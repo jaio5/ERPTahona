@@ -1,49 +1,46 @@
 package alicanteweb.erp;
 
+import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.application.Application;
+
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import java.io.IOException;
+import org.springframework.boot.SpringApplication;
 
 public class ErpFxApplication extends Application {
 
-    private ConfigurableApplicationContext springContext;
+    private ConfigurableApplicationContext context;
 
     @Override
-    public void init() {
-        // Inicializa Spring sin arrancar servidor web
-        springContext = new SpringApplicationBuilder(ErpApplication.class)
-                .properties("spring.main.web-application-type=none")
-                .run(getParameters().getRaw().toArray(new String[0]));
+    public void init() throws Exception {
+        // Espera y obtiene el contexto iniciado por ErpLauncher
+        context = ErpLauncher.getContext();
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Cargar FXML y usar Spring como controller factory
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
-        loader.setControllerFactory(beanClass -> springContext.getBean(beanClass));
-        Parent root;
-        try {
-            root = loader.load();
-        } catch (IOException e) {
-            throw new RuntimeException("No se pudo cargar FXML", e);
-        }
+        // Ajusta la ruta al FXML principal según tu proyecto (ej: /fxml/Main.fxml)
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Main.fxml"));
+        // Permite que los controladores sean beans Spring
+        loader.setControllerFactory(context::getBean);
 
+        Parent root = loader.load();
+        Scene scene = new Scene(root);
+        primaryStage.setScene(scene);
         primaryStage.setTitle("ERP");
-        primaryStage.setScene(new Scene(root));
         primaryStage.show();
     }
 
     @Override
-    public void stop() {
-        // Cerrar contexto Spring correctamente al salir
-        if (springContext != null) {
-            springContext.close();
+    public void stop() throws Exception {
+        // Cierra Spring y la plataforma JavaFX
+        if (context != null) {
+            SpringApplication.exit(context, () -> 0);
+            context.close();
         }
-        javafx.application.Platform.exit();
+        Platform.exit();
     }
 }

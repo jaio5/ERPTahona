@@ -1,68 +1,86 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<!-- xml -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.5.7</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
 
     <groupId>AlicanteWeb</groupId>
     <artifactId>ERP</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <name>ERP</name>
-    <description>ERP</description>
+    <description>ERP - aplicación de escritorio JavaFX con Spring Boot</description>
+    <packaging>jar</packaging>
 
     <properties>
         <java.version>17</java.version>
-        <!-- Forzar codificación UTF-8 para compilación y recursos -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- JavaFX / UI -->
         <javafx.version>20.0.2</javafx.version>
-        <javafx.platform>win</javafx.platform> <!-- usuario en Windows -->
+        <javafx.platform>win</javafx.platform>
         <controlsfx.version>11.1.1</controlsfx.version>
 
         <!-- Drivers / libs -->
         <mysql.connector.version>8.0.33</mysql.connector.version>
+        <h2.version>2.1.214</h2.version>
+        <flyway.version>9.22.0</flyway.version>
+
+        <!-- Tools -->
+        <dependency-check.version>8.4.1</dependency-check.version>
+        <maven.enforcer.plugin.version>3.2.1</maven.enforcer.plugin.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-core</artifactId>
+                <version>${flyway.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
-        <!-- Spring / JPA / Web -->
+        <!-- Core Spring (sin starter-web, para app de escritorio) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
+
+        <!-- JPA / Data -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- MySQL driver (corregido) -->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>${mysql.connector.version}</version>
-        </dependency>
-
-        <!-- Flyway -->
+        <!-- Flyway (migraciones) -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
+
+        <!-- MySQL driver (runtime only) -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-mysql</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>${mysql.connector.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
-        <!-- JavaFX dependencies (platform classifier) -->
+        <!-- JavaFX (platform classifier) -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -76,31 +94,28 @@
             <classifier>${javafx.platform}</classifier>
         </dependency>
 
-        <!-- ControlsFX -->
+        <!-- ControlsFX (marcar optional si no es imprescindible) -->
         <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
             <version>${controlsfx.version}</version>
+            <optional>true</optional>
         </dependency>
 
-        <!-- Testing -->
+        <!-- Testing: Spring Boot test y H2 en memoria -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- TestFX para pruebas UI (opcional) -->
         <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>testfx-junit5</artifactId>
-            <version>4.0.16-alpha</version>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
-        <!-- Evitar que Maven filtre recursos por defecto y asegurar encoding UTF-8 -->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -109,7 +124,7 @@
         </resources>
 
         <plugins>
-            <!-- asegurar el encoding en el proceso de recursos -->
+            <!-- Resources encoding -->
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.1</version>
@@ -118,7 +133,7 @@
                 </configuration>
             </plugin>
 
-            <!-- asegurar encoding en compilación -->
+            <!-- Compiler -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
@@ -126,16 +141,29 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                    <release>${java.version}</release>
                 </configuration>
             </plugin>
 
-            <!-- Spring Boot plugin -->
+            <!-- Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${project.parent.version}</version>
+                <configuration>
+                    <mainClass>alicanteweb.erp.ErpLauncher</mainClass>
+                    <layers>false</layers>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
-            <!-- Plugin JavaFX para ejecutar/empaquetar -->
+            <!-- JavaFX Maven Plugin (ejecutar / jlink) -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -154,7 +182,7 @@
                 </executions>
             </plugin>
 
-            <!-- Configuración de Surefire para tests -->
+            <!-- Surefire: configurar variables para evitar lanzar UI en tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -163,12 +191,61 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
                     <systemPropertyVariables>
-                        <!-- Evitar que la UI se lance durante las pruebas -->
                         <erp.launch-ui-on-start>false</erp.launch-ui-on-start>
                     </systemPropertyVariables>
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>
                 </configuration>
+            </plugin>
+
+            <!-- OWASP Dependency-Check -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${dependency-check.version}</version>
+                <configuration>
+                    <format>XML</format>
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <suppressionFile>${project.basedir}/dependency-check-suppress.xml</suppressionFile>
+                    <failOnError>false</failOnError>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven Enforcer -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${maven.enforcer.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>enforce-rules</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.6.3</version>
+                                </requireMavenVersion>
+                                <requirePluginVersions/>
+                                <bannedDependencies>
+                                    <excludes>
+                                        <exclude>commons-collections:commons-collections:3.2.1</exclude>
+                                    </excludes>
+                                </bannedDependencies>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
