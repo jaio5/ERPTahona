@@ -2,12 +2,9 @@ package alicanteweb.erp.entities;
 
 import jakarta.persistence.*;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 @Entity
-@Table(name = "clientes")
-public class Cliente {
+@Table(name = "proveedores")
+public class Proveedore {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -37,18 +34,6 @@ public class Cliente {
     @Lob
     @Column(name = "notas")
     private String notas;
-
-    @OneToMany(mappedBy = "cliente")
-    private Set<AlbaranesVenta> albaranesVentas = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "cliente")
-    private Set<DireccionesenvioNew> direccionesenvioNews = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "cliente")
-    private Set<Factura> facturas = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "cliente")
-    private Set<Pedido> pedidos = new LinkedHashSet<>();
 
     public Long getId() {
         return id;
@@ -120,38 +105,6 @@ public class Cliente {
 
     public void setNotas(String notas) {
         this.notas = notas;
-    }
-
-    public Set<AlbaranesVenta> getAlbaranesVentas() {
-        return albaranesVentas;
-    }
-
-    public void setAlbaranesVentas(Set<AlbaranesVenta> albaranesVentas) {
-        this.albaranesVentas = albaranesVentas;
-    }
-
-    public Set<DireccionesenvioNew> getDireccionesenvioNews() {
-        return direccionesenvioNews;
-    }
-
-    public void setDireccionesenvioNews(Set<DireccionesenvioNew> direccionesenvioNews) {
-        this.direccionesenvioNews = direccionesenvioNews;
-    }
-
-    public Set<Factura> getFacturas() {
-        return facturas;
-    }
-
-    public void setFacturas(Set<Factura> facturas) {
-        this.facturas = facturas;
-    }
-
-    public Set<Pedido> getPedidos() {
-        return pedidos;
-    }
-
-    public void setPedidos(Set<Pedido> pedidos) {
-        this.pedidos = pedidos;
     }
 
 }

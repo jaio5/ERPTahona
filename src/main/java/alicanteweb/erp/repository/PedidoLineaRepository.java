@@ -1,9 +1,9 @@
 package alicanteweb.erp.repository;
 
-import alicanteweb.erp.entities.Cliente;
+import alicanteweb.erp.entities.PedidoLinea;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
+public interface PedidoLineaRepository extends JpaRepository<PedidoLinea, Integer> {
 }

@@ -8,18 +8,30 @@
         <version>3.5.7</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
+
     <groupId>AlicanteWeb</groupId>
     <artifactId>ERP</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>ERP</name>
     <description>ERP</description>
+
     <properties>
         <java.version>17</java.version>
         <!-- Forzar codificación UTF-8 para compilación y recursos -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- JavaFX / UI -->
+        <javafx.version>20.0.2</javafx.version>
+        <javafx.platform>win</javafx.platform> <!-- usuario en Windows -->
+        <controlsfx.version>11.1.1</controlsfx.version>
+
+        <!-- Drivers / libs -->
+        <mysql.connector.version>8.0.33</mysql.connector.version>
     </properties>
+
     <dependencies>
+        <!-- Spring / JPA / Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -32,27 +44,61 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+
+        <!-- MySQL driver (corregido) -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <scope>runtime</scope>
+            <version>${mysql.connector.version}</version>
+        </dependency>
+
+        <!-- Flyway -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
+        <!-- JavaFX dependencies (platform classifier) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>${javafx.platform}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>${javafx.platform}</classifier>
         </dependency>
+
+        <!-- ControlsFX -->
+        <dependency>
+            <groupId>org.controlsfx</groupId>
+            <artifactId>controlsfx</artifactId>
+            <version>${controlsfx.version}</version>
+        </dependency>
+
+        <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- TestFX para pruebas UI (opcional) -->
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-junit5</artifactId>
+            <version>4.0.16-alpha</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
     <build>
         <!-- Evitar que Maven filtre recursos por defecto y asegurar encoding UTF-8 -->
         <resources>
@@ -61,6 +107,7 @@
                 <filtering>false</filtering>
             </resource>
         </resources>
+
         <plugins>
             <!-- asegurar el encoding en el proceso de recursos -->
             <plugin>
@@ -70,6 +117,7 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
+
             <!-- asegurar encoding en compilación -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -80,11 +128,48 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
+
+            <!-- Spring Boot plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+
+            <!-- Plugin JavaFX para ejecutar/empaquetar -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>alicanteweb.erp.ErpLauncher</mainClass>
+                    <jlinkZipName>${project.artifactId}-${project.version}-runtime</jlinkZipName>
+                    <launcher>true</launcher>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Configuración de Surefire para tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
+                    <systemPropertyVariables>
+                        <!-- Evitar que la UI se lance durante las pruebas -->
+                        <erp.launch-ui-on-start>false</erp.launch-ui-on-start>
+                    </systemPropertyVariables>
+                    <forkCount>1</forkCount>
+                    <reuseForks>true</reuseForks>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-
 </project>

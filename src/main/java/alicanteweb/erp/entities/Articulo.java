@@ -1,117 +1,138 @@
 package alicanteweb.erp.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "articulos")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Articulo {
-
     @Id
-    @Column(name = "CodigoArticulo", length = 500)
-    private String codigoArticulo;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Long id;
 
-    @Column(name = "DescripcionCorta", length = 500)
-    private String descripcionCorta;
+    @Column(name = "codigo", nullable = false, length = 50)
+    private String codigo;
 
-    @Column(name = "DescripcionArticulo", length = 500)
-    private String descripcionArticulo;
+    @Column(name = "descripcion")
+    private String descripcion;
 
-    @Column(name = "Unidad", length = 500)
+    @Column(name = "familia", length = 100)
+    private String familia;
+
+    @Column(name = "unidad", length = 20)
     private String unidad;
 
-    @Column(name = "FamiliaArticulo", length = 500)
-    private String familiaArticulo;
+    @Column(name = "iva", precision = 5, scale = 2)
+    private BigDecimal iva;
 
-    @Column(name = "Tipo_de_IVA")
-    private Integer tipoDeIva;
+    @ColumnDefault("0.00")
+    @Column(name = "pvp", precision = 10, scale = 2)
+    private BigDecimal pvp;
 
-    @Column(name = "SubCuentaVentas")
-    private Integer subCuentaVentas;
+    @ColumnDefault("0.00")
+    @Column(name = "coste", precision = 10, scale = 2)
+    private BigDecimal coste;
 
-    @Column(name = "SubCuentaCompras")
-    private Integer subCuentaCompras;
+    @OneToMany(mappedBy = "articulo")
+    private Set<AlbaranVentaLinea> albaranVentaLineas = new LinkedHashSet<>();
 
-    @Column(name = "UsoInterno", length = 500)
-    private String usoInterno;
+    @OneToMany(mappedBy = "articulo")
+    private Set<FacturaLinea> facturaLineas = new LinkedHashSet<>();
 
-    @Column(name = "Compuesto", length = 500)
-    private String compuesto;
+    @OneToMany(mappedBy = "articulo")
+    private Set<PedidoLinea> pedidoLineas = new LinkedHashSet<>();
 
-    @Column(name = "Servicio", length = 500)
-    private String servicio;
+    public Long getId() {
+        return id;
+    }
 
-    @Column(name = "CosteArticulo", precision = 15, scale = 2)
-    private BigDecimal costeArticulo;
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    @Column(name = "CosteMedio", precision = 15, scale = 2)
-    private BigDecimal costeMedio;
+    public String getCodigo() {
+        return codigo;
+    }
 
-    @Column(name = "UltimoCoste", precision = 15, scale = 2)
-    private BigDecimal ultimoCoste;
+    public void setCodigo(String codigo) {
+        this.codigo = codigo;
+    }
 
-    @Column(name = "PVP1", precision = 15, scale = 2)
-    private BigDecimal pvp1;
+    public String getDescripcion() {
+        return descripcion;
+    }
 
-    @Column(name = "PVP2", precision = 15, scale = 2)
-    private BigDecimal pvp2;
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
 
-    @Column(name = "PVP3", precision = 15, scale = 2)
-    private BigDecimal pvp3;
+    public String getFamilia() {
+        return familia;
+    }
 
-    @Column(name = "PVP4", precision = 15, scale = 2)
-    private BigDecimal pvp4;
+    public void setFamilia(String familia) {
+        this.familia = familia;
+    }
 
-    @Column(name = "PVP5", precision = 15, scale = 2)
-    private BigDecimal pvp5;
+    public String getUnidad() {
+        return unidad;
+    }
 
-    @Column(name = "MinimoStock")
-    private Integer minimoStock;
+    public void setUnidad(String unidad) {
+        this.unidad = unidad;
+    }
 
-    @Column(name = "MaximoStock")
-    private Integer maximoStock;
+    public BigDecimal getIva() {
+        return iva;
+    }
 
-    @Column(name = "MinStockPorAlmacen")
-    private Integer minStockPorAlmacen;
+    public void setIva(BigDecimal iva) {
+        this.iva = iva;
+    }
 
-    @Column(name = "MaxStockPorAlmacen")
-    private Integer maxStockPorAlmacen;
+    public BigDecimal getPvp() {
+        return pvp;
+    }
 
-    @Column(name = "Descuento1", precision = 15, scale = 2)
-    private BigDecimal descuento1;
+    public void setPvp(BigDecimal pvp) {
+        this.pvp = pvp;
+    }
 
-    @Column(name = "Descuento2", precision = 15, scale = 2)
-    private BigDecimal descuento2;
+    public BigDecimal getCoste() {
+        return coste;
+    }
 
-    @Column(name = "Descuento3", precision = 15, scale = 2)
-    private BigDecimal descuento3;
+    public void setCoste(BigDecimal coste) {
+        this.coste = coste;
+    }
 
-    @Column(name = "Descuento4", precision = 15, scale = 2)
-    private BigDecimal descuento4;
+    public Set<AlbaranVentaLinea> getAlbaranVentaLineas() {
+        return albaranVentaLineas;
+    }
 
-    @Column(name = "Descuento5", precision = 15, scale = 2)
-    private BigDecimal descuento5;
+    public void setAlbaranVentaLineas(Set<AlbaranVentaLinea> albaranVentaLineas) {
+        this.albaranVentaLineas = albaranVentaLineas;
+    }
 
-    @Column(name = "ProveedorDefecto", length = 500)
-    private String proveedorDefecto;
+    public Set<FacturaLinea> getFacturaLineas() {
+        return facturaLineas;
+    }
 
-    @Column(name = "DiasFabricacion", precision = 15, scale = 2)
-    private BigDecimal diasFabricacion;
+    public void setFacturaLineas(Set<FacturaLinea> facturaLineas) {
+        this.facturaLineas = facturaLineas;
+    }
 
-    @Column(name = "CodigoTablaArticulo", length = 500)
-    private String codigoTablaArticulo;
+    public Set<PedidoLinea> getPedidoLineas() {
+        return pedidoLineas;
+    }
 
-    @Column(name = "ValorFila", length = 500)
-    private String valorFila;
+    public void setPedidoLineas(Set<PedidoLinea> pedidoLineas) {
+        this.pedidoLineas = pedidoLineas;
+    }
 
-    @Column(name = "ValorColumna", length = 500)
-    private String valorColumna;
 }
-
