@@ -75,15 +75,6 @@ public class AlbaranesVentaController {
     private TextField txtSearch;
 
     @FXML
-    private DatePicker dpFechaInicio;
-
-    @FXML
-    private DatePicker dpFechaFin;
-
-    @FXML
-    private ComboBox<String> cboEstado;
-
-    @FXML
     private DatePicker dpFecha;
 
     @FXML
@@ -153,9 +144,7 @@ public class AlbaranesVentaController {
             tableAlbaranes.setItems(albaranesObservable);
 
             // Selección cambia formulario
-            tableAlbaranes.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-                populateForm(newSel);
-            });
+            tableAlbaranes.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> populateForm(newSel));
 
             // Doble clic en fila para editar
             tableAlbaranes.setRowFactory(tv -> {

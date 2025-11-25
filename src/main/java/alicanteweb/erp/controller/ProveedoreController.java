@@ -58,6 +58,15 @@ public class ProveedoreController implements MainControllerAware {
     @FXML
     private TextArea txtNotas;
 
+    @FXML
+    private ComboBox<String> cboProvincia;
+
+    @FXML
+    private TableColumn<Proveedore, String> colCif;
+
+    @FXML
+    private TableColumn<Proveedore, String> colProvincia;
+
     private final ObservableList<Proveedore> proveedoresObservable = FXCollections.observableArrayList();
 
     public ProveedoreController(ProveedoreService proveedoreService) {
@@ -179,5 +188,10 @@ public class ProveedoreController implements MainControllerAware {
     @FXML
     public void handleVolver() {
         if (mainPanelController != null) mainPanelController.showHome();
+    }
+
+    @FXML
+    public void handleFilterProvincia() {
+        // Implementar lógica de filtrado por provincia si es necesario
     }
 }

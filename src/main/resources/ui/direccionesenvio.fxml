@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.DireccionesenvioNewController">
+    <center>
+        <VBox spacing="10.0" alignment="CENTER">
+            <Label text="Direcciones de Envío" prefWidth="200.0" alignment="CENTER">
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Label>
+            <TableView fx:id="tableDirecciones" prefWidth="600.0" prefHeight="400.0">
+                <columns>
+                    <TableColumn fx:id="colNombre" text="Nombre" prefWidth="200.0"/>
+                    <TableColumn fx:id="colDireccion" text="Dirección" prefWidth="300.0"/>
+                    <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="100.0"/>
+                </columns>
+            </TableView>
+            <Button text="Añadir Dirección" onAction="#handleAnadirDireccion"/>
+        </VBox>
+    </center>
+    <bottom>
+        <HBox spacing="10.0" alignment="CENTER">
+            <Button text="Volver" onAction="#handleVolver"/>
+            <Button text="Guardar" onAction="#handleGuardar"/>
+        </HBox>
+    </bottom>
+</BorderPane>

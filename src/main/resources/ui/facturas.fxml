@@ -17,6 +17,7 @@
             <HBox spacing="10">
                 <TextField fx:id="txtSearch" promptText="Número..." />
                 <Button text="Buscar" onAction="#handleSearch"/>
+                <Button text="Copiar factura anterior" onAction="#handleCopiarFacturaAnterior"/>
             </HBox>
             <TableView fx:id="tableFacturas" VBox.vgrow="ALWAYS">
                 <columns>
@@ -29,4 +30,3 @@
         </VBox>
     </center>
 </BorderPane>
-

@@ -41,6 +41,11 @@ public class DireccionesenvioNewController implements MainControllerAware {
     private TableColumn<DireccionesenvioNew, String> colPoblacion;
 
     @FXML
+    private TableColumn<DireccionesenvioNew, String> colDireccion;
+    @FXML
+    private TableColumn<DireccionesenvioNew, String> colAcciones;
+
+    @FXML
     private TextField txtSearch;
 
     @FXML
@@ -83,6 +88,7 @@ public class DireccionesenvioNewController implements MainControllerAware {
         if (colId != null) colId.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getId() != null ? cell.getValue().getId().toString() : ""));
         if (colNombre != null) colNombre.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getNombre() != null ? cell.getValue().getNombre() : ""));
         if (colPoblacion != null) colPoblacion.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getPoblacion() != null ? cell.getValue().getPoblacion() : ""));
+        if (colDireccion != null) colDireccion.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getDireccion() != null ? cell.getValue().getDireccion() : ""));
 
         loadAll();
 
@@ -172,5 +178,11 @@ public class DireccionesenvioNewController implements MainControllerAware {
         if (selected == null || selected.getId() == null) return;
         service.deleteById(selected.getId());
         loadAll();
+    }
+
+    @FXML
+    public void handleAnadirDireccion() {
+        // Implementa aquí la lógica para añadir una nueva dirección
+        // Por ejemplo, abrir un formulario o limpiar los campos
     }
 }

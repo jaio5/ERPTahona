@@ -59,6 +59,15 @@ public class ClienteController implements MainControllerAware {
     @FXML
     private TextArea txtNotas;
 
+    @FXML
+    private ComboBox<String> cboProvincia;
+
+    @FXML
+    private TableColumn<Cliente, String> colCif;
+
+    @FXML
+    private TableColumn<Cliente, String> colProvincia;
+
     private final ObservableList<Cliente> clientesObservable = FXCollections.observableArrayList();
 
     public ClienteController(ClienteService clienteService) {
@@ -184,5 +193,10 @@ public class ClienteController implements MainControllerAware {
     @FXML
     public void handleVolver() {
         if (mainPanelController != null) mainPanelController.showHome();
+    }
+
+    @FXML
+    public void handleFilterProvincia() {
+        // Lógica de filtrado por provincia (puedes implementar aquí si lo necesitas)
     }
 }

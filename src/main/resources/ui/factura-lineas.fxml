@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.FacturaLineaController">
+    <center>
+        <TableView fx:id="tvLineas" prefHeight="400.0" prefWidth="600.0">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" />
+                <TableColumn fx:id="colDescripcion" text="Descripción" />
+                <TableColumn fx:id="colCantidad" text="Cantidad" />
+                <TableColumn fx:id="colPrecio" text="Precio" />
+                <TableColumn fx:id="colTotal" text="Total" />
+            </columns>
+        </TableView>
+    </center>
+    <bottom>
+        <HBox spacing="10.0" alignment="CENTER_RIGHT" padding="10.0">
+            <Button fx:id="btnAgregar" text="Agregar" />
+            <Button fx:id="btnEliminar" text="Eliminar" />
+            <Button fx:id="btnGuardar" text="Guardar" />
+            <Button fx:id="btnCancelar" text="Cancelar" />
+        </HBox>
+    </bottom>
+</BorderPane>
+

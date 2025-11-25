@@ -178,9 +178,7 @@
                             </Label>
                             <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="2">
                                 <TextField fx:id="txtIva" promptText="21.00" HBox.hgrow="ALWAYS"/>
-                                <Label text="%">
-                                    <font><Font size="12"/></font>
-                                </Label>
+                                <Label text="%" />
                             </HBox>
                         </GridPane>
 

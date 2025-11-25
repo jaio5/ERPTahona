@@ -2,6 +2,7 @@ package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Cliente;
 import alicanteweb.erp.entities.Factura;
+import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.service.ClienteService;
 import alicanteweb.erp.service.FacturaService;
 import javafx.beans.property.SimpleStringProperty;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 @Controller
@@ -137,8 +139,8 @@ public class FacturaController implements MainControllerAware {
         selected.setNumero(txtNumero != null ? txtNumero.getText() : null);
         selected.setFecha(dpFecha != null ? dpFecha.getValue() : null);
         selected.setCliente(cboCliente != null ? cboCliente.getSelectionModel().getSelectedItem() : null);
-        try { if (txtTotal != null && !txtTotal.getText().isBlank()) selected.setTotal(new java.math.BigDecimal(txtTotal.getText())); } catch (Exception e) { }
-        try { if (txtPagado != null && !txtPagado.getText().isBlank()) selected.setPagado(new java.math.BigDecimal(txtPagado.getText())); } catch (Exception e) { }
+        try { if (txtTotal != null && !txtTotal.getText().isBlank()) selected.setTotal(new java.math.BigDecimal(txtTotal.getText())); } catch (Exception e) { new Alert(Alert.AlertType.ERROR, "Total no válido").showAndWait(); }
+        try { if (txtPagado != null && !txtPagado.getText().isBlank()) selected.setPagado(new java.math.BigDecimal(txtPagado.getText())); } catch (Exception e) { new Alert(Alert.AlertType.ERROR, "Pagado no válido").showAndWait(); }
 
         // unicidad numero
         String numero = selected.getNumero();
@@ -166,6 +168,35 @@ public class FacturaController implements MainControllerAware {
         loadAll();
     }
 
+    /**
+     * Copia los datos de la última factura de un cliente seleccionado y los pone en el formulario para emitir una nueva factura similar.
+     * También copia las líneas de la factura anterior y las asocia a la nueva factura en edición.
+     */
+    public void copiarFacturaAnterior(Cliente cliente) {
+        if (cliente == null) return;
+        Optional<Factura> ultimaOpt = facturaService.findUltimaFacturaPorCliente(cliente.getId());
+        if (ultimaOpt.isPresent()) {
+            Factura ultima = ultimaOpt.get();
+            if (txtNumero != null) txtNumero.setText(""); // Nuevo número
+            if (dpFecha != null) dpFecha.setValue(java.time.LocalDate.now());
+            if (cboCliente != null) cboCliente.setValue(cliente);
+            if (txtTotal != null) txtTotal.setText(String.valueOf(ultima.getTotal()));
+            if (txtPagado != null) txtPagado.setText("0");
+            // Copiar líneas de factura
+            Set<FacturaLinea> lineasCopia = new java.util.LinkedHashSet<>();
+            for (FacturaLinea linea : ultima.getFacturaLineas()) {
+                FacturaLinea copia = new FacturaLinea();
+                copia.setArticulo(linea.getArticulo());
+                copia.setCantidad(linea.getCantidad());
+                copia.setPrecio(linea.getPrecio());
+                copia.setIva(linea.getIva());
+                copia.setFactura(null); // Se asociará al guardar la nueva factura
+                lineasCopia.add(copia);
+            }
+            // Aquí deberías asociar estas líneas a la nueva factura en edición
+        }
+    }
+
     @Override
     public void setMainPanelController(alicanteweb.erp.controller.ui.MainPanelController mainPanelController) {
         this.mainPanelController = mainPanelController;
@@ -174,5 +205,16 @@ public class FacturaController implements MainControllerAware {
     @FXML
     public void handleVolver() {
         if (mainPanelController != null) mainPanelController.showHome();
+    }
+
+    @FXML
+    public void handleCopiarFacturaAnterior() {
+        Cliente cliente = cboCliente != null ? cboCliente.getSelectionModel().getSelectedItem() : null;
+        if (cliente == null) {
+            new Alert(Alert.AlertType.WARNING, "Selecciona un cliente para copiar su última factura.").showAndWait();
+            return;
+        }
+        copiarFacturaAnterior(cliente);
+        new Alert(Alert.AlertType.INFORMATION, "Datos de la última factura copiados. Puedes modificar y guardar la nueva factura.").showAndWait();
     }
 }

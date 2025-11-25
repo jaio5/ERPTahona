@@ -51,6 +51,9 @@ public class PedidoController implements MainControllerAware {
     @FXML
     private ComboBox<String> cboEstado;
 
+    @FXML
+    private TextField txtSearch;
+
     private final ObservableList<Pedido> pedidosObservable = FXCollections.observableArrayList();
     private final ObservableList<Cliente> clientesObservable = FXCollections.observableArrayList();
 
@@ -148,6 +151,19 @@ public class PedidoController implements MainControllerAware {
         }
         pedidoService.deleteById(selected.getId());
         loadAll();
+    }
+
+    @FXML
+    public void handleSearch() {
+        // Implementación básica de búsqueda
+        String search = txtSearch.getText();
+        List<Pedido> pedidos;
+        if (search == null || search.isBlank()) {
+            pedidos = pedidoService.findAll();
+        } else {
+            pedidos = pedidoService.findByNumeroOrCliente(search);
+        }
+        tablePedidos.setItems(FXCollections.observableArrayList(pedidos));
     }
 
     @Override

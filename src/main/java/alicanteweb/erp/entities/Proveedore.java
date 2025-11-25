@@ -1,6 +1,7 @@
 package alicanteweb.erp.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "proveedores")
@@ -34,6 +35,66 @@ public class Proveedore {
     @Lob
     @Column(name = "notas")
     private String notas;
+
+    @Size(max = 50)
+    @Column(name = "telefono", length = 50)
+    private String telefono;
+
+    @Size(max = 255)
+    @Column(name = "email")
+    private String email;
+
+    @Size(max = 100)
+    @Column(name = "ciudad", length = 100)
+    private String ciudad;
+
+    @Size(max = 20)
+    @Column(name = "cp", length = 20)
+    private String cp;
+
+    @Size(max = 100)
+    @Column(name = "pais", length = 100)
+    private String pais;
+
+    public String getPais() {
+        return pais;
+    }
+
+    public void setPais(String pais) {
+        this.pais = pais;
+    }
+
+    public String getCp() {
+        return cp;
+    }
+
+    public void setCp(String cp) {
+        this.cp = cp;
+    }
+
+    public String getCiudad() {
+        return ciudad;
+    }
+
+    public void setCiudad(String ciudad) {
+        this.ciudad = ciudad;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
 
     public Long getId() {
         return id;

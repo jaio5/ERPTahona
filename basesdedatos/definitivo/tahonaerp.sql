@@ -60,7 +60,7 @@ CREATE TABLE `albaranes_venta` (
   `fecha` date DEFAULT NULL,
   `cliente_id` bigint DEFAULT NULL,
   `almacen_id` bigint DEFAULT NULL,
-  `observaciones` text,
+  `observaciones` tinytext,
   `total` decimal(10,2) DEFAULT '0.00',
   PRIMARY KEY (`id`),
   UNIQUE KEY `numero` (`numero`),
@@ -78,6 +78,35 @@ CREATE TABLE `albaranes_venta` (
 LOCK TABLES `albaranes_venta` WRITE;
 /*!40000 ALTER TABLE `albaranes_venta` DISABLE KEYS */;
 /*!40000 ALTER TABLE `albaranes_venta` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `albaranes_venta_facturas`
+--
+
+DROP TABLE IF EXISTS `albaranes_venta_facturas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `albaranes_venta_facturas` (
+  `albaranesVentas_id` bigint NOT NULL,
+  `facturas_id` bigint NOT NULL,
+  `albaranes_ventas_id` bigint NOT NULL,
+  PRIMARY KEY (`albaranesVentas_id`,`facturas_id`),
+  KEY `FKrs8jqeku4130hn9p3ecq0k041` (`facturas_id`),
+  KEY `FKlltrlkoq52htarynfh58km7v8` (`albaranes_ventas_id`),
+  CONSTRAINT `FK68q0gk90dgm2473kl63v764od` FOREIGN KEY (`albaranesVentas_id`) REFERENCES `albaranes_venta` (`id`),
+  CONSTRAINT `FKlltrlkoq52htarynfh58km7v8` FOREIGN KEY (`albaranes_ventas_id`) REFERENCES `albaranes_venta` (`id`),
+  CONSTRAINT `FKrs8jqeku4130hn9p3ecq0k041` FOREIGN KEY (`facturas_id`) REFERENCES `facturas` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `albaranes_venta_facturas`
+--
+
+LOCK TABLES `albaranes_venta_facturas` WRITE;
+/*!40000 ALTER TABLE `albaranes_venta_facturas` DISABLE KEYS */;
+/*!40000 ALTER TABLE `albaranes_venta_facturas` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -124,7 +153,7 @@ CREATE TABLE `articulos` (
   `coste` decimal(10,2) DEFAULT '0.00',
   PRIMARY KEY (`id`),
   UNIQUE KEY `codigo` (`codigo`)
-) ENGINE=InnoDB AUTO_INCREMENT=128 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=124 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -153,7 +182,7 @@ CREATE TABLE `clientes` (
   `poblacion` varchar(100) DEFAULT NULL,
   `codigo_postal` varchar(20) DEFAULT NULL,
   `provincia` varchar(50) DEFAULT NULL,
-  `notas` text,
+  `notas` tinytext,
   PRIMARY KEY (`id`),
   UNIQUE KEY `codigo` (`codigo`)
 ) ENGINE=InnoDB AUTO_INCREMENT=128 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -180,14 +209,14 @@ CREATE TABLE `direccionesenvio_new` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `cliente_id` bigint DEFAULT NULL,
   `codigo_direccion` int DEFAULT NULL,
-  `nombre` text,
-  `direccion` text,
-  `direccion2` text,
-  `poblacion` text,
-  `provincia` text,
-  `cp` text,
-  `telefono` text,
-  `notas` text,
+  `nombre` tinytext,
+  `direccion` varchar(1024) DEFAULT NULL,
+  `direccion2` varchar(1024) DEFAULT NULL,
+  `poblacion` tinytext,
+  `provincia` tinytext,
+  `cp` varchar(50) DEFAULT NULL,
+  `telefono` varchar(50) DEFAULT NULL,
+  `notas` tinytext,
   PRIMARY KEY (`id`),
   KEY `cliente_id` (`cliente_id`),
   CONSTRAINT `direccionesenvio_new_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE
@@ -291,6 +320,39 @@ LOCK TABLES `facturas` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `flyway_schema_history`
+--
+
+DROP TABLE IF EXISTS `flyway_schema_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `flyway_schema_history` (
+  `installed_rank` int NOT NULL,
+  `version` varchar(50) DEFAULT NULL,
+  `description` varchar(200) NOT NULL,
+  `type` varchar(20) NOT NULL,
+  `script` varchar(1000) NOT NULL,
+  `checksum` int DEFAULT NULL,
+  `installed_by` varchar(100) NOT NULL,
+  `installed_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `execution_time` int NOT NULL,
+  `success` tinyint(1) NOT NULL,
+  PRIMARY KEY (`installed_rank`),
+  KEY `flyway_schema_history_s_idx` (`success`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `flyway_schema_history`
+--
+
+LOCK TABLES `flyway_schema_history` WRITE;
+/*!40000 ALTER TABLE `flyway_schema_history` DISABLE KEYS */;
+INSERT INTO `flyway_schema_history` VALUES (1,'1','<< Flyway Baseline >>','BASELINE','<< Flyway Baseline >>',NULL,'root','2025-11-25 15:30:18',0,1);
+/*!40000 ALTER TABLE `flyway_schema_history` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `pedido_lineas`
 --
 
@@ -350,6 +412,33 @@ LOCK TABLES `pedidos` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `pedidos_compra`
+--
+
+DROP TABLE IF EXISTS `pedidos_compra`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pedidos_compra` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_proveedor` int DEFAULT NULL,
+  `fecha` date DEFAULT NULL,
+  `estado` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `id_proveedor` (`id_proveedor`),
+  CONSTRAINT `pedidos_compra_ibfk_1` FOREIGN KEY (`id_proveedor`) REFERENCES `proveedores` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pedidos_compra`
+--
+
+LOCK TABLES `pedidos_compra` WRITE;
+/*!40000 ALTER TABLE `pedidos_compra` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pedidos_compra` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `proveedores`
 --
 
@@ -357,17 +446,17 @@ DROP TABLE IF EXISTS `proveedores`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `proveedores` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `codigo` varchar(50) NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(255) DEFAULT NULL,
-  `cif` varchar(50) DEFAULT NULL,
+  `cif` varchar(20) DEFAULT NULL,
+  `telefono` varchar(50) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
   `direccion` varchar(255) DEFAULT NULL,
-  `poblacion` varchar(100) DEFAULT NULL,
-  `codigo_postal` varchar(20) DEFAULT NULL,
-  `provincia` varchar(50) DEFAULT NULL,
-  `notas` text,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `codigo` (`codigo`)
+  `ciudad` varchar(100) DEFAULT NULL,
+  `provincia` varchar(100) DEFAULT NULL,
+  `cp` varchar(20) DEFAULT NULL,
+  `pais` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -379,6 +468,39 @@ LOCK TABLES `proveedores` WRITE;
 /*!40000 ALTER TABLE `proveedores` DISABLE KEYS */;
 /*!40000 ALTER TABLE `proveedores` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `verifactu_evidence`
+--
+
+DROP TABLE IF EXISTS `verifactu_evidence`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `verifactu_evidence` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `cert_fingerprint` varchar(128) DEFAULT NULL,
+  `created_at` datetime(6) DEFAULT NULL,
+  `factura_id` varchar(100) NOT NULL,
+  `fecha_emision` datetime(6) DEFAULT NULL,
+  `hash` varchar(128) NOT NULL,
+  `hash_anterior` varchar(128) DEFAULT NULL,
+  `metadata` json DEFAULT NULL,
+  `numero` varchar(255) DEFAULT NULL,
+  `serie` varchar(255) DEFAULT NULL,
+  `signature` longblob,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UK7xfbppqjwpp50od5miq3dfkpu` (`factura_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `verifactu_evidence`
+--
+
+LOCK TABLES `verifactu_evidence` WRITE;
+/*!40000 ALTER TABLE `verifactu_evidence` DISABLE KEYS */;
+/*!40000 ALTER TABLE `verifactu_evidence` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -389,4 +511,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-20 16:45:53
+-- Dump completed on 2025-11-25 21:10:48

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.AsientoContableController">
+    <top>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Asientos contables" style="-fx-font-size:18px; -fx-font-weight:bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="← Volver" onAction="#handleVolver"/>
+        </HBox>
+    </top>
+    <center>
+        <TableView fx:id="tableAsientos">
+            <columns>
+                <TableColumn fx:id="colFecha" text="Fecha"/>
+                <TableColumn fx:id="colDescripcion" text="Descripción"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>
+

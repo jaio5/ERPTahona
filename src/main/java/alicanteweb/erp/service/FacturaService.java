@@ -43,5 +43,11 @@ public class FacturaService {
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
-}
 
+    /**
+     * Devuelve la última factura de un cliente por fecha descendente.
+     */
+    public Optional<Factura> findUltimaFacturaPorCliente(Long clienteId) {
+        return repository.findTopByCliente_IdOrderByFechaDesc(clienteId);
+    }
+}

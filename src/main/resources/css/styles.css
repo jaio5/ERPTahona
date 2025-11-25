@@ -77,11 +77,16 @@
 
 /* Secondary button */
 .btn-secondary {
-    -fx-background-color: transparent;
-    -fx-border-color: rgba(255,255,255,0.2);
+    -fx-background-color: #6c757d;
     -fx-text-fill: white;
-    -fx-padding: 6 12;
+    -fx-font-weight: bold;
     -fx-background-radius: 6;
+    -fx-padding: 8 14;
+    -fx-cursor: hand;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #495057;
 }
 
 /* Info badge */
@@ -123,8 +128,9 @@
 
 /* Table styling */
 .table-view {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
+    -fx-background-color: #f8f9fa;
+    -fx-table-cell-border-color: #dee2e6;
+    -fx-table-header-border-color: #adb5bd;
 }
 
 .table-view .column-header-background {
@@ -142,6 +148,10 @@
 .table-view .column-header, .table-view .column-header .label {
     -fx-text-fill: #2c3e50;
     -fx-font-weight: bold;
+}
+
+.table-column {
+    -fx-alignment: CENTER_LEFT;
 }
 
 /* Inputs */
@@ -195,6 +205,30 @@
 
 .left-panel .button:hover {
     -fx-background-color: rgba(52,152,219,0.08);
+}
+
+/* Form styling */
+.form-label {
+    -fx-text-fill: #2c3e50;
+    -fx-font-weight: bold;
+}
+
+.form-field {
+    -fx-background-color: #ecf0f1;
+    -fx-border-color: #b2bec3;
+    -fx-border-radius: 4;
+    -fx-padding: 6 10;
+}
+
+/* Success and error messages */
+.success-message {
+    -fx-text-fill: #27ae60;
+    -fx-font-weight: bold;
+}
+
+.error-message {
+    -fx-text-fill: #c0392b;
+    -fx-font-weight: bold;
 }
 
 /* small helper for the content area */

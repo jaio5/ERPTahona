@@ -185,4 +185,9 @@ public class ArticuloController implements MainControllerAware {
     public void handleVolver() {
         if (mainPanelController != null) mainPanelController.showHome();
     }
+
+    @FXML
+    public void handleFilterFamilia() {
+        // Lógica de filtrado por familia (puedes implementar aquí si lo necesitas)
+    }
 }

@@ -38,6 +38,11 @@ public class PedidoService {
         return repository.findByCliente_Id(clienteId);
     }
 
+    public List<Pedido> findByNumeroOrCliente(String search) {
+        // Buscar por número o por nombre de cliente
+        return repository.findByNumeroContainingIgnoreCaseOrCliente_NombreContainingIgnoreCase(search, search);
+    }
+
     @Transactional
     public Pedido save(Pedido p) {
         return repository.save(p);
@@ -48,4 +53,3 @@ public class PedidoService {
         repository.deleteById(id);
     }
 }
-
