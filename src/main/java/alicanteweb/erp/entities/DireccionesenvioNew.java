@@ -20,32 +20,25 @@ public class DireccionesenvioNew {
     @Column(name = "codigo_direccion")
     private Integer codigoDireccion;
 
-    @Lob
-    @Column(name = "nombre")
+    @Column(name = "nombre", length = 255)
     private String nombre;
 
-    @Lob
-    @Column(name = "direccion")
+    @Column(name = "direccion", length = 1024)
     private String direccion;
 
-    @Lob
-    @Column(name = "direccion2")
+    @Column(name = "direccion2", length = 1024)
     private String direccion2;
 
-    @Lob
-    @Column(name = "poblacion")
+    @Column(name = "poblacion", length = 255)
     private String poblacion;
 
-    @Lob
-    @Column(name = "provincia")
+    @Column(name = "provincia", length = 255)
     private String provincia;
 
-    @Lob
-    @Column(name = "cp")
+    @Column(name = "cp", length = 50)
     private String cp;
 
-    @Lob
-    @Column(name = "telefono")
+    @Column(name = "telefono", length = 50)
     private String telefono;
 
     @Lob

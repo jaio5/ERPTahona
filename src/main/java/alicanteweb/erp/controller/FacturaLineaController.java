@@ -19,11 +19,13 @@ import java.util.Optional;
 
 @SuppressWarnings("unused")
 @Controller
-public class FacturaLineaController {
+public class FacturaLineaController implements MainControllerAware {
 
     private final FacturaLineaService service;
     private final ArticuloService articuloService;
     private final FacturaService facturaService;
+
+    private alicanteweb.erp.controller.ui.MainPanelController mainPanelController;
 
     @FXML
     private TableView<FacturaLinea> tableLineas;
@@ -69,6 +71,16 @@ public class FacturaLineaController {
         this.service = service;
         this.articuloService = articuloService;
         this.facturaService = facturaService;
+    }
+
+    @Override
+    public void setMainPanelController(alicanteweb.erp.controller.ui.MainPanelController mainPanelController) {
+        this.mainPanelController = mainPanelController;
+    }
+
+    @FXML
+    public void handleVolver() {
+        if (mainPanelController != null) mainPanelController.showHome();
     }
 
     @FXML
@@ -204,4 +216,3 @@ public class FacturaLineaController {
         loadAll();
     }
 }
-

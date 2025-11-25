@@ -1,0 +1,60 @@
+/* Subsection titles */
+.subsection-title {
+    -fx-text-fill: #34495e;
+}
+
+/* Total field (readonly with emphasis) */
+.total-field {
+    -fx-background-color: #ecf0f1;
+    -fx-text-fill: #27ae60;
+    -fx-font-weight: bold;
+}
+
+/* Info badge */
+.info-badge {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-padding: 5 10;
+    -fx-background-radius: 12;
+}
+
+/* Filters panel */
+.filters-panel {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dee2e6;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+/* Info box */
+.info-box {
+    -fx-background-color: #e8f4f8;
+    -fx-border-color: #3498db;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+.info-title {
+    -fx-text-fill: #2c3e50;
+}
+
+.info-text {
+    -fx-text-fill: #34495e;
+    -fx-font-size: 11px;
+}
+
+/* Button info style */
+.btn-info {
+    -fx-background-color: #17a2b8;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+    -fx-padding: 8 16;
+}
+
+.btn-info:hover {
+    -fx-background-color: #138496;
+}

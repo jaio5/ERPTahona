@@ -19,11 +19,13 @@ import java.util.Optional;
 
 @SuppressWarnings("unused")
 @Controller
-public class PedidoLineaController {
+public class PedidoLineaController implements MainControllerAware {
 
     private final PedidoLineaService service;
     private final ArticuloService articuloService;
     private final PedidoService pedidoService;
+
+    private alicanteweb.erp.controller.ui.MainPanelController mainPanelController;
 
     @FXML
     private TableView<PedidoLinea> tableLineas;
@@ -177,5 +179,14 @@ public class PedidoLineaController {
         service.deleteById(selected.getId());
         loadAll();
     }
-}
 
+    @Override
+    public void setMainPanelController(alicanteweb.erp.controller.ui.MainPanelController mainPanelController) {
+        this.mainPanelController = mainPanelController;
+    }
+
+    @FXML
+    public void handleVolver() {
+        if (mainPanelController != null) mainPanelController.showHome();
+    }
+}

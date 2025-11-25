@@ -13,8 +13,20 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 @Controller
-public class DireccionesenvioNewController {
+public class DireccionesenvioNewController implements MainControllerAware {
     private final DireccionesenvioNewService service;
+
+    private alicanteweb.erp.controller.ui.MainPanelController mainPanelController;
+
+    @Override
+    public void setMainPanelController(alicanteweb.erp.controller.ui.MainPanelController mainPanelController) {
+        this.mainPanelController = mainPanelController;
+    }
+
+    @FXML
+    public void handleVolver() {
+        if (mainPanelController != null) mainPanelController.showHome();
+    }
 
     @FXML
     private TableView<DireccionesenvioNew> tableDirecciones;

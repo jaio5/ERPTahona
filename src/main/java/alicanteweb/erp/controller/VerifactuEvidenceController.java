@@ -15,9 +15,10 @@ import java.util.Optional;
 
 @SuppressWarnings("unused")
 @Controller
-public class VerifactuEvidenceController {
+public class VerifactuEvidenceController implements MainControllerAware {
 
     private final VerifactuEvidenceService evidenceService;
+    private alicanteweb.erp.controller.ui.MainPanelController mainPanelController;
 
     @FXML
     private TableView<VerifactuEvidence> tableEvidence;
@@ -62,6 +63,11 @@ public class VerifactuEvidenceController {
 
     public VerifactuEvidenceController(VerifactuEvidenceService evidenceService) {
         this.evidenceService = evidenceService;
+    }
+
+    @Override
+    public void setMainPanelController(alicanteweb.erp.controller.ui.MainPanelController mainPanelController) {
+        this.mainPanelController = mainPanelController;
     }
 
     @FXML
@@ -168,5 +174,9 @@ public class VerifactuEvidenceController {
         evidenceService.deleteById(v.getId());
         loadAll();
     }
-}
 
+    @FXML
+    public void handleVolver() {
+        if (mainPanelController != null) mainPanelController.showHome();
+    }
+}

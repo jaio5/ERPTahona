@@ -5,67 +5,223 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.ArticuloController" prefWidth="1000.0" prefHeight="700.0">
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.ArticuloController"
+            prefHeight="750.0" prefWidth="1300.0">
 
+    <!-- Header -->
     <top>
-        <HBox spacing="10" padding="10">
-            <Label text="Artículos" style="-fx-font-size:18px; -fx-font-weight:bold;"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <TextField fx:id="txtSearch" promptText="Buscar descripción..." />
-            <Button text="Buscar" onAction="#handleSearch" />
-        </HBox>
+        <VBox styleClass="header">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Gestión de Artículos" styleClass="header-title">
+                    <font><Font name="System Bold" size="22"/></font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
     </top>
 
+    <!-- Center - Split View -->
     <center>
-        <SplitPane orientation="HORIZONTAL" dividerPositions="0.6">
-            <VBox spacing="8" padding="10">
+        <SplitPane dividerPositions="0.58">
+            <!-- Left: Table and Filters -->
+            <VBox spacing="10">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+
+                <!-- Filters Panel -->
+                <VBox spacing="8" styleClass="filters-panel">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+
+                    <!-- Search Bar -->
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Buscar:">
+                            <font><Font name="System Bold" size="12"/></font>
+                        </Label>
+                        <TextField fx:id="txtSearch" promptText="Código o descripción..."
+                                   HBox.hgrow="ALWAYS"/>
+                        <Button text="Buscar" onAction="#handleSearch" styleClass="btn-primary"/>
+                    </HBox>
+
+                    <!-- Filter by Familia -->
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Familia:">
+                            <font><Font name="System Bold" size="12"/></font>
+                        </Label>
+                        <ComboBox fx:id="cboFamilia" prefWidth="200"/>
+                        <Button text="Aplicar" onAction="#handleFilterFamilia"
+                                styleClass="btn-success"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Table -->
                 <TableView fx:id="tableArticulos" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn fx:id="colCodigo" text="Código" prefWidth="100"/>
-                        <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="300"/>
-                        <TableColumn fx:id="colFamilia" text="Familia" prefWidth="150"/>
+                        <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="280"/>
+                        <TableColumn fx:id="colFamilia" text="Familia" prefWidth="100"/>
+                        <TableColumn fx:id="colPvp" text="PVP" prefWidth="100"/>
+                        <TableColumn fx:id="colCoste" text="Coste" prefWidth="100"/>
+                        <TableColumn fx:id="colIva" text="IVA" prefWidth="80"/>
                     </columns>
                 </TableView>
             </VBox>
 
-            <VBox spacing="8" padding="10">
-                <GridPane hgap="10" vgap="10">
-                    <columnConstraints>
-                        <ColumnConstraints minWidth="100" prefWidth="120" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                    </columnConstraints>
+            <!-- Right: Form -->
+            <VBox spacing="15">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
 
-                    <Label text="Código:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtCodigo" GridPane.rowIndex="0" GridPane.columnIndex="1" />
-
-                    <Label text="Descripción:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtDescripcion" GridPane.rowIndex="1" GridPane.columnIndex="1" />
-
-                    <Label text="Familia:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtFamilia" GridPane.rowIndex="2" GridPane.columnIndex="1" />
-
-                    <Label text="Unidad:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtUnidad" GridPane.rowIndex="3" GridPane.columnIndex="1" />
-
-                    <Label text="IVA:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtIva" GridPane.rowIndex="4" GridPane.columnIndex="1" />
-
-                    <Label text="PVP:" GridPane.rowIndex="5" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtPvp" GridPane.rowIndex="5" GridPane.columnIndex="1" />
-
-                    <Label text="Coste:" GridPane.rowIndex="6" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtCoste" GridPane.rowIndex="6" GridPane.columnIndex="1" />
-                </GridPane>
-
-                <HBox spacing="10" alignment="CENTER">
-                    <padding>
-                        <Insets top="10"/>
-                    </padding>
-                    <Button text="Nuevo" onAction="#handleNuevo" />
-                    <Button text="Guardar" onAction="#handleGuardar" />
-                    <Button text="Eliminar" onAction="#handleEliminar" />
+                <!-- Form Title -->
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="Datos del Artículo" styleClass="section-title">
+                        <font><Font name="System Bold" size="16"/></font>
+                    </Label>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="lblMargen" text="Margen: --" styleClass="info-badge">
+                        <font><Font name="System Bold" size="12"/></font>
+                    </Label>
                 </HBox>
+
+                <Separator/>
+
+                <!-- Form Fields -->
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+                    <VBox spacing="15">
+                        <padding>
+                            <Insets top="5" right="5" bottom="5" left="5"/>
+                        </padding>
+
+                        <GridPane hgap="10" vgap="15">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="100" prefWidth="100"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                            </columnConstraints>
+
+                            <!-- Código -->
+                            <Label text="Código:" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtCodigo" promptText="0100"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                            <!-- Descripción -->
+                            <Label text="Descripción:" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtDescripcion" promptText="Descripción del artículo"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                            <!-- Familia -->
+                            <Label text="Familia:" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtFamilia" promptText="01"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                            <!-- Unidad -->
+                            <Label text="Unidad:" GridPane.columnIndex="0" GridPane.rowIndex="3">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtUnidad" promptText="Kg, Ud, L..."
+                                       GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                        </GridPane>
+
+                        <!-- Separator for Prices -->
+                        <VBox spacing="5">
+                            <Label text="Precios e Impuestos" styleClass="subsection-title">
+                                <font><Font name="System Bold" size="13"/></font>
+                            </Label>
+                            <Separator/>
+                        </VBox>
+
+                        <GridPane hgap="10" vgap="15">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="100" prefWidth="100"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                            </columnConstraints>
+
+                            <!-- PVP -->
+                            <Label text="PVP (€):" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <TextField fx:id="txtPvp" promptText="0.00" HBox.hgrow="ALWAYS"/>
+                                <Label text="€">
+                                    <font><Font size="12"/></font>
+                                </Label>
+                            </HBox>
+
+                            <!-- Coste -->
+                            <Label text="Coste (€):" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                <TextField fx:id="txtCoste" promptText="0.00" HBox.hgrow="ALWAYS"/>
+                                <Label text="€">
+                                    <font><Font size="12"/></font>
+                                </Label>
+                            </HBox>
+
+                            <!-- IVA -->
+                            <Label text="IVA (%):" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <HBox spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                <TextField fx:id="txtIva" promptText="21.00" HBox.hgrow="ALWAYS"/>
+                                <Label text="%">
+                                    <font><Font size="12"/></font>
+                                </Label>
+                            </HBox>
+                        </GridPane>
+
+                        <!-- Info Box -->
+                        <VBox spacing="8" styleClass="info-box">
+                            <padding>
+                                <Insets top="10" right="10" bottom="10" left="10"/>
+                            </padding>
+                            <Label text="ℹ Tipos de IVA habituales" styleClass="info-title">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <Label text="• IVA General: 21%"
+                                   wrapText="true" styleClass="info-text"/>
+                            <Label text="• IVA Reducido: 10%"
+                                   wrapText="true" styleClass="info-text"/>
+                            <Label text="• IVA Superreducido: 4%"
+                                   wrapText="true" styleClass="info-text"/>
+                        </VBox>
+                    </VBox>
+                </ScrollPane>
+
+                <Separator/>
+
+                <!-- Action Buttons -->
+                <VBox spacing="10">
+                    <!-- Primary Actions -->
+                    <HBox spacing="10" alignment="CENTER">
+                        <Button text="Nuevo" onAction="#handleNuevo"
+                                styleClass="btn-success" prefWidth="130">
+                            <font><Font size="12"/></font>
+                        </Button>
+                        <Button text="Guardar" onAction="#handleGuardar"
+                                styleClass="btn-primary" prefWidth="130">
+                            <font><Font size="12"/></font>
+                        </Button>
+                        <Button text="Eliminar" onAction="#handleEliminar"
+                                styleClass="btn-danger" prefWidth="130">
+                            <font><Font size="12"/></font>
+                        </Button>
+                    </HBox>
+                </VBox>
             </VBox>
         </SplitPane>
     </center>

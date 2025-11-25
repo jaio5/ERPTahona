@@ -17,10 +17,11 @@ import java.util.Optional;
 
 @SuppressWarnings("unused")
 @Controller
-public class FacturaController {
+public class FacturaController implements MainControllerAware {
 
     private final FacturaService facturaService;
     private final ClienteService clienteService;
+    private alicanteweb.erp.controller.ui.MainPanelController mainPanelController;
 
     @FXML
     private TableView<Factura> tableFacturas;
@@ -164,5 +165,14 @@ public class FacturaController {
         facturaService.deleteById(selected.getId());
         loadAll();
     }
-}
 
+    @Override
+    public void setMainPanelController(alicanteweb.erp.controller.ui.MainPanelController mainPanelController) {
+        this.mainPanelController = mainPanelController;
+    }
+
+    @FXML
+    public void handleVolver() {
+        if (mainPanelController != null) mainPanelController.showHome();
+    }
+}

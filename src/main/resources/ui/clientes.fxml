@@ -3,68 +3,216 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.ClienteController" prefWidth="1000" prefHeight="700">
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.ClienteController"
+            prefHeight="750.0" prefWidth="1300.0">
+
+    <!-- Header -->
     <top>
-        <HBox spacing="8" padding="10">
-            <Label text="Clientes" style="-fx-font-size:18px; -fx-font-weight:bold;"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <TextField fx:id="txtSearch" promptText="Buscar nombre..." />
-            <Button text="Buscar" onAction="#handleSearch" />
-        </HBox>
+        <VBox styleClass="header">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Gestión de Clientes" styleClass="header-title">
+                    <font><Font name="System Bold" size="22"/></font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
     </top>
 
+    <!-- Center - Split View -->
     <center>
-        <SplitPane dividerPositions="0.6">
-            <VBox spacing="8" padding="10">
+        <SplitPane dividerPositions="0.55">
+            <!-- Left: Table and Filters -->
+            <VBox spacing="10">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+
+                <!-- Filters Panel -->
+                <VBox spacing="8" styleClass="filters-panel">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+
+                    <!-- Search Bar -->
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Buscar:">
+                            <font><Font name="System Bold" size="12"/></font>
+                        </Label>
+                        <TextField fx:id="txtSearch" promptText="Código, nombre o CIF..."
+                                   HBox.hgrow="ALWAYS"/>
+                        <Button text="Buscar" onAction="#handleSearch" styleClass="btn-primary"/>
+                    </HBox>
+
+                    <!-- Filter by Provincia -->
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Provincia:">
+                            <font><Font name="System Bold" size="12"/></font>
+                        </Label>
+                        <ComboBox fx:id="cboProvincia" prefWidth="150"/>
+                        <Button text="Aplicar" onAction="#handleFilterProvincia"
+                                styleClass="btn-success"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Table -->
                 <TableView fx:id="tableClientes" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colCodigo" text="Código" prefWidth="120" />
-                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="300" />
-                        <TableColumn fx:id="colPoblacion" text="Población" prefWidth="200" />
+                        <TableColumn fx:id="colCodigo" text="Código" prefWidth="100"/>
+                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="250"/>
+                        <TableColumn fx:id="colCif" text="CIF" prefWidth="110"/>
+                        <TableColumn fx:id="colPoblacion" text="Población" prefWidth="150"/>
+                        <TableColumn fx:id="colProvincia" text="Prov." prefWidth="60"/>
                     </columns>
                 </TableView>
             </VBox>
 
-            <VBox spacing="8" padding="10">
-                <GridPane hgap="10" vgap="8">
-                    <columnConstraints>
-                        <ColumnConstraints minWidth="100" prefWidth="120" />
-                        <ColumnConstraints hgrow="ALWAYS" />
-                    </columnConstraints>
-                    <Label text="Código:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtCodigo" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+            <!-- Right: Form -->
+            <VBox spacing="15">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
 
-                    <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtNombre" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                <!-- Form Title -->
+                <Label text="Datos del Cliente" styleClass="section-title">
+                    <font><Font name="System Bold" size="16"/></font>
+                </Label>
 
-                    <Label text="CIF:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtCif" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                <Separator/>
 
-                    <Label text="Dirección:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtDireccion" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                <!-- Form Fields -->
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+                    <VBox spacing="15">
+                        <padding>
+                            <Insets top="5" right="5" bottom="5" left="5"/>
+                        </padding>
 
-                    <Label text="Población:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtPoblacion" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+                        <!-- Datos Identificativos -->
+                        <VBox spacing="5">
+                            <Label text="Datos Identificativos" styleClass="subsection-title">
+                                <font><Font name="System Bold" size="13"/></font>
+                            </Label>
+                            <Separator/>
+                        </VBox>
 
-                    <Label text="Código postal:" GridPane.rowIndex="5" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtCodigoPostal" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+                        <GridPane hgap="10" vgap="15">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="100" prefWidth="100"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                            </columnConstraints>
 
-                    <Label text="Provincia:" GridPane.rowIndex="6" GridPane.columnIndex="0" />
-                    <TextField fx:id="txtProvincia" GridPane.rowIndex="6" GridPane.columnIndex="1" />
+                            <!-- Código -->
+                            <Label text="Código:" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtCodigo" promptText="0001"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                    <Label text="Notas:" GridPane.rowIndex="7" GridPane.columnIndex="0" />
-                    <TextArea fx:id="txtNotas" GridPane.rowIndex="7" GridPane.columnIndex="1" prefRowCount="4" />
-                </GridPane>
+                            <!-- Nombre -->
+                            <Label text="Nombre:" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtNombre" promptText="Nombre del cliente"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                <HBox spacing="10" alignment="CENTER" padding="10">
-                    <Button text="Nuevo" onAction="#handleNuevo" />
-                    <Button text="Guardar" onAction="#handleGuardar" />
-                    <Button text="Eliminar" onAction="#handleEliminar" />
-                </HBox>
+                            <!-- CIF -->
+                            <Label text="CIF/NIF:" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtCif" promptText="A12345678"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                        </GridPane>
+
+                        <!-- Dirección -->
+                        <VBox spacing="5">
+                            <Label text="Dirección" styleClass="subsection-title">
+                                <font><Font name="System Bold" size="13"/></font>
+                            </Label>
+                            <Separator/>
+                        </VBox>
+
+                        <GridPane hgap="10" vgap="15">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="100" prefWidth="100"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                            </columnConstraints>
+
+                            <!-- Dirección -->
+                            <Label text="Dirección:" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtDireccion" promptText="Calle, número, piso..."
+                                       GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                            <!-- Población -->
+                            <Label text="Población:" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtPoblacion" promptText="Población"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                            <!-- Código Postal -->
+                            <Label text="Código Postal:" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtCodigoPostal" promptText="03000"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                            <!-- Provincia -->
+                            <Label text="Provincia:" GridPane.columnIndex="0" GridPane.rowIndex="3">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextField fx:id="txtProvincia" promptText="03"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                        </GridPane>
+
+                        <!-- Notas -->
+                        <VBox spacing="5">
+                            <Label text="Notas y Observaciones" styleClass="subsection-title">
+                                <font><Font name="System Bold" size="13"/></font>
+                            </Label>
+                            <Separator/>
+                        </VBox>
+
+                        <VBox spacing="5">
+                            <Label text="Notas:">
+                                <font><Font name="System Bold" size="12"/></font>
+                            </Label>
+                            <TextArea fx:id="txtNotas" prefRowCount="4"
+                                      wrapText="true"
+                                      promptText="Observaciones adicionales del cliente..."/>
+                        </VBox>
+                    </VBox>
+                </ScrollPane>
+
+                <Separator/>
+
+                <!-- Action Buttons -->
+                <VBox spacing="10">
+                    <!-- Primary Actions -->
+                    <HBox spacing="10" alignment="CENTER">
+                        <Button text="Nuevo" onAction="#handleNuevo"
+                                styleClass="btn-success" prefWidth="130">
+                            <font><Font size="12"/></font>
+                        </Button>
+                        <Button text="Guardar" onAction="#handleGuardar"
+                                styleClass="btn-primary" prefWidth="130">
+                            <font><Font size="12"/></font>
+                        </Button>
+                        <Button text="Eliminar" onAction="#handleEliminar"
+                                styleClass="btn-danger" prefWidth="130">
+                            <font><Font size="12"/></font>
+                        </Button>
+                    </HBox>
+                </VBox>
             </VBox>
         </SplitPane>
     </center>
 </BorderPane>
-

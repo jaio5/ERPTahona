@@ -14,9 +14,10 @@ import java.util.Optional;
 
 @SuppressWarnings("unused")
 @Controller
-public class ProveedoreController {
+public class ProveedoreController implements MainControllerAware {
 
     private final ProveedoreService proveedoreService;
+    private alicanteweb.erp.controller.ui.MainPanelController mainPanelController;
 
     @FXML
     private TableView<Proveedore> tableProveedores;
@@ -169,5 +170,14 @@ public class ProveedoreController {
         proveedoreService.deleteById(selected.getId());
         loadAll();
     }
-}
 
+    @Override
+    public void setMainPanelController(alicanteweb.erp.controller.ui.MainPanelController mainPanelController) {
+        this.mainPanelController = mainPanelController;
+    }
+
+    @FXML
+    public void handleVolver() {
+        if (mainPanelController != null) mainPanelController.showHome();
+    }
+}

@@ -3,6 +3,8 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.repository.VerifactuEvidenceRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,34 +22,70 @@ import java.util.Formatter;
 @Service
 public class VerifactuService {
 
+    private static final Logger log = LoggerFactory.getLogger(VerifactuService.class);
+
     private final VerifactuEvidenceRepository evidenceRepository;
     private final KeyStore keyStore;
     private final PrivateKey privateKey;
     private final X509Certificate certificate;
+    private final boolean enabled;
 
     public VerifactuService(VerifactuEvidenceRepository evidenceRepository,
                             @Value("${verifactu.keystore.path}") String keystorePath,
                             @Value("${verifactu.keystore.password}") String keystorePassword,
                             @Value("${verifactu.key.alias}") String keyAlias,
-                            @Value("${verifactu.key.password:${verifactu.keystore.password}}") String keyPassword) throws Exception {
+                            @Value("${verifactu.key.password:${verifactu.keystore.password}}") String keyPassword) {
         this.evidenceRepository = evidenceRepository;
+        KeyStore ks = null;
+        PrivateKey pk = null;
+        X509Certificate cert = null;
+        boolean ok = false;
 
         try (InputStream is = getClass().getResourceAsStream(keystorePath)) {
             if (is == null) {
-                throw new IllegalStateException("Keystore not found at: " + keystorePath);
+                log.warn("Keystore not found at: {} — verifactu will be disabled", keystorePath);
+            } else {
+                ks = KeyStore.getInstance("PKCS12");
+                ks.load(is, keystorePassword != null ? keystorePassword.toCharArray() : null);
+
+                Key key = ks.getKey(keyAlias, keyPassword != null ? keyPassword.toCharArray() : null);
+                if (key instanceof PrivateKey) {
+                    pk = (PrivateKey) key;
+                } else {
+                    log.warn("Key with alias {} is not a private key; verifactu disabled", keyAlias);
+                }
+
+                Certificate c = ks.getCertificate(keyAlias);
+                if (c instanceof X509Certificate) {
+                    cert = (X509Certificate) c;
+                } else {
+                    log.warn("Certificate with alias {} is not X509; verifactu disabled", keyAlias);
+                }
+
+                if (pk != null && cert != null) {
+                    ok = true;
+                }
             }
-            KeyStore ks = KeyStore.getInstance("PKCS12");
-            ks.load(is, keystorePassword.toCharArray());
-            this.keyStore = ks;
+        } catch (Exception e) {
+            // No fallamos el arranque por un keystore corrupto o formato inesperado
+            log.warn("Error loading keystore for verifactu — verifactu disabled: {}", e.toString());
+            if (log.isDebugEnabled()) log.debug("Stack:", e);
         }
 
-        Key key = keyStore.getKey(keyAlias, keyPassword.toCharArray());
-        if (!(key instanceof PrivateKey)) throw new IllegalStateException("Key is not private key");
-        this.privateKey = (PrivateKey) key;
+        this.keyStore = ks;
+        this.privateKey = pk;
+        this.certificate = cert;
+        this.enabled = ok;
 
-        Certificate cert = keyStore.getCertificate(keyAlias);
-        if (!(cert instanceof X509Certificate)) throw new IllegalStateException("Certificate not X509");
-        this.certificate = (X509Certificate) cert;
+        if (this.enabled) {
+            log.info("Verifactu initialized using keystore {}", keystorePath);
+        } else {
+            log.info("Verifactu disabled — application will continue without evidences registered");
+        }
+    }
+
+    private void ensureEnabled() {
+        if (!enabled) throw new IllegalStateException("Verifactu not configured/disabled");
     }
 
     // calcule la huella SHA-256 de la factura + hash anterior (cadena clara)
@@ -60,6 +98,7 @@ public class VerifactuService {
     }
 
     public byte[] signHashHex(String hashHex) throws Exception {
+        ensureEnabled();
         byte[] data = hashHex.getBytes(StandardCharsets.UTF_8);
         Signature signature = Signature.getInstance("SHA256withRSA");
         signature.initSign(privateKey);
@@ -68,6 +107,7 @@ public class VerifactuService {
     }
 
     public String certificateFingerprint() throws Exception {
+        ensureEnabled();
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         byte[] der = certificate.getEncoded();
         byte[] digest = md.digest(der);
@@ -75,6 +115,7 @@ public class VerifactuService {
     }
 
     public VerifactuEvidence registerEvidence(String facturaId, String facturaPayload, String serie, String numero, LocalDateTime fechaEmision) throws Exception {
+        ensureEnabled();
         Optional<VerifactuEvidence> prev = evidenceRepository.findByFacturaId(facturaId);
         String prevHash = prev.map(VerifactuEvidence::getHash).orElse(null);
 

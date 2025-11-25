@@ -1,9 +1,9 @@
 package alicanteweb.erp.repository;
 
-import alicanteweb.erp.entities.FacturaAlbaranId;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+// Este archivo se mantiene solo por referencia histórica.
+// No debe ser un JpaRepository porque FacturaAlbaranId es @Embeddable, no una entidad.
+// Por tanto lo convertimos en una clase normal para que Spring no lo registre.
 
-@Repository
-public interface FacturaAlbaranIdRepository extends JpaRepository<FacturaAlbaranId, Integer> {
+class DisabledFacturaAlbaranIdRepository {
+    // Intencionalmente vacío
 }

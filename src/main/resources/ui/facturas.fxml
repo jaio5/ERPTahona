@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.FacturaController">
+    <top>
+        <HBox spacing="10" style="-fx-padding:10" alignment="CENTER_LEFT">
+            <Label text="Facturas" style="-fx-font-size:18px; -fx-font-weight:bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="← Volver" onAction="#handleVolver"/>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="10" style="-fx-padding:10">
+            <HBox spacing="10">
+                <TextField fx:id="txtSearch" promptText="Número..." />
+                <Button text="Buscar" onAction="#handleSearch"/>
+            </HBox>
+            <TableView fx:id="tableFacturas" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colNumero" text="Número" />
+                    <TableColumn fx:id="colFecha" text="Fecha" />
+                    <TableColumn fx:id="colCliente" text="Cliente" />
+                    <TableColumn fx:id="colTotal" text="Total" />
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>
+

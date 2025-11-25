@@ -22,15 +22,15 @@ public class ErpFxApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Ajusta la ruta al FXML principal según tu proyecto (ej: /fxml/Main.fxml)
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Main.fxml"));
+        // Cargar el panel principal del proyecto
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/main_panel.fxml"));
         // Permite que los controladores sean beans Spring
         loader.setControllerFactory(context::getBean);
 
         Parent root = loader.load();
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
-        primaryStage.setTitle("ERP");
+        primaryStage.setTitle("ERP Tahona");
         primaryStage.show();
     }
 
