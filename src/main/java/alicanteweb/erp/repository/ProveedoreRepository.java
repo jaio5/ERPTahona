@@ -4,6 +4,13 @@ import alicanteweb.erp.entities.Proveedore;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Optional;
+
 @Repository
-public interface ProveedoreRepository extends JpaRepository<Proveedore,Integer> {
+public interface ProveedoreRepository extends JpaRepository<Proveedore, Long> {
+    Optional<Proveedore> findByCodigo(String codigo);
+    boolean existsByCodigo(String codigo);
+    List<Proveedore> findByNombreContainingIgnoreCase(String texto);
 }
+

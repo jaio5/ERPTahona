@@ -14,8 +14,8 @@
     <groupId>AlicanteWeb</groupId>
     <artifactId>ERP</artifactId>
     <version>0.0.1</version>
-    <name>ERP</name>
-    <description>ERP - aplicación de escritorio JavaFX con Spring Boot</description>
+    <name>ERP Panadería Tahona</name>
+    <description>ERP - aplicación de escritorio JavaFX con Spring Boot para panadería</description>
     <packaging>jar</packaging>
 
     <properties>
@@ -24,18 +24,29 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- JavaFX / UI -->
-        <javafx.version>20.0.2</javafx.version>
+        <javafx.version>21.0.5</javafx.version>
         <javafx.platform>win</javafx.platform>
-        <controlsfx.version>11.1.1</controlsfx.version>
+        <controlsfx.version>11.2.1</controlsfx.version>
+        <ikonli.version>12.3.1</ikonli.version>
 
         <!-- Drivers / libs -->
-        <mysql.connector.version>8.0.33</mysql.connector.version>
-        <h2.version>2.1.214</h2.version>
-        <flyway.version>9.22.0</flyway.version>
+        <mysql.connector.version>8.4.0</mysql.connector.version>
+        <h2.version>2.2.224</h2.version>
+        <flyway.version>10.21.0</flyway.version>
+        <hikaricp.version>5.1.0</hikaricp.version>
+
+        <!-- Mappers / Utils -->
+        <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <lombok.version>1.18.30</lombok.version>
+
+        <!-- Reporting -->
+        <jasperreports.version>6.21.3</jasperreports.version>
+        <poi.version>5.2.5</poi.version>
 
         <!-- Tools -->
         <dependency-check.version>8.4.1</dependency-check.version>
         <maven.enforcer.plugin.version>3.2.1</maven.enforcer.plugin.version>
+        <testcontainers.version>1.19.3</testcontainers.version>
     </properties>
 
     <dependencyManagement>
@@ -50,29 +61,42 @@
                 <artifactId>flyway-core</artifactId>
                 <version>${flyway.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-mysql</artifactId>
+                <version>${flyway.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <!-- Core Spring (sin starter-web, para app de escritorio) -->
+        <!-- ========== SPRING BOOT CORE ========== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- JPA / Data -->
+        <!-- JPA / Hibernate -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- Flyway (migraciones) -->
+        <!-- Validación -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- MySQL driver (runtime only) -->
+        <!-- ========== BASE DE DATOS ========== -->
+        <!-- MySQL Driver -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
@@ -80,37 +104,151 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- JavaFX (platform classifier) -->
+        <!-- HikariCP (pool de conexiones) -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${hikaricp.version}</version>
+        </dependency>
+
+        <!-- Flyway (migraciones) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
+        <!-- ========== JAVAFX / UI ========== -->
+        <!-- JavaFX Controls -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
-            <classifier>${javafx.platform}</classifier>
         </dependency>
+
+        <!-- JavaFX FXML -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
-            <classifier>${javafx.platform}</classifier>
         </dependency>
 
-        <!-- ControlsFX (marcar optional si no es imprescindible) -->
+        <!-- JavaFX Swing (para integración si necesario) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+
+        <!-- ControlsFX (controles avanzados) -->
         <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
             <version>${controlsfx.version}</version>
-            <optional>true</optional>
         </dependency>
 
-        <!-- Testing: Spring Boot test y H2 en memoria -->
+        <!-- Ikonli (iconos) -->
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-javafx</artifactId>
+            <version>${ikonli.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-fontawesome5-pack</artifactId>
+            <version>${ikonli.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-materialdesign2-pack</artifactId>
+            <version>${ikonli.version}</version>
+        </dependency>
+
+        <!-- ========== MAPPERS / UTILS ========== -->
+        <!-- MapStruct (mapeo DTO <-> Entity) -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${mapstruct.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>${mapstruct.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Lombok (reducir boilerplate) -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ========== REPORTING / DOCUMENTOS ========== -->
+        <!-- JasperReports (informes PDF) -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+            <version>${jasperreports.version}</version>
+        </dependency>
+
+        <!-- Apache POI (Excel) -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+
+        <!-- ========== LOGGING ========== -->
+        <!-- SLF4J + Logback ya vienen con Spring Boot -->
+
+        <!-- ========== TESTING ========== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- H2 para tests en memoria -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Testcontainers (tests con MySQL real) -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mysql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- TestFX (testing de UI JavaFX) -->
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-core</artifactId>
+            <version>4.0.18</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-junit5</artifactId>
+            <version>4.0.18</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -124,7 +262,7 @@
         </resources>
 
         <plugins>
-            <!-- Resources encoding -->
+            <!-- ========== RESOURCES ========== -->
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.1</version>
@@ -133,26 +271,52 @@
                 </configuration>
             </plugin>
 
-            <!-- Compiler -->
+            <!-- ========== COMPILER ========== -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>3.11.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <release>${java.version}</release>
+                    <annotationProcessorPaths>
+                        <!-- Lombok -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <!-- MapStruct -->
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                        <!-- Lombok + MapStruct binding -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>0.2.0</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
-            <!-- Spring Boot -->
+            <!-- ========== SPRING BOOT ========== -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${project.parent.version}</version>
                 <configuration>
-                    <mainClass>alicanteweb.erp.ErpLauncher</mainClass>
-                    <layers>false</layers>
+                    <mainClass>erp.ErpApplication</mainClass>
+                    <layout>JAR</layout>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
                 </configuration>
                 <executions>
                     <execution>
@@ -163,33 +327,34 @@
                 </executions>
             </plugin>
 
-            <!-- JavaFX Maven Plugin (ejecutar / jlink) -->
+            <!-- ========== JAVAFX ========== -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>alicanteweb.erp.ErpLauncher</mainClass>
+                    <mainClass>erp.ErpApplication</mainClass>
                     <jlinkZipName>${project.artifactId}-${project.version}-runtime</jlinkZipName>
-                    <launcher>true</launcher>
+                    <launcher>ERP-Tahona</launcher>
+                    <jlinkImageName>ERP-Tahona</jlinkImageName>
+                    <noManPages>true</noManPages>
+                    <stripDebug>true</stripDebug>
+                    <noHeaderFiles>true</noHeaderFiles>
                 </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
-            <!-- Surefire: configurar variables para evitar lanzar UI en tests -->
+            <!-- ========== TESTING ========== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>3.2.5</version>
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
-                    <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
+                    <argLine>
+                        -Dfile.encoding=${project.build.sourceEncoding}
+                        -Djava.awt.headless=true
+                        --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+                    </argLine>
                     <systemPropertyVariables>
                         <erp.launch-ui-on-start>false</erp.launch-ui-on-start>
                     </systemPropertyVariables>
@@ -198,13 +363,14 @@
                 </configuration>
             </plugin>
 
+            <!-- ========== SECURITY CHECKS ========== -->
             <!-- OWASP Dependency-Check -->
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
                 <version>${dependency-check.version}</version>
                 <configuration>
-                    <format>XML</format>
+                    <format>ALL</format>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <suppressionFile>${project.basedir}/dependency-check-suppress.xml</suppressionFile>
                     <failOnError>false</failOnError>
@@ -219,7 +385,7 @@
                 </executions>
             </plugin>
 
-            <!-- Maven Enforcer -->
+            <!-- ========== ENFORCER ========== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -233,12 +399,18 @@
                         <configuration>
                             <rules>
                                 <requireMavenVersion>
-                                    <version>3.6.3</version>
+                                    <version>[3.8.0,)</version>
                                 </requireMavenVersion>
-                                <requirePluginVersions/>
+                                <requireJavaVersion>
+                                    <version>[17,)</version>
+                                </requireJavaVersion>
+                                <requirePluginVersions>
+                                    <message>Best Practice is to always define plugin versions!</message>
+                                </requirePluginVersions>
                                 <bannedDependencies>
                                     <excludes>
                                         <exclude>commons-collections:commons-collections:3.2.1</exclude>
+                                        <exclude>log4j:log4j</exclude>
                                     </excludes>
                                 </bannedDependencies>
                             </rules>
@@ -247,6 +419,47 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- ========== CODE QUALITY ========== -->
+            <!-- Spotless (format code) -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.41.1</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>1.17.0</version>
+                            <style>AOSP</style>
+                        </googleJavaFormat>
+                        <removeUnusedImports/>
+                        <trimTrailingWhitespace/>
+                        <endWithNewline/>
+                    </java>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <!-- ========== PROFILES ========== -->
+    <profiles>
+        <!-- Profile para desarrollo -->
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <spring.profiles.active>dev</spring.profiles.active>
+            </properties>
+        </profile>
+
+        <!-- Profile para producción -->
+        <profile>
+            <id>prod</id>
+            <properties>
+                <spring.profiles.active>prod</spring.profiles.active>
+            </properties>
+        </profile>
+    </profiles>
 </project>

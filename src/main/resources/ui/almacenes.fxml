@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.AlmaceneController"
+            prefHeight="700.0" prefWidth="1100.0">
+
+    <!-- Header -->
+    <top>
+        <VBox styleClass="header">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Gestión de Almacenes" styleClass="header-title">
+                    <font><Font name="System Bold" size="22"/></font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblEstadisticas" styleClass="header-subtitle">
+                    <font><Font size="13"/></font>
+                </Label>
+                <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- Center - Split View -->
+    <center>
+        <SplitPane dividerPositions="0.55">
+            <!-- Left: Table and Filters -->
+            <VBox spacing="10">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+
+                <!-- Filters Panel -->
+                <VBox spacing="8" styleClass="filters-panel">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+
+                    <!-- Search Bar -->
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Buscar:">
+                            <font><Font name="System Bold" size="12"/></font>
+                        </Label>
+                        <TextField fx:id="txtSearch" promptText="Código o nombre..."
+                                   HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnSearch" text="Buscar" styleClass="btn-primary"/>
+                    </HBox>
+
+                    <!-- Filter by Status -->
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Filtrar:">
+                            <font><Font name="System Bold" size="12"/></font>
+                        </Label>
+                        <ComboBox fx:id="cboFiltro" prefWidth="180"/>
+                        <Button fx:id="btnApply" text="Aplicar" styleClass="btn-success"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Table -->
+                <TableView fx:id="tableAlmacenes" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colCodigo" text="Código" prefWidth="100"/>
+                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="250"/>
+                        <TableColumn fx:id="colAlbaranes" text="Albaranes" prefWidth="120"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <!-- Right: Form -->
+            <VBox spacing="15">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+
+                <!-- Form Title -->
+                <Label text="Datos del Almacén" styleClass="section-title">
+                    <font><Font name="System Bold" size="16"/></font>
+                </Label>
+
+                <Separator/>
+
+                <!-- Form Fields -->
+                <VBox spacing="15" VBox.vgrow="ALWAYS">
+                    <GridPane hgap="10" vgap="15">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="100" prefWidth="100"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+
+                        <!-- Código -->
+                        <Label text="Código:" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <font><Font name="System Bold" size="12"/></font>
+                        </Label>
+                        <TextField fx:id="txtCodigo" promptText="001"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                        <!-- Nombre -->
+                        <Label text="Nombre:" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                            <font><Font name="System Bold" size="12"/></font>
+                        </Label>
+                        <TextField fx:id="txtNombre" promptText="Almacén Principal"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    </GridPane>
+
+                    <!-- Info Box -->
+                    <VBox spacing="8" styleClass="info-box">
+                        <padding>
+                            <Insets top="10" right="10" bottom="10" left="10"/>
+                        </padding>
+                        <Label text="ℹ Información" styleClass="info-title">
+                            <font><Font name="System Bold" size="12"/></font>
+                        </Label>
+                        <Label text="• Los almacenes con albaranes no pueden eliminarse"
+                               wrapText="true" styleClass="info-text"/>
+                        <Label text="• El código debe ser único en el sistema"
+                               wrapText="true" styleClass="info-text"/>
+                        <Label text="• Use códigos cortos para facilitar la búsqueda"
+                               wrapText="true" styleClass="info-text"/>
+                    </VBox>
+
+                    <Region VBox.vgrow="ALWAYS"/>
+                </VBox>
+
+                <Separator/>
+
+                <!-- Action Buttons -->
+                <VBox spacing="10">
+                    <!-- Primary Actions -->
+                    <HBox spacing="10" alignment="CENTER">
+                        <Button fx:id="btnNuevo" text="Nuevo" styleClass="btn-success" prefWidth="130">
+                            <font><Font size="12"/></font>
+                        </Button>
+                        <Button fx:id="btnGuardar" text="Guardar" styleClass="btn-primary" prefWidth="130">
+                            <font><Font size="12"/></font>
+                        </Button>
+                        <Button fx:id="btnEliminar" text="Eliminar" styleClass="btn-danger" prefWidth="130">
+                            <font><Font size="12"/></font>
+                        </Button>
+                    </HBox>
+
+                    <!-- Secondary Actions -->
+                    <HBox spacing="10" alignment="CENTER">
+                        <Button fx:id="btnVerAlbaranes" text="Ver Albaranes" styleClass="btn-info" prefWidth="200">
+                            <font><Font size="12"/></font>
+                        </Button>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </SplitPane>
+    </center>
+</BorderPane>

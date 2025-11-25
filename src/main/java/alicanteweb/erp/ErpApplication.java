@@ -9,7 +9,7 @@ import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class ErpFxApplication extends Application {
+public class ErpApplication extends Application {
 
     private ConfigurableApplicationContext springContext;
 

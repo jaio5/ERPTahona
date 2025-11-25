@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.ArticuloController" prefWidth="1000.0" prefHeight="700.0">
+
+    <top>
+        <HBox spacing="10" padding="10">
+            <Label text="Artículos" style="-fx-font-size:18px; -fx-font-weight:bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="txtSearch" promptText="Buscar descripción..." />
+            <Button text="Buscar" onAction="#handleSearch" />
+        </HBox>
+    </top>
+
+    <center>
+        <SplitPane orientation="HORIZONTAL" dividerPositions="0.6">
+            <VBox spacing="8" padding="10">
+                <TableView fx:id="tableArticulos" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colCodigo" text="Código" prefWidth="100"/>
+                        <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="300"/>
+                        <TableColumn fx:id="colFamilia" text="Familia" prefWidth="150"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <VBox spacing="8" padding="10">
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="100" prefWidth="120" />
+                        <ColumnConstraints hgrow="ALWAYS" />
+                    </columnConstraints>
+
+                    <Label text="Código:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                    <TextField fx:id="txtCodigo" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+                    <Label text="Descripción:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                    <TextField fx:id="txtDescripcion" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                    <Label text="Familia:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                    <TextField fx:id="txtFamilia" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+                    <Label text="Unidad:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                    <TextField fx:id="txtUnidad" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+                    <Label text="IVA:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                    <TextField fx:id="txtIva" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+
+                    <Label text="PVP:" GridPane.rowIndex="5" GridPane.columnIndex="0" />
+                    <TextField fx:id="txtPvp" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+
+                    <Label text="Coste:" GridPane.rowIndex="6" GridPane.columnIndex="0" />
+                    <TextField fx:id="txtCoste" GridPane.rowIndex="6" GridPane.columnIndex="1" />
+                </GridPane>
+
+                <HBox spacing="10" alignment="CENTER">
+                    <padding>
+                        <Insets top="10"/>
+                    </padding>
+                    <Button text="Nuevo" onAction="#handleNuevo" />
+                    <Button text="Guardar" onAction="#handleGuardar" />
+                    <Button text="Eliminar" onAction="#handleEliminar" />
+                </HBox>
+            </VBox>
+        </SplitPane>
+    </center>
+</BorderPane>
