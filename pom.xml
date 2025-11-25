@@ -198,6 +198,13 @@
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>
             <version>${jasperreports.version}</version>
+            <exclusions>
+                <!-- Evitar la dependencia transitiva prohibida commons-collections:commons-collections -->
+                <exclusion>
+                    <groupId>commons-collections</groupId>
+                    <artifactId>commons-collections</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Apache POI (Excel) -->
@@ -279,6 +286,13 @@
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
+            </plugin>
+
+            <!-- Declara la versión del maven-site-plugin (evita warning/fallo de enforcer requirePluginVersions) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.12.1</version>
             </plugin>
 
             <!-- ========== COMPILER ========== -->
@@ -473,3 +487,4 @@
         </profile>
     </profiles>
 </project>
+

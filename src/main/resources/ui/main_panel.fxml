@@ -2,31 +2,38 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <BorderPane xmlns="http://javafx.com/javafx/20" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.ui.MainPanelController">
+            fx:controller="alicanteweb.erp.controller.ui.MainPanelController"
+            stylesheets="/css/styles.css">
     <top>
-        <MenuBar>
-            <menus>
-                <Menu text="Archivo">
-                    <items>
-                        <MenuItem text="Salir" onAction="#onExit"/>
-                    </items>
-                </Menu>
-                <Menu text="Ayuda">
-                    <items>
-                        <MenuItem text="Acerca de" onAction="#onAbout"/>
-                    </items>
-                </Menu>
-            </menus>
-        </MenuBar>
+        <VBox styleClass="header">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Label text="ERP Tahona" styleClass="header-title" />
+                <Region HBox.hgrow="ALWAYS" />
+                <MenuBar>
+                    <menus>
+                        <Menu text="Archivo">
+                            <items>
+                                <MenuItem text="Salir" onAction="#onExit"/>
+                            </items>
+                        </Menu>
+                        <Menu text="Ayuda">
+                            <items>
+                                <MenuItem text="Acerca de" onAction="#onAbout"/>
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+            </HBox>
+        </VBox>
     </top>
 
     <left>
         <VBox spacing="8" style="-fx-padding:10;">
-            <Label fx:id="titleLabel" text="ERP" style="-fx-font-size:16px; -fx-font-weight:bold;"/>
+            <Label fx:id="titleLabel" text="Panel" styleClass="section-title"/>
             <Separator/>
-            <Button text="Facturas" onAction="#onNavFactura" maxWidth="Infinity"/>
-            <Button text="Clientes" onAction="#onNavClientes" maxWidth="Infinity"/>
-            <Button text="Artículos" onAction="#onNavArticulos" maxWidth="Infinity"/>
+            <Button text="Facturas" onAction="#onNavFactura" maxWidth="Infinity" styleClass="btn-primary"/>
+            <Button text="Clientes" onAction="#onNavClientes" maxWidth="Infinity" styleClass="btn-primary"/>
+            <Button text="Artículos" onAction="#onNavArticulos" maxWidth="Infinity" styleClass="btn-primary"/>
         </VBox>
     </left>
 

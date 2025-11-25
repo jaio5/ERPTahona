@@ -1,3 +1,22 @@
+/* Root and general app background */
+.root {
+    -fx-font-family: "Segoe UI", "System", "Arial";
+    -fx-base: #ffffff;
+    -fx-background-color: linear-gradient(#f6f8fa, #ffffff);
+}
+
+/* Header */
+.header {
+    -fx-background-color: linear-gradient(#2c3e50, #34495e);
+    -fx-padding: 12 20 12 20;
+}
+
+.header-title {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
 /* Subsection titles */
 .subsection-title {
     -fx-text-fill: #34495e;
@@ -10,21 +29,78 @@
     -fx-font-weight: bold;
 }
 
+/* Section title */
+.section-title {
+    -fx-text-fill: #2c3e50;
+    -fx-font-weight: bold;
+}
+
+/* Primary button */
+.btn-primary {
+    -fx-background-color: #007bff;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-padding: 8 14;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #0069d9;
+}
+
+/* Success button */
+.btn-success {
+    -fx-background-color: #28a745;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-padding: 8 14;
+}
+
+.btn-success:hover {
+    -fx-background-color: #218838;
+}
+
+/* Danger button */
+.btn-danger {
+    -fx-background-color: #dc3545;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-padding: 8 14;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #c82333;
+}
+
+/* Secondary button */
+.btn-secondary {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(255,255,255,0.2);
+    -fx-text-fill: white;
+    -fx-padding: 6 12;
+    -fx-background-radius: 6;
+}
+
 /* Info badge */
 .info-badge {
     -fx-background-color: #3498db;
     -fx-text-fill: white;
-    -fx-padding: 5 10;
+    -fx-padding: 6 12;
     -fx-background-radius: 12;
+    -fx-font-weight: bold;
 }
 
 /* Filters panel */
 .filters-panel {
-    -fx-background-color: #f8f9fa;
-    -fx-border-color: #dee2e6;
+    -fx-background-color: linear-gradient(#ffffff, #fbfdff);
+    -fx-border-color: #e6eef4;
     -fx-border-width: 1;
-    -fx-border-radius: 5;
-    -fx-background-radius: 5;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 10;
 }
 
 /* Info box */
@@ -45,16 +121,84 @@
     -fx-font-size: 11px;
 }
 
-/* Button info style */
-.btn-info {
-    -fx-background-color: #17a2b8;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-background-radius: 5;
-    -fx-cursor: hand;
-    -fx-padding: 8 16;
+/* Table styling */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
 }
 
-.btn-info:hover {
-    -fx-background-color: #138496;
+.table-view .column-header-background {
+    -fx-background-color: transparent;
+}
+
+.table-view .table-row-cell:filled:selected, .table-view .table-row-cell:focused:selected {
+    -fx-background-color: rgba(52,152,219,0.15);
+}
+
+.table-view .table-cell {
+    -fx-padding: 8 10;
+}
+
+.table-view .column-header, .table-view .column-header .label {
+    -fx-text-fill: #2c3e50;
+    -fx-font-weight: bold;
+}
+
+/* Inputs */
+.text-field, .text-area, .combo-box, .date-picker {
+    -fx-background-color: white;
+    -fx-border-color: #dfe6ea;
+    -fx-border-radius: 4;
+    -fx-padding: 6 8;
+}
+
+.text-field:focused, .combo-box:focused, .date-picker:focused, .text-area:focused {
+    -fx-border-color: #3498db;
+    -fx-effect: dropshadow(gaussian, rgba(52,152,219,0.12), 6, 0, 0, 2);
+}
+
+/* Small utility */
+.centered-label {
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* make separators softer */
+.separator {
+    -fx-background-color: transparent;
+}
+
+/* ScrollPane tweaks */
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Tooltip */
+.tooltip {
+    -fx-background-color: rgba(0,0,0,0.75);
+    -fx-text-fill: white;
+}
+
+/* Left navigation panel */
+.left-panel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e6eef4;
+    -fx-padding: 12;
+}
+
+.left-panel .button {
+    -fx-background-color: transparent;
+    -fx-border-color: #3498db;
+    -fx-text-fill: #3498db;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+}
+
+.left-panel .button:hover {
+    -fx-background-color: rgba(52,152,219,0.08);
+}
+
+/* small helper for the content area */
+.content-area {
+    -fx-background-color: transparent;
+    -fx-padding: 18;
 }

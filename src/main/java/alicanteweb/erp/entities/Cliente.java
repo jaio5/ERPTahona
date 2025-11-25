@@ -154,4 +154,12 @@ public class Cliente {
         this.pedidos = pedidos;
     }
 
+    @Override
+    public String toString() {
+        // Mostrar el nombre si existe, si no el código, para mostrar en ComboBox
+        if (this.nombre != null && !this.nombre.isBlank()) return this.nombre;
+        if (this.codigo != null) return this.codigo;
+        return "Cliente #" + (this.id != null ? this.id : "?");
+    }
+
 }

@@ -54,4 +54,11 @@ public class Almacene {
         this.albaranesVentas = albaranesVentas;
     }
 
+    @Override
+    public String toString() {
+        if (this.nombre != null && !this.nombre.isBlank()) return this.nombre;
+        if (this.codigo != null) return this.codigo;
+        return "Almacén #" + (this.id != null ? this.id : "?");
+    }
+
 }

@@ -8,7 +8,8 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="alicanteweb.erp.controller.AlbaranesVentaController"
-            prefHeight="800.0" prefWidth="1400.0">
+            prefHeight="800.0" prefWidth="1400.0"
+            stylesheets="/css/styles.css">
 
     <!-- Header -->
     <top>

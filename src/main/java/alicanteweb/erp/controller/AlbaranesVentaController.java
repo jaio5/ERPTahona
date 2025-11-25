@@ -2,7 +2,11 @@ package alicanteweb.erp.controller;
 
 
 import alicanteweb.erp.entities.AlbaranesVenta;
+import alicanteweb.erp.entities.Cliente;
+import alicanteweb.erp.entities.Almacene;
 import alicanteweb.erp.service.AlbaranesVentaService;
+import alicanteweb.erp.service.ClienteService;
+import alicanteweb.erp.service.AlmaceneService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,6 +21,8 @@ import java.util.List;
 public class AlbaranesVentaController {
 
     private final AlbaranesVentaService albaranesVentaService;
+    private final ClienteService clienteService;
+    private final AlmaceneService almaceneService;
 
     // JavaFX UI controls (connect in FXML)
     // Table in FXML is 'tableAlbaranes'
@@ -75,16 +81,16 @@ public class AlbaranesVentaController {
     private DatePicker dpFechaFin;
 
     @FXML
-    private ComboBox<?> cboEstado;
+    private ComboBox<String> cboEstado;
 
     @FXML
     private DatePicker dpFecha;
 
     @FXML
-    private ComboBox<?> cboCliente;
+    private ComboBox<Cliente> cboCliente;
 
     @FXML
-    private ComboBox<?> cboAlmacen;
+    private ComboBox<Almacene> cboAlmacen;
 
     @FXML
     private TextField txtTotal;
@@ -100,8 +106,10 @@ public class AlbaranesVentaController {
 
     private final ObservableList<AlbaranesVenta> albaranesObservable = FXCollections.observableArrayList();
 
-    public AlbaranesVentaController(AlbaranesVentaService albaranesVentaService) {
+    public AlbaranesVentaController(AlbaranesVentaService albaranesVentaService, ClienteService clienteService, AlmaceneService almaceneService) {
         this.albaranesVentaService = albaranesVentaService;
+        this.clienteService = clienteService;
+        this.almaceneService = almaceneService;
     }
 
     @FXML
@@ -143,7 +151,35 @@ public class AlbaranesVentaController {
         // Vincula la lista observable al TableView si existe
         if (tableAlbaranes != null) {
             tableAlbaranes.setItems(albaranesObservable);
+
+            // Selección cambia formulario
+            tableAlbaranes.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+                populateForm(newSel);
+            });
+
+            // Doble clic en fila para editar
+            tableAlbaranes.setRowFactory(tv -> {
+                TableRow<AlbaranesVenta> row = new TableRow<>();
+                row.setOnMouseClicked(event -> {
+                    if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                        AlbaranesVenta rowData = row.getItem();
+                        populateForm(rowData);
+                    }
+                });
+                return row;
+            });
         }
+
+        // Poblar combos de cliente y almacén
+        if (cboCliente != null) {
+            cboCliente.getItems().clear();
+            cboCliente.getItems().addAll(clienteService.findAll());
+        }
+        if (cboAlmacen != null) {
+            cboAlmacen.getItems().clear();
+            cboAlmacen.getItems().addAll(almaceneService.findAll());
+        }
+
         loadAll();
 
         // Configure buttons if present
@@ -250,6 +286,26 @@ public class AlbaranesVentaController {
     public void handleApplyFilters() {
         // Placeholder: aplicar filtros por fecha/estado
         System.out.println("Aplicar filtros (pendiente)");
+    }
+
+    private void populateForm(AlbaranesVenta a) {
+        if (a == null) {
+            if (txtNumero != null) txtNumero.clear();
+            if (txtObservaciones != null) txtObservaciones.clear();
+            if (txtTotal != null) txtTotal.setText("0.00");
+            if (lblLineas != null) lblLineas.setText("0 línea(s)");
+            return;
+        }
+        if (txtNumero != null) txtNumero.setText(a.getNumero());
+        if (txtObservaciones != null) txtObservaciones.setText(a.getObservaciones());
+        if (dpFecha != null) dpFecha.setValue(a.getFecha());
+        if (cboCliente != null) cboCliente.getSelectionModel().select(a.getCliente());
+        if (cboAlmacen != null) cboAlmacen.getSelectionModel().select(a.getAlmacen());
+        if (txtTotal != null) txtTotal.setText(a.getTotal() != null ? a.getTotal().toString() : "0.00");
+        if (lblLineas != null) {
+            int count = a.getAlbaranVentaLineas() != null ? a.getAlbaranVentaLineas().size() : 0;
+            lblLineas.setText(count + " línea(s)");
+        }
     }
 
 }
