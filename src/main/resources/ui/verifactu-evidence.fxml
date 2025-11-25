@@ -3,24 +3,63 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="alicanteweb.erp.controller.VerifactuEvidenceController"
             prefHeight="700.0" prefWidth="1100.0">
+    <top>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Verifactu Evidence" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <Pane/>
+            <TextField fx:id="txtSearch" promptText="Buscar por factura..."/>
+            <Button text="Buscar" onAction="#handleBuscar"/>
+        </HBox>
+    </top>
     <center>
-        <TableView fx:id="evidenceTable">
-            <columns>
-                <TableColumn fx:id="column1" text="Column 1"/>
-                <TableColumn fx:id="column2" text="Column 2"/>
-            </columns>
-        </TableView>
+        <VBox spacing="10">
+            <TableView fx:id="tableEvidence" prefHeight="350">
+                <columns>
+                    <TableColumn fx:id="colFacturaId" text="Factura ID" prefWidth="120"/>
+                    <TableColumn fx:id="colSerie" text="Serie" prefWidth="80"/>
+                    <TableColumn fx:id="colNumero" text="Número" prefWidth="80"/>
+                    <TableColumn fx:id="colFechaEmision" text="Fecha Emisión" prefWidth="120"/>
+                    <TableColumn fx:id="colHash" text="Hash" prefWidth="180"/>
+                    <TableColumn fx:id="colHashAnterior" text="Hash Anterior" prefWidth="180"/>
+                    <TableColumn fx:id="colCertFingerprint" text="Cert. Fingerprint" prefWidth="140"/>
+                </columns>
+            </TableView>
+            <Separator/>
+            <GridPane hgap="10" vgap="10">
+                <columnConstraints>
+                    <ColumnConstraints minWidth="120"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+                <Label text="Factura ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtFacturaId" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                <Label text="Serie:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtSerie" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                <Label text="Número:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtNumero" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                <Label text="Fecha Emisión:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtFechaEmision" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                <Label text="Hash:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtHash" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                <Label text="Hash Anterior:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtHashAnterior" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                <Label text="Cert. Fingerprint:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtCertFingerprint" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                <Label text="Metadata:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                <TextArea fx:id="txtMetadata" GridPane.rowIndex="7" GridPane.columnIndex="1" prefRowCount="3"/>
+            </GridPane>
+        </VBox>
     </center>
     <bottom>
-        <HBox spacing="10.0" alignment="CENTER">
-            <Button fx:id="addButton" text="Add"/>
-            <Button fx:id="removeButton" text="Remove"/>
+        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10;">
+            <Button fx:id="addButton" text="Nuevo" onAction="#handleNuevo"/>
+            <Button fx:id="removeButton" text="Eliminar" onAction="#handleEliminar"/>
+            <Button text="Guardar" onAction="#handleGuardar"/>
+            <!-- <Button text="Registrar AEAT" onAction="#handleRegistrarAEAT"/> -->
         </HBox>
     </bottom>
 </BorderPane>

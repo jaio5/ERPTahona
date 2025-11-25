@@ -36,6 +36,13 @@ public class VerifactuEvidenceController implements MainControllerAware {
     private TableColumn<VerifactuEvidence, String> colFechaEmision;
 
     @FXML
+    private TableColumn<VerifactuEvidence, String> colHash;
+    @FXML
+    private TableColumn<VerifactuEvidence, String> colHashAnterior;
+    @FXML
+    private TableColumn<VerifactuEvidence, String> colCertFingerprint;
+
+    @FXML
     private TextField txtSearch;
 
     @FXML
@@ -58,6 +65,14 @@ public class VerifactuEvidenceController implements MainControllerAware {
 
     @FXML
     private TextArea txtMetadata;
+
+    @FXML
+    private TextField txtFechaEmision;
+
+    @FXML
+    private Button addButton;
+    @FXML
+    private Button removeButton;
 
     private final ObservableList<VerifactuEvidence> evidenceObservable = FXCollections.observableArrayList();
 
@@ -127,6 +142,19 @@ public class VerifactuEvidenceController implements MainControllerAware {
     }
 
     @FXML
+    public void handleBuscar() {
+        if (txtSearch == null) return;
+        String q = txtSearch.getText();
+        if (q == null || q.isBlank()) {
+            loadAll();
+            return;
+        }
+        evidenceObservable.clear();
+        evidenceService.findByFacturaId(q).ifPresent(evidenceObservable::add);
+        evidenceObservable.addAll(evidenceService.findBySerie(q));
+    }
+
+    @FXML
     public void handleNuevo() {
         if (txtFacturaId != null) txtFacturaId.setText("");
         if (txtSerie != null) txtSerie.setText("");
@@ -178,5 +206,19 @@ public class VerifactuEvidenceController implements MainControllerAware {
     @FXML
     public void handleVolver() {
         if (mainPanelController != null) mainPanelController.showHome();
+    }
+
+    @FXML
+    public void handleRegistrarAEAT() {
+        try {
+            String datosFactura = txtFacturaId.getText();
+            String serie = txtSerie.getText();
+            String numero = txtNumero.getText();
+            evidenceService.registrarEvidenciaAEAT(datosFactura, serie, numero);
+            loadAll();
+            new Alert(Alert.AlertType.INFORMATION, "Evidencia registrada y enviada a la AEAT correctamente.").showAndWait();
+        } catch (Exception ex) {
+            new Alert(Alert.AlertType.ERROR, "Error al registrar evidencia: " + ex.getMessage()).showAndWait();
+        }
     }
 }

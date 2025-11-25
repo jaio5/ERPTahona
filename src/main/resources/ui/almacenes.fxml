@@ -69,7 +69,7 @@
                     <columns>
                         <TableColumn fx:id="colCodigo" text="Código" prefWidth="100"/>
                         <TableColumn fx:id="colNombre" text="Nombre" prefWidth="250"/>
-                        <TableColumn fx:id="colAlbaranes" text="Albaranes" prefWidth="120"/>
+                        <!-- Elimino la columna de albaranes para evitar LazyInitializationException -->
                     </columns>
                 </TableView>
             </VBox>

@@ -217,4 +217,87 @@ public class FacturaController implements MainControllerAware {
         copiarFacturaAnterior(cliente);
         new Alert(Alert.AlertType.INFORMATION, "Datos de la última factura copiados. Puedes modificar y guardar la nueva factura.").showAndWait();
     }
+
+    @FXML
+    public void handleNuevaFactura() {
+        // Diálogo simple para crear factura
+        Dialog<Factura> dialog = new Dialog<>();
+        dialog.setTitle("Nueva Factura");
+        dialog.setHeaderText("Crear nueva factura");
+        ButtonType btnCrear = new ButtonType("Crear", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnCrear, ButtonType.CANCEL);
+
+        TextField txtNumero = new TextField();
+        DatePicker dpFecha = new DatePicker();
+        ComboBox<Cliente> cboCliente = new ComboBox<>(clientesObservable);
+        TextField txtTotal = new TextField();
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(new Label("Número:"), 0, 0);
+        grid.add(txtNumero, 1, 0);
+        grid.add(new Label("Fecha:"), 0, 1);
+        grid.add(dpFecha, 1, 1);
+        grid.add(new Label("Cliente:"), 0, 2);
+        grid.add(cboCliente, 1, 2);
+        grid.add(new Label("Total:"), 0, 3);
+        grid.add(txtTotal, 1, 3);
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == btnCrear) {
+                Factura f = new Factura();
+                f.setNumero(txtNumero.getText());
+                f.setFecha(dpFecha.getValue());
+                f.setCliente(cboCliente.getValue());
+                try {
+                    f.setTotal(new java.math.BigDecimal(txtTotal.getText()));
+                } catch (Exception e) {
+                    f.setTotal(java.math.BigDecimal.ZERO);
+                }
+                return f;
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(factura -> {
+            facturaService.save(factura);
+            facturasObservable.add(factura);
+        });
+    }
+
+    @FXML
+    public void handleImprimirFactura() {
+        Factura factura = null;
+        if (tableFacturas != null) factura = tableFacturas.getSelectionModel().getSelectedItem();
+        if (factura == null) {
+            new Alert(Alert.AlertType.WARNING, "Selecciona una factura para imprimir").showAndWait();
+            return;
+        }
+        try {
+            facturaService.imprimirFactura(factura);
+            new Alert(Alert.AlertType.INFORMATION, "Factura impresa correctamente").showAndWait();
+        } catch (Exception e) {
+            new Alert(Alert.AlertType.ERROR, "Error al imprimir la factura: " + e.getMessage()).showAndWait();
+        }
+    }
+
+    @FXML
+    public void handlePrevisualizarFactura() {
+        Factura factura = null;
+        if (tableFacturas != null) factura = tableFacturas.getSelectionModel().getSelectedItem();
+        if (factura == null) {
+            new Alert(Alert.AlertType.WARNING, "Selecciona una factura para previsualizar").showAndWait();
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("Número: ").append(factura.getNumero()).append("\n");
+        sb.append("Fecha: ").append(factura.getFecha()).append("\n");
+        sb.append("Cliente: ").append(factura.getCliente() != null ? factura.getCliente().getNombre() : "").append("\n");
+        sb.append("Total: ").append(factura.getTotal()).append("\n");
+        sb.append("Pagado: ").append(factura.getPagado()).append("\n");
+        // Puedes añadir aquí las líneas de la factura si lo deseas
+        new Alert(Alert.AlertType.INFORMATION, sb.toString()).showAndWait();
+    }
 }

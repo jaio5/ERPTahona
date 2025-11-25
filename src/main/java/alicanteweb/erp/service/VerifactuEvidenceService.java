@@ -13,9 +13,11 @@ import java.util.Optional;
 public class VerifactuEvidenceService {
 
     private final VerifactuEvidenceRepository repository;
+one que     private final VerifactuAEATService aeatService;
 
-    public VerifactuEvidenceService(VerifactuEvidenceRepository repository) {
+    public VerifactuEvidenceService(VerifactuEvidenceRepository repository, VerifactuAEATService aeatService) {
         this.repository = repository;
+        this.aeatService = aeatService;
     }
 
     public List<VerifactuEvidence> findAll() {
@@ -47,5 +49,21 @@ public class VerifactuEvidenceService {
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
-}
 
+    public VerifactuEvidence registrarEvidenciaAEAT(String datosFactura, String serie, String numero) throws Exception {
+        VerifactuEvidence evidencia = new VerifactuEvidence();
+        evidencia.setFacturaId(datosFactura);
+        evidencia.setSerie(serie);
+        evidencia.setNumero(numero);
+        evidencia.setHash(aeatService.generarHash(datosFactura));
+        evidencia.setSignature(aeatService.firmarDatos(datosFactura.getBytes("UTF-8")));
+        evidencia.setCertFingerprint(aeatService.getCertFingerprint());
+        evidencia.setMetadata("{}");
+        evidencia.setFechaEmision(java.time.LocalDateTime.now());
+        evidencia.setCreatedAt(java.time.LocalDateTime.now());
+        String jsonEvidencia = "{\"facturaId\":\"" + datosFactura + "\",\"hash\":\"" + evidencia.getHash() + "\"}";
+        String respuesta = aeatService.enviarAEAT(jsonEvidencia);
+        evidencia.setMetadata(respuesta);
+        return repository.save(evidencia);
+    }
+}

@@ -15,7 +15,7 @@ public class AlbaranesVentaFactura {
 
     @MapsId("albaranesventasId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "albaranesVentas_id", nullable = false)
+    @JoinColumn(name = "albaranes_ventas_id", nullable = false)
     private AlbaranesVenta albaranesVentas;
 
     @MapsId("facturasId")
@@ -23,9 +23,5 @@ public class AlbaranesVentaFactura {
     @JoinColumn(name = "facturas_id", nullable = false)
     private Factura facturas;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "albaranes_ventas_id", nullable = false)
-    private AlbaranesVenta albaranesVentas1;
 
 }

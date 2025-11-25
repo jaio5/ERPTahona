@@ -17,7 +17,10 @@
         </TableView>
     </center>
     <bottom>
-        <HBox spacing="10.0" alignment="CENTER_RIGHT" padding="10.0">
+        <HBox spacing="10.0" alignment="CENTER_RIGHT">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
             <Button fx:id="btnAgregar" text="Agregar" />
             <Button fx:id="btnEliminar" text="Eliminar" />
             <Button fx:id="btnGuardar" text="Guardar" />
@@ -25,4 +28,3 @@
         </HBox>
     </bottom>
 </BorderPane>
-

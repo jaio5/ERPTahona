@@ -2,7 +2,7 @@ package alicanteweb.erp.controller;
 
 
 import alicanteweb.erp.entities.AlbaranesVenta;
-import alicanteweb.erp.entities.Cliente;
+ import alicanteweb.erp.entities.Cliente;
 import alicanteweb.erp.entities.Almacene;
 import alicanteweb.erp.service.AlbaranesVentaService;
 import alicanteweb.erp.service.ClienteService;
@@ -295,6 +295,96 @@ public class AlbaranesVentaController {
             int count = a.getAlbaranVentaLineas() != null ? a.getAlbaranVentaLineas().size() : 0;
             lblLineas.setText(count + " línea(s)");
         }
+    }
+
+    @FXML
+    public void handleNuevoAlbaran() {
+        Dialog<AlbaranesVenta> dialog = new Dialog<>();
+        dialog.setTitle("Nuevo Albarán");
+        dialog.setHeaderText("Crear nuevo albarán");
+        ButtonType btnCrear = new ButtonType("Crear", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnCrear, ButtonType.CANCEL);
+
+        TextField txtNumero = new TextField();
+        DatePicker dpFecha = new DatePicker();
+        ComboBox<Cliente> cboCliente = new ComboBox<>(FXCollections.observableArrayList(clienteService.findAll()));
+        ComboBox<Almacene> cboAlmacen = new ComboBox<>(FXCollections.observableArrayList(almaceneService.findAll()));
+        TextField txtTotal = new TextField();
+        TextArea txtObservaciones = new TextArea();
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(new Label("Número:"), 0, 0);
+        grid.add(txtNumero, 1, 0);
+        grid.add(new Label("Fecha:"), 0, 1);
+        grid.add(dpFecha, 1, 1);
+        grid.add(new Label("Cliente:"), 0, 2);
+        grid.add(cboCliente, 1, 2);
+        grid.add(new Label("Almacén:"), 0, 3);
+        grid.add(cboAlmacen, 1, 3);
+        grid.add(new Label("Total:"), 0, 4);
+        grid.add(txtTotal, 1, 4);
+        grid.add(new Label("Observaciones:"), 0, 5);
+        grid.add(txtObservaciones, 1, 5);
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == btnCrear) {
+                AlbaranesVenta a = new AlbaranesVenta();
+                a.setNumero(txtNumero.getText());
+                a.setFecha(dpFecha.getValue());
+                a.setCliente(cboCliente.getValue());
+                a.setAlmacen(cboAlmacen.getValue());
+                try {
+                    a.setTotal(new java.math.BigDecimal(txtTotal.getText()));
+                } catch (Exception e) {
+                    a.setTotal(java.math.BigDecimal.ZERO);
+                }
+                a.setObservaciones(txtObservaciones.getText());
+                return a;
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(albaran -> {
+            albaranesVentaService.save(albaran);
+            tableAlbaranes.getItems().add(albaran);
+        });
+    }
+
+    @FXML
+    public void handleImprimirAlbaran() {
+        AlbaranesVenta albaran = null;
+        if (tableAlbaranes != null) albaran = tableAlbaranes.getSelectionModel().getSelectedItem();
+        if (albaran == null) {
+            new Alert(Alert.AlertType.WARNING, "Selecciona un albarán para imprimir").showAndWait();
+            return;
+        }
+        try {
+            albaranesVentaService.imprimirAlbaran(albaran);
+            new Alert(Alert.AlertType.INFORMATION, "Albarán impreso correctamente").showAndWait();
+        } catch (Exception e) {
+            new Alert(Alert.AlertType.ERROR, "Error al imprimir el albarán: " + e.getMessage()).showAndWait();
+        }
+    }
+
+    @FXML
+    public void handlePrevisualizarAlbaran() {
+        AlbaranesVenta albaran = getSelected();
+        if (albaran == null) {
+            new Alert(Alert.AlertType.WARNING, "Selecciona un albarán para previsualizar").showAndWait();
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("Número: ").append(albaran.getNumero()).append("\n");
+        sb.append("Fecha: ").append(albaran.getFecha()).append("\n");
+        sb.append("Cliente: ").append(albaran.getCliente() != null ? albaran.getCliente().getNombre() : "").append("\n");
+        sb.append("Almacén: ").append(albaran.getAlmacen() != null ? albaran.getAlmacen().getNombre() : "").append("\n");
+        sb.append("Total: ").append(albaran.getTotal()).append("\n");
+        sb.append("Observaciones: ").append(albaran.getObservaciones()).append("\n");
+        // Puedes añadir aquí las líneas del albarán si lo deseas
+        new Alert(Alert.AlertType.INFORMATION, sb.toString()).showAndWait();
     }
 
 }

@@ -39,5 +39,10 @@ public class AlbaranesVentaService {
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
-}
 
+    public void imprimirAlbaran(AlbaranesVenta albaran) {
+        // Aquí deberías implementar la lógica real de impresión (PDF, JasperReports, etc.)
+        System.out.println("Imprimiendo albarán: " + albaran.getNumero());
+        // Ejemplo: Generar PDF, abrir diálogo de impresión, etc.
+    }
+}

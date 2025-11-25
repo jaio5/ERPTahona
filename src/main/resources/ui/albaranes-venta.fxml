@@ -197,6 +197,13 @@
                             <font><Font size="12"/></font>
                         </Button>
                     </HBox>
+
+                    <!-- New Buttons -->
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Button text="Nuevo albarán" onAction="#handleNuevoAlbaran" styleClass="btn-primary"/>
+                        <Button text="Imprimir" onAction="#handleImprimirAlbaran" styleClass="btn-primary"/>
+                        <Button text="Previsualizar" onAction="#handlePrevisualizarAlbaran" styleClass="btn-info"/>
+                    </HBox>
                 </VBox>
             </VBox>
         </SplitPane>

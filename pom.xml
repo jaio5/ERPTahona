@@ -272,6 +272,17 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
+        <!-- BouncyCastle (firma digital) -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.70</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -362,12 +373,6 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>alicanteweb.erp.ErpLauncher</mainClass>
-                    <jlinkZipName>${project.artifactId}-${project.version}-runtime</jlinkZipName>
-                    <launcher>ERP-Tahona</launcher>
-                    <jlinkImageName>ERP-Tahona</jlinkImageName>
-                    <noManPages>true</noManPages>
-                    <stripDebug>true</stripDebug>
-                    <noHeaderFiles>true</noHeaderFiles>
                 </configuration>
             </plugin>
 
@@ -491,4 +496,3 @@
         </profile>
     </profiles>
 </project>
-

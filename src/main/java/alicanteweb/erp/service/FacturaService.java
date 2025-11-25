@@ -13,9 +13,11 @@ import java.util.Optional;
 public class FacturaService {
 
     private final FacturaRepository repository;
+    private final VerifactuEvidenceService verifactuEvidenceService;
 
-    public FacturaService(FacturaRepository repository) {
+    public FacturaService(FacturaRepository repository, VerifactuEvidenceService verifactuEvidenceService) {
         this.repository = repository;
+        this.verifactuEvidenceService = verifactuEvidenceService;
     }
 
     public List<Factura> findAll() {
@@ -36,7 +38,18 @@ public class FacturaService {
 
     @Transactional
     public Factura save(Factura factura) {
-        return repository.save(factura);
+        Factura saved = repository.save(factura);
+        try {
+            verifactuEvidenceService.registrarEvidenciaAEAT(
+                saved.getId() != null ? saved.getId().toString() : "",
+                "", // No hay campo serie en Factura
+                saved.getNumero() != null ? saved.getNumero() : ""
+            );
+        } catch (Exception e) {
+            // Loguear el error, pero no impedir la emisión de la factura
+            System.err.println("Error registrando evidencia Verifactur: " + e.getMessage());
+        }
+        return saved;
     }
 
     @Transactional
@@ -49,5 +62,11 @@ public class FacturaService {
      */
     public Optional<Factura> findUltimaFacturaPorCliente(Long clienteId) {
         return repository.findTopByCliente_IdOrderByFechaDesc(clienteId);
+    }
+
+    public void imprimirFactura(Factura factura) {
+        // Aquí deberías implementar la lógica real de impresión (PDF, JasperReports, etc.)
+        System.out.println("Imprimiendo factura: " + factura.getNumero());
+        // Ejemplo: Generar PDF, abrir diálogo de impresión, etc.
     }
 }

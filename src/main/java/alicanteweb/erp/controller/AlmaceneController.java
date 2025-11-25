@@ -27,9 +27,6 @@ public class AlmaceneController {
     private TableColumn<Almacene, String> colNombre;
 
     @FXML
-    private TableColumn<Almacene, String> colAlbaranes;
-
-    @FXML
     private TextField txtSearch;
 
     @FXML
@@ -77,10 +74,11 @@ public class AlmaceneController {
             colCodigo.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getCodigo()));
         if (colNombre != null)
             colNombre.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getNombre()));
-        if (colAlbaranes != null)
-            colAlbaranes.setCellValueFactory(cell -> new SimpleStringProperty(
-                    String.valueOf(cell.getValue().getAlbaranesVentas() != null ? cell.getValue().getAlbaranesVentas().size() : 0)
-            ));
+        // Elimino el acceso a la colección albaranesVentas para evitar LazyInitializationException
+        // if (colAlbaranes != null)
+        //     colAlbaranes.setCellValueFactory(cell -> new SimpleStringProperty(
+        //             String.valueOf(cell.getValue().getAlbaranesVentas() != null ? cell.getValue().getAlbaranesVentas().size() : 0)
+        //     ));
 
         // Inicializar filtro mínimo para evitar advertencias
         if (cboFiltro != null) {
@@ -115,6 +113,10 @@ public class AlmaceneController {
     private void loadAll() {
         almacenesObservable.clear();
         List<Almacene> todos = almaceneService.findAll();
+        System.out.println("[DEBUG] Almacenes recuperados: " + todos.size());
+        for (Almacene a : todos) {
+            System.out.println("[DEBUG] Almacén: id=" + a.getId() + ", código=" + a.getCodigo() + ", nombre=" + a.getNombre());
+        }
         almacenesObservable.addAll(todos);
         if (lblEstadisticas != null) lblEstadisticas.setText(todos.size() + " almacén(es)");
     }

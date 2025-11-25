@@ -83,4 +83,58 @@ public class MainPanelController {
             a.showAndWait();
         }
     }
+
+    @FXML
+    public void onNavProveedores() {
+        loadView("/ui/proveedores.fxml");
+    }
+
+    @FXML
+    public void onNavAlmacenes() {
+        loadView("/ui/almacenes.fxml");
+    }
+
+    @FXML
+    public void onNavAlbaranesVenta() {
+        loadView("/ui/albaranes-venta.fxml");
+    }
+
+    @FXML
+    public void onNavFacturaLineas() {
+        loadView("/ui/factura-lineas.fxml");
+    }
+
+    @FXML
+    public void onNavPedidos() {
+        loadView("/ui/pedidos.fxml");
+    }
+
+    @FXML
+    public void onNavPedidoLineas() {
+        loadView("/ui/pedido-lineas.fxml");
+    }
+
+    @FXML
+    public void onNavDireccionesEnvio() {
+        loadView("/ui/direccionesenvio.fxml");
+    }
+
+    @FXML
+    public void onNavVerifactuEvidence() {
+        loadView("/ui/verifactu-evidence.fxml");
+    }
+
+    @FXML
+    public void onConfiguracion() {
+        Alert a = new Alert(Alert.AlertType.INFORMATION, "Configuración no implementada todavía.");
+        a.setHeaderText("Configuración");
+        a.showAndWait();
+    }
+
+    @FXML
+    public void onManual() {
+        Alert a = new Alert(Alert.AlertType.INFORMATION, "Manual de usuario no disponible todavía.");
+        a.setHeaderText("Manual de Usuario");
+        a.showAndWait();
+    }
 }
