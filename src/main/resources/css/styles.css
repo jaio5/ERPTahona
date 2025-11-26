@@ -565,25 +565,78 @@
     -fx-padding: 4;
 }
 
-/* === UTILIDADES === */
-.shadow-sm {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4, 0, 0, 2);
+/* === RESPONSIVE WINDOWS Y VISIBILIDAD === */
+@media screen and (max-width: 1200px) {
+    .header, .footer, .panel, .filters-panel, .section-title, .subsection-title {
+        -fx-font-size: 14px;
+        -fx-padding: 10;
+    }
+    .main-actions {
+        -fx-spacing: 10;
+        -fx-padding: 10 0 0 0;
+    }
+    .button, .btn-primary, .btn-secondary, .btn-success, .btn-danger {
+        -fx-padding: 8 16;
+        -fx-font-size: 13px;
+    }
+    .table-view {
+        -fx-font-size: 13px;
+    }
 }
 
-.shadow-md {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 4);
+@media screen and (max-width: 900px) {
+    .header, .footer, .panel, .filters-panel, .section-title, .subsection-title {
+        -fx-font-size: 12px;
+        -fx-padding: 6;
+    }
+    .main-actions {
+        -fx-spacing: 6;
+        -fx-padding: 6 0 0 0;
+    }
+    .button, .btn-primary, .btn-secondary, .btn-success, .btn-danger {
+        -fx-padding: 6 12;
+        -fx-font-size: 12px;
+    }
+    .table-view {
+        -fx-font-size: 12px;
+    }
 }
 
-.shadow-lg {
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 12, 0, 0, 6);
+/* SplitPane responsive */
+.split-pane {
+    -fx-min-width: 320;
+    -fx-min-height: 240;
+    -fx-max-width: 100vw;
+    -fx-max-height: 100vh;
 }
 
-.rounded {
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
+/* TableView responsive */
+.table-view {
+    -fx-min-width: 320;
+    -fx-min-height: 180;
+    -fx-max-width: 100vw;
+    -fx-max-height: 80vh;
 }
 
-.rounded-lg {
-    -fx-background-radius: 12;
-    -fx-border-radius: 12;
+/* Formulario responsive */
+.text-field, .text-area, .date-picker, .combo-box {
+    -fx-min-width: 120;
+    -fx-max-width: 100%;
+    -fx-font-size: 13px;
+}
+
+/* Visibilidad y contraste en textos */
+.label, .section-title, .subsection-title {
+    -fx-text-fill: -fx-primary-dark;
+    -fx-font-weight: bold;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-gray-900;
 }
