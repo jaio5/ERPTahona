@@ -10,7 +10,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import org.springframework.stereotype.Controller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -20,6 +23,8 @@ import java.util.Set;
 @SuppressWarnings("unused")
 @Controller
 public class FacturaController implements MainControllerAware {
+
+    private static final Logger log = LoggerFactory.getLogger(FacturaController.class);
 
     private final FacturaService facturaService;
     private final ClienteService clienteService;
@@ -68,38 +73,77 @@ public class FacturaController implements MainControllerAware {
 
     @FXML
     public void initialize() {
-        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        configureTableColumns();
+        bindTableData();
+        configureClienteComboBox();
+        configureSelectionListener();
+        loadAll();
+    }
 
+    private void configureTableColumns() {
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         if (colNumero != null) colNumero.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNumero()));
         if (colFecha != null) colFecha.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFecha() != null ? df.format(c.getValue().getFecha()) : ""));
         if (colCliente != null) colCliente.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCliente() != null ? c.getValue().getCliente().getNombre() : ""));
         if (colTotal != null) colTotal.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getTotal() != null ? c.getValue().getTotal().toString() : ""));
+    }
 
+    private void bindTableData() {
         if (tableFacturas != null) tableFacturas.setItems(facturasObservable);
+    }
+
+    private void configureClienteComboBox() {
         if (cboCliente != null) {
             clientesObservable.addAll(clienteService.findAll());
             cboCliente.setItems(clientesObservable);
         }
+    }
 
-        if (tableFacturas != null) {
-            tableFacturas.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-                if (newSel != null) {
-                    if (txtNumero != null) txtNumero.setText(newSel.getNumero() != null ? newSel.getNumero() : "");
-                    if (dpFecha != null) dpFecha.setValue(newSel.getFecha());
-                    if (cboCliente != null && newSel.getCliente() != null) cboCliente.getSelectionModel().select(newSel.getCliente());
-                    if (txtTotal != null) txtTotal.setText(newSel.getTotal() != null ? newSel.getTotal().toString() : "");
-                    if (txtPagado != null) txtPagado.setText(newSel.getPagado() != null ? newSel.getPagado().toString() : "");
-                } else {
-                    if (txtNumero != null) txtNumero.setText("");
-                    if (dpFecha != null) dpFecha.setValue(null);
-                    if (cboCliente != null) cboCliente.getSelectionModel().clearSelection();
-                    if (txtTotal != null) txtTotal.setText("");
-                    if (txtPagado != null) txtPagado.setText("");
-                }
-            });
-        }
+    private void configureSelectionListener() {
+        if (tableFacturas == null) return;
+        tableFacturas.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                populateDetails(newSel);
+            } else {
+                clearDetails();
+            }
+        });
+    }
 
-        loadAll();
+    private void populateDetails(Factura f) {
+        setText(txtNumero, f.getNumero());
+        setDate(dpFecha, f.getFecha());
+        selectCliente(cboCliente, f.getCliente());
+        setText(txtTotal, f.getTotal() != null ? f.getTotal().toString() : "");
+        setText(txtPagado, f.getPagado() != null ? f.getPagado().toString() : "");
+    }
+
+    private void clearDetails() {
+        setText(txtNumero, "");
+        setDate(dpFecha, null);
+        clearClienteSelection(cboCliente);
+        setText(txtTotal, "");
+        setText(txtPagado, "");
+    }
+
+    private String getText(TextInputControl control) {
+        return control == null ? "" : Optional.ofNullable(control.getText()).orElse("");
+    }
+
+    private void setText(TextInputControl control, String value) {
+        if (control != null) control.setText(value == null ? "" : value);
+    }
+
+    private void setDate(DatePicker picker, java.time.LocalDate date) {
+        if (picker != null) picker.setValue(date);
+    }
+
+    private void selectCliente(ComboBox<Cliente> combo, Cliente cliente) {
+        if (combo != null && cliente != null) combo.getSelectionModel().select(cliente);
+    }
+
+    private void clearClienteSelection(ComboBox<Cliente> combo) {
+        if (combo != null) combo.getSelectionModel().clearSelection();
     }
 
     private void loadAll() {
@@ -110,9 +154,8 @@ public class FacturaController implements MainControllerAware {
 
     @FXML
     public void handleSearch() {
-        if (txtSearch == null) return;
-        String q = txtSearch.getText();
-        if (q == null || q.isBlank()) {
+        String q = getText(txtSearch).trim();
+        if (q.isEmpty()) {
             loadAll();
             return;
         }
@@ -122,50 +165,54 @@ public class FacturaController implements MainControllerAware {
 
     @FXML
     public void handleNuevo() {
-        if (txtNumero != null) txtNumero.setText("");
-        if (dpFecha != null) dpFecha.setValue(null);
-        if (cboCliente != null) cboCliente.getSelectionModel().clearSelection();
-        if (txtTotal != null) txtTotal.setText("");
-        if (txtPagado != null) txtPagado.setText("");
+        clearDetails();
         if (tableFacturas != null) tableFacturas.getSelectionModel().clearSelection();
     }
 
     @FXML
     public void handleGuardar() {
-        Factura selected = null;
-        if (tableFacturas != null) selected = tableFacturas.getSelectionModel().getSelectedItem();
-        if (selected == null) selected = new Factura();
-
-        selected.setNumero(txtNumero != null ? txtNumero.getText() : null);
-        selected.setFecha(dpFecha != null ? dpFecha.getValue() : null);
-        selected.setCliente(cboCliente != null ? cboCliente.getSelectionModel().getSelectedItem() : null);
-        try { if (txtTotal != null && !txtTotal.getText().isBlank()) selected.setTotal(new java.math.BigDecimal(txtTotal.getText())); } catch (Exception e) { new Alert(Alert.AlertType.ERROR, "Total no válido").showAndWait(); }
-        try { if (txtPagado != null && !txtPagado.getText().isBlank()) selected.setPagado(new java.math.BigDecimal(txtPagado.getText())); } catch (Exception e) { new Alert(Alert.AlertType.ERROR, "Pagado no válido").showAndWait(); }
-
-        // unicidad numero
-        String numero = selected.getNumero();
-        if (numero != null && !numero.isBlank()) {
-            Optional<Factura> existe = facturaService.findByNumero(numero);
-            if (existe.isPresent()) {
-                Factura f = existe.get();
-                if (selected.getId() == null || !f.getId().equals(selected.getId())) {
-                    new Alert(Alert.AlertType.ERROR, "El número de factura ya existe").showAndWait();
-                    return;
-                }
-            }
+        Factura selected = getSelectedOrNew();
+        fillFromUi(selected);
+        if (!isNumeroUniqueOrSame(selected)) {
+            showAlert(Alert.AlertType.ERROR, "El número de factura ya existe");
+            return;
         }
-
         facturaService.save(selected);
         loadAll();
     }
 
+    private Factura getSelectedOrNew() {
+        if (tableFacturas == null) return new Factura();
+        Factura sel = tableFacturas.getSelectionModel().getSelectedItem();
+        return sel == null ? new Factura() : sel;
+    }
+
+    private void fillFromUi(Factura f) {
+        f.setNumero(getText(txtNumero));
+        f.setFecha(dpFecha != null ? dpFecha.getValue() : null);
+        f.setCliente(cboCliente != null ? cboCliente.getSelectionModel().getSelectedItem() : null);
+        try { f.setTotal(new java.math.BigDecimal(getText(txtTotal))); } catch (Exception e) { showAlert(Alert.AlertType.ERROR, "Total no válido"); }
+        try { f.setPagado(new java.math.BigDecimal(getText(txtPagado))); } catch (Exception e) { showAlert(Alert.AlertType.ERROR, "Pagado no válido"); }
+    }
+
+    private boolean isNumeroUniqueOrSame(Factura f) {
+        String numero = f.getNumero();
+        if (numero == null || numero.isBlank()) return true;
+        Optional<Factura> existe = facturaService.findByNumero(numero);
+        return existe.isEmpty() || (f.getId() != null && existe.get().getId().equals(f.getId()));
+    }
+
     @FXML
     public void handleEliminar() {
-        Factura selected = null;
-        if (tableFacturas != null) selected = tableFacturas.getSelectionModel().getSelectedItem();
+        Factura selected = getSelectedOrNull();
         if (selected == null || selected.getId() == null) return;
         facturaService.deleteById(selected.getId());
         loadAll();
+    }
+
+    private Factura getSelectedOrNull() {
+        if (tableFacturas == null) return null;
+        return tableFacturas.getSelectionModel().getSelectedItem();
     }
 
     /**
@@ -177,11 +224,11 @@ public class FacturaController implements MainControllerAware {
         Optional<Factura> ultimaOpt = facturaService.findUltimaFacturaPorCliente(cliente.getId());
         if (ultimaOpt.isPresent()) {
             Factura ultima = ultimaOpt.get();
-            if (txtNumero != null) txtNumero.setText(""); // Nuevo número
-            if (dpFecha != null) dpFecha.setValue(java.time.LocalDate.now());
-            if (cboCliente != null) cboCliente.setValue(cliente);
-            if (txtTotal != null) txtTotal.setText(String.valueOf(ultima.getTotal()));
-            if (txtPagado != null) txtPagado.setText("0");
+            setText(txtNumero, "");
+            setDate(dpFecha, java.time.LocalDate.now());
+            selectCliente(cboCliente, cliente);
+            setText(txtTotal, String.valueOf(ultima.getTotal()));
+            setText(txtPagado, "0");
             // Copiar líneas de factura
             Set<FacturaLinea> lineasCopia = new java.util.LinkedHashSet<>();
             for (FacturaLinea linea : ultima.getFacturaLineas()) {
@@ -211,16 +258,15 @@ public class FacturaController implements MainControllerAware {
     public void handleCopiarFacturaAnterior() {
         Cliente cliente = cboCliente != null ? cboCliente.getSelectionModel().getSelectedItem() : null;
         if (cliente == null) {
-            new Alert(Alert.AlertType.WARNING, "Selecciona un cliente para copiar su última factura.").showAndWait();
+            showAlert(Alert.AlertType.WARNING, "Selecciona un cliente para copiar su última factura.");
             return;
         }
         copiarFacturaAnterior(cliente);
-        new Alert(Alert.AlertType.INFORMATION, "Datos de la última factura copiados. Puedes modificar y guardar la nueva factura.").showAndWait();
+        showAlert(Alert.AlertType.INFORMATION, "Datos de la última factura copiados. Puedes modificar y guardar la nueva factura.");
     }
 
     @FXML
     public void handleNuevaFactura() {
-        // Diálogo simple para crear factura
         Dialog<Factura> dialog = new Dialog<>();
         dialog.setTitle("Nueva Factura");
         dialog.setHeaderText("Crear nueva factura");
@@ -269,26 +315,25 @@ public class FacturaController implements MainControllerAware {
 
     @FXML
     public void handleImprimirFactura() {
-        Factura factura = null;
-        if (tableFacturas != null) factura = tableFacturas.getSelectionModel().getSelectedItem();
+        Factura factura = getSelectedOrNull();
         if (factura == null) {
-            new Alert(Alert.AlertType.WARNING, "Selecciona una factura para imprimir").showAndWait();
+            showAlert(Alert.AlertType.WARNING, "Selecciona una factura para imprimir");
             return;
         }
         try {
             facturaService.imprimirFactura(factura);
-            new Alert(Alert.AlertType.INFORMATION, "Factura impresa correctamente").showAndWait();
+            showAlert(Alert.AlertType.INFORMATION, "Factura impresa correctamente");
         } catch (Exception e) {
-            new Alert(Alert.AlertType.ERROR, "Error al imprimir la factura: " + e.getMessage()).showAndWait();
+            log.error("Error al imprimir la factura", e);
+            showAlert(Alert.AlertType.ERROR, "Error al imprimir la factura: " + e.getMessage());
         }
     }
 
     @FXML
     public void handlePrevisualizarFactura() {
-        Factura factura = null;
-        if (tableFacturas != null) factura = tableFacturas.getSelectionModel().getSelectedItem();
+        Factura factura = getSelectedOrNull();
         if (factura == null) {
-            new Alert(Alert.AlertType.WARNING, "Selecciona una factura para previsualizar").showAndWait();
+            showAlert(Alert.AlertType.WARNING, "Selecciona una factura para previsualizar");
             return;
         }
         StringBuilder sb = new StringBuilder();
@@ -298,6 +343,11 @@ public class FacturaController implements MainControllerAware {
         sb.append("Total: ").append(factura.getTotal()).append("\n");
         sb.append("Pagado: ").append(factura.getPagado()).append("\n");
         // Puedes añadir aquí las líneas de la factura si lo deseas
-        new Alert(Alert.AlertType.INFORMATION, sb.toString()).showAndWait();
+        showAlert(Alert.AlertType.INFORMATION, sb.toString());
+    }
+
+    // Helper para mostrar alertas de forma centralizada.
+    private void showAlert(Alert.AlertType type, String message) {
+        new Alert(type, message).showAndWait();
     }
 }

@@ -18,9 +18,10 @@
                 <Insets top="15" right="20" bottom="15" left="20"/>
             </padding>
             <HBox alignment="CENTER_LEFT" spacing="20">
-                <Label text="Gestión de Albaranes de Venta" styleClass="header-title">
-                    <font><Font name="System Bold" size="22"/></font>
-                </Label>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="📦" style="-fx-font-size: 24px;"/>
+                    <Label text="Gestión de Albaranes de Venta" styleClass="header-title"/>
+                </HBox>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button fx:id="btnVolver" text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
             </HBox>
@@ -31,47 +32,43 @@
     <center>
         <SplitPane dividerPositions="0.6">
             <!-- Left: Table and Filters -->
-            <VBox spacing="10">
+            <VBox spacing="15" style="-fx-background-color: white;">
                 <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
                 </padding>
 
                 <!-- Search and Filters -->
-                <VBox spacing="8" styleClass="filters-panel">
-                    <padding>
-                        <Insets top="10" right="10" bottom="10" left="10"/>
-                    </padding>
-
-                    <!-- Search Bar -->
+                <VBox spacing="15" styleClass="filters-panel">
+                    <Label text="🔎 Búsqueda y Filtros" styleClass="subsection-title"/>
                     <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Buscar:">
-                            <font><Font name="System Bold" size="12"/></font>
-                        </Label>
+                        <Label text="Buscar:" style="-fx-min-width: 80; -fx-font-weight: bold;"/>
                         <TextField fx:id="txtSearch" promptText="Número o cliente..."
-                                   HBox.hgrow="ALWAYS"/>
-                        <Button fx:id="btnSearch" text="Buscar" styleClass="btn-primary"/>
+                                   HBox.hgrow="ALWAYS" styleClass="search-field"/>
+                        <Button fx:id="btnSearch" text="🔎 Buscar" styleClass="btn-primary"/>
+                        <Button text="⟳ Limpiar" onAction="#handleSearch" styleClass="btn-secondary"/>
                     </HBox>
-
-                    <!-- Date Filters -->
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Desde:">
-                            <font><Font name="System Bold" size="12"/></font>
-                        </Label>
-                        <DatePicker fx:id="dpFechaInicio" prefWidth="150"/>
-
-                        <Label text="Hasta:">
-                            <font><Font name="System Bold" size="12"/></font>
-                        </Label>
-                        <DatePicker fx:id="dpFechaFin" prefWidth="150"/>
-
-                        <Label text="Estado:">
-                            <font><Font name="System Bold" size="12"/></font>
-                        </Label>
-                        <ComboBox fx:id="cboEstado" prefWidth="120"/>
-
+                    <GridPane hgap="15" vgap="12">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="80" prefWidth="80"/>
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="150"/>
+                            <ColumnConstraints minWidth="80" prefWidth="80"/>
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="150"/>
+                        </columnConstraints>
+                        <Label text="Fecha desde:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                               style="-fx-font-weight: bold;"/>
+                        <DatePicker fx:id="dpFechaInicio" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                    maxWidth="Infinity"/>
+                        <Label text="Fecha hasta:" GridPane.columnIndex="2" GridPane.rowIndex="0"
+                               style="-fx-font-weight: bold;"/>
+                        <DatePicker fx:id="dpFechaFin" GridPane.columnIndex="3" GridPane.rowIndex="0"
+                                    maxWidth="Infinity"/>
+                        <Label text="Estado:" GridPane.columnIndex="0" GridPane.rowIndex="1"
+                               style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="cboEstado" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                                  maxWidth="Infinity" promptText="Todos los estados"/>
                         <Button fx:id="btnApplyFilters" text="Aplicar Filtros"
-                                styleClass="btn-success"/>
-                    </HBox>
+                                styleClass="btn-success" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+                    </GridPane>
                 </VBox>
 
                 <!-- Table -->
@@ -88,123 +85,52 @@
             </VBox>
 
             <!-- Right: Form -->
-            <VBox spacing="15">
+            <VBox spacing="15" style="-fx-background-color: #f8f9fa;">
                 <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
                 </padding>
-
-                <!-- Form Title -->
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <Label text="Datos del Albarán" styleClass="section-title">
                         <font><Font name="System Bold" size="16"/></font>
                     </Label>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="lblLineas" text="0 línea(s)" styleClass="info-badge">
-                        <font><Font size="12"/></font>
-                    </Label>
                 </HBox>
-
-                <Separator/>
-
-                <!-- Form Fields -->
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
-                    <VBox spacing="15">
-                        <padding>
-                            <Insets top="5" right="5" bottom="5" left="5"/>
-                        </padding>
-
-                        <GridPane hgap="10" vgap="15">
-                            <columnConstraints>
-                                <ColumnConstraints minWidth="120" prefWidth="120"/>
-                                <ColumnConstraints hgrow="ALWAYS"/>
-                            </columnConstraints>
-
-                            <!-- Número -->
-                            <Label text="Número:" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                <font><Font name="System Bold" size="12"/></font>
-                            </Label>
-                            <TextField fx:id="txtNumero" promptText="ALB-2025-0001"
-                                       GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-
-                            <!-- Fecha -->
-                            <Label text="Fecha:" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                                <font><Font name="System Bold" size="12"/></font>
-                            </Label>
-                            <DatePicker fx:id="dpFecha"
-                                        GridPane.columnIndex="1" GridPane.rowIndex="1"
-                                        maxWidth="Infinity"/>
-
-                            <!-- Cliente -->
-                            <Label text="Cliente:" GridPane.columnIndex="0" GridPane.rowIndex="2">
-                                <font><Font name="System Bold" size="12"/></font>
-                            </Label>
-                            <ComboBox fx:id="cboCliente"
-                                      GridPane.columnIndex="1" GridPane.rowIndex="2"
-                                      maxWidth="Infinity"/>
-
-                            <!-- Almacén -->
-                            <Label text="Almacén:" GridPane.columnIndex="0" GridPane.rowIndex="3">
-                                <font><Font name="System Bold" size="12"/></font>
-                            </Label>
-                            <ComboBox fx:id="cboAlmacen"
-                                      GridPane.columnIndex="1" GridPane.rowIndex="3"
-                                      maxWidth="Infinity"/>
-
-                            <!-- Total -->
-                            <Label text="Total:" GridPane.columnIndex="0" GridPane.rowIndex="4">
-                                <font><Font name="System Bold" size="12"/></font>
-                            </Label>
-                            <TextField fx:id="txtTotal" editable="false"
-                                       styleClass="total-field"
-                                       GridPane.columnIndex="1" GridPane.rowIndex="4">
-                                <font><Font name="System Bold" size="14"/></font>
-                            </TextField>
-
-                            <!-- Observaciones -->
-                            <Label text="Observaciones:"
-                                   GridPane.columnIndex="0" GridPane.rowIndex="5"
-                                   GridPane.valignment="TOP">
-                                <font><Font name="System Bold" size="12"/></font>
-                            </Label>
-                            <TextArea fx:id="txtObservaciones" prefRowCount="6"
-                                      wrapText="true"
-                                      GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-                        </GridPane>
-                    </VBox>
-                </ScrollPane>
-
-                <Separator/>
-
-                <!-- Action Buttons -->
-                <VBox spacing="10">
-                    <!-- Primary Actions -->
-                    <HBox spacing="10" alignment="CENTER">
-                        <Button fx:id="btnNuevo" text="Nuevo" styleClass="btn-success" prefWidth="120">
-                            <font><Font size="12"/></font>
-                        </Button>
-                        <Button fx:id="btnGuardar" text="Guardar" styleClass="btn-primary" prefWidth="120">
-                            <font><Font size="12"/></font>
-                        </Button>
-                        <Button fx:id="btnEliminar" text="Eliminar" styleClass="btn-danger" prefWidth="120">
-                            <font><Font size="12"/></font>
-                        </Button>
-                    </HBox>
-
-                    <!-- Secondary Actions -->
-                    <HBox spacing="10" alignment="CENTER">
-                        <Button fx:id="btnVerLineas" text="Ver/Editar Líneas"
-                                styleClass="btn-info" prefWidth="250">
-                            <font><Font size="12"/></font>
-                        </Button>
-                    </HBox>
-
-                    <!-- New Buttons -->
+                <!-- Formulario de albarán -->
+                <VBox spacing="12">
                     <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Button text="Nuevo albarán" onAction="#handleNuevoAlbaran" styleClass="btn-primary"/>
-                        <Button text="Imprimir" onAction="#handleImprimirAlbaran" styleClass="btn-primary"/>
-                        <Button text="Previsualizar" onAction="#handlePrevisualizarAlbaran" styleClass="btn-info"/>
+                        <Label text="Número:" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtNumero" promptText="Número de albarán"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Fecha:" style="-fx-font-weight: bold;"/>
+                        <DatePicker fx:id="dpFecha" promptText="Fecha"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Cliente:" style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="cboCliente" promptText="Selecciona cliente"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Almacén:" style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="cboAlmacen" promptText="Selecciona almacén"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Total:" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtTotal" promptText="Total"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Observaciones:" style="-fx-font-weight: bold;"/>
+                        <TextArea fx:id="txtObservaciones" promptText="Observaciones" prefRowCount="2"/>
                     </HBox>
                 </VBox>
+                <!-- Botonera principal -->
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                    <Button fx:id="btnNuevo" text="➕ Nuevo" styleClass="btn-primary" onAction="#handleNuevo"/>
+                    <Button fx:id="btnGuardar" text="💾 Guardar" styleClass="btn-success" onAction="#handleGuardar"/>
+                    <Button fx:id="btnEliminar" text="🗑 Eliminar" styleClass="btn-danger" onAction="#handleEliminar"/>
+                    <Button fx:id="btnVerLineas" text="📄 Ver Líneas" styleClass="btn-secondary" onAction="#handleVerLineas"/>
+                    <Button text="🖨 Imprimir" onAction="#handleImprimirAlbaran" styleClass="btn-secondary"/>
+                    <Button text="👁 Previsualizar" onAction="#handlePrevisualizarAlbaran" styleClass="btn-secondary"/>
+                </HBox>
             </VBox>
         </SplitPane>
     </center>

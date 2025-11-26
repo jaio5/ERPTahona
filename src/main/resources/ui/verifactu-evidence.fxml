@@ -1,65 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.VerifactuEvidenceController"
-            prefHeight="700.0" prefWidth="1100.0">
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.VerifactuEvidenceController"
+            prefHeight="800.0" prefWidth="1400.0" stylesheets="/css/styles.css">
+    <!-- Header -->
     <top>
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="Verifactu Evidence" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
-            <Pane/>
-            <TextField fx:id="txtSearch" promptText="Buscar por factura..."/>
-            <Button text="Buscar" onAction="#handleBuscar"/>
-        </HBox>
+        <VBox styleClass="header">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="🔒" style="-fx-font-size: 24px;"/>
+                    <Label text="Verifactu Evidence" styleClass="header-title"/>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
     </top>
     <center>
-        <VBox spacing="10">
-            <TableView fx:id="tableEvidence" prefHeight="350">
-                <columns>
-                    <TableColumn fx:id="colFacturaId" text="Factura ID" prefWidth="120"/>
-                    <TableColumn fx:id="colSerie" text="Serie" prefWidth="80"/>
-                    <TableColumn fx:id="colNumero" text="Número" prefWidth="80"/>
-                    <TableColumn fx:id="colFechaEmision" text="Fecha Emisión" prefWidth="120"/>
-                    <TableColumn fx:id="colHash" text="Hash" prefWidth="180"/>
-                    <TableColumn fx:id="colHashAnterior" text="Hash Anterior" prefWidth="180"/>
-                    <TableColumn fx:id="colCertFingerprint" text="Cert. Fingerprint" prefWidth="140"/>
-                </columns>
-            </TableView>
-            <Separator/>
-            <GridPane hgap="10" vgap="10">
-                <columnConstraints>
-                    <ColumnConstraints minWidth="120"/>
-                    <ColumnConstraints hgrow="ALWAYS"/>
-                </columnConstraints>
-                <Label text="Factura ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtFacturaId" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                <Label text="Serie:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtSerie" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                <Label text="Número:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtNumero" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                <Label text="Fecha Emisión:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtFechaEmision" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-                <Label text="Hash:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtHash" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-                <Label text="Hash Anterior:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtHashAnterior" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
-                <Label text="Cert. Fingerprint:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtCertFingerprint" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
-                <Label text="Metadata:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
-                <TextArea fx:id="txtMetadata" GridPane.rowIndex="7" GridPane.columnIndex="1" prefRowCount="3"/>
-            </GridPane>
-        </VBox>
+        <SplitPane dividerPositions="0.6">
+            <!-- Left: Table and Filters -->
+            <VBox spacing="15" style="-fx-background-color: white;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+                <VBox spacing="15" styleClass="filters-panel">
+                    <Label text="🔎 Búsqueda y Filtros" styleClass="subsection-title"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Buscar:" style="-fx-min-width: 80; -fx-font-weight: bold;"/>
+                        <TextField fx:id="txtSearch" promptText="Buscar por factura..."
+                                   HBox.hgrow="ALWAYS" styleClass="search-field"/>
+                        <Button text="🔎 Buscar" onAction="#handleBuscar" styleClass="btn-primary"/>
+                        <Button text="⟳ Limpiar" onAction="#handleBuscar" styleClass="btn-secondary"/>
+                    </HBox>
+                </VBox>
+                <TableView fx:id="tableEvidence" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colFacturaId" text="Factura ID" prefWidth="120"/>
+                        <TableColumn fx:id="colSerie" text="Serie" prefWidth="80"/>
+                        <TableColumn fx:id="colNumero" text="Número" prefWidth="80"/>
+                        <TableColumn fx:id="colFechaEmision" text="Fecha Emisión" prefWidth="120"/>
+                        <TableColumn fx:id="colHash" text="Hash" prefWidth="180"/>
+                        <TableColumn fx:id="colHashAnterior" text="Hash Anterior" prefWidth="180"/>
+                        <TableColumn fx:id="colCertFingerprint" text="Cert. Fingerprint" prefWidth="140"/>
+                    </columns>
+                </TableView>
+            </VBox>
+            <!-- Right: Form -->
+            <VBox spacing="15" style="-fx-background-color: #f8f9fa;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="Datos de la Evidencia" styleClass="section-title">
+                        <font><Font name="System Bold" size="16"/></font>
+                    </Label>
+                    <Region HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+                    <Label text="Factura ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtFacturaId" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                    <Label text="Serie:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtSerie" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                    <Label text="Número:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtNumero" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                    <Label text="Fecha Emisión:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtFechaEmision" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                    <Label text="Hash:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtHash" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                    <Label text="Hash Anterior:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtHashAnterior" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                    <Label text="Cert. Fingerprint:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtCertFingerprint" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                    <Label text="Metadata:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                    <TextArea fx:id="txtMetadata" GridPane.rowIndex="7" GridPane.columnIndex="1" prefRowCount="3"/>
+                </GridPane>
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                    <Button fx:id="addButton" text="➕ Nuevo" onAction="#handleNuevo" styleClass="btn-primary"/>
+                    <Button fx:id="removeButton" text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
+                    <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
+                </HBox>
+            </VBox>
+        </SplitPane>
     </center>
-    <bottom>
-        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10;">
-            <Button fx:id="addButton" text="Nuevo" onAction="#handleNuevo"/>
-            <Button fx:id="removeButton" text="Eliminar" onAction="#handleEliminar"/>
-            <Button text="Guardar" onAction="#handleGuardar"/>
-            <!-- <Button text="Registrar AEAT" onAction="#handleRegistrarAEAT"/> -->
-        </HBox>
-    </bottom>
 </BorderPane>

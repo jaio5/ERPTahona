@@ -7,6 +7,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 
 import java.time.format.DateTimeFormatter;
@@ -17,9 +19,19 @@ import java.util.Optional;
 @Controller
 public class VerifactuEvidenceController implements MainControllerAware {
 
+    private static final Logger log = LoggerFactory.getLogger(VerifactuEvidenceController.class);
+
+    /**
+     * Controlador FXML que muestra y gestiona las evidencias de Verifactu.
+     *
+     * He aplicado técnicas de clean code para mantener métodos pequeños y claros,
+     * evitar duplicación y encapsular las operaciones repetitivas en helpers.
+     */
+
     private final VerifactuEvidenceService evidenceService;
     private alicanteweb.erp.controller.ui.MainPanelController mainPanelController;
 
+    // Campos FXML (no pueden ser final porque JavaFX los inyecta)
     @FXML
     private TableView<VerifactuEvidence> tableEvidence;
 
@@ -74,151 +86,220 @@ public class VerifactuEvidenceController implements MainControllerAware {
     @FXML
     private Button removeButton;
 
+    // ObservableList para conectar la lista de la UI (TableView) con los datos.
     private final ObservableList<VerifactuEvidence> evidenceObservable = FXCollections.observableArrayList();
 
+    // Inyección por constructor: forma recomendada para que Spring pueda proveer el servicio.
     public VerifactuEvidenceController(VerifactuEvidenceService evidenceService) {
         this.evidenceService = evidenceService;
     }
 
+    // Método que permite al MainPanelController pasar una referencia (patrón "aware").
     @Override
     public void setMainPanelController(alicanteweb.erp.controller.ui.MainPanelController mainPanelController) {
         this.mainPanelController = mainPanelController;
     }
 
+    /**
+     * initialize() es llamado por el FXMLLoader después de que los campos @FXML
+     * han sido inyectados. Se usa para configurar columnas, listeners y cargar datos.
+     */
     @FXML
     public void initialize() {
-        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        configureTableColumns();
+        bindTableData();
+        configureSelectionListener();
+        loadAll();
+    }
 
+    // Configura los cellValueFactory de las columnas (pequeños extractos para claridad).
+    private void configureTableColumns() {
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         if (colFacturaId != null) colFacturaId.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getFacturaId()));
         if (colSerie != null) colSerie.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getSerie()));
         if (colNumero != null) colNumero.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getNumero()));
         if (colFechaEmision != null) colFechaEmision.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getFechaEmision() != null ? df.format(e.getValue().getFechaEmision()) : ""));
-
-        if (tableEvidence != null) tableEvidence.setItems(evidenceObservable);
-
-        if (tableEvidence != null) {
-            tableEvidence.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-                if (newSel != null) {
-                    if (txtFacturaId != null) txtFacturaId.setText(newSel.getFacturaId());
-                    if (txtSerie != null) txtSerie.setText(newSel.getSerie());
-                    if (txtNumero != null) txtNumero.setText(newSel.getNumero());
-                    if (txtHash != null) txtHash.setText(newSel.getHash());
-                    if (txtHashAnterior != null) txtHashAnterior.setText(newSel.getHashAnterior());
-                    if (txtCertFingerprint != null) txtCertFingerprint.setText(newSel.getCertFingerprint());
-                    if (txtMetadata != null) txtMetadata.setText(newSel.getMetadata());
-                } else {
-                    if (txtFacturaId != null) txtFacturaId.setText("");
-                    if (txtSerie != null) txtSerie.setText("");
-                    if (txtNumero != null) txtNumero.setText("");
-                    if (txtHash != null) txtHash.setText("");
-                    if (txtHashAnterior != null) txtHashAnterior.setText("");
-                    if (txtCertFingerprint != null) txtCertFingerprint.setText("");
-                    if (txtMetadata != null) txtMetadata.setText("");
-                }
-            });
-        }
-
-        loadAll();
+        if (colHash != null) colHash.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getHash()));
+        if (colHashAnterior != null) colHashAnterior.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getHashAnterior()));
+        if (colCertFingerprint != null) colCertFingerprint.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getCertFingerprint()));
     }
 
+    private void bindTableData() {
+        if (tableEvidence != null) tableEvidence.setItems(evidenceObservable);
+    }
+
+    private void configureSelectionListener() {
+        if (tableEvidence == null) return;
+        tableEvidence.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                populateDetails(newSel);
+            } else {
+                clearDetails();
+            }
+        });
+    }
+
+    // Rellena los campos de detalle con los datos de la evidencia.
+    private void populateDetails(VerifactuEvidence v) {
+        setText(txtFacturaId, v.getFacturaId());
+        setText(txtSerie, v.getSerie());
+        setText(txtNumero, v.getNumero());
+        setText(txtHash, v.getHash());
+        setText(txtHashAnterior, v.getHashAnterior());
+        setText(txtCertFingerprint, v.getCertFingerprint());
+        setText(txtMetadata, v.getMetadata());
+        setText(txtFechaEmision, v.getFechaEmision() != null ? v.getFechaEmision().toString() : "");
+    }
+
+    // Limpia los campos de detalle.
+    private void clearDetails() {
+        setText(txtFacturaId, "");
+        setText(txtSerie, "");
+        setText(txtNumero, "");
+        setText(txtHash, "");
+        setText(txtHashAnterior, "");
+        setText(txtCertFingerprint, "");
+        setText(txtMetadata, "");
+        setText(txtFechaEmision, "");
+    }
+
+    // Helpers seguros para leer/escribir TextInputControls sin repetir null-checks.
+    private String getText(TextInputControl control) {
+        return control == null ? "" : Optional.ofNullable(control.getText()).orElse("");
+    }
+
+    private void setText(TextInputControl control, String value) {
+        if (control != null) control.setText(value == null ? "" : value);
+    }
+
+    // Carga todas las evidencias desde la BD y las añade al ObservableList.
     private void loadAll() {
         evidenceObservable.clear();
         List<VerifactuEvidence> all = evidenceService.findAll();
         evidenceObservable.addAll(all);
     }
 
+    /**
+     * Método conectado al botón de búsqueda (onAction) en el FXML.
+     * Realiza búsqueda por facturaId o por serie.
+     */
     @FXML
     public void handleSearch() {
-        if (txtSearch == null) return;
-        String q = txtSearch.getText();
-        if (q == null || q.isBlank()) {
+        String q = getText(txtSearch).trim();
+        if (q.isEmpty()) {
             loadAll();
             return;
         }
-        // Buscar por facturaId o por serie
-        evidenceObservable.clear();
-        evidenceService.findByFacturaId(q).ifPresent(evidenceObservable::add);
-        evidenceObservable.addAll(evidenceService.findBySerie(q));
+        performSearch(q);
     }
 
+    // Alias para compatibilidad con FXML que use otro nombre.
     @FXML
     public void handleBuscar() {
-        if (txtSearch == null) return;
-        String q = txtSearch.getText();
-        if (q == null || q.isBlank()) {
-            loadAll();
-            return;
-        }
+        handleSearch();
+    }
+
+    // Ejecuta la búsqueda concreta.
+    private void performSearch(String q) {
         evidenceObservable.clear();
         evidenceService.findByFacturaId(q).ifPresent(evidenceObservable::add);
         evidenceObservable.addAll(evidenceService.findBySerie(q));
     }
 
+    // Prepara la UI para crear una nueva evidencia vacía.
     @FXML
     public void handleNuevo() {
-        if (txtFacturaId != null) txtFacturaId.setText("");
-        if (txtSerie != null) txtSerie.setText("");
-        if (txtNumero != null) txtNumero.setText("");
-        if (txtHash != null) txtHash.setText("");
-        if (txtHashAnterior != null) txtHashAnterior.setText("");
-        if (txtCertFingerprint != null) txtCertFingerprint.setText("");
-        if (txtMetadata != null) txtMetadata.setText("");
+        tableClearSelection();
+        clearDetails();
+    }
+
+    private void tableClearSelection() {
         if (tableEvidence != null) tableEvidence.getSelectionModel().clearSelection();
     }
 
+    /**
+     * Guarda la evidencia actual (inserta o actualiza). Valida unicidad por facturaId.
+     */
     @FXML
     public void handleGuardar() {
-        VerifactuEvidence v = null;
-        if (tableEvidence != null) v = tableEvidence.getSelectionModel().getSelectedItem();
-        if (v == null) v = new VerifactuEvidence();
-
-        v.setFacturaId(txtFacturaId != null ? txtFacturaId.getText() : null);
-        v.setSerie(txtSerie != null ? txtSerie.getText() : null);
-        v.setNumero(txtNumero != null ? txtNumero.getText() : null);
-        v.setHash(txtHash != null ? txtHash.getText() : null);
-        v.setHashAnterior(txtHashAnterior != null ? txtHashAnterior.getText() : null);
-        v.setCertFingerprint(txtCertFingerprint != null ? txtCertFingerprint.getText() : null);
-        v.setMetadata(txtMetadata != null ? txtMetadata.getText() : null);
-
-        // unicidad facturaId
-        String facturaId = v.getFacturaId();
-        if (facturaId != null && !facturaId.isBlank()) {
-            Optional<VerifactuEvidence> existe = evidenceService.findByFacturaId(facturaId);
-            if (existe.isPresent() && (v.getId() == null || !existe.get().getId().equals(v.getId()))) {
-                new Alert(Alert.AlertType.ERROR, "Ya existe evidencia para esta factura").showAndWait();
-                return;
-            }
+        VerifactuEvidence v = getSelectedOrNew();
+        fillFromUi(v);
+        if (!isFacturaIdUniqueOrSame(v)) {
+            showAlert(Alert.AlertType.ERROR, "Ya existe evidencia para esta factura");
+            return;
         }
-
         evidenceService.save(v);
         loadAll();
     }
 
+    // Obtiene la entidad seleccionada en la tabla o crea una nueva.
+    private VerifactuEvidence getSelectedOrNew() {
+        if (tableEvidence == null) return new VerifactuEvidence();
+        VerifactuEvidence sel = tableEvidence.getSelectionModel().getSelectedItem();
+        return sel == null ? new VerifactuEvidence() : sel;
+    }
+
+    // Rellena la entidad con datos de la UI.
+    private void fillFromUi(VerifactuEvidence v) {
+        v.setFacturaId(getText(txtFacturaId));
+        v.setSerie(getText(txtSerie));
+        v.setNumero(getText(txtNumero));
+        v.setHash(getText(txtHash));
+        v.setHashAnterior(getText(txtHashAnterior));
+        v.setCertFingerprint(getText(txtCertFingerprint));
+        v.setMetadata(getText(txtMetadata));
+    }
+
+    // Valida unicidad por facturaId: si ya existe otra entidad con el mismo facturaId, retorna false.
+    private boolean isFacturaIdUniqueOrSame(VerifactuEvidence v) {
+        String facturaId = v.getFacturaId();
+        if (facturaId == null || facturaId.isBlank()) return true;
+        Optional<VerifactuEvidence> existe = evidenceService.findByFacturaId(facturaId);
+        return existe.isEmpty() || (v.getId() != null && existe.get().getId().equals(v.getId()));
+    }
+
+    // Elimina la evidencia seleccionada.
     @FXML
     public void handleEliminar() {
-        VerifactuEvidence v = null;
-        if (tableEvidence != null) v = tableEvidence.getSelectionModel().getSelectedItem();
+        VerifactuEvidence v = getSelectedOrNull();
         if (v == null || v.getId() == null) return;
         evidenceService.deleteById(v.getId());
         loadAll();
     }
 
+    private VerifactuEvidence getSelectedOrNull() {
+        if (tableEvidence == null) return null;
+        return tableEvidence.getSelectionModel().getSelectedItem();
+    }
+
+    // Vuelve a la vista principal del panel (usando la referencia pasada desde MainPanelController).
     @FXML
     public void handleVolver() {
         if (mainPanelController != null) mainPanelController.showHome();
     }
 
+    /**
+     * Método que invoca la lógica para registrar la evidencia y enviarla a la AEAT.
+     * - En esta implementación, el envío se simula en `VerifactuAEATService`.
+     * - El método muestra alertas con el resultado o el error.
+     */
     @FXML
     public void handleRegistrarAEAT() {
         try {
-            String datosFactura = txtFacturaId.getText();
-            String serie = txtSerie.getText();
-            String numero = txtNumero.getText();
+            String datosFactura = getText(txtFacturaId);
+            String serie = getText(txtSerie);
+            String numero = getText(txtNumero);
             evidenceService.registrarEvidenciaAEAT(datosFactura, serie, numero);
             loadAll();
-            new Alert(Alert.AlertType.INFORMATION, "Evidencia registrada y enviada a la AEAT correctamente.").showAndWait();
+            showAlert(Alert.AlertType.INFORMATION, "Evidencia registrada y enviada a la AEAT correctamente.");
         } catch (Exception ex) {
-            new Alert(Alert.AlertType.ERROR, "Error al registrar evidencia: " + ex.getMessage()).showAndWait();
+            log.error("Error al registrar evidencia AEAT", ex);
+            showAlert(Alert.AlertType.ERROR, "Error al registrar evidencia: " + ex.getMessage());
         }
+    }
+
+    // Helper para mostrar alertas de forma centralizada.
+    private void showAlert(Alert.AlertType type, String message) {
+        new Alert(type, message).showAndWait();
     }
 }

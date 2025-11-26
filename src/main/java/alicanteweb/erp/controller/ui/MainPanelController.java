@@ -17,7 +17,6 @@ import java.util.Objects;
 public class MainPanelController {
 
     private static final Logger log = LoggerFactory.getLogger(MainPanelController.class);
-
     private final ApplicationContext context;
 
     @FXML
@@ -28,32 +27,37 @@ public class MainPanelController {
     }
 
     @FXML
-    public void onNavFactura() {
-        loadView("/ui/facturas.fxml");
-    }
+    public void onNavFactura() { loadView("/ui/facturas.fxml"); }
+    @FXML
+    public void onNavClientes() { loadView("/ui/clientes.fxml"); }
+    @FXML
+    public void onNavArticulos() { loadView("/ui/articulos.fxml"); }
+    @FXML
+    public void onNavProveedores() { loadView("/ui/proveedores.fxml"); }
+    @FXML
+    public void onNavAlmacenes() { loadView("/ui/almacenes.fxml"); }
+    @FXML
+    public void onNavAlbaranesVenta() { loadView("/ui/albaranes-venta.fxml"); }
+    @FXML
+    public void onNavFacturaLineas() { loadView("/ui/factura-lineas.fxml"); }
+    @FXML
+    public void onNavPedidos() { loadView("/ui/pedidos.fxml"); }
+    @FXML
+    public void onNavPedidoLineas() { loadView("/ui/pedido-lineas.fxml"); }
+    @FXML
+    public void onNavDireccionesEnvio() { loadView("/ui/direccionesenvio.fxml"); }
+    @FXML
+    public void onNavVerifactuEvidence() { loadView("/ui/verifactu-evidence.fxml"); }
 
     @FXML
-    public void onNavClientes() {
-        loadView("/ui/clientes.fxml");
-    }
+    public void onExit() { System.exit(0); }
 
     @FXML
-    public void onNavArticulos() {
-        loadView("/ui/articulos.fxml");
-    }
-
+    public void onAbout() { showInfo("ERP Tahona - Versión de escritorio", "Acerca de"); }
     @FXML
-    public void onExit() {
-        // Close action handled by the platform - keep placeholder
-        System.exit(0);
-    }
-
+    public void onConfiguracion() { showInfo("Configuración no implementada todavía.", "Configuración"); }
     @FXML
-    public void onAbout() {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, "ERP Tahona - Versión de escritorio");
-        a.setHeaderText("Acerca de");
-        a.showAndWait();
-    }
+    public void onManual() { showInfo("Manual de usuario no disponible todavía.", "Manual de Usuario"); }
 
     public void showHome() {
         if (contentPane != null) contentPane.getChildren().clear();
@@ -62,79 +66,30 @@ public class MainPanelController {
     private void loadView(String resource) {
         try {
             FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(resource)));
-            // Usar siempre la factory de Spring para inyectar el controlador
             loader.setControllerFactory(context::getBean);
-
             Node node = loader.load();
-
-            // Después de cargar, obtener el controlador y pasar la referencia al main si implementa MainControllerAware
             Object ctl = loader.getController();
             if (ctl instanceof alicanteweb.erp.controller.MainControllerAware awareCtl) {
                 awareCtl.setMainPanelController(this);
             }
-
             if (contentPane != null) {
                 contentPane.getChildren().setAll(node);
             }
         } catch (IOException e) {
             log.error("No se pudo cargar la vista: {}", resource, e);
-            Alert a = new Alert(Alert.AlertType.ERROR, "No se pudo cargar la vista: " + resource + "\n" + e.getMessage());
-            a.setHeaderText("Error al cargar vista");
-            a.showAndWait();
+            showError("No se pudo cargar la vista: " + resource + "\n" + e.getMessage(), "Error al cargar vista");
         }
     }
 
-    @FXML
-    public void onNavProveedores() {
-        loadView("/ui/proveedores.fxml");
-    }
-
-    @FXML
-    public void onNavAlmacenes() {
-        loadView("/ui/almacenes.fxml");
-    }
-
-    @FXML
-    public void onNavAlbaranesVenta() {
-        loadView("/ui/albaranes-venta.fxml");
-    }
-
-    @FXML
-    public void onNavFacturaLineas() {
-        loadView("/ui/factura-lineas.fxml");
-    }
-
-    @FXML
-    public void onNavPedidos() {
-        loadView("/ui/pedidos.fxml");
-    }
-
-    @FXML
-    public void onNavPedidoLineas() {
-        loadView("/ui/pedido-lineas.fxml");
-    }
-
-    @FXML
-    public void onNavDireccionesEnvio() {
-        loadView("/ui/direccionesenvio.fxml");
-    }
-
-    @FXML
-    public void onNavVerifactuEvidence() {
-        loadView("/ui/verifactu-evidence.fxml");
-    }
-
-    @FXML
-    public void onConfiguracion() {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, "Configuración no implementada todavía.");
-        a.setHeaderText("Configuración");
+    private void showInfo(String message, String header) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION, message);
+        a.setHeaderText(header);
         a.showAndWait();
     }
 
-    @FXML
-    public void onManual() {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, "Manual de usuario no disponible todavía.");
-        a.setHeaderText("Manual de Usuario");
+    private void showError(String message, String header) {
+        Alert a = new Alert(Alert.AlertType.ERROR, message);
+        a.setHeaderText(header);
         a.showAndWait();
     }
 }

@@ -19,6 +19,21 @@ import java.util.Base64;
 import java.util.Optional;
 import java.util.Formatter;
 
+/**
+ * Servicio que implementa la lógica de firma/huella y registro encadenado de facturas
+ * para Verifactu (evidencias AEAT).
+ *
+ * Explicación para un estudiante de DAM:
+ * - Este servicio carga un keystore PKCS12 (archivo .p12) que contiene la clave privada
+ *   y el certificado que se usarán para firmar y generar huellas.
+ * - computeChainedHash: genera una huella SHA-256 de la factura combinada con la huella
+ *   anterior (cadena encadenada). Esto permite construir una cadena de evidencias.
+ * - signHashHex: firma la cadena hex de la huella usando SHA256withRSA.
+ * - registerEvidence: crea una entidad VerifactuEvidence y la persiste (repositorio JPA).
+ * - El servicio es tolerant: si no encuentra el keystore o la clave, se desactiva y no
+ *   lanza excepción en el arranque (solo registra advertencias). Esto facilita que la APP
+ *   funcione en entornos sin configuración de firma.
+ */
 @Service
 public class VerifactuService {
 
@@ -88,7 +103,7 @@ public class VerifactuService {
         if (!enabled) throw new IllegalStateException("Verifactu not configured/disabled");
     }
 
-    // calcule la huella SHA-256 de la factura + hash anterior (cadena clara)
+    // calcula la huella SHA-256 de la factura + hash anterior (cadena clara)
     public String computeChainedHash(String facturaPayload, String previousHash) throws Exception {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         md.update(facturaPayload.getBytes(StandardCharsets.UTF_8));
@@ -97,6 +112,7 @@ public class VerifactuService {
         return bytesToHex(digest);
     }
 
+    // Firma la huella (hex) con la clave privada cargada del keystore.
     public byte[] signHashHex(String hashHex) throws Exception {
         ensureEnabled();
         byte[] data = hashHex.getBytes(StandardCharsets.UTF_8);
@@ -106,6 +122,7 @@ public class VerifactuService {
         return signature.sign();
     }
 
+    // Calcula la huella del certificado (fingerprint) en SHA-256.
     public String certificateFingerprint() throws Exception {
         ensureEnabled();
         MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -114,6 +131,18 @@ public class VerifactuService {
         return bytesToHex(digest);
     }
 
+    /**
+     * Registra una evidencia encadenada en la base de datos: calcula huella, firma y guarda
+     * una entidad VerifactuEvidence usando JPA.
+     *
+     * Inputs:
+     * - facturaId: identificador de la factura (puede ser string)
+     * - facturaPayload: representación textual/JSON/XML de la factura usada para el hash
+     * - serie/numero: metadatos opcionales
+     * - fechaEmision: fecha de la factura
+     *
+     * Output: la entidad persistida con hash, firma y metadatos.
+     */
     public VerifactuEvidence registerEvidence(String facturaId, String facturaPayload, String serie, String numero, LocalDateTime fechaEmision) throws Exception {
         ensureEnabled();
         Optional<VerifactuEvidence> prev = evidenceRepository.findByFacturaId(facturaId);

@@ -1,22 +1,88 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.AlbaranEntradaController">
+<?import javafx.scene.text.Font?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.AlbaranesEntradaController"
+            prefHeight="800.0" prefWidth="1400.0" stylesheets="/css/styles.css">
+    <!-- Header -->
     <top>
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="Albaranes de Entrada" style="-fx-font-size:18px; -fx-font-weight:bold;"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="← Volver" onAction="#handleVolver"/>
-        </HBox>
+        <VBox styleClass="header">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="📥" style="-fx-font-size: 24px;"/>
+                    <Label text="Gestión de Albaranes de Entrada" styleClass="header-title"/>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
     </top>
     <center>
-        <TableView fx:id="tableAlbaranesEntrada">
-            <columns>
-                <TableColumn fx:id="colProveedor" text="Proveedor"/>
-                <TableColumn fx:id="colFecha" text="Fecha"/>
-                <TableColumn fx:id="colNumero" text="Número"/>
-            </columns>
-        </TableView>
+        <SplitPane dividerPositions="0.6">
+            <!-- Left: Table and Filters -->
+            <VBox spacing="15" style="-fx-background-color: white;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+                <VBox spacing="15" styleClass="filters-panel">
+                    <Label text="🔎 Búsqueda y Filtros" styleClass="subsection-title"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Buscar:" style="-fx-min-width: 80; -fx-font-weight: bold;"/>
+                        <TextField fx:id="txtSearch" promptText="Número, proveedor..."
+                                   HBox.hgrow="ALWAYS" styleClass="search-field"/>
+                        <Button text="🔎 Buscar" onAction="#handleSearch" styleClass="btn-primary"/>
+                        <Button text="⟳ Limpiar" onAction="#handleSearch" styleClass="btn-secondary"/>
+                    </HBox>
+                </VBox>
+                <TableView fx:id="tableAlbaranesEntrada" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colNumero" text="Número" />
+                        <TableColumn fx:id="colFecha" text="Fecha" />
+                        <TableColumn fx:id="colProveedor" text="Proveedor" />
+                        <TableColumn fx:id="colEstado" text="Estado" />
+                    </columns>
+                </TableView>
+            </VBox>
+            <!-- Right: Form -->
+            <VBox spacing="15" style="-fx-background-color: #f8f9fa;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="Datos del Albarán de Entrada" styleClass="section-title">
+                        <font><Font name="System Bold" size="16"/></font>
+                    </Label>
+                    <Region HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <VBox spacing="12">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Número:" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtNumero" promptText="Número de albarán"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Fecha:" style="-fx-font-weight: bold;"/>
+                        <DatePicker fx:id="dpFecha" promptText="Fecha"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Proveedor:" style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="cboProveedor" promptText="Selecciona proveedor"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Estado:" style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="cboEstado" promptText="Selecciona estado"/>
+                    </HBox>
+                </VBox>
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                    <Button text="➕ Nuevo" onAction="#handleNuevo" styleClass="btn-primary"/>
+                    <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
+                    <Button text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
+                </HBox>
+            </VBox>
+        </SplitPane>
     </center>
 </BorderPane>
-

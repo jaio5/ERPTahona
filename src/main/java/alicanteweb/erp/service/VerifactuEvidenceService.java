@@ -8,12 +8,21 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Servicio que gestiona el almacenamiento y consulta de las evidencias Verifactu
+ * (registros que contienen hash, firma y metadatos del envío a la AEAT).
+ *
+ * Explicación para un estudiante de DAM:
+ * - El servicio usa un repositorio JPA para persistir VerifactuEvidence.
+ * - El método registrarEvidenciaAEAT combina funcionalidad del servicio AEAT
+ *   (generar hash/firma) y persiste la evidencia en la BD.
+ */
 @Service
 @Transactional(readOnly = true)
 public class VerifactuEvidenceService {
 
     private final VerifactuEvidenceRepository repository;
-one que     private final VerifactuAEATService aeatService;
+    private final VerifactuAEATService aeatService;
 
     public VerifactuEvidenceService(VerifactuEvidenceRepository repository, VerifactuAEATService aeatService) {
         this.repository = repository;
@@ -50,6 +59,13 @@ one que     private final VerifactuAEATService aeatService;
         repository.deleteById(id);
     }
 
+    /**
+     * Crea y registra una evidencia en la BD y la envía (simulado) a la AEAT.
+     * - datosFactura: contenido textual que se usará para calcular el hash
+     * - serie/numero: datos complementarios
+     *
+     * Nota: este método delega en VerifactuAEATService para generar hash y firma.
+     */
     public VerifactuEvidence registrarEvidenciaAEAT(String datosFactura, String serie, String numero) throws Exception {
         VerifactuEvidence evidencia = new VerifactuEvidence();
         evidencia.setFacturaId(datosFactura);

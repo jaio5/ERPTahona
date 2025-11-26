@@ -1,22 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.ApunteContableController">
+<?import javafx.scene.text.Font?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.ApunteContableController"
+            prefHeight="800.0" prefWidth="1400.0" stylesheets="/css/styles.css">
+    <!-- Header -->
     <top>
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="Apuntes contables" style="-fx-font-size:18px; -fx-font-weight:bold;"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="← Volver" onAction="#handleVolver"/>
-        </HBox>
+        <VBox styleClass="header">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="📑" style="-fx-font-size: 24px;"/>
+                    <Label text="Apuntes contables" styleClass="header-title"/>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
     </top>
     <center>
-        <TableView fx:id="tableApuntes">
-            <columns>
-                <TableColumn fx:id="colCuenta" text="Cuenta"/>
-                <TableColumn fx:id="colDebe" text="Debe"/>
-                <TableColumn fx:id="colHaber" text="Haber"/>
-            </columns>
-        </TableView>
+        <SplitPane dividerPositions="0.6">
+            <!-- Left: Table -->
+            <VBox spacing="15" style="-fx-background-color: white;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+                <TableView fx:id="tableApuntes" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colCuenta" text="Cuenta"/>
+                        <TableColumn fx:id="colDebe" text="Debe"/>
+                        <TableColumn fx:id="colHaber" text="Haber"/>
+                    </columns>
+                </TableView>
+            </VBox>
+            <!-- Right: Form -->
+            <VBox spacing="15" style="-fx-background-color: #f8f9fa;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="Datos del Apunte" styleClass="section-title">
+                        <font><Font name="System Bold" size="16"/></font>
+                    </Label>
+                    <Region HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <VBox spacing="12">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Cuenta:" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtCuenta" promptText="Cuenta"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Debe:" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtDebe" promptText="Debe"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Haber:" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtHaber" promptText="Haber"/>
+                    </HBox>
+                </VBox>
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                    <Button text="➕ Nuevo" onAction="#handleNuevo" styleClass="btn-primary"/>
+                    <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
+                    <Button text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
+                </HBox>
+            </VBox>
+        </SplitPane>
     </center>
 </BorderPane>
-

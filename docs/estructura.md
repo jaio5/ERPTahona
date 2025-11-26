@@ -1,115 +1,91 @@
-Estructura del proyecto ERP (Java 17, Spring Boot, JPA, JavaFX con FXML)
+# Estructura propuesta y guía de desarrollo para ERP Tahona
 
-Objetivo
-- Aplicación de escritorio JavaFX que usa Spring Boot y JPA para acceso a la base de datos.
-- Evitar @Autowired: inyección por constructor y uso del ApplicationContext en los controladores FXML.
+Este documento explica la estructura del proyecto que vamos a mantener y sirve como guía para un estudiante de DAM que comienza con Spring Boot, JPA y JavaFX (FXML).
 
-Estructura recomendada (ya presente en el proyecto)
+1) Objetivo
+- Aplicación de escritorio (JavaFX + FXML) que usa Spring Boot y JPA para acceder a la base de datos.
+- Verifactur: módulo encargado de registrar/transmitir facturas a AEAT (de momento veremos solo registro y previsualización).
 
-- src/main/java/
-  - alicanteweb.erp
-    - SpringBootApp.java                # clase @SpringBootApplication (configuración principal)
-    - ErpLauncher.java                 # arranca Spring y lanza JavaFX
-    - ErpFxApplication.java            # extiende javafx.application.Application e integra Spring
-    - ErpApplication.java              # alternativa que arranca Spring dentro de JavaFX (opcional)
+2) Estructura de carpetas relevante
+- src/main/java/alicanteweb/erp
+  - SpringBootApp.java  -> Clase principal de Spring Boot (annotada con @SpringBootApplication)
+  - ErpLauncher.java    -> Lanzador JavaFX que arranca Spring Boot (explicado en clase)
+  - model/              -> Entidades JPA (Factura, Cliente, Articulo, Almacen, etc.)
+  - repository/         -> Repositorios JPA (interfaces que extienden JpaRepository)
+  - service/            -> Servicios de negocio (lógica, transacciones)
+  - ui/                 -> Controladores FXML anotados con @Component (no usar @Autowired)
+  - verifactur/         -> Código relacionado con la integración AEAT y modelos asociados
 
-  - alicanteweb.erp.entities/         # JPA @Entity
-    - Articulo.java
-    - Cliente.java
-    - Factura.java
-    - FacturaLinea.java
-    - Almacene.java
-    - AlbaranesVenta.java
-    - ...
+- src/main/resources/ui
+  - fxml files (main_panel.fxml, facturas.fxml, clientes.fxml, articulos.fxml...)
+- src/main/resources/application.properties (y profiles application-dev.properties,...)
 
-  - alicanteweb.erp.repository/       # interfaces JPA (extienden JpaRepository)
-    - ArticuloRepository.java
-    - ClienteRepository.java
-    - FacturaRepository.java
-    - FacturaLineaRepository.java
-    - AlmaceneRepository.java
-    - AlbaranesVentaRepository.java
-    - ...
+3) Patrón de integración JavaFX + Spring
+- `ErpLauncher` arranca Spring Boot en `init()` y, en `start()`, carga los FXML usando
+  `loader.setControllerFactory(springContext::getBean)`. Esto permite que los controladores
+  FXML sean beans de Spring y reciban dependencias por constructor.
+- En los controladores FXML:
+  - Marcar con `@Component` para que Spring los detecte.
+  - No usar `@Autowired`. Preferir inyección por constructor.
+  - Definir campos `@FXML` para enlazar con elementos del FXML.
 
-  - alicanteweb.erp.service/          # servicios (componentes sin @Autowired)
-    - ArticuloService.java
-    - ClienteService.java
-    - FacturaService.java
-    - FacturaLineaService.java
-    - AlmaceneService.java
-    - AlbaranesVentaService.java
+4) JPA y repositorios
+- Todas las entidades deben estar anotadas con `@Entity` y tener un `@Id`.
+- Crear repositorios que extiendan `JpaRepository<T, ID>`.
+- Los servicios usan los repositorios inyectados por constructor y aplican anotaciones
+  como `@Transactional` cuando sea necesario.
 
-  - alicanteweb.erp.controller/       # controladores JavaFX (anotados con @Controller o @Component opcionalmente)
-    - ui/                             # controllers de la UI principal
-    - ArticuloController.java
-    - ClienteController.java
-    - FacturaController.java
-    - FacturaLineaController.java
-    - AlmaceneController.java
-    - AlbaranesVentaController.java
+5) Verifactur (concepto y flujo)
+- Propósito: registrar envío de facturas a la AEAT y almacenar el estado de cada envío.
+- Componentes:
+  - Entidad `VerifacturRecord` (id, facturaId, estado, mensajeRespuesta, fechaEnvio, etc.)
+  - Repositorio `VerifacturRecordRepository` (JpaRepository)
+  - Servicio `VerifacturService` que:
+    - Valida la factura y genera representación (XML/JSON) requerida por la AEAT
+    - Realiza la llamada a la AEAT (simulada/real) y guarda el resultado en `VerifacturRecord`
+    - Expone métodos para obtener el registro y su estado
+  - UI (FXML) `VerifacturController` que muestra la tabla de envíos y permite reintentar
+    envíos manualmente o ver la respuesta.
 
-- src/main/resources/
-  - application.properties            # configuración (datasource, JPA, perfiles)
-  - ui/                               # archivos FXML
-    - main_panel.fxml
-    - facturas.fxml
-    - factura-lineas.fxml
-    - articulos.fxml
-    - ...
-  - certs/
-  - css/
+6) Conexión entre FXML y servicios (ejemplo práctico)
+- FXML `facturas.fxml` define un botón "Emitir" con `onAction="#onEmitirFactura"`.
+- Controlador `FacturaFxController` (bean Spring) tiene método `onEmitirFactura()`.
+- Dentro de `onEmitirFactura()`:
+  - Se crea/actualiza la entidad `Factura` y se guarda con `facturaService.save(...)`.
+  - Se llama a `verifacturService.enviar(factura)` que devuelve un `VerifacturRecord`.
+  - Se actualiza la UI (tabla de verifactur) y se muestra previsualización si procede.
 
-Buenas prácticas para este proyecto
-- Java 17: en pom.xml asegurarse de <java.version>17</java.version>.
-- JPA: usar Spring Data JPA (JpaRepository) para repositorios.
-- Spring Boot: crear una clase @SpringBootApplication (ya añadida: SpringBootApp).
-- JavaFX + Spring: cargar FXML con FXMLLoader y setControllerFactory(context::getBean) para inyectar beans por constructor.
-- No usar @Autowired: usar inyección por constructor; marcar servicios/repositorios como @Service/@Repository o interfaces JpaRepository.
-- Manejo de errores: para aplicación de escritorio, usar excepciones específicas y diálogos; no dependes de controlador global web.
+7) Buenas prácticas y consejos
+- Usar inyección por constructor en todos los beans (evitar @Autowired).
+- Mantener la lógica de negocio en `service/` y la lógica de presentación en `ui/`.
+- Evitar mezclar JPA y operaciones con UI en el hilo de JavaFX; si una operación es lenta,
+  ejecutarla en un hilo/coroutine y actualizar la UI con Platform.runLater.
+- Para previsualizar facturas en la UI usar `WebView` y generar HTML o generar PDF
+  y mostrar un viewer.
 
-Cómo arrancar la aplicación localmente (desarrollo)
-1. Tener JDK 17 instalado y JAVA_HOME configurado.
-2. Tener Maven instalado (o usar el wrapper mvnw con permisos de ejecución).
-3. Desde la raíz del proyecto:
-   - Con Maven: mvn javafx:run -DskipTests
-   - Con wrapper: ./mvnw -DskipTests package && java -jar target/*.jar
+8) Ajustes para ejecutar la aplicación (resumen rápido)
+- Añadir plugin JavaFX en `pom.xml` o usar `--module-path` y `--add-modules` en las VM options
+  para que la JVM encuentre los módulos JavaFX si usas una JDK modular.
+- Ejecutar con Java 17 (ya configurado en tu entorno), y comprobar que las dependencias
+  de `org.openjfx` están en el repositorio local.
 
-Cómo ejecutar rápido sin MySQL (H2 en memoria)
+9) Cómo comentar el código para aprender
+- Cada clase debe incluir un comentario al principio que explique su responsabilidad.
+- Métodos clave (start, init, save, enviar) deben tener javadoc o comentarios
+  que expliquen entradas/salidas y efectos secundarios.
 
-Si no quieres configurar MySQL local, existe un perfil `dev-h2` para desarrollo que usa H2 en memoria.
-
-PowerShell – ejecutar con H2 (usa el wrapper incluido):
-
-```powershell
-# Limpia e inicia la aplicación usando JavaFX plugin
-.\mvnw clean javafx:run -Dspring.profiles.active=dev-h2
-
-# O empaqueta y ejecuta el jar (parámetros para H2)
-.\mvnw -DskipTests clean package
-java -jar .\target\ERP-0.0.1.jar --spring.profiles.active=dev-h2
-```
-
-Notas:
-- Asegúrate de tener JDK 17 y `JAVA_HOME` configurado. Si no tienes Maven instalado, usa `mvnw` o `mvnw.cmd` (ö el wrapper de Windows) que está incluido en el proyecto.
-- Si prefieres usar MySQL, revisa `src/main/resources/application-dev.properties` y actualiza la URL/credenciales.
-
-Checklist para completar el frontend y errores detectados
-- [x] Añadir SpringBootApp para arrancar Spring Boot.
-- [x] Cambiar ErpLauncher para iniciar Spring antes de JavaFX y exponer el contexto.
-- [x] ErpFxApplication ya preparado para cargar FXML con setControllerFactory.
-- [ ] Asegurarse que todos los controladores FXML están definidos como beans (marcados @Controller o @Component) y usan inyección por constructor.
-- [ ] Reemplazar cualquier @Autowired por inyección por constructor en todo el proyecto.
-- [ ] Probar mvn package y ejecutar la app JavaFX.
-
-Próximos pasos sugeridos
-- Ejecutar una búsqueda para eliminar todos los @Autowired (ya solicitada anteriormente).
-- Verificar que todos los controladores FXML tienen un bean en Spring y que los fxml usan fx:controller si no se usa controllerFactory.
-- Implementar o revisar services/repositories faltantes y adaptarlos a JPA.
-
-Si quieres, puedo:
-- Ejecutar la búsqueda y eliminar todos los @Autowired automáticamente.
-- Marcar y corregir los controladores FXML que no se registren como beans.
-- Generar plantillas para servicios, repositorios y controladores faltantes.
+10) Próximos pasos sugeridos
+- Revisar las entidades existentes en `model/` y asegurarse de que tienen relaciones bien
+  mapeadas (@OneToMany, @ManyToOne) y `fetch` adecuados.
+- Implementar los repositorios y servicios para las entidades que faltan.
+- Crear/ajustar los FXML y controladores con bindings (Properties) para que la UI sea reactiva.
 
 ---
-Archivo generado automáticamente por la herramienta de soporte del proyecto.
+
+Si quieres, ahora puedo:
+- Añadir comentarios similares a otras clases clave del proyecto (por ejemplo `FacturaService`,
+  `FacturaFxController`, `VerifacturService`) para que las entiendas.
+- Generar ejemplos de código de cómo llamar a la AEAT (simulado) y registrar la respuesta.
+
+Dime qué prefieres que haga a continuación: comentar clases concretas o añadir ejemplos prácticos
+(en código) para ver la previsualización e integración con la base de datos.

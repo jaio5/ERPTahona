@@ -4,30 +4,77 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.PedidoLineaController">
-    <center>
-        <TableView fx:id="tableLineas" prefHeight="400.0" prefWidth="600.0">
-            <columns>
-                <TableColumn fx:id="colId" text="ID" />
-                <TableColumn fx:id="colArticulo" text="Artículo" />
-                <TableColumn fx:id="colCantidad" text="Cantidad" />
-                <TableColumn fx:id="colPrecio" text="Precio" />
-            </columns>
-        </TableView>
-    </center>
-    <bottom>
-        <HBox spacing="10.0" alignment="CENTER_RIGHT">
-            <padding>
-                <Insets top="10" right="10" bottom="10" left="10"/>
-            </padding>
-            <Button text="Agregar" />
-            <Button text="Modificar" />
-            <Button text="Eliminar" />
-            <Button text="Guardar" />
-            <Button text="Cancelar" />
-        </HBox>
-    </bottom>
+            fx:controller="alicanteweb.erp.controller.PedidoLineaController"
+            prefHeight="700.0" prefWidth="1100.0" stylesheets="/css/styles.css">
+    <!-- Header -->
     <top>
-        <Label text="Líneas del Pedido" />
+        <VBox styleClass="header">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="🧾" style="-fx-font-size: 24px;"/>
+                    <Label text="Líneas del Pedido" styleClass="header-title"/>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
     </top>
+    <center>
+        <SplitPane dividerPositions="0.6">
+            <!-- Left: Table -->
+            <VBox spacing="15" style="-fx-background-color: white;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+                <TableView fx:id="tableLineas" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colId" text="ID" />
+                        <TableColumn fx:id="colArticulo" text="Artículo" />
+                        <TableColumn fx:id="colCantidad" text="Cantidad" />
+                        <TableColumn fx:id="colPrecio" text="Precio" />
+                    </columns>
+                </TableView>
+            </VBox>
+            <!-- Right: Form -->
+            <VBox spacing="15" style="-fx-background-color: #f8f9fa;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="Datos de la Línea" styleClass="section-title">
+                        <font><Font name="System Bold" size="16"/></font>
+                    </Label>
+                    <Region HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <VBox spacing="12">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="ID:" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtId" promptText="ID"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Artículo:" style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="cboArticulo" promptText="Selecciona artículo"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Cantidad:" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtCantidad" promptText="Cantidad"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Precio:" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtPrecio" promptText="Precio"/>
+                    </HBox>
+                </VBox>
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                    <Button text="➕ Agregar" onAction="#handleAgregar" styleClass="btn-primary"/>
+                    <Button text="✏️ Modificar" onAction="#handleModificar" styleClass="btn-secondary"/>
+                    <Button text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
+                    <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
+                    <Button text="❌ Cancelar" onAction="#handleCancelar" styleClass="btn-secondary"/>
+                </HBox>
+            </VBox>
+        </SplitPane>
+    </center>
 </BorderPane>

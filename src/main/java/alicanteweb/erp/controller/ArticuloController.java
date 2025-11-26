@@ -8,6 +8,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import org.springframework.stereotype.Controller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +17,8 @@ import java.util.Optional;
 @SuppressWarnings("unused")
 @Controller
 public class ArticuloController implements MainControllerAware {
+
+    private static final Logger log = LoggerFactory.getLogger(ArticuloController.class);
 
     private final ArticuloService articuloService;
     private alicanteweb.erp.controller.ui.MainPanelController mainPanelController;
@@ -63,35 +67,59 @@ public class ArticuloController implements MainControllerAware {
 
     @FXML
     public void initialize() {
-        if (tableArticulos != null) tableArticulos.setItems(articulosObservable);
+        configureTableColumns();
+        bindTableData();
+        configureSelectionListener();
+        loadAll();
+    }
 
+    private void configureTableColumns() {
         if (colCodigo != null) colCodigo.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getCodigo()));
         if (colDescripcion != null) colDescripcion.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getDescripcion()));
         if (colFamilia != null) colFamilia.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getFamilia()));
+    }
 
-        loadAll();
+    private void bindTableData() {
+        if (tableArticulos != null) tableArticulos.setItems(articulosObservable);
+    }
 
-        if (tableArticulos != null) {
-            tableArticulos.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-                if (newSel != null) {
-                    if (txtCodigo != null) txtCodigo.setText(newSel.getCodigo() != null ? newSel.getCodigo() : "");
-                    if (txtDescripcion != null) txtDescripcion.setText(newSel.getDescripcion() != null ? newSel.getDescripcion() : "");
-                    if (txtFamilia != null) txtFamilia.setText(newSel.getFamilia() != null ? newSel.getFamilia() : "");
-                    if (txtUnidad != null) txtUnidad.setText(newSel.getUnidad() != null ? newSel.getUnidad() : "");
-                    if (txtIva != null) txtIva.setText(newSel.getIva() != null ? newSel.getIva().toString() : "");
-                    if (txtPvp != null) txtPvp.setText(newSel.getPvp() != null ? newSel.getPvp().toString() : "");
-                    if (txtCoste != null) txtCoste.setText(newSel.getCoste() != null ? newSel.getCoste().toString() : "");
-                } else {
-                    if (txtCodigo != null) txtCodigo.setText("");
-                    if (txtDescripcion != null) txtDescripcion.setText("");
-                    if (txtFamilia != null) txtFamilia.setText("");
-                    if (txtUnidad != null) txtUnidad.setText("");
-                    if (txtIva != null) txtIva.setText("");
-                    if (txtPvp != null) txtPvp.setText("");
-                    if (txtCoste != null) txtCoste.setText("");
-                }
-            });
-        }
+    private void configureSelectionListener() {
+        if (tableArticulos == null) return;
+        tableArticulos.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                populateDetails(newSel);
+            } else {
+                clearDetails();
+            }
+        });
+    }
+
+    private void populateDetails(Articulo a) {
+        setText(txtCodigo, a.getCodigo());
+        setText(txtDescripcion, a.getDescripcion());
+        setText(txtFamilia, a.getFamilia());
+        setText(txtUnidad, a.getUnidad());
+        setText(txtIva, a.getIva() != null ? a.getIva().toString() : "");
+        setText(txtPvp, a.getPvp() != null ? a.getPvp().toString() : "");
+        setText(txtCoste, a.getCoste() != null ? a.getCoste().toString() : "");
+    }
+
+    private void clearDetails() {
+        setText(txtCodigo, "");
+        setText(txtDescripcion, "");
+        setText(txtFamilia, "");
+        setText(txtUnidad, "");
+        setText(txtIva, "");
+        setText(txtPvp, "");
+        setText(txtCoste, "");
+    }
+
+    private String getText(TextInputControl control) {
+        return control == null ? "" : Optional.ofNullable(control.getText()).orElse("");
+    }
+
+    private void setText(TextInputControl control, String value) {
+        if (control != null) control.setText(value == null ? "" : value);
     }
 
     private void loadAll() {
@@ -102,78 +130,71 @@ public class ArticuloController implements MainControllerAware {
 
     @FXML
     public void handleSearch() {
-        if (txtSearch == null) return;
-        String q = txtSearch.getText();
-        if (q == null || q.isBlank()) {
+        String q = getText(txtSearch).trim();
+        if (q.isEmpty()) {
             loadAll();
             return;
         }
-
         articulosObservable.clear();
         articulosObservable.addAll(articuloService.searchByDescripcion(q));
     }
 
     @FXML
     public void handleNuevo() {
-        if (txtCodigo != null) txtCodigo.setText("");
-        if (txtDescripcion != null) txtDescripcion.setText("");
-        if (txtFamilia != null) txtFamilia.setText("");
-        if (txtUnidad != null) txtUnidad.setText("");
-        if (txtIva != null) txtIva.setText("");
-        if (txtPvp != null) txtPvp.setText("");
-        if (txtCoste != null) txtCoste.setText("");
+        clearDetails();
         if (tableArticulos != null) tableArticulos.getSelectionModel().clearSelection();
     }
 
     @FXML
     public void handleGuardar() {
-        Articulo selected = null;
-        if (tableArticulos != null) selected = tableArticulos.getSelectionModel().getSelectedItem();
-        if (selected == null) selected = new Articulo();
-
-        selected.setCodigo(txtCodigo != null ? txtCodigo.getText() : null);
-        selected.setDescripcion(txtDescripcion != null ? txtDescripcion.getText() : null);
-        selected.setFamilia(txtFamilia != null ? txtFamilia.getText() : null);
-        selected.setUnidad(txtUnidad != null ? txtUnidad.getText() : null);
-        // parse BigDecimal fields defensively
-        try {
-            if (txtIva != null && !txtIva.getText().isBlank()) selected.setIva(new java.math.BigDecimal(txtIva.getText()));
-        } catch (Exception e) { /* ignore, leave null */ }
-        try {
-            if (txtPvp != null && !txtPvp.getText().isBlank()) selected.setPvp(new java.math.BigDecimal(txtPvp.getText()));
-        } catch (Exception e) { /* ignore, leave null */ }
-        try {
-            if (txtCoste != null && !txtCoste.getText().isBlank()) selected.setCoste(new java.math.BigDecimal(txtCoste.getText()));
-        } catch (Exception e) { /* ignore, leave null */ }
-
-        // unicidad de codigo
-        String codigo = selected.getCodigo();
-        if (codigo != null && !codigo.isBlank()) {
-            Optional<Articulo> existente = articuloService.findByCodigo(codigo);
-            if (existente.isPresent()) {
-                Articulo existing = existente.get();
-                if (selected.getId() == null || !existing.getId().equals(selected.getId())) {
-                    new Alert(Alert.AlertType.ERROR, "El código ya existe").showAndWait();
-                    return;
-                }
-            }
+        Articulo selected = getSelectedOrNew();
+        fillFromUi(selected);
+        if (!isCodigoUniqueOrSame(selected)) {
+            showAlert("El código ya existe");
+            return;
         }
-
         articuloService.save(selected);
         loadAll();
     }
 
+    private Articulo getSelectedOrNew() {
+        if (tableArticulos == null) return new Articulo();
+        Articulo sel = tableArticulos.getSelectionModel().getSelectedItem();
+        return sel == null ? new Articulo() : sel;
+    }
+
+    private void fillFromUi(Articulo a) {
+        a.setCodigo(getText(txtCodigo));
+        a.setDescripcion(getText(txtDescripcion));
+        a.setFamilia(getText(txtFamilia));
+        a.setUnidad(getText(txtUnidad));
+        try { a.setIva(new java.math.BigDecimal(getText(txtIva))); } catch (Exception e) { showAlert("IVA no válido"); }
+        try { a.setPvp(new java.math.BigDecimal(getText(txtPvp))); } catch (Exception e) { showAlert("PVP no válido"); }
+        try { a.setCoste(new java.math.BigDecimal(getText(txtCoste))); } catch (Exception e) { showAlert("Coste no válido"); }
+    }
+
+    private boolean isCodigoUniqueOrSame(Articulo a) {
+        String codigo = a.getCodigo();
+        if (codigo == null || codigo.isBlank()) return true;
+        Optional<Articulo> existente = articuloService.findByCodigo(codigo);
+        return existente.isEmpty() || (a.getId() != null && existente.get().getId().equals(a.getId()));
+    }
+
     @FXML
     public void handleEliminar() {
-        Articulo selected = null;
-        if (tableArticulos != null) selected = tableArticulos.getSelectionModel().getSelectedItem();
+        Articulo selected = getSelectedOrNull();
         if (selected == null || selected.getId() == null) return;
         if (selected.getAlbaranVentaLineas() != null && !selected.getAlbaranVentaLineas().isEmpty()) {
-            new Alert(Alert.AlertType.ERROR, "No se puede eliminar: existen líneas de albarán asociadas").showAndWait();
+            showAlert("No se puede eliminar: existen líneas de albarán asociadas");
             return;
         }
         articuloService.deleteById(selected.getId());
         loadAll();
+    }
+
+    private Articulo getSelectedOrNull() {
+        if (tableArticulos == null) return null;
+        return tableArticulos.getSelectionModel().getSelectedItem();
     }
 
     @Override
@@ -189,5 +210,10 @@ public class ArticuloController implements MainControllerAware {
     @FXML
     public void handleFilterFamilia() {
         // Lógica de filtrado por familia (puedes implementar aquí si lo necesitas)
+    }
+
+    // Helper para mostrar alertas de error de forma centralizada.
+    private void showAlert(String message) {
+        new Alert(Alert.AlertType.ERROR, message).showAndWait();
     }
 }
