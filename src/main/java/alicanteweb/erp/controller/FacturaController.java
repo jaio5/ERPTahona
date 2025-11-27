@@ -2,18 +2,22 @@ package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Cliente;
 import alicanteweb.erp.entities.Factura;
-import alicanteweb.erp.entities.FacturaLinea;
+import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.service.ClienteService;
 import alicanteweb.erp.service.FacturaService;
+import alicanteweb.erp.service.VerifactuAEATService;
+import alicanteweb.erp.service.VerifactuService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -26,10 +30,24 @@ public class FacturaController implements MainControllerAware {
 
     private static final Logger log = LoggerFactory.getLogger(FacturaController.class);
 
+    // ... (servicios y otros campos)
     private final FacturaService facturaService;
     private final ClienteService clienteService;
+    private final VerifactuService verifactuService;
+    private final VerifactuAEATService verifactuAEATService;
+    private final ObjectMapper objectMapper;
     private alicanteweb.erp.controller.ui.MainPanelController mainPanelController;
 
+
+    public FacturaController(FacturaService facturaService, ClienteService clienteService, VerifactuService verifactuService, VerifactuAEATService verifactuAEATService) {
+        this.facturaService = facturaService;
+        this.clienteService = clienteService;
+        this.verifactuService = verifactuService;
+        this.verifactuAEATService = verifactuAEATService;
+        this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    }
+
+    // ... (código existente del controlador)
     @FXML
     private TableView<Factura> tableFacturas;
 
@@ -65,11 +83,6 @@ public class FacturaController implements MainControllerAware {
 
     private final ObservableList<Factura> facturasObservable = FXCollections.observableArrayList();
     private final ObservableList<Cliente> clientesObservable = FXCollections.observableArrayList();
-
-    public FacturaController(FacturaService facturaService, ClienteService clienteService) {
-        this.facturaService = facturaService;
-        this.clienteService = clienteService;
-    }
 
     @FXML
     public void initialize() {
@@ -177,8 +190,45 @@ public class FacturaController implements MainControllerAware {
             showAlert(Alert.AlertType.ERROR, "El número de factura ya existe");
             return;
         }
-        facturaService.save(selected);
+        Factura savedFactura = facturaService.save(selected);
         loadAll();
+        registrarYEnviarVerifactu(savedFactura);
+    }
+
+    private void registrarYEnviarVerifactu(Factura factura) {
+        try {
+            String facturaPayload = String.format("id=%s,numero=%s,fecha=%s,total=%.2f",
+                    factura.getId(), factura.getNumero(), factura.getFecha(), factura.getTotal());
+
+            log.info("Registrando evidencia Verifactu para la factura {}", factura.getNumero());
+            VerifactuEvidence evidence = verifactuService.registerEvidence(
+                    String.valueOf(factura.getId()),
+                    facturaPayload,
+                    factura.getNumero(),
+                    null,
+                    factura.getFecha().atStartOfDay()
+            );
+            log.info("Evidencia Verifactu registrada localmente con hash: {}", evidence.getHash());
+
+            String evidenciaJson = objectMapper.writeValueAsString(evidence);
+
+            verifactuAEATService.enviarAEAT(evidenciaJson);
+
+            String successMessage;
+            if (verifactuAEATService.isAeatEnabled()) {
+                successMessage = "Factura guardada, registrada y enviada a la AEAT con éxito.";
+            } else {
+                successMessage = "Factura guardada y registrada localmente. El envío a la AEAT está desactivado (modo de prueba).";
+            }
+            showAlert(Alert.AlertType.INFORMATION, successMessage + "\nHash: " + evidence.getHash());
+
+        } catch (IllegalStateException e) {
+            log.warn("No se pudo registrar la evidencia Verifactu: {}.", e.getMessage());
+            showAlert(Alert.AlertType.WARNING, "Factura guardada, pero no se pudo registrar en Verifactu.\nMotivo: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Error durante el proceso de registro y envío a Verifactu/AEAT", e);
+            showAlert(Alert.AlertType.ERROR, "Factura guardada, pero ocurrió un error con Verifactu/AEAT.\nError: " + e.getMessage());
+        }
     }
 
     private Factura getSelectedOrNew() {
@@ -215,35 +265,6 @@ public class FacturaController implements MainControllerAware {
         return tableFacturas.getSelectionModel().getSelectedItem();
     }
 
-    /**
-     * Copia los datos de la última factura de un cliente seleccionado y los pone en el formulario para emitir una nueva factura similar.
-     * También copia las líneas de la factura anterior y las asocia a la nueva factura en edición.
-     */
-    public void copiarFacturaAnterior(Cliente cliente) {
-        if (cliente == null) return;
-        Optional<Factura> ultimaOpt = facturaService.findUltimaFacturaPorCliente(cliente.getId());
-        if (ultimaOpt.isPresent()) {
-            Factura ultima = ultimaOpt.get();
-            setText(txtNumero, "");
-            setDate(dpFecha, java.time.LocalDate.now());
-            selectCliente(cboCliente, cliente);
-            setText(txtTotal, String.valueOf(ultima.getTotal()));
-            setText(txtPagado, "0");
-            // Copiar líneas de factura
-            Set<FacturaLinea> lineasCopia = new java.util.LinkedHashSet<>();
-            for (FacturaLinea linea : ultima.getFacturaLineas()) {
-                FacturaLinea copia = new FacturaLinea();
-                copia.setArticulo(linea.getArticulo());
-                copia.setCantidad(linea.getCantidad());
-                copia.setPrecio(linea.getPrecio());
-                copia.setIva(linea.getIva());
-                copia.setFactura(null); // Se asociará al guardar la nueva factura
-                lineasCopia.add(copia);
-            }
-            // Aquí deberías asociar estas líneas a la nueva factura en edición
-        }
-    }
-
     @Override
     public void setMainPanelController(alicanteweb.erp.controller.ui.MainPanelController mainPanelController) {
         this.mainPanelController = mainPanelController;
@@ -254,99 +275,6 @@ public class FacturaController implements MainControllerAware {
         if (mainPanelController != null) mainPanelController.showHome();
     }
 
-    @FXML
-    public void handleCopiarFacturaAnterior() {
-        Cliente cliente = cboCliente != null ? cboCliente.getSelectionModel().getSelectedItem() : null;
-        if (cliente == null) {
-            showAlert(Alert.AlertType.WARNING, "Selecciona un cliente para copiar su última factura.");
-            return;
-        }
-        copiarFacturaAnterior(cliente);
-        showAlert(Alert.AlertType.INFORMATION, "Datos de la última factura copiados. Puedes modificar y guardar la nueva factura.");
-    }
-
-    @FXML
-    public void handleNuevaFactura() {
-        Dialog<Factura> dialog = new Dialog<>();
-        dialog.setTitle("Nueva Factura");
-        dialog.setHeaderText("Crear nueva factura");
-        ButtonType btnCrear = new ButtonType("Crear", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(btnCrear, ButtonType.CANCEL);
-
-        TextField txtNumero = new TextField();
-        DatePicker dpFecha = new DatePicker();
-        ComboBox<Cliente> cboCliente = new ComboBox<>(clientesObservable);
-        TextField txtTotal = new TextField();
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.add(new Label("Número:"), 0, 0);
-        grid.add(txtNumero, 1, 0);
-        grid.add(new Label("Fecha:"), 0, 1);
-        grid.add(dpFecha, 1, 1);
-        grid.add(new Label("Cliente:"), 0, 2);
-        grid.add(cboCliente, 1, 2);
-        grid.add(new Label("Total:"), 0, 3);
-        grid.add(txtTotal, 1, 3);
-        dialog.getDialogPane().setContent(grid);
-
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == btnCrear) {
-                Factura f = new Factura();
-                f.setNumero(txtNumero.getText());
-                f.setFecha(dpFecha.getValue());
-                f.setCliente(cboCliente.getValue());
-                try {
-                    f.setTotal(new java.math.BigDecimal(txtTotal.getText()));
-                } catch (Exception e) {
-                    f.setTotal(java.math.BigDecimal.ZERO);
-                }
-                return f;
-            }
-            return null;
-        });
-
-        dialog.showAndWait().ifPresent(factura -> {
-            facturaService.save(factura);
-            facturasObservable.add(factura);
-        });
-    }
-
-    @FXML
-    public void handleImprimirFactura() {
-        Factura factura = getSelectedOrNull();
-        if (factura == null) {
-            showAlert(Alert.AlertType.WARNING, "Selecciona una factura para imprimir");
-            return;
-        }
-        try {
-            facturaService.imprimirFactura(factura);
-            showAlert(Alert.AlertType.INFORMATION, "Factura impresa correctamente");
-        } catch (Exception e) {
-            log.error("Error al imprimir la factura", e);
-            showAlert(Alert.AlertType.ERROR, "Error al imprimir la factura: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    public void handlePrevisualizarFactura() {
-        Factura factura = getSelectedOrNull();
-        if (factura == null) {
-            showAlert(Alert.AlertType.WARNING, "Selecciona una factura para previsualizar");
-            return;
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append("Número: ").append(factura.getNumero()).append("\n");
-        sb.append("Fecha: ").append(factura.getFecha()).append("\n");
-        sb.append("Cliente: ").append(factura.getCliente() != null ? factura.getCliente().getNombre() : "").append("\n");
-        sb.append("Total: ").append(factura.getTotal()).append("\n");
-        sb.append("Pagado: ").append(factura.getPagado()).append("\n");
-        // Puedes añadir aquí las líneas de la factura si lo deseas
-        showAlert(Alert.AlertType.INFORMATION, sb.toString());
-    }
-
-    // Helper para mostrar alertas de forma centralizada.
     private void showAlert(Alert.AlertType type, String message) {
         new Alert(type, message).showAndWait();
     }

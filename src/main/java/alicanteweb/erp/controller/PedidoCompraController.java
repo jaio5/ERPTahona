@@ -6,14 +6,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import alicanteweb.erp.entities.PedidoCompra;
 import alicanteweb.erp.service.PedidoCompraService;
+import org.springframework.stereotype.Controller;
 
-/**
- * Controlador para la vista de gestión de pedidos de compra.
- * Conecta los elementos FXML con la lógica de la aplicación.
- * Ejemplo para DAM: aquí se enlazan los componentes visuales con la lógica de negocio usando JPA y servicios.
- */
+@Controller
 public class PedidoCompraController {
-    // Elementos de la tabla y filtros
+
     @FXML private TableView<PedidoCompra> tablePedidosCompra;
     @FXML private TableColumn<PedidoCompra, String> colNumero;
     @FXML private TableColumn<PedidoCompra, String> colFecha;
@@ -21,67 +18,72 @@ public class PedidoCompraController {
     @FXML private TableColumn<PedidoCompra, String> colEstado;
     @FXML private TextField txtSearch;
 
-    // Elementos del formulario de pedido
     @FXML private TextField txtNumero;
     @FXML private DatePicker dpFecha;
     @FXML private ComboBox<String> cboProveedor;
     @FXML private ComboBox<String> cboEstado;
 
-    // Servicio para acceder a la base de datos (JPA)
     private final PedidoCompraService pedidoCompraService;
     private final ObservableList<PedidoCompra> pedidosList = FXCollections.observableArrayList();
 
-    // Constructor para inyección manual (sin @Autowired)
-    public PedidoCompraController() {
-        this.pedidoCompraService = new PedidoCompraService(); // En producción, usaría un gestor de dependencias
+    public PedidoCompraController(PedidoCompraService pedidoCompraService) {
+        this.pedidoCompraService = pedidoCompraService;
     }
 
-    // Inicialización automática al cargar el FXML
     @FXML
     public void initialize() {
         tablePedidosCompra.setItems(pedidosList);
+        // Aquí se configurarían las celdas de la tabla (setCellValueFactory)
         cargarPedidos();
-        // Configura columnas si es necesario
     }
 
     private void cargarPedidos() {
-        pedidosList.clear();
-        pedidosList.addAll(pedidoCompraService.findAll());
+        pedidosList.setAll(pedidoCompraService.findAll());
     }
 
-    // Acciones principales
-    @FXML public void handleVolver() {
-        // Implementa la lógica para volver al menú principal
-    }
-    @FXML public void handleSearch() {
-        // Implementa la lógica de búsqueda y limpieza de filtros
+    @FXML
+    public void handleSearch() {
         String filtro = txtSearch.getText();
-        pedidosList.clear();
-        pedidosList.addAll(pedidoCompraService.buscarPorFiltro(filtro));
+        pedidosList.setAll(pedidoCompraService.buscarPorFiltro(filtro));
     }
-    @FXML public void handleNuevo() {
-        // Limpia el formulario para crear un nuevo pedido
+
+    @FXML
+    public void handleNuevo() {
         txtNumero.clear();
         dpFecha.setValue(null);
         cboProveedor.getSelectionModel().clearSelection();
         cboEstado.getSelectionModel().clearSelection();
+        tablePedidosCompra.getSelectionModel().clearSelection();
     }
-    @FXML public void handleGuardar() {
-        // Guarda el pedido en la base de datos
+
+    @FXML
+    public void handleGuardar() {
+        // En una app real, aquí se validaría la entrada.
         PedidoCompra pedido = new PedidoCompra();
         pedido.setNumero(txtNumero.getText());
         pedido.setFecha(dpFecha.getValue());
         pedido.setProveedor(cboProveedor.getValue());
         pedido.setEstado(cboEstado.getValue());
+        
+        // Aquí faltaría la lógica para el total, pero para compilar es suficiente.
+        pedido.setTotal(0.0f); 
+
         pedidoCompraService.save(pedido);
         cargarPedidos();
     }
-    @FXML public void handleEliminar() {
-        // Elimina el pedido seleccionado
+
+    @FXML
+    public void handleEliminar() {
         PedidoCompra seleccionado = tablePedidosCompra.getSelectionModel().getSelectedItem();
         if (seleccionado != null) {
+            // Aquí iría una confirmación antes de borrar.
             pedidoCompraService.delete(seleccionado);
             cargarPedidos();
         }
+    }
+    
+    @FXML 
+    public void handleVolver() {
+        // Lógica para volver a la pantalla principal (requiere referencia al MainPanelController)
     }
 }

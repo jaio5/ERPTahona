@@ -1,5 +1,7 @@
 package alicanteweb.erp.controller.ui;
 
+import alicanteweb.erp.controller.MainControllerAware;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -27,69 +29,73 @@ public class MainPanelController {
     }
 
     @FXML
-    public void onNavFactura() { loadView("/ui/facturas.fxml"); }
-    @FXML
-    public void onNavClientes() { loadView("/ui/clientes.fxml"); }
-    @FXML
-    public void onNavArticulos() { loadView("/ui/articulos.fxml"); }
-    @FXML
-    public void onNavProveedores() { loadView("/ui/proveedores.fxml"); }
-    @FXML
-    public void onNavAlmacenes() { loadView("/ui/almacenes.fxml"); }
-    @FXML
-    public void onNavAlbaranesVenta() { loadView("/ui/albaranes-venta.fxml"); }
-    @FXML
-    public void onNavFacturaLineas() { loadView("/ui/factura-lineas.fxml"); }
-    @FXML
-    public void onNavPedidos() { loadView("/ui/pedidos.fxml"); }
-    @FXML
-    public void onNavPedidoLineas() { loadView("/ui/pedido-lineas.fxml"); }
-    @FXML
-    public void onNavDireccionesEnvio() { loadView("/ui/direccionesenvio.fxml"); }
-    @FXML
-    public void onNavVerifactuEvidence() { loadView("/ui/verifactu-evidence.fxml"); }
-
-    @FXML
-    public void onExit() { System.exit(0); }
-
-    @FXML
-    public void onAbout() { showInfo("ERP Tahona - Versión de escritorio", "Acerca de"); }
-    @FXML
-    public void onConfiguracion() { showInfo("Configuración no implementada todavía.", "Configuración"); }
-    @FXML
-    public void onManual() { showInfo("Manual de usuario no disponible todavía.", "Manual de Usuario"); }
-
-    public void showHome() {
-        if (contentPane != null) contentPane.getChildren().clear();
+    public void initialize() {
+        // Puedes añadir aquí la lógica de inicialización si es necesaria
     }
 
-    private void loadView(String resource) {
+    // --- Métodos de Navegación --- 
+    @FXML public void onNavFactura() { loadView("/ui/facturas.fxml"); }
+    @FXML public void onNavClientes() { loadView("/ui/clientes.fxml"); }
+    @FXML public void onNavArticulos() { loadView("/ui/articulos.fxml"); }
+    @FXML public void onNavProveedores() { loadView("/ui/proveedores.fxml"); }
+    @FXML public void onNavAlmacenes() { loadView("/ui/almacenes.fxml"); }
+    @FXML public void onNavAlbaranesVenta() { loadView("/ui/albaranes-venta.fxml"); }
+    @FXML public void onNavFacturaLineas() { loadView("/ui/factura-lineas.fxml"); }
+    @FXML public void onNavPedidos() { loadView("/ui/pedidos.fxml"); }
+    @FXML public void onNavPedidoLineas() { loadView("/ui/pedido-lineas.fxml"); }
+    @FXML public void onNavDireccionesEnvio() { loadView("/ui/direccionesenvio.fxml"); }
+    @FXML public void onNavVerifactuEvidence() { loadView("/ui/verifactu-evidence.fxml"); }
+
+    // --- Métodos de Menú --- 
+    @FXML public void onExit() { Platform.exit(); }
+    @FXML public void onAbout() { showInfo("ERP Tahona - Versión 1.0", "Acerca de"); }
+    @FXML public void onConfiguracion() { showInfo("Función de configuración no implementada.", "Aviso"); }
+    @FXML public void onManual() { showInfo("El manual de usuario estará disponible en futuras versiones.", "Aviso"); }
+
+    // --- Métodos de Carga de Vistas --- 
+    public void showHome() {
+        if (contentPane.getChildren().isEmpty()) return; // Ya está en Home
+        Platform.runLater(() -> contentPane.getChildren().clear());
+    }
+
+    private void loadView(String resourcePath) {
         try {
-            FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(resource)));
-            loader.setControllerFactory(context::getBean);
-            Node node = loader.load();
-            Object ctl = loader.getController();
-            if (ctl instanceof alicanteweb.erp.controller.MainControllerAware awareCtl) {
-                awareCtl.setMainPanelController(this);
+            FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(getClass().getResource(resourcePath)));
+            loader.setControllerFactory(context::getBean); // Dejar que Spring cree los controladores
+            Node viewNode = loader.load();
+
+            // Inyectar el controlador principal a los sub-controladores que lo necesiten
+            Object controller = loader.getController();
+            if (controller instanceof MainControllerAware) {
+                ((MainControllerAware) controller).setMainPanelController(this);
             }
-            if (contentPane != null) {
-                contentPane.getChildren().setAll(node);
-            }
+            
+            // Actualizar la UI en el hilo de JavaFX para evitar problemas de concurrencia
+            Platform.runLater(() -> contentPane.getChildren().setAll(viewNode));
+
         } catch (IOException e) {
-            log.error("No se pudo cargar la vista: {}", resource, e);
-            showError("No se pudo cargar la vista: " + resource + "\n" + e.getMessage(), "Error al cargar vista");
+            log.error("Fallo al cargar la vista FXML: {}", resourcePath, e);
+            showError("Error al cargar la vista: " + resourcePath + ". Causa: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Error inesperado al cargar el controlador para: {}", resourcePath, e);
+            showError("No se pudo inicializar el controlador para la vista: " + resourcePath + ". Verifique las dependencias del controlador.");
         }
     }
 
-    private void showInfo(String message, String header) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, message);
-        a.setHeaderText(header);
-        a.showAndWait();
+    // --- Helpers de UI ---
+    private void showInfo(String message, String title) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
-    private void showError(String message, String header) {
-        Alert a = new Alert(Alert.AlertType.ERROR, message);
-        a.setHeaderText(header);
-        a.showAndWait();
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error de Aplicación");
+        alert.setHeaderText("Ha ocurrido un error grave");
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
