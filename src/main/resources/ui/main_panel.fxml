@@ -1,52 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <!--
-================================================================
- FXML REFACTORIZADO Y MEJORADO
-================================================================
-- Hoja de estilos externa: Se utiliza "styles_mejorado.css".
-- Clases CSS: Se eliminaron todos los estilos en línea ("style=...")
-  y se reemplazaron por styleClass.
-- Bienvenida modernizada: Las tarjetas de acceso rápido ahora usan
-  VBox con vgrow="ALWAYS" para alinear el link "Acceder" en la
-  parte inferior, logrando un diseño más limpio y adaptable.
-================================================================
+  MAIN PANEL REFINED & UNIFIED
+  - Root: The root container is now an AnchorPane with a main VBox, consistent with all other modernized views.
+  - Stylesheet: The stylesheet reference is unified to the single '''styles.css'''.
+  - StyleClass Syntax: All '''styleClass''' attributes have been corrected to use a single string with space-separated classes.
+  - Inline Styles: All inline '''style''' attributes have been removed to ensure all styling is handled by the external stylesheet.
+  - Consistency: The overall structure (Header, Sidebar, Content, Footer) has been cleaned up for better readability and maintenance.
 -->
-
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="alicanteweb.erp.controller.ui.MainPanelController"
-            prefHeight="800.0" prefWidth="1400.0"
-            stylesheets="@../css/styles_mejorado.css">
+            styleClass="page-view"
+            stylesheets="@/css/styles.css">
+    <VBox AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
 
-    <!-- ======================= HEADER ======================= -->
-    <top>
+        <!-- HEADER -->
         <VBox styleClass="header">
             <HBox alignment="CENTER_LEFT" spacing="20">
-                <!-- Logo y Título -->
                 <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="🍞" styleClass="icon-sm"/>
+                    <Label text="🍞" styleClass="header-icon"/>
                     <VBox>
                         <Label text="ERP Panadería Tahona" styleClass="header-title"/>
                         <Label text="Sistema de Gestión Integral" styleClass="header-subtitle"/>
                     </VBox>
                 </HBox>
-
                 <Region HBox.hgrow="ALWAYS"/>
-
-                <!-- Info Usuario y Menú -->
                 <HBox spacing="15" alignment="CENTER_RIGHT">
                     <VBox alignment="CENTER_RIGHT" spacing="2">
                         <Label fx:id="lblUsuario" text="👤 Usuario Admin" styleClass="header-user-label"/>
                         <Label fx:id="lblFechaHora" text="📅 26 Nov 2025, 14:30" styleClass="header-subtitle"/>
                     </VBox>
-
                     <Separator orientation="VERTICAL" styleClass="header-separator"/>
-
                     <MenuBar>
                         <Menu text="⚙️ Sistema">
                             <MenuItem text="Configuración" onAction="#onConfiguracion"/>
@@ -61,175 +48,144 @@
                 </HBox>
             </HBox>
         </VBox>
-    </top>
 
-    <!-- ======================= NAVEGACIÓN LATERAL ======================= -->
-    <left>
-        <VBox styleClass="left-sidebar" prefWidth="240" maxWidth="240">
-
-            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="nav-header">
-                <Label text="📋" styleClass="icon-xs"/>
-                <Label text="NAVEGACIÓN" styleClass="nav-title-text"/>
-            </HBox>
-
-            <Separator/>
-
-            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
-                <VBox spacing="8">
-                    <!-- Sección Ventas -->
-                    <VBox spacing="6">
-                        <Label text="💰 VENTAS" styleClass="nav-section-title"/>
-                        <Button text="📄 Facturas" onAction="#onNavFactura" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
-                        <Button text="📦 Albaranes Venta" onAction="#onNavAlbaranesVenta" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
-                        <Button text="📋 Pedidos" onAction="#onNavPedidos" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
-                    </VBox>
-
-                    <Separator styleClass="nav-separator"/>
-
-                    <!-- Sección Maestros -->
-                    <VBox spacing="6">
-                        <Label text="📚 MAESTROS" styleClass="nav-section-title"/>
-                        <Button text="👥 Clientes" onAction="#onNavClientes" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
-                        <Button text="🏭 Proveedores" onAction="#onNavProveedores" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
-                        <Button text="🍞 Artículos" onAction="#onNavArticulos" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
-                        <Button text="🏪 Almacenes" onAction="#onNavAlmacenes" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
-                    </VBox>
-
-                    <Separator styleClass="nav-separator"/>
-
-                    <!-- Sección Complementos -->
-                    <VBox spacing="6">
-                        <Label text="🔧 COMPLEMENTOS" styleClass="nav-section-title"/>
-                        <Button text="📍 Direcciones Envío" onAction="#onNavDireccionesEnvio" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
-                        <Button text="📊 Líneas Factura" onAction="#onNavFacturaLineas" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
-                        <Button text="📊 Líneas Pedido" onAction="#onNavPedidoLineas" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
-                    </VBox>
-
-                    <Separator styleClass="nav-separator"/>
-
-                    <!-- Sección Sistema -->
-                    <VBox spacing="6">
-                        <Label text="🔐 SISTEMA" styleClass="nav-section-title"/>
-                        <Button text="🔐 Verifactu Evidence" onAction="#onNavVerifactuEvidence" styleClass="btn-outline-primary", "nav-button" prefWidth="210"/>
+        <!-- MAIN BODY: SIDEBAR + CONTENT -->
+        <BorderPane VBox.vgrow="ALWAYS">
+            <!-- LEFT SIDEBAR -->
+            <left>
+                <VBox styleClass="left-sidebar" prefWidth="240">
+                    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="nav-header">
+                        <Label text="🧭" styleClass="icon-xs"/>
+                        <Label text="NAVEGACIÓN" styleClass="nav-title-text"/>
+                    </HBox>
+                    <Separator/>
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+                        <VBox spacing="8" styleClass="nav-group-container">
+                            <VBox spacing="6" styleClass="nav-group">
+                                <Label text="💰 VENTAS" styleClass="nav-section-title"/>
+                                <Button text="📄 Facturas" onAction="#onNavFactura" styleClass="nav-button"/>
+                                <Button text="📦 Albaranes Venta" onAction="#onNavAlbaranesVenta" styleClass="nav-button"/>
+                                <Button text="📋 Pedidos" onAction="#onNavPedidos" styleClass="nav-button"/>
+                            </VBox>
+                            <Separator styleClass="nav-separator"/>
+                            <VBox spacing="6" styleClass="nav-group">
+                                <Label text="📚 MAESTROS" styleClass="nav-section-title"/>
+                                <Button text="👥 Clientes" onAction="#onNavClientes" styleClass="nav-button"/>
+                                <Button text="🏭 Proveedores" onAction="#onNavProveedores" styleClass="nav-button"/>
+                                <Button text="🍞 Artículos" onAction="#onNavArticulos" styleClass="nav-button"/>
+                                <Button text="🏪 Almacenes" onAction="#onNavAlmacenes" styleClass="nav-button"/>
+                            </VBox>
+                            <Separator styleClass="nav-separator"/>
+                            <VBox spacing="6" styleClass="nav-group">
+                                <Label text="🔧 COMPLEMENTOS" styleClass="nav-section-title"/>
+                                <Button text="📍 Direcciones Envío" onAction="#onNavDireccionesEnvio" styleClass="nav-button"/>
+                                <Button text="📊 Líneas Factura" onAction="#onNavFacturaLineas" styleClass="nav-button"/>
+                                <Button text="📊 Líneas Pedido" onAction="#onNavPedidoLineas" styleClass="nav-button"/>
+                            </VBox>
+                            <Separator styleClass="nav-separator"/>
+                            <VBox spacing="6" styleClass="nav-group">
+                                <Label text="🔐 SISTEMA" styleClass="nav-section-title"/>
+                                <Button text="🔐 Verifactu Evidence" onAction="#onNavVerifactuEvidence" styleClass="nav-button"/>
+                            </VBox>
+                        </VBox>
+                    </ScrollPane>
+                    <VBox styleClass="nav-footer">
+                        <Separator/>
+                        <Button text="❓ Ayuda Rápida" onAction="#onManual" styleClass="btn-info" maxWidth="Infinity"/>
                     </VBox>
                 </VBox>
-            </ScrollPane>
+            </left>
 
-            <!-- Ayuda Rápida -->
-            <VBox spacing="10" style="-fx-padding: 15 0 0 0;">
-                <Separator/>
-                <Button text="❓ Ayuda Rápida" onAction="#onManual" styleClass="btn-info" prefWidth="210"/>
-            </VBox>
-        </VBox>
-    </left>
+            <!-- MAIN CONTENT -->
+            <center>
+                <StackPane fx:id="contentPane" styleClass="content-pane">
+                    <VBox fx:id="welcomeScreen" alignment="CENTER" spacing="25" styleClass="page-content">
+                        <VBox alignment="CENTER" spacing="20" styleClass="welcome-card">
+                            <Label text="🍞" styleClass="welcome-icon"/>
+                            <Label text="Bienvenido al ERP Panadería Tahona" styleClass="welcome-title"/>
+                            <Label text="Sistema Integrado de Gestión Empresarial" styleClass="welcome-subtitle"/>
+                            <Separator prefWidth="400" styleClass="welcome-separator"/>
+                            <VBox spacing="25">
+                                <Label text="⚡ Accesos Rápidos" styleClass="section-title"/>
+                                <GridPane hgap="20" vgap="20" alignment="CENTER">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="220.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="220.0"/>
+                                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="220.0"/>
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints minHeight="10.0" prefHeight="180.0" vgrow="SOMETIMES"/>
+                                        <RowConstraints minHeight="10.0" prefHeight="180.0" vgrow="SOMETIMES"/>
+                                    </rowConstraints>
 
-    <!-- ======================= CONTENIDO PRINCIPAL ======================= -->
-    <center>
-        <StackPane fx:id="contentPane" styleClass="content-pane">
-
-            <!-- Pantalla de Bienvenida -->
-            <VBox fx:id="welcomeScreen" alignment="CENTER" spacing="25">
-                <VBox alignment="CENTER" spacing="20" styleClass="welcome-card-main">
-                    <Label text="🍞" styleClass="icon-lg"/>
-                    <Label text="Bienvenido al ERP Panadería Tahona" styleClass="welcome-title", "text-primary"/>
-                    <Label text="Sistema Integrado de Gestión Empresarial" styleClass="welcome-subtitle", "text-muted"/>
-                    <Separator prefWidth="400" styleClass="welcome-separator"/>
-
-                    <!-- Accesos Rápidos -->
-                    <VBox spacing="25">
-                        <Label text="⚡ Accesos Rápidos" styleClass="text-md", "text-primary"/>
-                        <GridPane hgap="20" vgap="20" alignment="CENTER">
-                            <columnConstraints>
-                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
-                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
-                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
-                            </columnConstraints>
-                            <rowConstraints>
-                                <RowConstraints minHeight="10.0" prefHeight="180.0" vgrow="SOMETIMES" />
-                                <RowConstraints minHeight="10.0" prefHeight="180.0" vgrow="SOMETIMES" />
-                            </rowConstraints>
-
-                            <!-- Card Facturas -->
-                            <VBox onMouseClicked="#onNavFactura" styleClass="card", "quick-access-card" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                <Label text="📄" styleClass="icon-md"/>
-                                <Label text="Facturas" styleClass="quick-access-title", "text-primary"/>
-                                <Label text="Gestión de facturación y cobros" styleClass="quick-access-description", "text-muted", "text-sm"/>
-                                <Region VBox.vgrow="ALWAYS"/>
-                                <Label text="→ Acceder" styleClass="quick-access-link"/>
+                                    <!-- Quick Access Cards -->
+                                    <VBox onMouseClicked="#onNavFactura" styleClass="card quick-access-card" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                        <Label text="📄" styleClass="quick-access-icon"/>
+                                        <Label text="Facturas" styleClass="quick-access-title"/>
+                                        <Label text="Gestión de facturación y cobros" styleClass="quick-access-description"/>
+                                        <Region VBox.vgrow="ALWAYS"/>
+                                        <Label text="→ Acceder" styleClass="quick-access-link"/>
+                                    </VBox>
+                                    <VBox onMouseClicked="#onNavClientes" styleClass="card quick-access-card" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                        <Label text="👥" styleClass="quick-access-icon"/>
+                                        <Label text="Clientes" styleClass="quick-access-title"/>
+                                        <Label text="Administra la base de clientes" styleClass="quick-access-description"/>
+                                        <Region VBox.vgrow="ALWAYS"/>
+                                        <Label text="→ Acceder" styleClass="quick-access-link"/>
+                                    </VBox>
+                                    <VBox onMouseClicked="#onNavArticulos" styleClass="card quick-access-card" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                        <Label text="🥖" styleClass="quick-access-icon"/>
+                                        <Label text="Artículos" styleClass="quick-access-title"/>
+                                        <Label text="Catálogo de productos y precios" styleClass="quick-access-description"/>
+                                        <Region VBox.vgrow="ALWAYS"/>
+                                        <Label text="→ Acceder" styleClass="quick-access-link"/>
+                                    </VBox>
+                                    <VBox onMouseClicked="#onNavAlbaranesVenta" styleClass="card quick-access-card" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                        <Label text="📦" styleClass="quick-access-icon"/>
+                                        <Label text="Albaranes" styleClass="quick-access-title"/>
+                                        <Label text="Control de entregas y salidas" styleClass="quick-access-description"/>
+                                        <Region VBox.vgrow="ALWAYS"/>
+                                        <Label text="→ Acceder" styleClass="quick-access-link"/>
+                                    </VBox>
+                                    <VBox onMouseClicked="#onNavAlmacenes" styleClass="card quick-access-card" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                        <Label text="🏪" styleClass="quick-access-icon"/>
+                                        <Label text="Almacenes" styleClass="quick-access-title"/>
+                                        <Label text="Gestión de inventario y stock" styleClass="quick-access-description"/>
+                                        <Region VBox.vgrow="ALWAYS"/>
+                                        <Label text="→ Acceder" styleClass="quick-access-link"/>
+                                    </VBox>
+                                    <VBox onMouseClicked="#onNavPedidos" styleClass="card quick-access-card" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                        <Label text="📋" styleClass="quick-access-icon"/>
+                                        <Label text="Pedidos" styleClass="quick-access-title"/>
+                                        <Label text="Control de pedidos de clientes" styleClass="quick-access-description"/>
+                                        <Region VBox.vgrow="ALWAYS"/>
+                                        <Label text="→ Acceder" styleClass="quick-access-link"/>
+                                    </VBox>
+                                </GridPane>
                             </VBox>
-
-                            <!-- Card Clientes -->
-                            <VBox onMouseClicked="#onNavClientes" styleClass="card", "quick-access-card" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                <Label text="👥" styleClass="icon-md"/>
-                                <Label text="Clientes" styleClass="quick-access-title", "text-primary"/>
-                                <Label text="Administra la base de clientes" styleClass="quick-access-description", "text-muted", "text-sm"/>
-                                <Region VBox.vgrow="ALWAYS"/>
-                                <Label text="→ Acceder" styleClass="quick-access-link"/>
-                            </VBox>
-
-                            <!-- Card Artículos -->
-                            <VBox onMouseClicked="#onNavArticulos" styleClass="card", "quick-access-card" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                <Label text="🍞" styleClass="icon-md"/>
-                                <Label text="Artículos" styleClass="quick-access-title", "text-primary"/>
-                                <Label text="Catálogo de productos y precios" styleClass="quick-access-description", "text-muted", "text-sm"/>
-                                <Region VBox.vgrow="ALWAYS"/>
-                                <Label text="→ Acceder" styleClass="quick-access-link"/>
-                            </VBox>
-
-                            <!-- Card Albaranes -->
-                            <VBox onMouseClicked="#onNavAlbaranesVenta" styleClass="card", "quick-access-card" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                                <Label text="📦" styleClass="icon-md"/>
-                                <Label text="Albaranes" styleClass="quick-access-title", "text-primary"/>
-                                <Label text="Control de entregas y salidas" styleClass="quick-access-description", "text-muted", "text-sm"/>
-                                <Region VBox.vgrow="ALWAYS"/>
-                                <Label text="→ Acceder" styleClass="quick-access-link"/>
-                            </VBox>
-
-                            <!-- Card Almacenes -->
-                            <VBox onMouseClicked="#onNavAlmacenes" styleClass="card", "quick-access-card" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                <Label text="🏪" styleClass="icon-md"/>
-                                <Label text="Almacenes" styleClass="quick-access-title", "text-primary"/>
-                                <Label text="Gestión de inventario y stock" styleClass="quick-access-description", "text-muted", "text-sm"/>
-                                <Region VBox.vgrow="ALWAYS"/>
-                                <Label text="→ Acceder" styleClass="quick-access-link"/>
-                            </VBox>
-
-                            <!-- Card Pedidos -->
-                            <VBox onMouseClicked="#onNavPedidos" styleClass="card", "quick-access-card" GridPane.columnIndex="2" GridPane.rowIndex="1">
-                                <Label text="📋" styleClass="icon-md"/>
-                                <Label text="Pedidos" styleClass="quick-access-title", "text-primary"/>
-                                <Label text="Control de pedidos de clientes" styleClass="quick-access-description", "text-muted", "text-sm"/>
-                                <Region VBox.vgrow="ALWAYS"/>
-                                <Label text="→ Acceder" styleClass="quick-access-link"/>
-                            </VBox>
-                        </GridPane>
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="10" styleClass="tips-footer">
+                            <Label text="💡 Tip: Usa Ctrl+Click para abrir módulos en una nueva ventana." styleClass="tip-text"/>
+                            <Label text="Versión 1.0.0" styleClass="tip-text text-muted"/>
+                        </VBox>
                     </VBox>
-                </VBox>
+                </StackPane>
+            </center>
+        </BorderPane>
 
-                <!-- Tips y Versión -->
-                <HBox spacing="30" alignment="CENTER">
-                    <Label text="💡 Tip: Usa Ctrl+Click para abrir módulos en una nueva ventana." styleClass="tip-text"/>
-                    <Label text="•" styleClass="text-muted"/>
-                    <Label text="Versión 1.0.0" styleClass="tip-text"/>
-                </HBox>
-            </VBox>
-        </StackPane>
-    </center>
-
-    <!-- ======================= FOOTER ======================= -->
-    <bottom>
+        <!-- FOOTER -->
         <HBox spacing="20" alignment="CENTER_LEFT" styleClass="footer">
-            <HBox spacing="8" alignment="CENTER_LEFT">
+            <HBox spacing="8" alignment="CENTER_LEFT" styleClass="footer-status-group">
                 <Label text="✓" styleClass="footer-status-icon-ok"/>
-                <Label text="Sistema operativo" styleClass="footer-status-text-ok"/>
+                <Label text="Sistema operativo" styleClass="footer-text"/>
             </HBox>
-            <Separator orientation="VERTICAL" styleClass="footer-separator"/>
-            <HBox spacing="8" alignment="CENTER_LEFT">
+            <Separator orientation="VERTICAL"/>
+            <HBox spacing="8" alignment="CENTER_LEFT" styleClass="footer-status-group">
                 <Label text="●" styleClass="footer-db-status-icon"/>
-                <Label fx:id="lblEstadoDB" text="Base de datos: Conectada" styleClass="footer-db-status-text"/>
+                <Label fx:id="lblEstadoDB" text="Base de datos: Conectada" styleClass="footer-text"/>
             </HBox>
             <Region HBox.hgrow="ALWAYS"/>
             <Label text="ERP Panadería Tahona © 2025 | Todos los derechos reservados" styleClass="footer-text"/>
         </HBox>
-    </bottom>
-</BorderPane>
+    </VBox>
+</AnchorPane>

@@ -2,79 +2,83 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+
+<!--
+  MODERN & RESPONSIVE LAYOUT
+  - Root: AnchorPane for a flexible UI container.
+  - Structure: A main VBox organizes the view, with a SplitPane for the master-detail layout.
+  - Content Panels: Both the table and form panels are now styled as 'cards'.
+  - Form: The form has been rebuilt with a GridPane for a clean, aligned, and responsive interface.
+  - Styling: All inline styles, <padding>, and <font> tags have been removed. Styling is managed via 'styles.css'.
+-->
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="alicanteweb.erp.controller.PedidoLineaController"
-            prefHeight="700.0" prefWidth="1100.0" stylesheets="/css/styles.css">
-    <!-- Header -->
-    <top>
+            styleClass="page-view"
+            stylesheets="@/css/styles.css">
+    <VBox AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+        <!-- Header -->
         <VBox styleClass="header">
-            <padding>
-                <Insets top="15" right="20" bottom="15" left="20"/>
-            </padding>
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Label text="🧾" style="-fx-font-size: 24px;"/>
+                    <Label text="🧾" styleClass="header-icon"/>
                     <Label text="Líneas del Pedido" styleClass="header-title"/>
                 </HBox>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
             </HBox>
         </VBox>
-    </top>
-    <center>
-        <SplitPane dividerPositions="0.6">
-            <!-- Left: Table -->
-            <VBox spacing="15" style="-fx-background-color: white;">
-                <padding>
-                    <Insets top="20" right="20" bottom="20" left="20"/>
-                </padding>
+
+        <!-- Main Content -->
+        <SplitPane dividerPositions="0.6" VBox.vgrow="ALWAYS" styleClass="page-content">
+            <!-- Left Panel: Table -->
+            <VBox styleClass="card">
                 <TableView fx:id="tableLineas" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colId" text="ID" />
-                        <TableColumn fx:id="colArticulo" text="Artículo" />
-                        <TableColumn fx:id="colCantidad" text="Cantidad" />
-                        <TableColumn fx:id="colPrecio" text="Precio" />
+                        <TableColumn fx:id="colId" text="ID" prefWidth="80"/>
+                        <TableColumn fx:id="colArticulo" text="Artículo" prefWidth="250"/>
+                        <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="100"/>
+                        <TableColumn fx:id="colPrecio" text="Precio" prefWidth="100"/>
                     </columns>
                 </TableView>
             </VBox>
-            <!-- Right: Form -->
-            <VBox spacing="15" style="-fx-background-color: #f8f9fa;">
-                <padding>
-                    <Insets top="20" right="20" bottom="20" left="20"/>
-                </padding>
-                <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="Datos de la Línea" styleClass="section-title">
-                        <font><Font name="System Bold" size="16"/></font>
-                    </Label>
-                    <Region HBox.hgrow="ALWAYS"/>
-                </HBox>
-                <VBox spacing="12">
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="ID:" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="txtId" promptText="ID"/>
-                    </HBox>
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Artículo:" style="-fx-font-weight: bold;"/>
-                        <ComboBox fx:id="cboArticulo" promptText="Selecciona artículo"/>
-                    </HBox>
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Cantidad:" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="txtCantidad" promptText="Cantidad"/>
-                    </HBox>
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Precio:" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="txtPrecio" promptText="Precio"/>
+
+            <!-- Right Panel: Form -->
+            <AnchorPane>
+                <VBox spacing="20" styleClass="card" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+                    <Label text="📝 Datos de la Línea" styleClass="section-title"/>
+                    <GridPane hgap="10" vgap="15" VBox.vgrow="ALWAYS">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="80.0" prefWidth="100.0"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <Label text="ID:" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtId" promptText="ID (automático)" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                        <Label text="Artículo:" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <ComboBox fx:id="cboArticulo" promptText="Seleccione un artículo" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                        <Label text="Cantidad:" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCantidad" promptText="0" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                        <Label text="Precio:" styleClass="form-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtPrecio" promptText="0.00" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <rowConstraints>
+                            <RowConstraints/>
+                            <RowConstraints/>
+                            <RowConstraints/>
+                            <RowConstraints/>
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        </rowConstraints>
+                    </GridPane>
+                    <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                        <Button text="✨ Nuevo" onAction="#handleNuevo" styleClass="btn-primary"/>
+                        <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
+                        <Button text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="❌ Cancelar" onAction="#handleCancelar" styleClass="btn-secondary"/>
                     </HBox>
                 </VBox>
-                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
-                    <Button text="➕ Agregar" onAction="#handleAgregar" styleClass="btn-primary"/>
-                    <Button text="✏️ Modificar" onAction="#handleModificar" styleClass="btn-secondary"/>
-                    <Button text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
-                    <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
-                    <Button text="❌ Cancelar" onAction="#handleCancelar" styleClass="btn-secondary"/>
-                </HBox>
-            </VBox>
+            </AnchorPane>
         </SplitPane>
-    </center>
-</BorderPane>
+    </VBox>
+</AnchorPane>

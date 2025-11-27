@@ -2,29 +2,54 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.FacturaLineaController">
-    <center>
-        <TableView fx:id="tvLineas" prefHeight="400.0" prefWidth="600.0">
-            <columns>
-                <TableColumn fx:id="colId" text="ID" />
-                <TableColumn fx:id="colDescripcion" text="Descripción" />
-                <TableColumn fx:id="colCantidad" text="Cantidad" />
-                <TableColumn fx:id="colPrecio" text="Precio" />
-                <TableColumn fx:id="colTotal" text="Total" />
-            </columns>
-        </TableView>
-    </center>
-    <bottom>
-        <HBox spacing="10.0" alignment="CENTER_RIGHT">
-            <padding>
-                <Insets top="10" right="10" bottom="10" left="10"/>
-            </padding>
-            <Button fx:id="btnAgregar" text="Agregar" />
-            <Button fx:id="btnEliminar" text="Eliminar" />
-            <Button fx:id="btnGuardar" text="Guardar" />
-            <Button fx:id="btnCancelar" text="Cancelar" />
-        </HBox>
-    </bottom>
-</BorderPane>
+
+<!--
+  MODERN & RESPONSIVE LAYOUT
+  - Root: AnchorPane for a flexible UI container.
+  - Structure: A main VBox organizes the view vertically (header, content).
+  - Content: A 'card' contains the TableView for invoice lines and a unified action bar.
+  - Styling: All inline styles are removed. Styling is managed via 'styles.css'.
+-->
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.FacturaLineaController"
+            styleClass="page-view"
+            stylesheets="@/css/styles.css">
+    <VBox AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+        <!-- Header -->
+        <VBox styleClass="header">
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="🧾" styleClass="header-icon"/>
+                    <Label text="Líneas de Factura" styleClass="header-title"/>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
+
+        <!-- Main Content -->
+        <VBox VBox.vgrow="ALWAYS" styleClass="page-content">
+            <VBox styleClass="card" VBox.vgrow="ALWAYS">
+                <!-- Invoice Lines Table -->
+                <TableView fx:id="tvLineas" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colId" text="ID" prefWidth="80"/>
+                        <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="250"/>
+                        <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="100"/>
+                        <TableColumn fx:id="colPrecio" text="Precio" prefWidth="100"/>
+                        <TableColumn fx:id="colTotal" text="Total" prefWidth="120"/>
+                    </columns>
+                </TableView>
+
+                <!-- Actions -->
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                    <Button fx:id="btnAgregar" text="➕ Agregar" onAction="#handleAgregar" styleClass="btn-primary"/>
+                    <Button fx:id="btnEliminar" text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button fx:id="btnGuardar" text="💾 Guardar Cambios" onAction="#handleGuardar" styleClass="btn-success"/>
+                    <Button fx:id="btnCancelar" text="❌ Cancelar" onAction="#handleCancelar" styleClass="btn-secondary"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </VBox>
+</AnchorPane>

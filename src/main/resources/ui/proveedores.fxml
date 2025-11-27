@@ -2,86 +2,84 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.ProveedoreController"
-            prefHeight="800.0" prefWidth="1400.0" stylesheets="/css/styles.css">
-    <!-- Header -->
-    <top>
+
+<!--
+  MODERN & RESPONSIVE LAYOUT
+  - Root: AnchorPane for a flexible UI container.
+  - Structure: A main VBox organizes the view, with a SplitPane for the master-detail layout.
+  - Content Panels: Both the filters/table and the form panels are styled as 'cards'.
+  - Form: The form uses a GridPane inside a 'sub-card' for a clean, aligned, and responsive interface.
+  - Styling: All inline styles, <padding>, and <font> tags have been removed. Styling is managed via 'styles.css'.
+-->
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.ProveedoreController"
+            styleClass="page-view" stylesheets="@/css/styles.css">
+    <VBox AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+        <!-- Header -->
         <VBox styleClass="header">
-            <padding>
-                <Insets top="15" right="20" bottom="15" left="20"/>
-            </padding>
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Label text="🏢" style="-fx-font-size: 24px;"/>
+                    <Label text="🏢" styleClass="header-icon"/>
                     <Label text="Gestión de Proveedores" styleClass="header-title"/>
                 </HBox>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
             </HBox>
         </VBox>
-    </top>
-    <center>
-        <SplitPane dividerPositions="0.6">
-            <!-- Left: Table and Filters -->
-            <VBox spacing="15" style="-fx-background-color: white;">
-                <padding>
-                    <Insets top="20" right="20" bottom="20" left="20"/>
-                </padding>
-                <VBox spacing="15" styleClass="filters-panel">
-                    <Label text="🔎 Búsqueda y Filtros" styleClass="subsection-title"/>
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Buscar:" style="-fx-min-width: 80; -fx-font-weight: bold;"/>
-                        <TextField fx:id="txtSearch" promptText="Código, nombre, CIF..."
-                                   HBox.hgrow="ALWAYS" styleClass="search-field"/>
-                        <Button text="🔎 Buscar" onAction="#handleSearch" styleClass="btn-primary"/>
-                        <Button text="⟳ Limpiar" onAction="#handleSearch" styleClass="btn-secondary"/>
+
+        <!-- Main Content -->
+        <SplitPane dividerPositions="0.6" VBox.vgrow="ALWAYS" styleClass="page-content">
+            <!-- Left Panel: Filters & Table -->
+            <VBox spacing="20">
+                <VBox styleClass="card">
+                    <Label text="🔍 Búsqueda y Filtros" styleClass="section-title"/>
+                    <VBox spacing="15" styleClass="filters-panel">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Buscar:" styleClass="form-label"/>
+                            <TextField fx:id="txtSearch" promptText="Código, nombre, CIF..." HBox.hgrow="ALWAYS" styleClass="search-field"/>
+                            <Button text="🔎 Buscar" onAction="#handleSearch" styleClass="btn-primary"/>
+                            <Button text="⟳ Limpiar" onAction="#handleSearch" styleClass="btn-secondary"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+                <VBox styleClass="card" VBox.vgrow="ALWAYS">
+                    <TableView fx:id="tableProveedores" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colCodigo" text="Código" prefWidth="100"/>
+                            <TableColumn fx:id="colNombre" text="Nombre" prefWidth="250"/>
+                            <TableColumn fx:id="colCif" text="CIF" prefWidth="120"/>
+                            <TableColumn fx:id="colPoblacion" text="Población" prefWidth="180"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </VBox>
+
+            <!-- Right Panel: Form -->
+            <AnchorPane>
+                <VBox spacing="20" styleClass="card" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+                    <Label text="📝 Datos del Proveedor" styleClass="section-title"/>
+                    <VBox spacing="20" VBox.vgrow="ALWAYS" styleClass="sub-card">
+                        <GridPane hgap="10" vgap="15">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="80.0" prefWidth="100.0"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                            </columnConstraints>
+                            <Label text="Código:" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtCodigo" promptText="Código del proveedor" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Label text="Nombre:" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtNombre" promptText="Nombre comercial" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label text="CIF:" styleClass="form-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtCif" promptText="CIF / NIF" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <Label text="Población:" styleClass="form-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtPoblacion" promptText="Población" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        </GridPane>
+                    </VBox>
+                    <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                        <Button text="✨ Nuevo" onAction="#handleNuevo" styleClass="btn-primary"/>
+                        <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
+                        <Button text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
                     </HBox>
                 </VBox>
-                <TableView fx:id="tableProveedores" VBox.vgrow="ALWAYS">
-                    <columns>
-                        <TableColumn fx:id="colCodigo" text="Código"/>
-                        <TableColumn fx:id="colNombre" text="Nombre"/>
-                        <TableColumn fx:id="colCif" text="CIF"/>
-                        <TableColumn fx:id="colPoblacion" text="Población"/>
-                    </columns>
-                </TableView>
-            </VBox>
-            <!-- Right: Form -->
-            <VBox spacing="15" style="-fx-background-color: #f8f9fa;">
-                <padding>
-                    <Insets top="20" right="20" bottom="20" left="20"/>
-                </padding>
-                <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="Datos del Proveedor" styleClass="section-title">
-                        <font><Font name="System Bold" size="16"/></font>
-                    </Label>
-                    <Region HBox.hgrow="ALWAYS"/>
-                </HBox>
-                <VBox spacing="12">
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Código:" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="txtCodigo" promptText="Código"/>
-                    </HBox>
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Nombre:" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="txtNombre" promptText="Nombre"/>
-                    </HBox>
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="CIF:" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="txtCif" promptText="CIF"/>
-                    </HBox>
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Población:" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="txtPoblacion" promptText="Población"/>
-                    </HBox>
-                </VBox>
-                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
-                    <Button text="➕ Nuevo" onAction="#handleNuevo" styleClass="btn-primary"/>
-                    <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
-                    <Button text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
-                </HBox>
-            </VBox>
+            </AnchorPane>
         </SplitPane>
-    </center>
-</BorderPane>
+    </VBox>
+</AnchorPane>

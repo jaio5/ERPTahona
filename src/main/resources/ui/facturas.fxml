@@ -1,124 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
+<!--
+  MODERN & RESPONSIVE LAYOUT
+  - Root: AnchorPane for a flexible UI container.
+  - Structure: A main VBox organizes the view, with a SplitPane separating the master (list) and detail (form) views.
+  - Content Panels: Both the master and detail views are organized into 'cards' for a clean, modern look.
+  - Forms: All forms now use GridPane for proper alignment and a responsive interface.
+  - Styling: All inline styles have been removed. All styling is managed via 'styles.css'.
+-->
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="alicanteweb.erp.controller.FacturaController"
-            prefHeight="800.0" prefWidth="1400.0"
-            stylesheets="@../css/styles.css">
+            styleClass="page-view"
+            stylesheets="@/css/styles.css">
+    <VBox AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
 
-    <!-- HEADER -->
-    <top>
+        <!-- HEADER -->
         <VBox styleClass="header">
-            <padding>
-                <Insets top="15" right="20" bottom="15" left="20"/>
-            </padding>
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Label text="📄" style="-fx-font-size: 24px;"/>
+                    <Label text="📄" styleClass="header-icon"/>
                     <Label text="Gestión de Facturas" styleClass="header-title"/>
                 </HBox>
-
                 <Region HBox.hgrow="ALWAYS"/>
 
-                <!-- Estadísticas Rápidas -->
+                <!-- Quick Stats -->
                 <HBox spacing="15" alignment="CENTER">
-                    <VBox alignment="CENTER" spacing="2" styleClass="badge-info"
-                          style="-fx-padding: 8 15; -fx-background-radius: 8;">
-                        <Label text="Total Facturas" style="-fx-font-size: 10px; -fx-text-fill: #0c5460;"/>
-                        <Label text="0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0c5460;"/>
+                    <VBox alignment="CENTER" spacing="2" styleClass="badge-info">
+                        <Label text="Total Facturas" styleClass="badge-title"/>
+                        <Label text="0" styleClass="badge-value"/>
                     </VBox>
-
-                    <VBox alignment="CENTER" spacing="2" styleClass="badge-success"
-                          style="-fx-padding: 8 15; -fx-background-radius: 8;">
-                        <Label text="Pagadas" style="-fx-font-size: 10px; -fx-text-fill: #155724;"/>
-                        <Label text="0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #155724;"/>
+                    <VBox alignment="CENTER" spacing="2" styleClass="badge-success">
+                        <Label text="Pagadas" styleClass="badge-title"/>
+                        <Label text="0" styleClass="badge-value"/>
                     </VBox>
-
-                    <VBox alignment="CENTER" spacing="2" styleClass="badge-warning"
-                          style="-fx-padding: 8 15; -fx-background-radius: 8;">
-                        <Label text="Pendientes" style="-fx-font-size: 10px; -fx-text-fill: #856404;"/>
-                        <Label text="0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #856404;"/>
+                    <VBox alignment="CENTER" spacing="2" styleClass="badge-warning">
+                        <Label text="Pendientes" styleClass="badge-title"/>
+                        <Label text="0" styleClass="badge-value"/>
                     </VBox>
                 </HBox>
-
-                <Separator orientation="VERTICAL" style="-fx-background-color: rgba(255,255,255,0.3); -fx-pref-height: 40;"/>
-
+                <Separator orientation="VERTICAL"/>
                 <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
             </HBox>
         </VBox>
-    </top>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <center>
-        <SplitPane dividerPositions="0.6">
-            <!-- PANEL IZQUIERDO: Tabla y Filtros -->
-            <VBox spacing="15" style="-fx-background-color: white;">
-                <padding>
-                    <Insets top="20" right="20" bottom="20" left="20"/>
-                </padding>
-
-                <!-- PANEL DE BÚSQUEDA Y FILTROS -->
-                <VBox spacing="15" styleClass="filters-panel">
-                    <Label text="🔍 Búsqueda y Filtros" styleClass="subsection-title"/>
-
-                    <!-- Barra de Búsqueda -->
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Buscar:" style="-fx-min-width: 80; -fx-font-weight: bold;"/>
-                        <TextField fx:id="txtSearch" promptText="Número de factura, cliente..."
-                                   HBox.hgrow="ALWAYS" styleClass="search-field"/>
-                        <Button text="🔍 Buscar" onAction="#handleSearch" styleClass="btn-primary"/>
-                        <Button text="🔄 Limpiar" onAction="#handleSearch" styleClass="btn-secondary"/>
-                    </HBox>
-
-                    <!-- Filtros Avanzados -->
-                    <GridPane hgap="15" vgap="12">
-                        <columnConstraints>
-                            <ColumnConstraints minWidth="80" prefWidth="80"/>
-                            <ColumnConstraints hgrow="ALWAYS" minWidth="150"/>
-                            <ColumnConstraints minWidth="80" prefWidth="80"/>
-                            <ColumnConstraints hgrow="ALWAYS" minWidth="150"/>
-                        </columnConstraints>
-
-                        <Label text="Fecha desde:" GridPane.columnIndex="0" GridPane.rowIndex="0"
-                               style="-fx-font-weight: bold;"/>
-                        <DatePicker fx:id="dpFechaDesde" GridPane.columnIndex="1" GridPane.rowIndex="0"
-                                    maxWidth="Infinity"/>
-
-                        <Label text="Fecha hasta:" GridPane.columnIndex="2" GridPane.rowIndex="0"
-                               style="-fx-font-weight: bold;"/>
-                        <DatePicker fx:id="dpFechaHasta" GridPane.columnIndex="3" GridPane.rowIndex="0"
-                                    maxWidth="Infinity"/>
-
-                        <Label text="Cliente:" GridPane.columnIndex="0" GridPane.rowIndex="1"
-                               style="-fx-font-weight: bold;"/>
-                        <ComboBox fx:id="cboClienteFiltro" GridPane.columnIndex="1" GridPane.rowIndex="1"
-                                  maxWidth="Infinity" promptText="Todos los clientes"/>
-
-                        <Label text="Estado:" GridPane.columnIndex="2" GridPane.rowIndex="1"
-                               style="-fx-font-weight: bold;"/>
-                        <ComboBox fx:id="cboEstadoFiltro" GridPane.columnIndex="3" GridPane.rowIndex="1"
-                                  maxWidth="Infinity" promptText="Todos los estados"/>
-                    </GridPane>
-
-                    <HBox spacing="10" alignment="CENTER_RIGHT">
-                        <Button text="Aplicar Filtros" styleClass="btn-success"/>
-                        <Button text="Limpiar Filtros" styleClass="btn-secondary"/>
-                    </HBox>
+        <!-- MAIN CONTENT -->
+        <SplitPane dividerPositions="0.6" VBox.vgrow="ALWAYS" styleClass="page-content">
+            <!-- Left Panel: Filters & Table -->
+            <VBox spacing="20">
+                <!-- Filters Panel -->
+                <VBox styleClass="card">
+                     <Label text="🔍 Búsqueda y Filtros" styleClass="section-title"/>
+                    <VBox spacing="15" styleClass="filters-panel">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Buscar:" styleClass="form-label"/>
+                            <TextField fx:id="txtSearch" promptText="Número, cliente..." HBox.hgrow="ALWAYS" styleClass="search-field"/>
+                        </HBox>
+                        <GridPane hgap="15" vgap="12">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="90" prefWidth="90"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                                <ColumnConstraints minWidth="90" prefWidth="90"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                            </columnConstraints>
+                            <Label text="Fecha desde:" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                            <DatePicker fx:id="dpFechaDesde" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                            <Label text="Fecha hasta:" styleClass="form-label" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                            <DatePicker fx:id="dpFechaHasta" maxWidth="Infinity" GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+                            <Label text="Cliente:" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                            <ComboBox fx:id="cboClienteFiltro" promptText="Todos" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                            <Label text="Estado:" styleClass="form-label" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                            <ComboBox fx:id="cboEstadoFiltro" promptText="Todos" maxWidth="Infinity" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+                        </GridPane>
+                        <HBox spacing="10" alignment="CENTER_RIGHT">
+                             <Button text="✨ Aplicar Filtros" styleClass="btn-primary"/>
+                             <Button text="⟳ Limpiar" styleClass="btn-secondary"/>
+                        </HBox>
+                    </VBox>
                 </VBox>
 
-                <!-- TABLA DE FACTURAS -->
-                <VBox VBox.vgrow="ALWAYS" spacing="10">
+                <!-- Invoices Table -->
+                <VBox styleClass="card" VBox.vgrow="ALWAYS">
                     <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label text="📋 Lista de Facturas" styleClass="subsection-title"/>
+                        <Label text="📋 Lista de Facturas" styleClass="section-title"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="Mostrando 0 facturas" styleClass="text-muted text-sm"/>
+                        <Label text="Mostrando 0 facturas" styleClass="text-muted"/>
                     </HBox>
-
                     <TableView fx:id="tableFacturas" VBox.vgrow="ALWAYS">
                         <columns>
                             <TableColumn fx:id="colNumero" text="Número" prefWidth="120"/>
@@ -128,161 +97,80 @@
                             <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
                         </columns>
                         <placeholder>
-                            <VBox alignment="CENTER" spacing="10">
-                                <Label text="📋" style="-fx-font-size: 48px; -fx-text-fill: #bdc3c7;"/>
-                                <Label text="No hay facturas para mostrar"
-                                       style="-fx-text-fill: #95a5a6; -fx-font-size: 14px;"/>
-                                <Label text="Cree una nueva factura para comenzar"
-                                       style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;"/>
+                            <VBox alignment="CENTER" spacing="10" styleClass="placeholder">
+                                <Label text="🤷‍♂️" styleClass="placeholder-icon"/>
+                                <Label text="No hay facturas para mostrar" styleClass="placeholder-title"/>
+                                <Label text="Pruebe a cambiar los filtros o cree una nueva factura" styleClass="placeholder-text"/>
                             </VBox>
                         </placeholder>
                     </TableView>
                 </VBox>
-
-                <!-- ACCIONES RÁPIDAS -->
-                <HBox spacing="10" alignment="CENTER">
-                    <Button text="➕ Nueva Factura" onAction="#handleNuevaFactura"
-                            styleClass="btn-success" prefWidth="150"/>
-                    <Button text="📄 Copiar Anterior" onAction="#handleCopiarFacturaAnterior"
-                            styleClass="btn-info" prefWidth="150"/>
-                    <Button text="🖨️ Imprimir" onAction="#handleImprimirFactura"
-                            styleClass="btn-primary" prefWidth="150"/>
-                    <Button text="👁️ Previsualizar" onAction="#handlePrevisualizarFactura"
-                            styleClass="btn-secondary" prefWidth="150"/>
-                </HBox>
             </VBox>
 
-            <!-- PANEL DERECHO: Formulario -->
-            <VBox spacing="20" style="-fx-background-color: white;">
-                <padding>
-                    <Insets top="20" right="20" bottom="20" left="20"/>
-                </padding>
-
-                <!-- Título del Formulario -->
-                <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="📝" style="-fx-font-size: 20px;"/>
-                    <Label text="Detalles de la Factura" styleClass="section-title"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="lblEstadoFactura" text="NUEVA" styleClass="badge-info"
-                           style="-fx-font-size: 12px;"/>
-                </HBox>
-
-                <Separator/>
-
-                <!-- Formulario con Scroll -->
-                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
-                            style="-fx-background-color: transparent;">
-                    <VBox spacing="20">
-                        <!-- Información General -->
-                        <VBox spacing="15">
-                            <Label text="📋 Información General" styleClass="subsection-title"/>
-
-                            <GridPane hgap="15" vgap="15">
-                                <columnConstraints>
-                                    <ColumnConstraints minWidth="120" prefWidth="120"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                </columnConstraints>
-
-                                <Label text="Número:" GridPane.columnIndex="0" GridPane.rowIndex="0"
-                                       style="-fx-font-weight: bold;"/>
-                                <TextField fx:id="txtNumero" promptText="F-2025-0001"
-                                           GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-
-                                <Label text="Fecha:" GridPane.columnIndex="0" GridPane.rowIndex="1"
-                                       style="-fx-font-weight: bold;"/>
-                                <DatePicker fx:id="dpFecha" GridPane.columnIndex="1" GridPane.rowIndex="1"
-                                            maxWidth="Infinity"/>
-
-                                <Label text="Cliente:" GridPane.columnIndex="0" GridPane.rowIndex="2"
-                                       style="-fx-font-weight: bold;"/>
-                                <ComboBox fx:id="cboCliente" GridPane.columnIndex="1" GridPane.rowIndex="2"
-                                          maxWidth="Infinity" promptText="Seleccione un cliente"/>
-                            </GridPane>
-                        </VBox>
-
-                        <Separator/>
-
-                        <!-- Importes -->
-                        <VBox spacing="15">
-                            <Label text="💰 Importes" styleClass="subsection-title"/>
-
-                            <GridPane hgap="15" vgap="15">
-                                <columnConstraints>
-                                    <ColumnConstraints minWidth="120" prefWidth="120"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                </columnConstraints>
-
-                                <Label text="Total:" GridPane.columnIndex="0" GridPane.rowIndex="0"
-                                       style="-fx-font-weight: bold;"/>
-                                <TextField fx:id="txtTotal" editable="false" styleClass="total-field"
-                                           text="0.00 €" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-
-                                <Label text="Pagado:" GridPane.columnIndex="0" GridPane.rowIndex="1"
-                                       style="-fx-font-weight: bold;"/>
-                                <TextField fx:id="txtPagado" promptText="0.00 €"
-                                           GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-
-                                <Label text="Pendiente:" GridPane.columnIndex="0" GridPane.rowIndex="2"
-                                       style="-fx-font-weight: bold;"/>
-                                <TextField fx:id="txtPendiente" editable="false"
-                                           text="0.00 €" GridPane.columnIndex="1" GridPane.rowIndex="2"
-                                           style="-fx-background-color: #fff3cd; -fx-border-color: #f39c12;"/>
-                            </GridPane>
-                        </VBox>
-
-                        <Separator/>
-
-                        <!-- Observaciones -->
-                        <VBox spacing="10">
-                            <Label text="📝 Observaciones" styleClass="subsection-title"/>
-                            <TextArea fx:id="txtObservaciones" prefRowCount="4"
-                                      promptText="Notas adicionales sobre la factura..."
-                                      wrapText="true"/>
-                        </VBox>
-
-                        <!-- Info Box -->
-                        <VBox spacing="8" styleClass="info-box">
-                            <Label text="ℹ️ Información Importante" styleClass="info-title"/>
-                            <Label text="• Los cambios se guardan automáticamente"
-                                   styleClass="info-text" wrapText="true"/>
-                            <Label text="• Puede editar las líneas después de crear la factura"
-                                   styleClass="info-text" wrapText="true"/>
-                            <Label text="• El total se calcula automáticamente"
-                                   styleClass="info-text" wrapText="true"/>
-                        </VBox>
-                    </VBox>
-                </ScrollPane>
-
-                <Separator/>
-
-                <!-- Botones de Acción -->
-                <VBox spacing="12">
-                    <!-- Acciones Principales -->
-                    <HBox spacing="10" alignment="CENTER">
-                        <Button text="💾 Guardar" onAction="#handleGuardar"
-                                styleClass="btn-success" prefWidth="160"/>
-                        <Button text="🗑️ Eliminar" onAction="#handleEliminar"
-                                styleClass="btn-danger" prefWidth="160"/>
+            <!-- Right Panel: Form -->
+            <AnchorPane>
+                <VBox spacing="20" styleClass="card" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="📝" styleClass="header-icon"/>
+                        <Label text="Detalles de la Factura" styleClass="section-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="lblEstadoFactura" text="NUEVA" styleClass="badge-info"/>
                     </HBox>
-
-                    <!-- Acciones Secundarias -->
-                    <HBox spacing="10" alignment="CENTER">
-                        <Button text="📋 Ver Líneas"
-                                styleClass="btn-info" prefWidth="160"/>
-                        <Button text="🔄 Nuevo" onAction="#handleNuevo"
-                                styleClass="btn-secondary" prefWidth="160"/>
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane-form">
+                        <VBox spacing="20">
+                            <VBox spacing="15" styleClass="sub-card">
+                                <Label text="📋 Información General" styleClass="subsection-title"/>
+                                <GridPane hgap="15" vgap="15">
+                                    <columnConstraints>
+                                        <ColumnConstraints minWidth="100" prefWidth="100"/>
+                                        <ColumnConstraints hgrow="ALWAYS"/>
+                                    </columnConstraints>
+                                    <Label text="Número:" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                                    <TextField fx:id="txtNumero" promptText="F-2025-0001" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                                    <Label text="Fecha:" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                                    <DatePicker fx:id="dpFecha" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                                    <Label text="Cliente:" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                                    <ComboBox fx:id="cboCliente" promptText="Seleccione un cliente" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                                </GridPane>
+                            </VBox>
+                            <VBox spacing="15" styleClass="sub-card">
+                                <Label text="💰 Importes" styleClass="subsection-title"/>
+                                <GridPane hgap="15" vgap="15">
+                                    <columnConstraints>
+                                        <ColumnConstraints minWidth="100" prefWidth="100"/>
+                                        <ColumnConstraints hgrow="ALWAYS"/>
+                                    </columnConstraints>
+                                    <Label text="Total:" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                                    <TextField fx:id="txtTotal" editable="false" text="0.00 €" styleClass="total-field" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                                    <Label text="Pagado:" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                                    <TextField fx:id="txtPagado" promptText="0.00 €" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                                    <Label text="Pendiente:" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                                    <TextField fx:id="txtPendiente" editable="false" text="0.00 €" styleClass="pending-field" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                                </GridPane>
+                            </VBox>
+                            <VBox spacing="10" styleClass="sub-card">
+                                <Label text="📝 Observaciones" styleClass="subsection-title"/>
+                                <TextArea fx:id="txtObservaciones" promptText="Notas adicionales sobre la factura..." wrapText="true" prefRowCount="4"/>
+                            </VBox>
+                        </VBox>
+                    </ScrollPane>
+                    <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                        <Button text="➕ Nuevo" onAction="#handleNuevo" styleClass="btn-primary"/>
+                        <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
+                        <Button text="🗑️ Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="📋 Ver Líneas" styleClass="btn-info"/>
+                        <Button text="🖨️ Imprimir" onAction="#handleImprimirFactura" styleClass="btn-info"/>
                     </HBox>
                 </VBox>
-            </VBox>
+            </AnchorPane>
         </SplitPane>
-    </center>
 
-    <!-- BARRA INFERIOR -->
-    <bottom>
+        <!-- FOOTER -->
         <HBox spacing="15" alignment="CENTER_LEFT" styleClass="footer">
-            <Label text="💡 Tip: Haga doble clic en una fila para editar" styleClass="footer-text"/>
+            <Label text="💡 Tip: Haga doble clic en una fila para editar la factura" styleClass="footer-text"/>
             <Separator orientation="VERTICAL"/>
-            <Label text="Última actualización: --:--" styleClass="footer-text"/>
+            <Label text="Última sincronización: --:--" styleClass="footer-text"/>
         </HBox>
-    </bottom>
-</BorderPane>
+    </VBox>
+</AnchorPane>

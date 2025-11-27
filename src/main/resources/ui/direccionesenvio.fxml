@@ -2,30 +2,55 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.DireccionesenvioNewController">
-    <center>
-        <VBox spacing="10.0" alignment="CENTER">
-            <Label text="Direcciones de Envío" prefWidth="200.0" alignment="CENTER">
-                <font>
-                    <Font name="System Bold" size="14.0"/>
-                </font>
-            </Label>
-            <TableView fx:id="tableDirecciones" prefWidth="600.0" prefHeight="400.0">
-                <columns>
-                    <TableColumn fx:id="colNombre" text="Nombre" prefWidth="200.0"/>
-                    <TableColumn fx:id="colDireccion" text="Dirección" prefWidth="300.0"/>
-                    <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="100.0"/>
-                </columns>
-            </TableView>
-            <Button text="Añadir Dirección" onAction="#handleAnadirDireccion"/>
+
+<!--
+  MODERN & RESPONSIVE LAYOUT
+  - Root: AnchorPane for a flexible UI container.
+  - Structure: A main VBox organizes the view vertically (header, content).
+  - Content: A '''card''' contains the TableView and the main action buttons.
+  - Styling: All inline styles (like <font>) are removed. Styling is managed via '''styles.css'''.
+-->
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.DireccionesenvioNewController"
+            styleClass="page-view"
+            stylesheets="@/css/styles.css">
+    <VBox AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+        <!-- Header -->
+        <VBox styleClass="header">
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="🚚" styleClass="header-icon"/>
+                    <Label text="Direcciones de Envío" styleClass="header-title"/>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
+            </HBox>
         </VBox>
-    </center>
-    <bottom>
-        <HBox spacing="10.0" alignment="CENTER">
-            <Button text="Volver" onAction="#handleVolver"/>
-            <Button text="Guardar" onAction="#handleGuardar"/>
-        </HBox>
-    </bottom>
-</BorderPane>
+
+        <!-- Main Content -->
+        <VBox VBox.vgrow="ALWAYS" styleClass="page-content">
+            <VBox styleClass="card" VBox.vgrow="ALWAYS">
+                <!-- Table -->
+                <TableView fx:id="tableDirecciones" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="200.0"/>
+                        <TableColumn fx:id="colDireccion" text="Dirección" prefWidth="300.0"/>
+                        <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="100.0"/>
+                    </columns>
+                </TableView>
+                
+                <!-- Actions -->
+                <VBox spacing="15" alignment="CENTER_LEFT">
+                    <padding>
+                        <Insets top="20.0"/>
+                    </padding>
+                    <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                        <Button text="➕ Añadir Dirección" onAction="#handleAnadirDireccion" styleClass="btn-primary"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="💾 Guardar Cambios" onAction="#handleGuardar" styleClass="btn-success"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </VBox>
+    </VBox>
+</AnchorPane>

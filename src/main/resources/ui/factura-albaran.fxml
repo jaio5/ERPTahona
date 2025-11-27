@@ -2,36 +2,80 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.FacturaAlbaranController">
-    <center>
-        <TabPane fx:id="tabPane" prefHeight="400.0" prefWidth="600.0">
-            <tabs>
-                <Tab fx:id="tabFactura" text="Factura">
-                    <content>
-                        <VBox spacing="10.0" xmlns:fx="http://javafx.com/fxml">
-                            <TextField fx:id="numeroFacturaField" promptText="Número de Factura"/>
-                            <Button fx:id="guardarFacturaButton" text="Guardar Factura"/>
-                        </VBox>
-                    </content>
-                </Tab>
-                <Tab fx:id="tabAlbaran" text="Albarán">
-                    <content>
-                        <VBox spacing="10.0" xmlns:fx="http://javafx.com/fxml">
-                            <TextField fx:id="numeroAlbaranField" promptText="Número de Albarán"/>
-                            <Button fx:id="guardarAlbaranButton" text="Guardar Albarán"/>
-                        </VBox>
-                    </content>
-                </Tab>
-            </tabs>
-        </TabPane>
-    </center>
-    <bottom>
-        <HBox spacing="10.0" alignment="center">
-            <Button fx:id="imprimirButton" text="Imprimir"/>
-            <Button fx:id="enviarEmailButton" text="Enviar por Email"/>
-        </HBox>
-    </bottom>
-</BorderPane>
 
+<!--
+  MODERN & RESPONSIVE LAYOUT
+  - Root: AnchorPane for a flexible UI container.
+  - Structure: A main VBox organizes the view vertically (header, content).
+  - Content: A '''card''' contains a TabPane for Factura/Albaran and a unified action bar.
+  - Form (in Tabs): Forms inside tabs now use GridPane for alignment and consistency.
+  - Styling: All inline styles are removed. Styling is managed via '''styles.css'''.
+-->
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.FacturaAlbaranController"
+            styleClass="page-view"
+            stylesheets="@/css/styles.css">
+    <VBox AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+        <!-- Header -->
+        <VBox styleClass="header">
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="📄" styleClass="header-icon"/>
+                    <Label text="Facturación y Albaranes" styleClass="header-title"/>
+                </HBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
+
+        <!-- Main Content -->
+        <VBox VBox.vgrow="ALWAYS" styleClass="page-content">
+            <VBox styleClass="card" VBox.vgrow="ALWAYS">
+                <TabPane fx:id="tabPane" VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
+                    <tabs>
+                        <Tab fx:id="tabFactura" text="Factura">
+                            <content>
+                                <AnchorPane>
+                                    <VBox spacing="20" styleClass="sub-card" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+                                         <Label text="Datos de la Factura" styleClass="section-title"/>
+                                         <GridPane hgap="10" vgap="15">
+                                             <columnConstraints>
+                                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="120.0"/>
+                                                 <ColumnConstraints hgrow="ALWAYS"/>
+                                             </columnConstraints>
+                                             <Label text="Nº Factura:" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                                             <TextField fx:id="numeroFacturaField" promptText="Número de Factura" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                                         </GridPane>
+                                     </VBox>
+                                </AnchorPane>
+                            </content>
+                        </Tab>
+                        <Tab fx:id="tabAlbaran" text="Albarán">
+                            <content>
+                                 <AnchorPane>
+                                    <VBox spacing="20" styleClass="sub-card" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+                                         <Label text="Datos del Albarán" styleClass="section-title"/>
+                                         <GridPane hgap="10" vgap="15">
+                                            <columnConstraints>
+                                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="100.0" prefWidth="120.0"/>
+                                                 <ColumnConstraints hgrow="ALWAYS"/>
+                                             </columnConstraints>
+                                             <Label text="Nº Albarán:" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                                             <TextField fx:id="numeroAlbaranField" promptText="Número de Albarán" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                                         </GridPane>
+                                     </VBox>
+                                </AnchorPane>
+                            </content>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+                 <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                    <Button fx:id="guardarButton" text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button fx:id="imprimirButton" text="📄 Imprimir" onAction="#handleImprimir" styleClass="btn-primary"/>
+                    <Button fx:id="enviarEmailButton" text="✉️ Enviar por Email" onAction="#handleEnviarEmail" styleClass="btn-primary"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </VBox>
+</AnchorPane>

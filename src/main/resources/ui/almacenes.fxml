@@ -1,46 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
+<!--
+  MODERN & RESPONSIVE LAYOUT
+  - Root: AnchorPane for a flexible UI container.
+  - Structure: VBox for the main layout, with a SplitPane for the master-detail view.
+  - Form (Right): The data form is rebuilt with a GridPane for a clean, aligned, and responsive interface.
+  - Styling: All inline styles removed. All styling is managed via '''styles.css'''.
+-->
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="alicanteweb.erp.controller.AlmaceneController"
-            prefHeight="700.0" prefWidth="1100.0">
-
-    <!-- Header -->
-    <top>
+            styleClass="page-view"
+            stylesheets="@/css/styles.css">
+    <VBox AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+        <!-- Header -->
         <VBox styleClass="header">
-            <padding>
-                <Insets top="15" right="20" bottom="15" left="20"/>
-            </padding>
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Label text="🏬" style="-fx-font-size: 24px;"/>
+                    <Label text="🏬" styleClass="header-icon"/>
                     <Label text="Gestión de Almacenes" styleClass="header-title"/>
                 </HBox>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="← Volver" onAction="#handleVolver" styleClass="btn-secondary"/>
             </HBox>
         </VBox>
-    </top>
 
-    <!-- Center - Split View -->
-    <center>
-        <SplitPane dividerPositions="0.6">
-            <!-- Left: Table and Filters -->
-            <VBox spacing="15" style="-fx-background-color: white;">
-                <padding>
-                    <Insets top="20" right="20" bottom="20" left="20"/>
-                </padding>
+        <!-- Main Content -->
+        <SplitPane dividerPositions="0.6" VBox.vgrow="ALWAYS" styleClass="page-content">
+            <!-- Left Panel: Table and Filters -->
+            <VBox spacing="15" styleClass="card">
                 <VBox spacing="15" styleClass="filters-panel">
                     <Label text="🔎 Búsqueda y Filtros" styleClass="subsection-title"/>
                     <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Buscar:" style="-fx-min-width: 80; -fx-font-weight: bold;"/>
-                        <TextField fx:id="txtSearch" promptText="Código o nombre..."
-                                   HBox.hgrow="ALWAYS" styleClass="search-field"/>
+                        <Label text="Buscar:" styleClass="form-label"/>
+                        <TextField fx:id="txtSearch" promptText="Código o nombre..." HBox.hgrow="ALWAYS" styleClass="search-field"/>
                         <Button fx:id="btnSearch" text="🔎 Buscar" styleClass="btn-primary"/>
                         <Button text="⟳ Limpiar" onAction="#handleSearch" styleClass="btn-secondary"/>
                     </HBox>
@@ -52,33 +47,33 @@
                     </columns>
                 </TableView>
             </VBox>
-            <!-- Right: Form -->
-            <VBox spacing="15" style="-fx-background-color: #f8f9fa;">
-                <padding>
-                    <Insets top="20" right="20" bottom="20" left="20"/>
-                </padding>
-                <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="Datos del Almacén" styleClass="section-title">
-                        <font><Font name="System Bold" size="16"/></font>
-                    </Label>
-                    <Region HBox.hgrow="ALWAYS"/>
-                </HBox>
-                <VBox spacing="12">
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Código:" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="txtCodigo" promptText="Código"/>
-                    </HBox>
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Nombre:" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="txtNombre" promptText="Nombre"/>
+
+            <!-- Right Panel: Form -->
+            <AnchorPane>
+                <VBox spacing="20" styleClass="card" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0">
+                    <Label text="📝 Datos del Almacén" styleClass="section-title"/>
+                    <GridPane hgap="10" vgap="15" VBox.vgrow="ALWAYS">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="80.0" prefWidth="100.0"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <Label text="Código:" styleClass="form-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCodigo" promptText="Código del almacén" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <Label text="Nombre:" styleClass="form-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtNombre" promptText="Nombre del almacén" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <rowConstraints>
+                            <RowConstraints/>
+                            <RowConstraints/>
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        </rowConstraints>
+                    </GridPane>
+                    <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
+                        <Button text="➕ Nuevo" onAction="#handleNuevo" styleClass="btn-primary"/>
+                        <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
+                        <Button text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
                     </HBox>
                 </VBox>
-                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">
-                    <Button text="➕ Nuevo" onAction="#handleNuevo" styleClass="btn-primary"/>
-                    <Button text="💾 Guardar" onAction="#handleGuardar" styleClass="btn-success"/>
-                    <Button text="🗑 Eliminar" onAction="#handleEliminar" styleClass="btn-danger"/>
-                </HBox>
-            </VBox>
+            </AnchorPane>
         </SplitPane>
-    </center>
-</BorderPane>
+    </VBox>
+</AnchorPane>
