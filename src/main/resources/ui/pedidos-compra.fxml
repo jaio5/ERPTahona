@@ -62,19 +62,19 @@
                 <VBox spacing="12">
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="Número:" style="-fx-font-weight: bold;"/>
-                        <TextField fx:id="txtNumero" promptText="Número de pedido"/>
+                        <TextField fx:id="txtNumero" promptText="Número de pedido" HBox.hgrow="ALWAYS" styleClass="form-field-large"/>
                     </HBox>
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="Fecha:" style="-fx-font-weight: bold;"/>
-                        <DatePicker fx:id="dpFecha" promptText="Fecha"/>
+                        <DatePicker fx:id="dpFecha" promptText="Fecha" HBox.hgrow="ALWAYS" styleClass="form-field-large"/>
                     </HBox>
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="Proveedor:" style="-fx-font-weight: bold;"/>
-                        <ComboBox fx:id="cboProveedor" promptText="Selecciona proveedor"/>
+                        <ComboBox fx:id="cboProveedor" promptText="Selecciona proveedor" HBox.hgrow="ALWAYS" styleClass="form-field-large"/>
                     </HBox>
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="Estado:" style="-fx-font-weight: bold;"/>
-                        <ComboBox fx:id="cboEstado" promptText="Selecciona estado"/>
+                        <ComboBox fx:id="cboEstado" promptText="Selecciona estado" HBox.hgrow="ALWAYS" styleClass="form-field-large"/>
                     </HBox>
                 </VBox>
                 <HBox spacing="12" alignment="CENTER_LEFT" styleClass="main-actions">

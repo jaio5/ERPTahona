@@ -640,3 +640,18 @@
     -fx-font-size: 13px;
     -fx-text-fill: -fx-gray-900;
 }
+
+/* === NUEVAS CLASES CSS === */
+.form-field-large {
+    -fx-font-size: 16px;
+    -fx-pref-height: 40px;
+    -fx-min-width: 220px;
+    -fx-max-width: 100%;
+    -fx-background-radius: 6px;
+    -fx-padding: 0 10px;
+}
+
+/* Responsive para formularios: los campos se expanden y se adaptan */
+.hbox > .form-field-large {
+    -fx-hgrow: always;
+}
