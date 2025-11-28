@@ -10,6 +10,8 @@ import java.util.Optional;
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     Optional<Pedido> findByNumero(String numero);
+
+    boolean existsByNumero(String numero);
     List<Pedido> findByEstado(String estado);
     List<Pedido> findByCliente_Id(Long clienteId);
     List<Pedido> findByNumeroContainingIgnoreCaseOrCliente_NombreContainingIgnoreCase(String numero, String nombre);

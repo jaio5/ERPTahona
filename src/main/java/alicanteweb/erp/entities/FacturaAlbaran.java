@@ -1,9 +1,13 @@
 package alicanteweb.erp.entities;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "factura_albaran")
 public class FacturaAlbaran {
@@ -16,34 +20,11 @@ public class FacturaAlbaran {
     @JoinColumn(name = "factura_id", nullable = false)
     private Factura factura;
 
+    // El campo albaran es necesario para los métodos del repositorio
     @MapsId("albaranId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "albaran_id", nullable = false)
-    private AlbaranesVenta albaran;
-
-    public FacturaAlbaranId getId() {
-        return id;
-    }
-
-    public void setId(FacturaAlbaranId id) {
-        this.id = id;
-    }
-
-    public Factura getFactura() {
-        return factura;
-    }
-
-    public void setFactura(Factura factura) {
-        this.factura = factura;
-    }
-
-    public AlbaranesVenta getAlbaran() {
-        return albaran;
-    }
-
-    public void setAlbaran(AlbaranesVenta albaran) {
-        this.albaran = albaran;
-    }
+    private AlbaranVenta albaran;
 
 }

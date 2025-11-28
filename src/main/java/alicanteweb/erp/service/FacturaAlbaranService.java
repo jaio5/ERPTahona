@@ -24,6 +24,8 @@ public class FacturaAlbaranService {
     }
 
     public Optional<FacturaAlbaran> findById(FacturaAlbaranId id) {
+        // Solución robusta: comprobar null y usar el tipo correcto
+        if (id == null || id.getFacturaId() == null || id.getAlbaranId() == null) return Optional.empty();
         return repository.findById(id);
     }
 
@@ -42,7 +44,7 @@ public class FacturaAlbaranService {
 
     @Transactional
     public void deleteById(FacturaAlbaranId id) {
+        if (id == null || id.getFacturaId() == null || id.getAlbaranId() == null) return;
         repository.deleteById(id);
     }
 }
-

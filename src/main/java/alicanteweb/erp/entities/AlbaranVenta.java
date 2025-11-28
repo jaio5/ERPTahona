@@ -9,14 +9,12 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "facturas")
-public class Factura {
+@Table(name = "albaranes_venta")
+public class AlbaranVenta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -34,21 +32,16 @@ public class Factura {
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "almacen_id")
+    private Almacen almacen;
+
+    @Lob
+    @Column(name = "observaciones")
+    private String observaciones;
+
     @ColumnDefault("0.00")
     @Column(name = "total", precision = 10, scale = 2)
     private BigDecimal total;
-
-    @ColumnDefault("0.00")
-    @Column(name = "pagado", precision = 10, scale = 2)
-    private BigDecimal pagado;
-
-    @Column(name = "pagada", nullable = false)
-    private boolean pagada;
-
-    @OneToMany(mappedBy = "facturas")
-    private Set<AlbaranVentaFactura> albaranesVentaFacturas = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "factura")
-    private Set<FacturaLinea> facturaLineas = new LinkedHashSet<>();
 
 }

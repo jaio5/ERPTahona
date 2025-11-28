@@ -2,6 +2,8 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.repository.FacturaRepository;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,5 +102,20 @@ public class FacturaService {
     public void imprimirFactura(Factura factura) {
         // Aquí deberías implementar la lógica real de impresión (PDF, JasperReports, etc.)
         System.out.println("Imprimiendo factura: " + factura.getNumero());
+    }
+
+    /**
+     * Devuelve el número de facturas pendientes de pago.
+     */
+    public int countFacturasPendientes() {
+        // Suponiendo que existe un campo 'pagada' en la entidad Factura
+        return (int) repository.countByPagadaFalse();
+    }
+
+    /**
+     * Devuelve todas las facturas como ObservableList para la UI.
+     */
+    public ObservableList<Factura> findAllObservable() {
+        return FXCollections.observableArrayList(findAll());
     }
 }

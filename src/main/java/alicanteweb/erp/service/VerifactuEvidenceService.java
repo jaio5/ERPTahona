@@ -5,6 +5,7 @@ import alicanteweb.erp.repository.VerifactuEvidenceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,20 +67,21 @@ public class VerifactuEvidenceService {
      *
      * Nota: este método delega en VerifactuAEATService para generar hash y firma.
      */
+    @Transactional
     public VerifactuEvidence registrarEvidenciaAEAT(String datosFactura, String serie, String numero) throws Exception {
         VerifactuEvidence evidencia = new VerifactuEvidence();
         evidencia.setFacturaId(datosFactura);
         evidencia.setSerie(serie);
         evidencia.setNumero(numero);
         evidencia.setHash(aeatService.generarHash(datosFactura));
-        evidencia.setSignature(aeatService.firmarDatos(datosFactura.getBytes("UTF-8")));
+        evidencia.setSignature(aeatService.firmarDatos(datosFactura.getBytes(StandardCharsets.UTF_8)));
         evidencia.setCertFingerprint(aeatService.getCertFingerprint());
-        evidencia.setMetadata("{}");
-        evidencia.setFechaEmision(java.time.LocalDateTime.now());
-        evidencia.setCreatedAt(java.time.LocalDateTime.now());
+        evidencia.setMetadata(java.util.Collections.emptyMap()); // Inicializa como Map vacío
+        evidencia.setFechaEmision(java.time.Instant.now()); // Usa Instant
+        evidencia.setCreatedAt(java.time.Instant.now()); // Usa Instant
         String jsonEvidencia = "{\"facturaId\":\"" + datosFactura + "\",\"hash\":\"" + evidencia.getHash() + "\"}";
         String respuesta = aeatService.enviarAEAT(jsonEvidencia);
-        evidencia.setMetadata(respuesta);
+        evidencia.setMetadata(java.util.Collections.singletonMap("respuesta", respuesta));
         return repository.save(evidencia);
     }
 }

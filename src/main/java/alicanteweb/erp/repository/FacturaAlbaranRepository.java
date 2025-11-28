@@ -12,4 +12,3 @@ public interface FacturaAlbaranRepository extends JpaRepository<FacturaAlbaran, 
     List<FacturaAlbaran> findByFactura_Id(Long facturaId);
     List<FacturaAlbaran> findByAlbaran_Id(Long albaranId);
 }
-
