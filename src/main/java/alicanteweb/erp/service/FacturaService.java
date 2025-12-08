@@ -12,7 +12,6 @@ import java.util.Optional;
 
 /**
  * Servicio de negocio para manejar facturas.
- *
  * Explicación para un estudiante de DAM:
  * - Esta clase es un bean de Spring anotado con @Service. Spring la gestiona y
  *   la expone para que otros beans (por ejemplo controladores FXML) la inyecten.

@@ -94,6 +94,11 @@
             <artifactId>ikonli-javafx</artifactId>
             <version>${ikonli.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-fontawesome5-pack</artifactId>
+            <version>${ikonli.version}</version>
+        </dependency>
         <!-- MapStruct (mapeo DTO <-> Entity) -->
         <dependency>
             <groupId>org.mapstruct</groupId>
@@ -123,7 +128,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <version>${h2.version}</version>
         </dependency>
         <!-- BouncyCastle (criptografía) -->
         <dependency>
@@ -193,6 +198,10 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <jvmArguments>
+                        --module-path "${java.home}/lib;${java.home}/lib/ext;${project.build.directory}/classes;${project.build.directory}/dependency"
+                        --add-modules javafx.controls,javafx.fxml
+                    </jvmArguments>
                 </configuration>
                 <executions>
                     <execution>
@@ -213,3 +222,5 @@
         </plugins>
     </build>
 </project>
+
+<!-- RECOMENDACIÓN: Para ejecutar la app JavaFX, usa preferentemente 'mvn javafx:run' en vez de 'spring-boot:run' -->

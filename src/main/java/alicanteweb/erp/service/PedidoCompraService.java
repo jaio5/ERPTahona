@@ -39,4 +39,17 @@ public class PedidoCompraService {
     public Optional<PedidoCompra> findById(String id) {
         return repository.findById(id);
     }
+
+    @Transactional(readOnly = true)
+    public List<PedidoCompra> buscarPorFiltro(String filtro) {
+        if (filtro == null || filtro.trim().isEmpty()) {
+            return findAll();
+        }
+        String filtroLower = filtro.toLowerCase();
+        return findAll().stream()
+            .filter(p -> (p.getNumero() != null && p.getNumero().toLowerCase().contains(filtroLower))
+                || (p.getIdProveedor() != null && p.getIdProveedor().getNombre() != null && p.getIdProveedor().getNombre().toLowerCase().contains(filtroLower))
+                || (p.getEstado() != null && p.getEstado().toLowerCase().contains(filtroLower)))
+            .toList();
+    }
 }

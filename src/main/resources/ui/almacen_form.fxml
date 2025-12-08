@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="15" prefWidth="400" prefHeight="250">
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+    <Label text="Datos del Almacén" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+    <GridPane hgap="10" vgap="15">
+        <columnConstraints>
+            <ColumnConstraints minWidth="100" prefWidth="100"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+        </columnConstraints>
+        <Label text="Código:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <TextField fx:id="txtCodigo" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="Código del almacén"/>
+        <Label text="Nombre:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <TextField fx:id="txtNombre" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="Nombre del almacén"/>
+    </GridPane>
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="btnGuardar" text="Guardar" defaultButton="true" styleClass="btn-primary"/>
+        <Button fx:id="btnCancelar" text="Cancelar" cancelButton="true" styleClass="btn-secondary"/>
+    </HBox>
+</VBox>

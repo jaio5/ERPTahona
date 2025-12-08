@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="15" prefWidth="500" prefHeight="550">
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+    <Label text="Datos del Proveedor" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+    <GridPane hgap="10" vgap="15">
+        <columnConstraints>
+            <ColumnConstraints minWidth="120" prefWidth="120"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+        </columnConstraints>
+        <Label text="Nombre:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <TextField fx:id="txtNombre" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="Nombre o razón social"/>
+        <Label text="CIF/NIF:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <TextField fx:id="txtCif" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="CIF/NIF"/>
+        <Label text="Teléfono:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <TextField fx:id="txtTelefono" GridPane.columnIndex="1" GridPane.rowIndex="2" promptText="Teléfono de contacto"/>
+        <Label text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+        <TextField fx:id="txtEmail" GridPane.columnIndex="1" GridPane.rowIndex="3" promptText="Correo electrónico"/>
+        <Label text="Dirección:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+        <TextField fx:id="txtDireccion" GridPane.columnIndex="1" GridPane.rowIndex="4" promptText="Dirección completa"/>
+        <Label text="Ciudad:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+        <TextField fx:id="txtCiudad" GridPane.columnIndex="1" GridPane.rowIndex="5" promptText="Ciudad"/>
+        <Label text="Provincia:" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+        <TextField fx:id="txtProvincia" GridPane.columnIndex="1" GridPane.rowIndex="6" promptText="Provincia"/>
+        <Label text="Código Postal:" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
+        <TextField fx:id="txtCp" GridPane.columnIndex="1" GridPane.rowIndex="7" promptText="CP"/>
+        <Label text="País:" GridPane.columnIndex="0" GridPane.rowIndex="8"/>
+        <TextField fx:id="txtPais" GridPane.columnIndex="1" GridPane.rowIndex="8" promptText="País"/>
+    </GridPane>
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="btnGuardar" text="Guardar" defaultButton="true" styleClass="btn-primary"/>
+        <Button fx:id="btnCancelar" text="Cancelar" cancelButton="true" styleClass="btn-secondary"/>
+    </HBox>
+</VBox>

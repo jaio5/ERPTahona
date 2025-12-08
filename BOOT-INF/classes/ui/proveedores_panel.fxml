@@ -19,12 +19,32 @@
     </HBox>
 
     <HBox styleClass="toolbar" alignment="CENTER_LEFT" spacing="15">
-        <TextField fx:id="txtBuscar" promptText="Buscar..." styleClass="search-field"/>
+        <TextField fx:id="txtBuscar" promptText="Buscar..." styleClass="search-field">
+            <graphic>
+                <FontIcon iconLiteral="fas-search" iconSize="14"/>
+            </graphic>
+        </TextField>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Nuevo" styleClass="btn-success" onAction="#onCreate"/>
-        <Button text="Editar" styleClass="btn-primary" onAction="#onEdit"/>
-        <Button text="Eliminar" styleClass="btn-danger" onAction="#onDelete"/>
-        <Button text="Refrescar" styleClass="btn-secondary" onAction="#onRefresh"/>
+        <Button text="Nuevo" styleClass="btn-success" onAction="#onCreate">
+            <graphic>
+                <FontIcon iconLiteral="fas-plus" iconSize="14"/>
+            </graphic>
+        </Button>
+        <Button text="Editar" styleClass="btn-primary" onAction="#onEdit">
+            <graphic>
+                <FontIcon iconLiteral="fas-edit" iconSize="14"/>
+            </graphic>
+        </Button>
+        <Button text="Eliminar" styleClass="btn-danger" onAction="#onDelete">
+            <graphic>
+                <FontIcon iconLiteral="fas-trash" iconSize="14"/>
+            </graphic>
+        </Button>
+        <Button text="Refrescar" styleClass="btn-secondary" onAction="#onRefresh">
+            <graphic>
+                <FontIcon iconLiteral="fas-sync" iconSize="14"/>
+            </graphic>
+        </Button>
     </HBox>
 
     <StackPane VBox.vgrow="ALWAYS">

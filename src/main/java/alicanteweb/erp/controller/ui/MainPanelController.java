@@ -6,37 +6,45 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import javafx.scene.input.MouseEvent;
 import javafx.animation.ScaleTransition;
 import javafx.util.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 public class MainPanelController {
+    private static final Logger log = LoggerFactory.getLogger(MainPanelController.class);
+
+    private final ApplicationContext springContext;
+
     @FXML private Button btnClientes;
     @FXML private Button btnProveedores;
     @FXML private Button btnArticulos;
     @FXML private Button btnFacturas;
     @FXML private Button btnAlmacenes;
+    @FXML private Button btnVerifactu;
     @FXML private StackPane mainContent;
     @FXML private GridPane gridModulos;
 
-    @FXML
-    public void initialize() {
-        btnClientes.setText("Clientes");
-        btnProveedores.setText("Proveedores");
-        btnArticulos.setText("Artículos");
-        btnFacturas.setText("Facturas");
-        btnAlmacenes.setText("Almacenes");
-        addButtonAnimation(btnClientes, "/ui/clientes_panel.fxml");
-        addButtonAnimation(btnProveedores, "/ui/proveedores_panel.fxml");
-        addButtonAnimation(btnArticulos, "/ui/articulos_panel.fxml");
-        addButtonAnimation(btnFacturas, "/ui/facturas_panel.fxml");
-        addButtonAnimation(btnAlmacenes, "/ui/almacenes_panel.fxml");
-        mostrarMenuPrincipal();
+    public MainPanelController(ApplicationContext springContext) {
+        this.springContext = springContext;
     }
 
-    private void addButtonAnimation(Button button, String fxmlPath) {
+    @FXML
+    public void initialize() {
+        // Solo añadir animaciones hover, no sobrescribir onAction
+        addButtonAnimation(btnClientes);
+        addButtonAnimation(btnProveedores);
+        addButtonAnimation(btnArticulos);
+        addButtonAnimation(btnFacturas);
+        addButtonAnimation(btnAlmacenes);
+        addButtonAnimation(btnVerifactu);
+    }
+
+    private void addButtonAnimation(Button button) {
         button.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> {
             ScaleTransition st = new ScaleTransition(Duration.millis(150), button);
             st.setToX(1.08);
@@ -49,16 +57,49 @@ public class MainPanelController {
             st.setToY(1.0);
             st.play();
         });
-        button.setOnAction(e -> cargarVistaModulo(fxmlPath));
     }
 
     private void cargarVistaModulo(String fxmlPath) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            log.info("=====================================");
+            log.info("INTENTANDO CARGAR VISTA: {}", fxmlPath);
+            log.info("=====================================");
+
+            java.net.URL resourceUrl = getClass().getResource(fxmlPath);
+            if (resourceUrl == null) {
+                throw new IllegalArgumentException("No se encontró el archivo: " + fxmlPath);
+            }
+            log.info("Archivo encontrado en: {}", resourceUrl);
+
+            FXMLLoader loader = new FXMLLoader(resourceUrl);
+            loader.setControllerFactory(springContext::getBean);
+
+            log.info("Cargando FXML...");
             Parent view = loader.load();
+            log.info("FXML cargado OK. Tipo de vista: {}", view.getClass().getSimpleName());
+
+            log.info("Reemplazando contenido de mainContent...");
             mainContent.getChildren().setAll(view);
+
+            log.info("=====================================");
+            log.info("VISTA CARGADA EXITOSAMENTE: {}", fxmlPath);
+            log.info("Elementos en mainContent: {}", mainContent.getChildren().size());
+            log.info("=====================================");
         } catch (Exception e) {
-            System.err.println("Error cargando la vista: " + fxmlPath + " - " + e.getMessage());
+            log.error("=====================================");
+            log.error("ERROR CRÍTICO CARGANDO VISTA: {}", fxmlPath);
+            log.error("Tipo de error: {}", e.getClass().getName());
+            log.error("Mensaje: {}", e.getMessage());
+            log.error("=====================================", e);
+
+            // Mostrar alert al usuario
+            javafx.application.Platform.runLater(() -> {
+                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Error cargando vista");
+                alert.setContentText("No se pudo cargar la vista: " + fxmlPath + "\n" + e.getMessage());
+                alert.showAndWait();
+            });
         }
     }
 
@@ -68,33 +109,37 @@ public class MainPanelController {
 
     @FXML
     public void onClientes() {
-        mostrarMenuPrincipal();
+        log.info(">>> BOTÓN CLIENTES PRESIONADO <<<");
+        cargarVistaModulo("/ui/clientes_panel.fxml");
     }
 
     @FXML
     public void onProveedores() {
-        mostrarMenuPrincipal();
+        log.info(">>> BOTÓN PROVEEDORES PRESIONADO <<<");
+        cargarVistaModulo("/ui/proveedores_panel.fxml");
     }
 
     @FXML
     public void onArticulos() {
-        mostrarMenuPrincipal();
+        log.info(">>> BOTÓN ARTÍCULOS PRESIONADO <<<");
+        cargarVistaModulo("/ui/articulos_panel.fxml");
     }
 
     @FXML
     public void onFacturas() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/facturas_panel.fxml"));
-            Parent facturasView = loader.load();
-            mainContent.getChildren().setAll(facturasView);
-        } catch (Exception e) {
-            // Mejor logging
-            System.err.println("Error cargando la vista de facturas: " + e.getMessage());
-        }
+        log.info(">>> BOTÓN FACTURAS PRESIONADO <<<");
+        cargarVistaModulo("/ui/facturas_panel.fxml");
     }
 
     @FXML
     public void onAlmacenes() {
-        mostrarMenuPrincipal();
+        log.info(">>> BOTÓN ALMACENES PRESIONADO <<<");
+        cargarVistaModulo("/ui/almacenes_panel.fxml");
+    }
+
+    @FXML
+    public void onVerifactu() {
+        log.info(">>> BOTÓN VERIFACTU PRESIONADO <<<");
+        cargarVistaModulo("/ui/verifactu_panel.fxml");
     }
 }

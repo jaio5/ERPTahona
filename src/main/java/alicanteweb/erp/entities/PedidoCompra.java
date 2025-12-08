@@ -28,4 +28,16 @@ public class PedidoCompra {
     @Column(name = "estado", length = 50)
     private String estado;
 
+    @Size(max = 50)
+    @Column(name = "numero", length = 50)
+    private String numero;
+
+    @Column(name = "total")
+    private Float total;
+
+    // Lombok genera los getters y setters para numero y total
+    public String getProveedor() {
+        return idProveedor != null ? idProveedor.getNombre() : null;
+    }
+
 }
