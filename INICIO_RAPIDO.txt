@@ -1,0 +1,15 @@
+﻿# INICIO RAPIDO
+## Para ARRANCAR la aplicacion:
+1. Doble clic en: **arrancar.bat**
+2. O desde terminal: mvn javafx:run
+## Para COMPILAR:
+1. Doble clic en: **compilar.bat**
+2. O desde terminal: mvn clean compile
+## Requisitos:
+- Java 17+
+- Maven
+- MySQL ejecutandose en localhost:3306
+- Base de datos "tahona" creada
+## Documentacion completa:
+- Ver: **GUIA_ARRANQUE.md**
+- Ver: **README.md**

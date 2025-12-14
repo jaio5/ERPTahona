@@ -1,0 +1,189 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                  ÍNDICE DE DOCUMENTACIÓN - ERP TAHONA                    ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 📖 PARA EMPEZAR (LEE PRIMERO)                                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  1. REFERENCIA_RAPIDA.txt ⭐ RECOMENDADO
+     → Guía visual con todos los comandos básicos
+     → Módulos disponibles
+     → Solución rápida de problemas
+
+  2. INICIO_RAPIDO.txt
+     → Comandos para arrancar
+     → Requisitos mínimos
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 📚 GUÍAS DETALLADAS                                                      │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  3. GUIA_ARRANQUE.md
+     → Métodos de arranque paso a paso
+     → Solución de problemas detallada
+     → Configuración de base de datos
+     → Logs y depuración
+     → Checklist de arranque exitoso
+
+  4. GUIA_PERSONALIZACION_IMPRESION.md
+     → 3 formatos de impresión disponibles
+     → Cómo cambiar el formato
+     → Crear formatos personalizados
+     → Ejemplos de personalización
+     → Consejos para impresión B/N
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 📊 ESTADO Y DOCUMENTACIÓN TÉCNICA                                        │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  5. ESTADO_PROYECTO.md ⭐ COMPLETO
+     → Resumen completo del proyecto
+     → Funcionalidades implementadas
+     → Checklist de características
+     → Estadísticas del proyecto
+     → Archivos creados
+     → Próximos pasos sugeridos
+
+  6. README.md
+     → Descripción general
+     → Tecnologías utilizadas
+     → Características principales
+     → Enlaces a documentación
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 🚀 SCRIPTS DE ARRANQUE                                                   │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  arrancar.bat
+  → Doble clic para ARRANCAR la aplicación
+  → Usa el plugin Maven JavaFX
+
+  arrancar.ps1
+  → Versión PowerShell del script de arranque
+
+  compilar.bat
+  → Doble clic para COMPILAR el proyecto
+  → Limpia y compila (mvn clean compile)
+
+  compilar_y_arrancar.bat
+  → TODO EN UNO: Compila y arranca
+  → Ideal para desarrollo
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 📂 ESTRUCTURA DE DOCUMENTACIÓN                                           │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  D:/Programación/ERP/
+  │
+  ├── 📄 REFERENCIA_RAPIDA.txt          ← Empieza aquí
+  ├── 📄 INICIO_RAPIDO.txt              ← Comandos básicos
+  ├── 📄 README.md                      ← Descripción general
+  │
+  ├── 📘 GUIA_ARRANQUE.md               ← Arranque detallado
+  ├── 📘 GUIA_PERSONALIZACION_IMPRESION.md  ← Personalizar impresión
+  ├── 📘 ESTADO_PROYECTO.md             ← Estado completo
+  │
+  ├── 🚀 arrancar.bat                   ← ARRANCAR (Windows)
+  ├── 🚀 arrancar.ps1                   ← ARRANCAR (PowerShell)
+  ├── 🚀 compilar.bat                   ← COMPILAR
+  ├── 🚀 compilar_y_arrancar.bat        ← TODO EN UNO
+  │
+  └── 📂 docs/                          ← Documentación adicional
+      ├── UI_UX_GUIDE.md
+      ├── VISTA_PREVIA_UI.md
+      ├── estructura.md
+      ├── PROYECTO_ERP_PANADERIA.md
+      ├── SOLUCION_UTF8_IMPRESION.md    ← Solución UTF-8
+      ├── VERIFACTU_INICIO_RAPIDO.md    ← VeriFactu: Inicio ⭐
+      ├── VERIFACTU_DOCUMENTACION.md    ← VeriFactu: Completa
+      └── VERIFACTU_RESUMEN.md          ← VeriFactu: Resumen
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 🎯 SEGÚN TU NECESIDAD, LEE...                                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  ❓ "¿Cómo arranco la aplicación?"
+  → REFERENCIA_RAPIDA.txt (Sección 1)
+  → arrancar.bat (Doble clic)
+
+  ❓ "No arranca, da error"
+  → GUIA_ARRANQUE.md (Sección: Solución de Problemas)
+
+  ❓ "¿Qué funcionalidades tiene?"
+  → ESTADO_PROYECTO.md (Sección: Funcionalidades Implementadas)
+
+  ❓ "¿Cómo personalizar las impresiones?"
+  → GUIA_PERSONALIZACION_IMPRESION.md
+
+  ❓ "¿Cómo se usa cada módulo?"
+  → ESTADO_PROYECTO.md (Sección: Cómo Usar la Aplicación)
+
+  ❓ "¿Cómo configurar VeriFactu?"
+  → docs/VERIFACTU_INICIO_RAPIDO.md (¡Solo 3 pasos!)
+
+  ❓ "¿Qué es VeriFactu y cómo funciona?"
+  → docs/VERIFACTU_DOCUMENTACION.md (Documentación completa)
+
+  ❓ "Problema con caracteres españoles en impresión"
+  → docs/SOLUCION_UTF8_IMPRESION.md
+  → REFERENCIA_RAPIDA.txt (Sección 3 y 4)
+
+  ❓ "¿Qué tecnologías usa?"
+  → README.md (Sección: Tecnologías)
+  → ESTADO_PROYECTO.md (Sección: Estadísticas)
+
+  ❓ "¿Cómo configurar la base de datos?"
+  → GUIA_ARRANQUE.md (Sección: Base de Datos)
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ ✅ CHECKLIST RÁPIDO                                                      │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  Antes de arrancar, verifica:
+
+  ☐ Java 17+ instalado (java -version)
+  ☐ Maven instalado (mvn -version)
+  ☐ MySQL ejecutándose (net start mysql)
+  ☐ Base de datos 'tahona' creada
+  ☐ Credenciales en application.properties
+
+  Para arrancar:
+
+  ☐ Doble clic en arrancar.bat
+    o
+  ☐ Ejecutar: mvn javafx:run
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ 🆘 SOPORTE RÁPIDO                                                        │
+└──────────────────────────────────────────────────────────────────────────┘
+
+  Error más común: "Cannot connect to database"
+  → Solución: GUIA_ARRANQUE.md (busca "MySQL")
+
+  Error: "Java version incompatible"
+  → Solución: Instalar Java 17+
+
+  Error: "JavaFX not found"
+  → Solución: Usar mvn javafx:run (no java -jar)
+
+  La app arranca pero no hay datos:
+  → Solución: Verificar que MySQL tiene datos
+             SELECT COUNT(*) FROM clientes;
+
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║  📌 DOCUMENTACIÓN ACTUALIZADA: 8 de diciembre de 2025                   ║
+║                                                                           ║
+║  🎉 Aplicación 100% funcional y lista para usar                          ║
+║                                                                           ║
+║  Para empezar: Abre REFERENCIA_RAPIDA.txt                                ║
+╚══════════════════════════════════════════════════════════════════════════╝
+

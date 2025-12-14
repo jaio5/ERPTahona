@@ -11,6 +11,7 @@ import java.util.Optional;
 @Service
 @Transactional(readOnly = true)
 public class AlbaranVentaService {
+
     private final AlbaranVentaRepository repository;
 
     public AlbaranVentaService(AlbaranVentaRepository repository) {
@@ -18,7 +19,7 @@ public class AlbaranVentaService {
     }
 
     public List<AlbaranVenta> findAll() {
-        return repository.findAll();
+        return repository.findAllWithRelations();
     }
 
     public Optional<AlbaranVenta> findById(Long id) {
@@ -29,14 +30,17 @@ public class AlbaranVentaService {
         return repository.findByNumero(numero);
     }
 
-    @Transactional
-    public AlbaranVenta save(AlbaranVenta albaran) {
-        return repository.save(albaran);
+    public boolean existsByNumero(String numero) {
+        return repository.existsByNumero(numero);
+    }
+
+    public List<AlbaranVenta> findByClienteId(Long clienteId) {
+        return repository.findByCliente_Id(clienteId);
     }
 
     @Transactional
-    public void delete(AlbaranVenta albaran) {
-        repository.delete(albaran);
+    public AlbaranVenta save(AlbaranVenta albaran) {
+        return repository.save(albaran);
     }
 
     @Transactional

@@ -1,17 +1,25 @@
 package alicanteweb.erp.controller;
 
-import alicanteweb.erp.entities.Factura;
-import alicanteweb.erp.service.FacturaService;
+import alicanteweb.erp.entities.*;
+import alicanteweb.erp.service.*;
+import alicanteweb.erp.controller.dto.FacturaLineaDTO;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.VBox;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.util.StringConverter;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,10 +38,17 @@ public class FacturaController {
     @FXML private TextField txtBuscar;
 
     private final FacturaService facturaService;
+    private final ClienteService clienteService;
+    private final ArticuloService articuloService;
+    private final alicanteweb.erp.service.PrintService printService;
     private final ObservableList<Factura> facturasList = FXCollections.observableArrayList();
 
-    public FacturaController(FacturaService facturaService) {
+    public FacturaController(FacturaService facturaService, ClienteService clienteService,
+                            ArticuloService articuloService, alicanteweb.erp.service.PrintService printService) {
         this.facturaService = facturaService;
+        this.clienteService = clienteService;
+        this.articuloService = articuloService;
+        this.printService = printService;
     }
 
     @FXML
@@ -84,7 +99,286 @@ public class FacturaController {
 
     @FXML
     public void onCreate() {
-        mostrarInfo("Funcionalidad de alta de factura: implementa un formulario para crear nuevas facturas.");
+        mostrarFormularioFactura(null);
+    }
+
+    private void mostrarFormularioFactura(Factura factura) {
+        try {
+            // Cargar FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/factura_form.fxml"));
+            VBox formRoot = loader.load();
+
+            // Obtener controles
+            TextField txtNumero = (TextField) formRoot.lookup("#txtNumero");
+            DatePicker dpFecha = (DatePicker) formRoot.lookup("#dpFecha");
+            ComboBox<Cliente> cbCliente = (ComboBox<Cliente>) formRoot.lookup("#cbCliente");
+            Button btnBuscarCliente = (Button) formRoot.lookup("#btnBuscarCliente");
+            Button btnAgregarLinea = (Button) formRoot.lookup("#btnAgregarLinea");
+            Button btnEliminarLinea = (Button) formRoot.lookup("#btnEliminarLinea");
+            TableView<FacturaLineaDTO> tableLineas = (TableView<FacturaLineaDTO>) formRoot.lookup("#tableLineas");
+            Label lblBaseImponible = (Label) formRoot.lookup("#lblBaseImponible");
+            Label lblIva = (Label) formRoot.lookup("#lblIva");
+            Label lblTotal = (Label) formRoot.lookup("#lblTotal");
+            Button btnGuardar = (Button) formRoot.lookup("#btnGuardar");
+            Button btnCancelar = (Button) formRoot.lookup("#btnCancelar");
+
+            // Configurar tabla de líneas
+            ObservableList<FacturaLineaDTO> lineas = FXCollections.observableArrayList();
+            configurarTablaLineas(tableLineas, lineas, lblBaseImponible, lblIva, lblTotal);
+
+            // Cargar clientes
+            List<Cliente> clientes = clienteService.findAll().stream()
+                .filter(c -> c.getActivo() == null || c.getActivo())
+                .toList();
+            cbCliente.setItems(FXCollections.observableArrayList(clientes));
+            cbCliente.setConverter(new StringConverter<Cliente>() {
+                @Override
+                public String toString(Cliente cliente) {
+                    return cliente == null ? "" : cliente.getCodigo() + " - " + cliente.getNombre();
+                }
+                @Override
+                public Cliente fromString(String string) { return null; }
+            });
+
+            // Establecer valores por defecto
+            boolean esNueva = (factura == null);
+            if (esNueva) {
+                txtNumero.setText(generarNumeroFactura());
+                dpFecha.setValue(LocalDate.now());
+            }
+
+            // Crear ventana modal
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle(esNueva ? "Nueva Factura" : "Editar Factura");
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setScene(new javafx.scene.Scene(formRoot));
+
+            // Botón agregar línea
+            btnAgregarLinea.setOnAction(e -> agregarLineaFactura(tableLineas, lineas, lblBaseImponible, lblIva, lblTotal));
+
+            // Botón eliminar línea
+            btnEliminarLinea.setOnAction(e -> {
+                FacturaLineaDTO selected = tableLineas.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    lineas.remove(selected);
+                    calcularTotales(lineas, lblBaseImponible, lblIva, lblTotal);
+                }
+            });
+
+            // Botón guardar
+            btnGuardar.setOnAction(e -> {
+                if (validarFactura(txtNumero, cbCliente, lineas)) {
+                    guardarFactura(txtNumero.getText(), dpFecha.getValue(), cbCliente.getValue(), lineas, stage);
+                }
+            });
+
+            // Botón cancelar
+            btnCancelar.setOnAction(e -> stage.close());
+
+            stage.showAndWait();
+
+        } catch (Exception e) {
+            log.error("Error mostrando formulario de factura", e);
+            mostrarError("Error al abrir el formulario: " + e.getMessage());
+        }
+    }
+
+    private void configurarTablaLineas(TableView<FacturaLineaDTO> table, ObservableList<FacturaLineaDTO> lineas,
+                                      Label lblBase, Label lblIva, Label lblTotal) {
+        table.setItems(lineas);
+        table.setEditable(true);
+
+        TableColumn<FacturaLineaDTO, String> colArticulo = (TableColumn<FacturaLineaDTO, String>) table.getColumns().get(0);
+        TableColumn<FacturaLineaDTO, String> colDescripcion = (TableColumn<FacturaLineaDTO, String>) table.getColumns().get(1);
+        TableColumn<FacturaLineaDTO, BigDecimal> colCantidad = (TableColumn<FacturaLineaDTO, BigDecimal>) table.getColumns().get(2);
+        TableColumn<FacturaLineaDTO, BigDecimal> colPrecio = (TableColumn<FacturaLineaDTO, BigDecimal>) table.getColumns().get(3);
+        TableColumn<FacturaLineaDTO, BigDecimal> colIva = (TableColumn<FacturaLineaDTO, BigDecimal>) table.getColumns().get(4);
+        TableColumn<FacturaLineaDTO, BigDecimal> colSubtotal = (TableColumn<FacturaLineaDTO, BigDecimal>) table.getColumns().get(5);
+        TableColumn<FacturaLineaDTO, BigDecimal> colTotal = (TableColumn<FacturaLineaDTO, BigDecimal>) table.getColumns().get(6);
+
+        colArticulo.setCellValueFactory(cell -> new SimpleStringProperty(
+            cell.getValue().getArticulo() != null ? cell.getValue().getArticulo().getCodigo() : ""));
+        colDescripcion.setCellValueFactory(cell -> cell.getValue().descripcionProperty());
+        colCantidad.setCellValueFactory(cell -> cell.getValue().cantidadProperty());
+        colPrecio.setCellValueFactory(cell -> cell.getValue().precioProperty());
+        colIva.setCellValueFactory(cell -> cell.getValue().ivaProperty());
+        colSubtotal.setCellValueFactory(cell -> cell.getValue().subtotalProperty());
+        colTotal.setCellValueFactory(cell -> cell.getValue().totalProperty());
+
+        // Hacer editable cantidad y precio
+        colCantidad.setCellFactory(TextFieldTableCell.forTableColumn(new BigDecimalStringConverter()));
+        colCantidad.setOnEditCommit(e -> {
+            e.getRowValue().setCantidad(e.getNewValue());
+            calcularTotales(lineas, lblBase, lblIva, lblTotal);
+        });
+
+        colPrecio.setCellFactory(TextFieldTableCell.forTableColumn(new BigDecimalStringConverter()));
+        colPrecio.setOnEditCommit(e -> {
+            e.getRowValue().setPrecio(e.getNewValue());
+            calcularTotales(lineas, lblBase, lblIva, lblTotal);
+        });
+    }
+
+    private void agregarLineaFactura(TableView<FacturaLineaDTO> table, ObservableList<FacturaLineaDTO> lineas,
+                                     Label lblBase, Label lblIva, Label lblTotal) {
+        // Mostrar diálogo para seleccionar artículo
+        List<Articulo> articulos = articuloService.findAll().stream()
+            .filter(a -> a.getActivo() == null || a.getActivo())
+            .toList();
+
+        if (articulos.isEmpty()) {
+            mostrarError("No hay artículos disponibles. Crea artículos primero.");
+            return;
+        }
+
+        ChoiceDialog<Articulo> dialog = new ChoiceDialog<>(articulos.get(0), articulos);
+        dialog.setTitle("Seleccionar Artículo");
+        dialog.setHeaderText("Agregar línea a la factura");
+        dialog.setContentText("Selecciona un artículo:");
+
+        // Configurar el converter para mostrar código y descripción
+        ComboBox<Articulo> comboBox = (ComboBox<Articulo>) dialog.getDialogPane().lookup(".combo-box");
+        if (comboBox != null) {
+            comboBox.setConverter(new StringConverter<Articulo>() {
+                @Override
+                public String toString(Articulo articulo) {
+                    if (articulo == null) return "";
+                    return articulo.getCodigo() + " - " + articulo.getDescripcion() +
+                           " (" + (articulo.getPvp() != null ? String.format("%.2f €", articulo.getPvp()) : "0.00 €") + ")";
+                }
+                @Override
+                public Articulo fromString(String string) { return null; }
+            });
+        }
+
+        dialog.showAndWait().ifPresent(articulo -> {
+            FacturaLineaDTO linea = new FacturaLineaDTO(articulo);
+            lineas.add(linea);
+            calcularTotales(lineas, lblBase, lblIva, lblTotal);
+        });
+    }
+
+    private void calcularTotales(ObservableList<FacturaLineaDTO> lineas, Label lblBase, Label lblIva, Label lblTotal) {
+        BigDecimal baseImponible = BigDecimal.ZERO;
+        BigDecimal totalIva = BigDecimal.ZERO;
+
+        for (FacturaLineaDTO linea : lineas) {
+            baseImponible = baseImponible.add(linea.getSubtotal() != null ? linea.getSubtotal() : BigDecimal.ZERO);
+            BigDecimal importeIva = linea.getTotal() != null && linea.getSubtotal() != null
+                ? linea.getTotal().subtract(linea.getSubtotal())
+                : BigDecimal.ZERO;
+            totalIva = totalIva.add(importeIva);
+        }
+
+        BigDecimal total = baseImponible.add(totalIva);
+
+        lblBase.setText(String.format("%.2f €", baseImponible));
+        lblIva.setText(String.format("%.2f €", totalIva));
+        lblTotal.setText(String.format("%.2f €", total));
+    }
+
+    private boolean validarFactura(TextField txtNumero, ComboBox<Cliente> cbCliente, ObservableList<FacturaLineaDTO> lineas) {
+        if (txtNumero.getText() == null || txtNumero.getText().trim().isEmpty()) {
+            mostrarError("El número de factura es obligatorio");
+            return false;
+        }
+        if (cbCliente.getValue() == null) {
+            mostrarError("Debes seleccionar un cliente");
+            return false;
+        }
+        if (lineas.isEmpty()) {
+            mostrarError("Debes agregar al menos una línea a la factura");
+            return false;
+        }
+        return true;
+    }
+
+    private void guardarFactura(String numero, LocalDate fecha, Cliente cliente,
+                                ObservableList<FacturaLineaDTO> lineasDTO, javafx.stage.Stage stage) {
+        try {
+            // Crear factura
+            Factura factura = new Factura();
+            factura.setNumero(numero);
+            factura.setFecha(fecha);
+            factura.setCliente(cliente);
+            factura.setPagada(false);
+            factura.setPagado(BigDecimal.ZERO);
+
+            // Calcular total
+            BigDecimal total = lineasDTO.stream()
+                .map(l -> l.getTotal() != null ? l.getTotal() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            factura.setTotal(total);
+
+            // Guardar factura
+            Factura facturaSaved = facturaService.save(factura);
+
+            // Crear y guardar líneas
+            for (FacturaLineaDTO dto : lineasDTO) {
+                FacturaLinea linea = new FacturaLinea();
+                linea.setFactura(facturaSaved);
+                linea.setArticulo(dto.getArticulo());
+                linea.setCantidad(dto.getCantidad());
+                linea.setPrecio(dto.getPrecio());
+                linea.setIva(dto.getIva());
+                // Las líneas se guardan en cascada o se necesita un servicio específico
+            }
+
+            loadAll();
+            mostrarInfo("Factura creada correctamente: " + numero);
+            stage.close();
+
+        } catch (Exception e) {
+            log.error("Error guardando factura", e);
+            mostrarError("Error al guardar la factura: " + e.getMessage());
+        }
+    }
+
+    private String generarNumeroFactura() {
+        try {
+            List<Factura> todas = facturaService.findAll();
+            if (todas.isEmpty()) {
+                return "FAC001";
+            }
+
+            int maxNumero = 0;
+            for (Factura f : todas) {
+                String numero = f.getNumero();
+                if (numero != null && numero.startsWith("FAC")) {
+                    try {
+                        String numeroStr = numero.substring(3);
+                        int num = Integer.parseInt(numeroStr);
+                        if (num > maxNumero) {
+                            maxNumero = num;
+                        }
+                    } catch (Exception e) {
+                        // Ignorar
+                    }
+                }
+            }
+
+            return String.format("FAC%03d", maxNumero + 1);
+        } catch (Exception e) {
+            log.error("Error generando número de factura", e);
+            return "FAC001";
+        }
+    }
+
+    // Clase auxiliar para convertir BigDecimal a String
+    private static class BigDecimalStringConverter extends StringConverter<BigDecimal> {
+        @Override
+        public String toString(BigDecimal value) {
+            return value == null ? "0" : value.toString();
+        }
+
+        @Override
+        public BigDecimal fromString(String string) {
+            try {
+                return new BigDecimal(string);
+            } catch (Exception e) {
+                return BigDecimal.ZERO;
+            }
+        }
     }
 
     @FXML
@@ -104,7 +398,52 @@ public class FacturaController {
             mostrarError("Selecciona una factura para imprimir");
             return;
         }
-        mostrarInfo("Funcionalidad de impresión no implementada");
+
+        // Mostrar diálogo para seleccionar diseño
+        ChoiceDialog<alicanteweb.erp.service.PrintService.PrintDesign> dialog = new ChoiceDialog<>(
+            alicanteweb.erp.service.PrintService.PrintDesign.CLASICO,
+            alicanteweb.erp.service.PrintService.PrintDesign.values()
+        );
+        dialog.setTitle("Seleccionar Diseño de Impresión");
+        dialog.setHeaderText("Elige el diseño para imprimir la factura");
+        dialog.setContentText("Diseño:");
+
+        // Configurar converter para mostrar nombres legibles
+        ComboBox<alicanteweb.erp.service.PrintService.PrintDesign> comboBox =
+            (ComboBox<alicanteweb.erp.service.PrintService.PrintDesign>) dialog.getDialogPane().lookup(".combo-box");
+        if (comboBox != null) {
+            comboBox.setConverter(new StringConverter<>() {
+                @Override
+                public String toString(alicanteweb.erp.service.PrintService.PrintDesign design) {
+                    return design == null ? "" : design.getNombre() + " - " + design.getDescripcion();
+                }
+                @Override
+                public alicanteweb.erp.service.PrintService.PrintDesign fromString(String string) { return null; }
+            });
+        }
+
+        dialog.showAndWait().ifPresent(design -> {
+            try {
+                // Obtener líneas de la factura (simulación - en producción usar servicio)
+                List<FacturaLinea> lineas = new java.util.ArrayList<>();
+                // TODO: Cargar líneas reales de la base de datos
+
+                // Generar HTML de impresión
+                java.io.File htmlFile = printService.generarImpresionFactura(seleccionada, lineas, design);
+
+                // Abrir en navegador predeterminado
+                if (java.awt.Desktop.isDesktopSupported()) {
+                    java.awt.Desktop.getDesktop().browse(htmlFile.toURI());
+                    mostrarInfo("Documento de impresión generado. Se abrirá en tu navegador.");
+                } else {
+                    mostrarInfo("Archivo generado en: " + htmlFile.getAbsolutePath());
+                }
+
+            } catch (Exception e) {
+                log.error("Error generando impresión", e);
+                mostrarError("Error al generar documento de impresión: " + e.getMessage());
+            }
+        });
     }
 
     @FXML

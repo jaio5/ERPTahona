@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" 
+      fx:controller="alicanteweb.erp.controller.AlbaranController"
+      spacing="10" styleClass="panel-container">
+    <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="Albaranes de Venta" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="txtBuscar" promptText="🔍 Buscar albarán..." prefWidth="250"/>
+    </HBox>
+    <Separator/>
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Button fx:id="btnNuevo" text="📄 Nuevo Albarán" onAction="#onCreate" styleClass="btn-primary"/>
+        <Button fx:id="btnEditar" text="✏️ Ver Detalles" onAction="#onEdit" styleClass="btn-secondary"/>
+        <Button fx:id="btnEliminar" text="🗑️ Eliminar" onAction="#onDelete" styleClass="btn-danger"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnRefrescar" text="🔄 Refrescar" onAction="#onRefresh" styleClass="btn-secondary"/>
+    </HBox>
+    <TableView fx:id="tableAlbaranes" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+            <TableColumn fx:id="colNumero" text="Número" prefWidth="120"/>
+            <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
+            <TableColumn fx:id="colCliente" text="Cliente" prefWidth="250"/>
+            <TableColumn fx:id="colAlmacen" text="Almacén" prefWidth="150"/>
+            <TableColumn fx:id="colTotal" text="Total" prefWidth="100"/>
+            <TableColumn fx:id="colObservaciones" text="Observaciones" prefWidth="200"/>
+        </columns>
+    </TableView>
+</VBox>

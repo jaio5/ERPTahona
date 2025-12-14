@@ -4,30 +4,37 @@ import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.repository.VerifactuEvidenceRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Optional;
+import java.time.Instant;
+import java.util.*;
 
 /**
  * Servicio que gestiona el almacenamiento y consulta de las evidencias Verifactu
  * (registros que contienen hash, firma y metadatos del envío a la AEAT).
- *
- * Explicación para un estudiante de DAM:
- * - El servicio usa un repositorio JPA para persistir VerifactuEvidence.
- * - El método registrarEvidenciaAEAT combina funcionalidad del servicio AEAT
- *   (generar hash/firma) y persiste la evidencia en la BD.
  */
 @Service
 @Transactional(readOnly = true)
 public class VerifactuEvidenceService {
 
+    private static final Logger log = LoggerFactory.getLogger(VerifactuEvidenceService.class);
+    private static final String ESTADO_PENDIENTE = "PENDIENTE";
+    private static final String ESTADO_ENVIADO = "ENVIADO";
+    private static final String ESTADO_ERROR = "ERROR";
+    private static final String ESTADO_VERIFICADO = "VERIFICADO";
+
     private final VerifactuEvidenceRepository repository;
     private final VerifactuAEATService aeatService;
+    private final VerifactuService verifactuService;
 
-    public VerifactuEvidenceService(VerifactuEvidenceRepository repository, VerifactuAEATService aeatService) {
+    public VerifactuEvidenceService(VerifactuEvidenceRepository repository,
+                                   VerifactuAEATService aeatService,
+                                   VerifactuService verifactuService) {
         this.repository = repository;
         this.aeatService = aeatService;
+        this.verifactuService = verifactuService;
     }
 
     public List<VerifactuEvidence> findAll() {
@@ -50,6 +57,14 @@ public class VerifactuEvidenceService {
         return repository.findBySerieContainingIgnoreCase(serie);
     }
 
+    public List<VerifactuEvidence> findByEstado(String estado) {
+        return repository.findByEstado(estado);
+    }
+
+    public long countByEstado(String estado) {
+        return repository.countByEstado(estado);
+    }
+
     @Transactional
     public VerifactuEvidence save(VerifactuEvidence e) {
         return repository.save(e);
@@ -61,27 +76,194 @@ public class VerifactuEvidenceService {
     }
 
     /**
-     * Crea y registra una evidencia en la BD y la envía (simulado) a la AEAT.
-     * - datosFactura: contenido textual que se usará para calcular el hash
-     * - serie/numero: datos complementarios
-     *
-     * Nota: este método delega en VerifactuAEATService para generar hash y firma.
+     * Crea y registra una evidencia en la BD y la envía a la AEAT.
      */
     @Transactional
     public VerifactuEvidence registrarEvidenciaAEAT(String datosFactura, String serie, String numero) throws Exception {
+        log.info("Registrando evidencia VeriFactu para factura {}/{}", serie, numero);
+
         VerifactuEvidence evidencia = new VerifactuEvidence();
         evidencia.setFacturaId(datosFactura);
         evidencia.setSerie(serie);
         evidencia.setNumero(numero);
-        evidencia.setHash(aeatService.generarHash(datosFactura));
-        evidencia.setSignature(aeatService.firmarDatos(datosFactura.getBytes(StandardCharsets.UTF_8)));
-        evidencia.setCertFingerprint(aeatService.getCertFingerprint());
-        evidencia.setMetadata(java.util.Collections.emptyMap()); // Inicializa como Map vacío
-        evidencia.setFechaEmision(java.time.Instant.now()); // Usa Instant
-        evidencia.setCreatedAt(java.time.Instant.now()); // Usa Instant
-        String jsonEvidencia = "{\"facturaId\":\"" + datosFactura + "\",\"hash\":\"" + evidencia.getHash() + "\"}";
-        String respuesta = aeatService.enviarAEAT(jsonEvidencia);
-        evidencia.setMetadata(java.util.Collections.singletonMap("respuesta", respuesta));
-        return repository.save(evidencia);
+        evidencia.setFechaEmision(Instant.now());
+        evidencia.setCreatedAt(Instant.now());
+        evidencia.setEstado(ESTADO_PENDIENTE);
+
+        try {
+            // Obtener hash anterior para encadenar
+            String hashAnterior = verifactuService.obtenerHashAnterior(serie);
+            evidencia.setHashAnterior(hashAnterior);
+
+            // Generar hash encadenado
+            String hash = verifactuService.generarHashEncadenado(datosFactura, hashAnterior);
+            evidencia.setHash(hash);
+
+            // Firmar datos
+            byte[] firma = aeatService.firmarDatos(datosFactura.getBytes(StandardCharsets.UTF_8));
+            evidencia.setSignature(firma);
+
+            // Obtener fingerprint del certificado
+            String fingerprint = aeatService.getCertFingerprint();
+            evidencia.setCertFingerprint(fingerprint);
+
+            // Construir JSON de evidencia
+            String jsonEvidencia = construirJsonEvidencia(evidencia, datosFactura);
+
+            // Enviar a AEAT
+            String respuesta = aeatService.enviarAEAT(jsonEvidencia);
+
+            // Procesar respuesta
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("respuesta", respuesta);
+            metadata.put("fechaEnvio", Instant.now().toString());
+            evidencia.setMetadata(metadata);
+
+            // Verificar si fue exitoso
+            if (respuesta.contains("\"resultado\":\"OK\"")) {
+                evidencia.setEstado(ESTADO_ENVIADO);
+                evidencia.setFechaEnvio(Instant.now());
+                log.info("Evidencia enviada exitosamente a AEAT");
+            } else {
+                evidencia.setEstado(ESTADO_ERROR);
+                evidencia.setErrorMessage("Error en respuesta de AEAT");
+                log.warn("Error en respuesta de AEAT: {}", respuesta);
+            }
+
+            // Guardar y retornar
+            VerifactuEvidence saved = repository.save(evidencia);
+            log.info("Evidencia guardada con ID: {}", saved.getId());
+            return saved;
+
+        } catch (Exception e) {
+            log.error("Error registrando evidencia VeriFactu", e);
+            evidencia.setEstado(ESTADO_ERROR);
+            evidencia.setErrorMessage(e.getMessage());
+            evidencia.setMetadata(Collections.singletonMap("error", e.getMessage()));
+            repository.save(evidencia);
+            throw e;
+        }
+    }
+
+    /**
+     * Reenvía una evidencia que falló previamente
+     */
+    @Transactional
+    public VerifactuEvidence reenviarEvidencia(Long id) throws Exception {
+        log.info("Reenviando evidencia ID: {}", id);
+
+        Optional<VerifactuEvidence> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            throw new IllegalArgumentException("Evidencia no encontrada con ID: " + id);
+        }
+
+        VerifactuEvidence evidencia = opt.get();
+
+        try {
+            // Reconstruir datos para reenvío
+            String datosFactura = evidencia.getFacturaId();
+            String jsonEvidencia = construirJsonEvidencia(evidencia, datosFactura);
+
+            // Reenviar a AEAT
+            String respuesta = aeatService.reenviarAEAT(jsonEvidencia);
+
+            // Actualizar metadata
+            Map<String, Object> metadata = evidencia.getMetadata();
+            if (metadata == null) {
+                metadata = new HashMap<>();
+            }
+            metadata.put("respuestaReenvio", respuesta);
+            metadata.put("fechaReenvio", Instant.now().toString());
+            evidencia.setMetadata(metadata);
+
+            // Actualizar estado
+            if (respuesta.contains("\"resultado\":\"OK\"")) {
+                evidencia.setEstado(ESTADO_ENVIADO);
+                evidencia.setFechaEnvio(Instant.now());
+                evidencia.setErrorMessage(null);
+                log.info("Evidencia reenviada exitosamente");
+            } else {
+                evidencia.setEstado(ESTADO_ERROR);
+                evidencia.setErrorMessage("Error en reenvío");
+                log.warn("Error en reenvío: {}", respuesta);
+            }
+
+            return repository.save(evidencia);
+
+        } catch (Exception e) {
+            log.error("Error reenviando evidencia", e);
+            evidencia.setErrorMessage(e.getMessage());
+            repository.save(evidencia);
+            throw e;
+        }
+    }
+
+    /**
+     * Verifica el estado de una evidencia en la AEAT
+     */
+    @Transactional
+    public VerifactuEvidence verificarEstadoAEAT(Long id) throws Exception {
+        Optional<VerifactuEvidence> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            throw new IllegalArgumentException("Evidencia no encontrada con ID: " + id);
+        }
+
+        VerifactuEvidence evidencia = opt.get();
+
+        try {
+            String respuesta = aeatService.verificarEstadoAEAT(evidencia.getHash());
+
+            Map<String, Object> metadata = evidencia.getMetadata();
+            if (metadata == null) {
+                metadata = new HashMap<>();
+            }
+            metadata.put("verificacion", respuesta);
+            metadata.put("fechaVerificacion", Instant.now().toString());
+            evidencia.setMetadata(metadata);
+
+            if (respuesta.contains("\"resultado\":\"OK\"")) {
+                evidencia.setEstado(ESTADO_VERIFICADO);
+            }
+
+            return repository.save(evidencia);
+
+        } catch (Exception e) {
+            log.error("Error verificando estado en AEAT", e);
+            throw e;
+        }
+    }
+
+    /**
+     * Valida la integridad de la cadena de evidencias
+     */
+    public boolean validarCadenaIntegridad(String serie) {
+        return verifactuService.validarCadenaIntegridad(serie);
+    }
+
+    /**
+     * Construye el JSON de evidencia para enviar a AEAT
+     */
+    private String construirJsonEvidencia(VerifactuEvidence evidencia, String datosFactura) {
+        return String.format("""
+            {
+                "facturaId": "%s",
+                "serie": "%s",
+                "numero": "%s",
+                "hash": "%s",
+                "hashAnterior": "%s",
+                "firma": "%s",
+                "certFingerprint": "%s",
+                "fechaEmision": "%s"
+            }
+            """,
+            datosFactura,
+            evidencia.getSerie(),
+            evidencia.getNumero(),
+            evidencia.getHash(),
+            evidencia.getHashAnterior() != null ? evidencia.getHashAnterior() : "",
+            Base64.getEncoder().encodeToString(evidencia.getSignature()),
+            evidencia.getCertFingerprint(),
+            evidencia.getFechaEmision().toString()
+        );
     }
 }

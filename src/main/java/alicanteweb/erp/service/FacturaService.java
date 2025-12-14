@@ -42,7 +42,7 @@ public class FacturaService {
 
     // Consultas de solo lectura (no necesitan transacción de escritura).
     public List<Factura> findAll() {
-        return repository.findAll();
+        return repository.findAllWithCliente();
     }
 
     public Optional<Factura> findById(Long id) {

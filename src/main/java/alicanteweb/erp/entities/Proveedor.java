@@ -54,6 +54,9 @@ public class Proveedor {
     @Column(name = "pais", length = 100)
     private String pais;
 
+    @Column(name = "activo")
+    private Boolean activo = true;
+
     @OneToMany(mappedBy = "idProveedor")
     private Set<PedidoCompra> pedidosCompras = new LinkedHashSet<>();
 

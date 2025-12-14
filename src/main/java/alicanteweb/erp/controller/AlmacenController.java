@@ -38,7 +38,16 @@ public class AlmacenController {
     public void initialize() {
         if (colId != null) colId.setCellValueFactory(cell -> new SimpleObjectProperty<>(cell.getValue() == null ? null : cell.getValue().getId()));
         if (colCodigo != null) colCodigo.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getCodigo()).orElse("")));
-        if (colNombre != null) colNombre.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getNombre()).orElse("")));
+        if (colNombre != null) colNombre.setCellValueFactory(cell -> {
+            Almacen a = cell.getValue();
+            if (a == null) return new SimpleStringProperty("");
+            String nombre = Optional.ofNullable(a.getNombre()).orElse("");
+            // Agregar indicador si está inactivo
+            if (a.getActivo() != null && !a.getActivo()) {
+                nombre = "❌ " + nombre + " (INACTIVO)";
+            }
+            return new SimpleStringProperty(nombre);
+        });
 
         if (tableAlmacenes != null) tableAlmacenes.setItems(almacenesList);
         loadAll();
@@ -88,7 +97,7 @@ public class AlmacenController {
 
     @FXML
     public void onCreate() {
-        mostrarInfo("Funcionalidad de alta de almacén: implementa un formulario para crear nuevos almacenes.");
+        mostrarFormulario(null);
     }
 
     @FXML
@@ -98,28 +107,151 @@ public class AlmacenController {
             mostrarError("Selecciona un almacén para editar");
             return;
         }
-        mostrarInfo("Funcionalidad de edición no implementada");
+        mostrarFormulario(seleccionado);
+    }
+
+    private void mostrarFormulario(Almacen almacen) {
+        try {
+            // Cargar el FXML del formulario
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/almacen_form.fxml"));
+            VBox formRoot = loader.load();
+
+            // Obtener los campos del formulario
+            TextField txtCodigo = (TextField) formRoot.lookup("#txtCodigo");
+            TextField txtNombre = (TextField) formRoot.lookup("#txtNombre");
+            Button btnGuardar = (Button) formRoot.lookup("#btnGuardar");
+            Button btnCancelar = (Button) formRoot.lookup("#btnCancelar");
+
+            // Si estamos editando, rellenar los campos
+            boolean esNuevo = (almacen == null || almacen.getId() == null);
+            Almacen almacenEditar = esNuevo ? new Almacen() : almacen;
+
+            if (!esNuevo) {
+                txtCodigo.setText(almacen.getCodigo());
+                txtNombre.setText(almacen.getNombre());
+            } else {
+                // Generar código automáticamente para nuevo almacén
+                txtCodigo.setText(generarNuevoCodigo());
+            }
+
+            // Crear Stage modal
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle(esNuevo ? "Nuevo Almacén" : "Editar Almacén");
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setScene(new javafx.scene.Scene(formRoot));
+
+            // Configurar botones
+            btnGuardar.setOnAction(e -> {
+                if (validarFormulario(txtCodigo, txtNombre)) {
+                    almacenEditar.setCodigo(txtCodigo.getText().trim());
+                    almacenEditar.setNombre(txtNombre.getText().trim());
+
+                    try {
+                        almacenService.save(almacenEditar);
+                        loadAll();
+                        mostrarInfo(esNuevo ? "Almacén creado correctamente" : "Almacén actualizado correctamente");
+                        stage.close();
+                    } catch (Exception ex) {
+                        log.error("Error guardando almacén", ex);
+                        mostrarError("Error al guardar: " + ex.getMessage());
+                    }
+                }
+            });
+
+            btnCancelar.setOnAction(e -> stage.close());
+
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error mostrando formulario", e);
+            mostrarError("Error al abrir el formulario: " + e.getMessage());
+        }
     }
 
     @FXML
     public void onDelete() {
         if (tableAlmacenes == null) { mostrarError("Tabla no disponible"); return; }
         Almacen sel = tableAlmacenes.getSelectionModel().getSelectedItem();
-        if (sel == null) { mostrarInfo("Selecciona un almacén para eliminar"); return; }
+        if (sel == null) { mostrarInfo("Selecciona un almacén"); return; }
         if (sel.getId() == null) { mostrarError("El almacén seleccionado no tiene id"); return; }
-        try {
-            almacenService.delete(sel);
-            loadAll();
-            mostrarInfo("Almacén eliminado");
-        } catch (Exception e) {
-            log.error("Error eliminando almacén", e);
-            mostrarError("Error eliminando almacén: " + e.getMessage());
-        }
+
+        // Verificar estado actual
+        boolean estaActivo = sel.getActivo() == null || sel.getActivo();
+        String accion = estaActivo ? "dar de baja" : "activar";
+        String mensaje = estaActivo ?
+            "¿Estás seguro de dar de baja el almacén '" + sel.getNombre() + "'?" :
+            "¿Estás seguro de activar el almacén '" + sel.getNombre() + "'?";
+
+        // Confirmar acción
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Confirmar " + accion);
+        confirmacion.setHeaderText(mensaje);
+        confirmacion.setContentText("Esta operación cambiará el estado del almacén.");
+
+        confirmacion.showAndWait().ifPresent(response -> {
+            if (response == javafx.scene.control.ButtonType.OK) {
+                try {
+                    // Cambiar estado
+                    sel.setActivo(!estaActivo);
+                    almacenService.save(sel);
+                    loadAll();
+                    mostrarInfo("Almacén " + (estaActivo ? "dado de baja" : "activado") + " correctamente");
+                } catch (Exception e) {
+                    log.error("Error cambiando estado del almacén", e);
+                    mostrarError("Error cambiando estado: " + e.getMessage());
+                }
+            }
+        });
     }
 
     @FXML
     public void onRefresh() {
         loadAll();
+    }
+
+    private boolean validarFormulario(TextField txtCodigo, TextField txtNombre) {
+        String codigo = txtCodigo.getText();
+        String nombre = txtNombre.getText();
+        if (codigo == null || codigo.trim().isEmpty()) {
+            mostrarError("El código es obligatorio");
+            return false;
+        }
+        if (nombre == null || nombre.trim().isEmpty()) {
+            mostrarError("El nombre es obligatorio");
+            return false;
+        }
+        return true;
+    }
+
+    private String generarNuevoCodigo() {
+        try {
+            List<Almacen> todos = almacenService.findAll();
+            if (todos.isEmpty()) {
+                return "ALM001";
+            }
+
+            // Buscar el código más alto
+            int maxNumero = 0;
+            for (Almacen a : todos) {
+                String codigo = a.getCodigo();
+                if (codigo != null && codigo.startsWith("ALM")) {
+                    try {
+                        String numeroStr = codigo.substring(3);
+                        int numero = Integer.parseInt(numeroStr);
+                        if (numero > maxNumero) {
+                            maxNumero = numero;
+                        }
+                    } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
+                        // Ignorar códigos que no sigan el patrón ALMxxx
+                    }
+                }
+            }
+
+            // Incrementar y formatear
+            return String.format("ALM%03d", maxNumero + 1);
+        } catch (Exception e) {
+            log.error("Error generando código automático", e);
+            return "ALM001";
+        }
     }
 
     private void mostrarInfo(String mensaje) {

@@ -23,20 +23,28 @@ El ERP ahora cuenta con una **interfaz gráfica moderna, profesional y completam
 
 ### 1. Ejecutar la Aplicación
 
-**Opción A: Usar script (RECOMENDADO)**
+**Opción A: Usar script de arranque (RECOMENDADO)**
 ```bash
-.\run.bat
+# Windows - Doble clic o desde terminal
+.\arrancar.bat
+
+# PowerShell
+.\arrancar.ps1
 ```
 
-**Opción B: Desde IntelliJ IDEA**
-1. Abrir el proyecto
-2. Ejecutar `ErpLauncher.java`
-
-**Opción C: Maven**
+**Opción B: Maven directamente**
 ```bash
-mvn clean compile -DskipTests
-mvn dependency:copy-dependencies -DincludeScope=runtime
-java --module-path "target/dependency" --add-modules javafx.controls,javafx.fxml -cp "target/classes;target/dependency/*" alicanteweb.erp.ErpLauncher
+mvn javafx:run
+```
+
+**Opción C: Desde IntelliJ IDEA**
+1. Abrir el proyecto
+2. Ejecutar `ErpLauncher.java` (clic derecho → Run)
+
+**Opción D: Compilar y ejecutar manualmente**
+```bash
+mvn clean compile
+mvn javafx:run
 ```
 
 ### 2. Configurar Base de Datos
@@ -47,16 +55,16 @@ Ver instrucciones detalladas en: **[README_DB.md](README_DB.md)**
 
 ## 📚 Documentación
 
-### Guías del Frontend
-- **[INICIO_RAPIDO.md](INICIO_RAPIDO.md)** - Guía de inicio rápido
-- **[README_FRONTEND.md](README_FRONTEND.md)** - Documentación completa del frontend
-- **[FRONTEND_COMPLETO.md](FRONTEND_COMPLETO.md)** - Resumen ejecutivo
-- **[CHECKLIST_FRONTEND.md](CHECKLIST_FRONTEND.md)** - Lista de verificación
+### 📖 Guías Principales
+- **[REFERENCIA_RAPIDA.txt](REFERENCIA_RAPIDA.txt)** - ⭐ Referencia rápida visual
+- **[INICIO_RAPIDO.txt](INICIO_RAPIDO.txt)** - Comandos básicos de inicio
+- **[ESTADO_PROYECTO.md](ESTADO_PROYECTO.md)** - Estado completo del proyecto
+- **[GUIA_ARRANQUE.md](GUIA_ARRANQUE.md)** - Guía detallada de arranque y troubleshooting
+- **[GUIA_PERSONALIZACION_IMPRESION.md](GUIA_PERSONALIZACION_IMPRESION.md)** - Personalizar formatos de impresión
+
+### 📖 Documentación Técnica
 - **[docs/UI_UX_GUIDE.md](docs/UI_UX_GUIDE.md)** - Guía de diseño UI/UX
 - **[docs/VISTA_PREVIA_UI.md](docs/VISTA_PREVIA_UI.md)** - Vista previa visual
-
-### Otras Guías
-- **[README_DB.md](README_DB.md)** - Configuración de base de datos
 - **[docs/estructura.md](docs/estructura.md)** - Estructura del proyecto
 - **[docs/PROYECTO_ERP_PANADERIA.md](docs/PROYECTO_ERP_PANADERIA.md)** - Documentación del proyecto
 
@@ -337,5 +345,6 @@ cd D:\Programación\ERP
 
 🍞 **¡Bienvenido al futuro de la gestión de panaderías!** 🥐
 
-#   E R P T a h o n a  
+#   E R P T a h o n a 
+ 
  

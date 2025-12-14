@@ -49,6 +49,9 @@ public class Articulo {
     @Column(name = "coste", precision = 10, scale = 2)
     private BigDecimal coste;
 
+    @Column(name = "activo")
+    private Boolean activo = true;
+
     @OneToMany(mappedBy = "articulo")
     private Set<AlbaranVentaLinea> albaranVentaLineas = new LinkedHashSet<>();
 

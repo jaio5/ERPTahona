@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="10" prefWidth="900" prefHeight="700">
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+    <Label text="Nuevo Albarán de Venta" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+    <Separator/>
+    <!-- Datos de cabecera -->
+    <GridPane hgap="10" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints minWidth="120" prefWidth="120"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+            <ColumnConstraints minWidth="120" prefWidth="120"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+        </columnConstraints>
+        <Label text="Número:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <TextField fx:id="txtNumero" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="Nº Albarán"/>
+        <Label text="Fecha:" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+        <DatePicker fx:id="dpFecha" GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+        <Label text="Cliente:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <ComboBox fx:id="cbCliente" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="3" 
+                  promptText="Selecciona un cliente" maxWidth="Infinity"/>
+        <Label text="Almacén:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <ComboBox fx:id="cbAlmacen" GridPane.columnIndex="1" GridPane.rowIndex="2" 
+                  promptText="Selecciona un almacén" maxWidth="Infinity"/>
+        <Label text="Observaciones:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+        <TextArea fx:id="txtObservaciones" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.columnSpan="3" 
+                  promptText="Observaciones..." prefRowCount="2"/>
+    </GridPane>
+    <Separator/>
+    <!-- Líneas de albarán -->
+    <VBox spacing="10" VBox.vgrow="ALWAYS">
+        <Label text="Líneas de Albarán" style="-fx-font-weight: bold;"/>
+        <!-- Botones de líneas -->
+        <HBox spacing="10">
+            <Button fx:id="btnAgregarLinea" text="➕ Agregar Línea" styleClass="btn-primary"/>
+            <Button fx:id="btnEliminarLinea" text="❌ Eliminar Línea" styleClass="btn-secondary"/>
+        </HBox>
+        <!-- Tabla de líneas -->
+        <TableView fx:id="tableLineas" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colArticulo" text="Artículo" prefWidth="200"/>
+                <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="200"/>
+                <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="80"/>
+                <TableColumn fx:id="colPrecio" text="Precio" prefWidth="90"/>
+                <TableColumn fx:id="colDescuento" text="Dto." prefWidth="70"/>
+                <TableColumn fx:id="colIva" text="IVA %" prefWidth="60"/>
+                <TableColumn fx:id="colSubtotal" text="Base" prefWidth="90"/>
+                <TableColumn fx:id="colTotal" text="Total" prefWidth="90"/>
+            </columns>
+        </TableView>
+    </VBox>
+    <Separator/>
+    <!-- Totales -->
+    <GridPane hgap="20" vgap="5" style="-fx-background-color: #f5f5f5; -fx-padding: 10;">
+        <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS"/>
+            <ColumnConstraints minWidth="120" prefWidth="120"/>
+            <ColumnConstraints minWidth="120" prefWidth="120"/>
+        </columnConstraints>
+        <Label text="Base Imponible:" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+        <Label fx:id="lblBaseImponible" text="0.00 €" GridPane.columnIndex="2" GridPane.rowIndex="0" style="-fx-alignment: center-right;"/>
+        <Label text="IVA:" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+        <Label fx:id="lblIva" text="0.00 €" GridPane.columnIndex="2" GridPane.rowIndex="1" style="-fx-alignment: center-right;"/>
+        <Label text="TOTAL:" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        <Label fx:id="lblTotal" text="0.00 €" GridPane.columnIndex="2" GridPane.rowIndex="2" 
+               style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: center-right;"/>
+    </GridPane>
+    <Separator/>
+    <!-- Botones de acción -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="btnGuardar" text="💾 Guardar Albarán" defaultButton="true" styleClass="btn-primary"/>
+        <Button fx:id="btnCancelar" text="Cancelar" cancelButton="true" styleClass="btn-secondary"/>
+    </HBox>
+</VBox>

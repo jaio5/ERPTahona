@@ -12,5 +12,13 @@ public interface VerifactuEvidenceRepository extends JpaRepository<VerifactuEvid
     Optional<VerifactuEvidence> findByFacturaId(String facturaId);
     Optional<VerifactuEvidence> findByHash(String hash);
     List<VerifactuEvidence> findBySerieContainingIgnoreCase(String serie);
+
+    // Métodos para la cadena de bloques
+    Optional<VerifactuEvidence> findFirstBySerieOrderByFechaEmisionDesc(String serie);
+    List<VerifactuEvidence> findAllBySerieOrderByFechaEmisionAsc(String serie);
+
+    // Métodos para estados
+    List<VerifactuEvidence> findByEstado(String estado);
+    long countByEstado(String estado);
 }
 

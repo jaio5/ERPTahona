@@ -60,4 +60,18 @@ public class VerifactuEvidence {
     @Column(name = "signature")
     private byte[] signature;
 
+    @Size(max = 50)
+    @Column(name = "estado", length = 50)
+    private String estado; // PENDIENTE, ENVIADO, ERROR, VERIFICADO
+
+    @Column(name = "error_message")
+    private String errorMessage;
+
+    @Column(name = "fecha_envio")
+    private Instant fechaEnvio;
+
+    @Size(max = 100)
+    @Column(name = "codigo_respuesta_aeat", length = 100)
+    private String codigoRespuestaAEAT;
+
 }

@@ -52,6 +52,9 @@ public class Cliente {
     @Column(name = "notas")
     private String notas;
 
+    @Column(name = "activo")
+    private Boolean activo = true;
+
     @OneToMany(mappedBy = "cliente")
     private Set<DireccionenvioNew> direccionesenvioNews = new LinkedHashSet<>();
 

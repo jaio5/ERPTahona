@@ -25,4 +25,7 @@ public class Almacen {
     @Column(name = "nombre")
     private String nombre;
 
+    @Column(name = "activo")
+    private Boolean activo = true;
+
 }

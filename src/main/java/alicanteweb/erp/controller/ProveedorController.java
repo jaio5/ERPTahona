@@ -142,11 +142,11 @@ public class ProveedorController {
                 txtPais.setText(proveedor.getPais());
             }
 
-            // Crear el diálogo
-            Dialog<ButtonType> dialog = new Dialog<>();
-            dialog.setTitle(esNuevo ? "Nuevo Proveedor" : "Editar Proveedor");
-            dialog.getDialogPane().setContent(formRoot);
-            dialog.getDialogPane().getButtonTypes().clear();
+            // Crear Stage modal
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle(esNuevo ? "Nuevo Proveedor" : "Editar Proveedor");
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setScene(new javafx.scene.Scene(formRoot));
 
             // Configurar botones
             btnGuardar.setOnAction(e -> {
@@ -165,7 +165,7 @@ public class ProveedorController {
                         proveedorService.save(proveedorEditar);
                         loadAll();
                         mostrarInfo(esNuevo ? "Proveedor creado correctamente" : "Proveedor actualizado correctamente");
-                        dialog.close();
+                        stage.close();
                     } catch (Exception ex) {
                         log.error("Error guardando proveedor", ex);
                         mostrarError("Error al guardar: " + ex.getMessage());
@@ -173,9 +173,9 @@ public class ProveedorController {
                 }
             });
 
-            btnCancelar.setOnAction(e -> dialog.close());
+            btnCancelar.setOnAction(e -> stage.close());
 
-            dialog.showAndWait();
+            stage.showAndWait();
         } catch (Exception e) {
             log.error("Error mostrando formulario", e);
             mostrarError("Error al abrir el formulario: " + e.getMessage());
@@ -194,16 +194,36 @@ public class ProveedorController {
     public void onDelete() {
         if (tableProveedores == null) { mostrarError("Tabla no disponible"); return; }
         Proveedor sel = tableProveedores.getSelectionModel().getSelectedItem();
-        if (sel == null) { mostrarInfo("Selecciona un proveedor para eliminar"); return; }
+        if (sel == null) { mostrarInfo("Selecciona un proveedor"); return; }
         if (sel.getId() == null) { mostrarError("El proveedor seleccionado no tiene id"); return; }
-        try {
-            proveedorService.deleteById(sel.getId().longValue());
-            loadAll();
-            mostrarInfo("Proveedor eliminado");
-        } catch (Exception e) {
-            log.error("Error eliminando proveedor", e);
-            mostrarError("Error eliminando proveedor: " + e.getMessage());
-        }
+
+        // Verificar estado actual
+        boolean estaActivo = sel.getActivo() == null || sel.getActivo();
+        String accion = estaActivo ? "dar de baja" : "activar";
+        String mensaje = estaActivo ?
+            "¿Estás seguro de dar de baja el proveedor '" + sel.getNombre() + "'?" :
+            "¿Estás seguro de activar el proveedor '" + sel.getNombre() + "'?";
+
+        // Confirmar acción
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Confirmar " + accion);
+        confirmacion.setHeaderText(mensaje);
+        confirmacion.setContentText("Esta operación cambiará el estado del proveedor.");
+
+        confirmacion.showAndWait().ifPresent(response -> {
+            if (response == javafx.scene.control.ButtonType.OK) {
+                try {
+                    // Cambiar estado
+                    sel.setActivo(!estaActivo);
+                    proveedorService.save(sel);
+                    loadAll();
+                    mostrarInfo("Proveedor " + (estaActivo ? "dado de baja" : "activado") + " correctamente");
+                } catch (Exception e) {
+                    log.error("Error cambiando estado del proveedor", e);
+                    mostrarError("Error cambiando estado: " + e.getMessage());
+                }
+            }
+        });
     }
 
     @FXML

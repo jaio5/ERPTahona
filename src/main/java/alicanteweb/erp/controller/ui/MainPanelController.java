@@ -23,6 +23,7 @@ public class MainPanelController {
     @FXML private Button btnClientes;
     @FXML private Button btnProveedores;
     @FXML private Button btnArticulos;
+    @FXML private Button btnAlbaranes;
     @FXML private Button btnFacturas;
     @FXML private Button btnAlmacenes;
     @FXML private Button btnVerifactu;
@@ -39,6 +40,7 @@ public class MainPanelController {
         addButtonAnimation(btnClientes);
         addButtonAnimation(btnProveedores);
         addButtonAnimation(btnArticulos);
+        addButtonAnimation(btnAlbaranes);
         addButtonAnimation(btnFacturas);
         addButtonAnimation(btnAlmacenes);
         addButtonAnimation(btnVerifactu);
@@ -123,6 +125,12 @@ public class MainPanelController {
     public void onArticulos() {
         log.info(">>> BOTÓN ARTÍCULOS PRESIONADO <<<");
         cargarVistaModulo("/ui/articulos_panel.fxml");
+    }
+
+    @FXML
+    public void onAlbaranes() {
+        log.info(">>> BOTÓN ALBARANES PRESIONADO <<<");
+        cargarVistaModulo("/ui/albaranes_panel.fxml");
     }
 
     @FXML
