@@ -15,6 +15,7 @@
     <HBox spacing="10" alignment="CENTER_LEFT">
         <Button fx:id="btnNuevo" text="📄 Nuevo Albarán" onAction="#onCreate" styleClass="btn-primary"/>
         <Button fx:id="btnEditar" text="✏️ Ver Detalles" onAction="#onEdit" styleClass="btn-secondary"/>
+        <Button fx:id="btnImprimir" text="🖨️ Imprimir" onAction="#onPrint" styleClass="btn-success"/>
         <Button fx:id="btnEliminar" text="🗑️ Eliminar" onAction="#onDelete" styleClass="btn-danger"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button fx:id="btnRefrescar" text="🔄 Refrescar" onAction="#onRefresh" styleClass="btn-secondary"/>

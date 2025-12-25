@@ -91,8 +91,6 @@
    ===================================================== */
 .sidebar {
     -fx-background-color: -fx-sidebar-bg;
-    -fx-min-width: 250px;
-    -fx-pref-width: 250px;
     -fx-effect: dropshadow(gaussian, -fx-shadow, 5, 0, 2, 0);
 }
 
@@ -106,10 +104,9 @@
 .sidebar-button {
     -fx-background-color: transparent;
     -fx-background-radius: 8px;
-    -fx-padding: 12 15;
+    -fx-padding: 12 10;
     -fx-cursor: hand;
     -fx-alignment: CENTER_LEFT;
-    -fx-min-width: 220px;
 }
 
 .sidebar-button .ikonli-font-icon {
@@ -117,6 +114,12 @@
 }
 
 .sidebar-button .sidebar-text {
+    -fx-text-fill: -fx-text-primary;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+}
+
+.sidebar-button Label {
     -fx-text-fill: -fx-text-primary;
     -fx-font-size: 14px;
     -fx-font-weight: 500;
@@ -134,6 +137,10 @@
     -fx-text-fill: -fx-primary;
 }
 
+.sidebar-button:hover Label {
+    -fx-text-fill: -fx-primary;
+}
+
 .sidebar-button:pressed {
     -fx-background-color: rgba(212, 146, 43, 0.2);
 }
@@ -145,17 +152,45 @@
     -fx-background-color: -fx-background;
 }
 
+.content-area .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.content-area .scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.content-area .scroll-pane .scroll-bar:vertical {
+    -fx-pref-width: 10px;
+}
+
+.content-area .scroll-pane .scroll-bar:horizontal {
+    -fx-pref-height: 10px;
+}
+
+.content-area .scroll-pane .scroll-bar .thumb {
+    -fx-background-color: -fx-medium-gray;
+    -fx-background-radius: 5px;
+}
+
+.content-area .scroll-pane .scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+.content-area .scroll-pane .corner {
+    -fx-background-color: transparent;
+}
+
 /* =====================================================
    DASHBOARD CARDS
    ===================================================== */
 .dashboard-card {
     -fx-background-color: -fx-white;
     -fx-background-radius: 12px;
-    -fx-padding: 30;
+    -fx-padding: 25 20;
     -fx-effect: dropshadow(gaussian, -fx-shadow, 8, 0, 0, 2);
-    -fx-min-width: 220px;
-    -fx-min-height: 260px;
-    -fx-max-width: 280px;
+    -fx-pref-height: 240px;
     -fx-cursor: hand;
 }
 

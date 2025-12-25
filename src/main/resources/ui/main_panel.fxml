@@ -21,10 +21,10 @@
     </top>
     <!-- Sidebar -->
     <left>
-        <VBox styleClass="sidebar" spacing="10">
-            <padding><Insets top="20" right="15" bottom="20" left="15"/></padding>
+        <VBox styleClass="sidebar" spacing="10" maxWidth="250" minWidth="200">
+            <padding><Insets top="20" right="10" bottom="20" left="10"/></padding>
             <Label text="MODULOS" styleClass="sidebar-section-title"/>
-            <Button fx:id="btnClientes" styleClass="sidebar-button" onAction="#onClientes">
+            <Button fx:id="btnClientes" styleClass="sidebar-button" onAction="#onClientes" maxWidth="Infinity">
                 <graphic>
                     <HBox spacing="12" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fas-users" iconSize="18"/>
@@ -32,41 +32,41 @@
                     </HBox>
                 </graphic>
             </Button>
-            <Button fx:id="btnProveedores" styleClass="sidebar-button" onAction="#onProveedores">
+            <Button fx:id="btnProveedores" styleClass="sidebar-button" onAction="#onProveedores" maxWidth="Infinity">
                 <graphic>
-                    <HBox spacing="12">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fas-truck" iconSize="18"/>
                         <Label text="Proveedores"/>
                     </HBox>
                 </graphic>
             </Button>
-            <Button fx:id="btnArticulos" styleClass="sidebar-button" onAction="#onArticulos">
+            <Button fx:id="btnArticulos" styleClass="sidebar-button" onAction="#onArticulos" maxWidth="Infinity">
                 <graphic>
-                    <HBox spacing="12">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fas-box" iconSize="18"/>
                         <Label text="Articulos"/>
                     </HBox>
                 </graphic>
             </Button>
-            <Button fx:id="btnAlbaranes" styleClass="sidebar-button" onAction="#onAlbaranes">
+            <Button fx:id="btnAlbaranes" styleClass="sidebar-button" onAction="#onAlbaranes" maxWidth="Infinity">
                 <graphic>
-                    <HBox spacing="12">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fas-file-alt" iconSize="18"/>
                         <Label text="Albaranes"/>
                     </HBox>
                 </graphic>
             </Button>
-            <Button fx:id="btnFacturas" styleClass="sidebar-button" onAction="#onFacturas">
+            <Button fx:id="btnFacturas" styleClass="sidebar-button" onAction="#onFacturas" maxWidth="Infinity">
                 <graphic>
-                    <HBox spacing="12">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fas-file-invoice-dollar" iconSize="18"/>
                         <Label text="Facturas"/>
                     </HBox>
                 </graphic>
             </Button>
-            <Button fx:id="btnAlmacenes" styleClass="sidebar-button" onAction="#onAlmacenes">
+            <Button fx:id="btnAlmacenes" styleClass="sidebar-button" onAction="#onAlmacenes" maxWidth="Infinity">
                 <graphic>
-                    <HBox spacing="12">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fas-warehouse" iconSize="18"/>
                         <Label text="Almacenes"/>
                     </HBox>
@@ -74,9 +74,9 @@
             </Button>
             <Region VBox.vgrow="ALWAYS"/>
             <Separator/>
-            <Button fx:id="btnVerifactu" styleClass="sidebar-button" onAction="#onVerifactu">
+            <Button fx:id="btnVerifactu" styleClass="sidebar-button" onAction="#onVerifactu" maxWidth="Infinity">
                 <graphic>
-                    <HBox spacing="12">
+                    <HBox spacing="12" alignment="CENTER_LEFT">
                         <FontIcon iconLiteral="fas-shield-alt" iconSize="18"/>
                         <Label text="Verifactu"/>
                     </HBox>
@@ -87,61 +87,68 @@
     <!-- Main Content -->
     <center>
         <StackPane fx:id="mainContent" styleClass="content-area">
-            <GridPane fx:id="gridModulos" hgap="20" vgap="20" alignment="CENTER">
-                <padding><Insets top="40" right="40" bottom="40" left="40"/></padding>
-                <!-- Row 0 -->
-                <VBox styleClass="dashboard-card" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                    <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
-                        <FontIcon iconLiteral="fas-users" iconSize="48" styleClass="card-icon-primary"/>
-                        <Label text="Clientes" styleClass="card-title"/>
-                        <Button text="Abrir" styleClass="card-button" onAction="#onClientes"/>
+            <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+                <GridPane fx:id="gridModulos" hgap="20" vgap="20" alignment="CENTER">
+                    <padding><Insets top="40" right="40" bottom="40" left="40"/></padding>
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="33.33" halignment="CENTER"/>
+                        <ColumnConstraints percentWidth="33.33" halignment="CENTER"/>
+                        <ColumnConstraints percentWidth="33.33" halignment="CENTER"/>
+                    </columnConstraints>
+                    <!-- Row 0 -->
+                    <VBox styleClass="dashboard-card" GridPane.columnIndex="0" GridPane.rowIndex="0" maxWidth="280" minWidth="180">
+                        <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
+                            <FontIcon iconLiteral="fas-users" iconSize="48" styleClass="card-icon-primary"/>
+                            <Label text="Clientes" styleClass="card-title"/>
+                            <Button text="Abrir" styleClass="card-button" onAction="#onClientes"/>
+                        </VBox>
                     </VBox>
-                </VBox>
-                <VBox styleClass="dashboard-card" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                    <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
-                        <FontIcon iconLiteral="fas-truck" iconSize="48" styleClass="card-icon-success"/>
-                        <Label text="Proveedores" styleClass="card-title"/>
-                        <Button text="Abrir" styleClass="card-button" onAction="#onProveedores"/>
+                    <VBox styleClass="dashboard-card" GridPane.columnIndex="1" GridPane.rowIndex="0" maxWidth="280" minWidth="180">
+                        <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
+                            <FontIcon iconLiteral="fas-truck" iconSize="48" styleClass="card-icon-success"/>
+                            <Label text="Proveedores" styleClass="card-title"/>
+                            <Button text="Abrir" styleClass="card-button" onAction="#onProveedores"/>
+                        </VBox>
                     </VBox>
-                </VBox>
-                <VBox styleClass="dashboard-card" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                    <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
-                        <FontIcon iconLiteral="fas-box" iconSize="48" styleClass="card-icon-warning"/>
-                        <Label text="Articulos" styleClass="card-title"/>
-                        <Button text="Abrir" styleClass="card-button" onAction="#onArticulos"/>
+                    <VBox styleClass="dashboard-card" GridPane.columnIndex="2" GridPane.rowIndex="0" maxWidth="280" minWidth="180">
+                        <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
+                            <FontIcon iconLiteral="fas-box" iconSize="48" styleClass="card-icon-warning"/>
+                            <Label text="Articulos" styleClass="card-title"/>
+                            <Button text="Abrir" styleClass="card-button" onAction="#onArticulos"/>
+                        </VBox>
                     </VBox>
-                </VBox>
-                <!-- Row 1 -->
-                <VBox styleClass="dashboard-card" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                    <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
-                        <FontIcon iconLiteral="fas-file-alt" iconSize="48" styleClass="card-icon-info"/>
-                        <Label text="Albaranes" styleClass="card-title"/>
-                        <Button text="Abrir" styleClass="card-button" onAction="#onAlbaranes"/>
+                    <!-- Row 1 -->
+                    <VBox styleClass="dashboard-card" GridPane.columnIndex="0" GridPane.rowIndex="1" maxWidth="280" minWidth="180">
+                        <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
+                            <FontIcon iconLiteral="fas-file-alt" iconSize="48" styleClass="card-icon-info"/>
+                            <Label text="Albaranes" styleClass="card-title"/>
+                            <Button text="Abrir" styleClass="card-button" onAction="#onAlbaranes"/>
+                        </VBox>
                     </VBox>
-                </VBox>
-                <VBox styleClass="dashboard-card" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                    <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
-                        <FontIcon iconLiteral="fas-file-invoice-dollar" iconSize="48" styleClass="card-icon-danger"/>
-                        <Label text="Facturas" styleClass="card-title"/>
-                        <Button text="Abrir" styleClass="card-button" onAction="#onFacturas"/>
+                    <VBox styleClass="dashboard-card" GridPane.columnIndex="1" GridPane.rowIndex="1" maxWidth="280" minWidth="180">
+                        <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
+                            <FontIcon iconLiteral="fas-file-invoice-dollar" iconSize="48" styleClass="card-icon-danger"/>
+                            <Label text="Facturas" styleClass="card-title"/>
+                            <Button text="Abrir" styleClass="card-button" onAction="#onFacturas"/>
+                        </VBox>
                     </VBox>
-                </VBox>
-                <VBox styleClass="dashboard-card" GridPane.columnIndex="2" GridPane.rowIndex="1">
-                    <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
-                        <FontIcon iconLiteral="fas-warehouse" iconSize="48" styleClass="card-icon-purple"/>
-                        <Label text="Almacenes" styleClass="card-title"/>
-                        <Button text="Abrir" styleClass="card-button" onAction="#onAlmacenes"/>
+                    <VBox styleClass="dashboard-card" GridPane.columnIndex="2" GridPane.rowIndex="1" maxWidth="280" minWidth="180">
+                        <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
+                            <FontIcon iconLiteral="fas-warehouse" iconSize="48" styleClass="card-icon-purple"/>
+                            <Label text="Almacenes" styleClass="card-title"/>
+                            <Button text="Abrir" styleClass="card-button" onAction="#onAlmacenes"/>
+                        </VBox>
                     </VBox>
-                </VBox>
-                <!-- Row 2 -->
-                <VBox styleClass="dashboard-card" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                    <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
-                        <FontIcon iconLiteral="fas-shield-alt" iconSize="48" styleClass="card-icon-success"/>
-                        <Label text="Verifactu" styleClass="card-title"/>
-                        <Button text="Abrir" styleClass="card-button" onAction="#onVerifactu"/>
+                    <!-- Row 2 -->
+                    <VBox styleClass="dashboard-card" GridPane.columnIndex="1" GridPane.rowIndex="2" maxWidth="280" minWidth="180">
+                        <VBox alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
+                            <FontIcon iconLiteral="fas-shield-alt" iconSize="48" styleClass="card-icon-success"/>
+                            <Label text="Verifactu" styleClass="card-title"/>
+                            <Button text="Abrir" styleClass="card-button" onAction="#onVerifactu"/>
+                        </VBox>
                     </VBox>
-                </VBox>
-            </GridPane>
+                </GridPane>
+            </ScrollPane>
         </StackPane>
     </center>
     <!-- Footer -->

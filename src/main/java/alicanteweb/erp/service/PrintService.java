@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.FileOutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -26,7 +27,8 @@ public class PrintService {
     public enum PrintDesign {
         CLASICO("Clásico", "Diseño tradicional con bordes"),
         MODERNO("Moderno", "Diseño minimalista sin bordes"),
-        COMPACTO("Compacto", "Diseño compacto para ahorrar papel");
+        COMPACTO("Compacto", "Diseño compacto para ahorrar papel"),
+        RECIBO_PANADERIA("Recibo Panadería", "Formato tipo ticket de panadería");
 
         private final String nombre;
         private final String descripcion;
@@ -93,6 +95,9 @@ public class PrintService {
                 break;
             case COMPACTO:
                 html.append(generarAlbaranCompacto(albaran, lineas));
+                break;
+            case RECIBO_PANADERIA:
+                html.append(generarAlbaranReciboPanaderia(albaran, lineas));
                 break;
         }
 
@@ -335,7 +340,7 @@ public class PrintService {
         for (FacturaLinea linea : lineas) {
             BigDecimal subtotal = linea.getCantidad().multiply(linea.getPrecio());
             base = base.add(subtotal);
-            BigDecimal iva = subtotal.multiply(linea.getIva()).divide(new BigDecimal("100"), 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal iva = subtotal.multiply(linea.getIva()).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
             totalIva = totalIva.add(iva);
         }
 
@@ -391,10 +396,10 @@ public class PrintService {
         if (cantidad == null || precio == null) return BigDecimal.ZERO;
         BigDecimal subtotal = cantidad.multiply(precio);
         if (iva != null) {
-            BigDecimal importeIva = subtotal.multiply(iva).divide(new BigDecimal("100"), 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal importeIva = subtotal.multiply(iva).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
             subtotal = subtotal.add(importeIva);
         }
-        return subtotal.setScale(2, BigDecimal.ROUND_HALF_UP);
+        return subtotal.setScale(2, RoundingMode.HALF_UP);
     }
 
     private String formatMoney(BigDecimal value) {
@@ -405,6 +410,125 @@ public class PrintService {
     private String formatDecimal(BigDecimal value) {
         if (value == null) return "0";
         return value.stripTrailingZeros().toPlainString();
+    }
+
+    /**
+     * Genera un albarán en formato tipo recibo de panadería
+     * Similar al formato mostrado en la imagen del cliente
+     */
+    private String generarAlbaranReciboPanaderia(AlbaranVenta albaran, List<AlbaranVentaLinea> lineas) {
+        StringBuilder html = new StringBuilder();
+
+        // Encabezado estilo recibo
+        html.append("<div style='font-family: \"Courier New\", monospace; font-size: 10pt;'>");
+
+        // Datos de la empresa (izquierda) y logo (derecha)
+        html.append("<table style='width:100%; border:none; margin-bottom:10px;'><tr>");
+        html.append("<td style='width:50%; vertical-align:top; border:none;'>");
+        html.append("<div style='font-size:11pt;'><strong>GRUPO BABO, S.Coop.V.L.</strong></div>");
+        html.append("<div>Armada Española, P.2 Nº213</div>");
+        html.append("<div>03195 El Altet - ELCHE</div>");
+        html.append("</td>");
+        html.append("<td style='width:50%; vertical-align:top; text-align:right; border:none;'>");
+        html.append("<div>CIF F54059985</div>");
+        html.append("<div>R.G.S. EM-20.05033/A</div>");
+        html.append("<div>Tel. 965 68 73 58</div>");
+        html.append("</td>");
+        html.append("</tr></table>");
+
+        // Nombre del establecimiento y datos del albarán
+        html.append("<table style='width:100%; border:none; margin-bottom:10px;'><tr>");
+        html.append("<td style='width:60%; border:none;'></td>");
+        html.append("<td style='width:40%; text-align:right; border:none;'>");
+        html.append("<div style='font-size:14pt; font-weight:bold;'>LA TAHONA</div>");
+        html.append("<div style='font-size:12pt; font-weight:bold;'>EL ALTET</div>");
+        html.append("</td>");
+        html.append("</tr></table>");
+
+        html.append("<hr style='border:1px solid #000; margin:10px 0;'/>");
+
+        // Información del albarán (número y fecha)
+        html.append("<table style='width:100%; border:none; margin-bottom:5px;'><tr>");
+        html.append("<td style='width:70%; border:none;'>");
+        // Número de orden interno
+        html.append("<div style='margin-bottom:5px;'>");
+        html.append(String.format("<span style='margin-left:50px;'>%03d</span>",
+            albaran.getId() != null ? albaran.getId() % 1000 : 0));
+        html.append("</div>");
+
+        // Cliente
+        if (albaran.getCliente() != null) {
+            html.append("<div style='font-size:11pt; font-weight:bold; margin-bottom:5px;'>");
+            html.append(albaran.getCliente().getNombre());
+            html.append("</div>");
+        }
+
+        // Almacén/Local
+        if (albaran.getAlmacen() != null) {
+            html.append("<div style='margin-bottom:10px;'>");
+            html.append(albaran.getAlmacen().getNombre());
+            html.append("</div>");
+        }
+        html.append("</td>");
+        html.append("<td style='width:30%; border:2px solid #000; text-align:center; vertical-align:top; padding:5px;'>");
+        html.append("<div style='font-size:9pt;'><strong>FECHA/LOTE</strong></div>");
+        html.append("<div style='font-size:10pt;'>").append(
+            albaran.getFecha() != null ? albaran.getFecha().format(DATE_FORMATTER) : ""
+        ).append("</div>");
+        html.append("<div style='font-size:9pt; margin-top:5px;'><strong>Nº ALBARAN</strong></div>");
+        html.append("<div style='font-size:11pt; font-weight:bold;'>").append(albaran.getNumero()).append("</div>");
+        html.append("</td>");
+        html.append("</tr></table>");
+
+        // Tabla de productos
+        html.append("<table style='width:100%; border:none; margin-top:10px;'>");
+        html.append("<thead><tr style='border-bottom:1px solid #000;'>");
+        html.append("<th style='text-align:center; width:15%; padding:5px; border:none;'>CANTIDAD</th>");
+        html.append("<th style='text-align:left; width:50%; padding:5px; border:none;'>DESCRIPCION / ARTICULO</th>");
+        html.append("<th style='text-align:right; width:15%; padding:5px; border:none;'>PRECIO</th>");
+        html.append("<th style='text-align:right; width:20%; padding:5px; border:none;'>IMPORTE</th>");
+        html.append("</tr></thead>");
+        html.append("<tbody>");
+
+        BigDecimal totalGeneral = BigDecimal.ZERO;
+
+        for (AlbaranVentaLinea linea : lineas) {
+            BigDecimal cantidad = linea.getCantidad() != null ? linea.getCantidad() : BigDecimal.ZERO;
+            BigDecimal precio = linea.getPrecio() != null ? linea.getPrecio() : BigDecimal.ZERO;
+            BigDecimal importe = cantidad.multiply(precio).setScale(2, RoundingMode.HALF_UP);
+            totalGeneral = totalGeneral.add(importe);
+
+            html.append("<tr>");
+            html.append("<td style='text-align:center; padding:5px; border:none;'>").append(formatDecimal(cantidad)).append("</td>");
+            html.append("<td style='text-align:left; padding:5px; border:none;'>");
+            html.append(linea.getArticulo() != null ? linea.getArticulo().getDescripcion() : "");
+            html.append("</td>");
+            html.append("<td style='text-align:right; padding:5px; border:none;'>").append(formatMoney(precio)).append("</td>");
+            html.append("<td style='text-align:right; padding:5px; border:none;'>").append(formatMoney(importe)).append("</td>");
+            html.append("</tr>");
+        }
+
+        html.append("</tbody>");
+        html.append("</table>");
+
+        // Total (si es necesario mostrar)
+        if (albaran.getTotal() != null && albaran.getTotal().compareTo(BigDecimal.ZERO) > 0) {
+            html.append("<div style='text-align:right; margin-top:20px; font-size:12pt; font-weight:bold;'>");
+            html.append("TOTAL: ").append(formatMoney(albaran.getTotal()));
+            html.append("</div>");
+        }
+
+        // Observaciones
+        if (albaran.getObservaciones() != null && !albaran.getObservaciones().isBlank()) {
+            html.append("<div style='margin-top:20px; padding:10px; border:1px solid #ccc; background:#f9f9f9;'>");
+            html.append("<strong>Observaciones:</strong><br/>");
+            html.append(albaran.getObservaciones().replace("\n", "<br/>"));
+            html.append("</div>");
+        }
+
+        html.append("</div>");
+
+        return html.toString();
     }
 }
 

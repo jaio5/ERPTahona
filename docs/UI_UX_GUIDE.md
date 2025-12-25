@@ -300,6 +300,79 @@ Spacing: 20px horizontal y vertical entre cards
 - Modificadores: `:hover`, `:disabled`, `:selected`
 - Estados: `.active`, `.error`, `.success`
 
+## 🔄 Diseño Responsive
+
+### Principios de Responsividad
+
+El diseño del ERP está optimizado para adaptarse a diferentes tamaños de ventana:
+
+#### Sidebar (Menú Lateral)
+- **Ancho flexible**: 200px - 250px
+- Los botones se expanden al 100% del ancho disponible
+- Padding ajustable: 10px (reducido en pantallas pequeñas)
+- `maxWidth="Infinity"` para todos los botones
+
+#### Dashboard Cards (Tarjetas del Dashboard)
+- **Distribución**: GridPane con 3 columnas al 33.33% cada una
+- **Tamaño de tarjetas**: 
+  - Mínimo: 180px
+  - Máximo: 280px
+- **Padding adaptativo**: 25px vertical, 20px horizontal (reducido de 30px)
+- **Altura preferida**: 240px (flexible)
+
+#### Contenido Principal
+- **ScrollPane**: Envuelve el GridPane para manejar overflow
+- `fitToWidth="true"` y `fitToHeight="true"`
+- Scroll horizontal deshabilitado (`hbarPolicy="NEVER"`)
+- Scroll vertical según necesidad (`vbarPolicy="AS_NEEDED"`)
+
+#### Column Constraints
+```xml
+<columnConstraints>
+    <ColumnConstraints percentWidth="33.33" halignment="CENTER"/>
+    <ColumnConstraints percentWidth="33.33" halignment="CENTER"/>
+    <ColumnConstraints percentWidth="33.33" halignment="CENTER"/>
+</columnConstraints>
+```
+
+### Mejoras Implementadas (2025-12-25)
+
+1. **Eliminación de anchos fijos** en sidebar (era 250px fijo)
+2. **Tarjetas con tamaños min/max** en lugar de fixed width
+3. **Botones responsive** con `maxWidth="Infinity"`
+4. **ScrollPane transparente** para mejor visualización
+5. **Column constraints con porcentajes** para distribución equitativa
+
+### CSS Responsive
+
+```css
+.sidebar {
+    /* Sin -fx-min-width ni -fx-pref-width fijos */
+    -fx-background-color: -fx-sidebar-bg;
+    -fx-effect: dropshadow(gaussian, -fx-shadow, 5, 0, 2, 0);
+}
+
+.sidebar-button {
+    /* Sin -fx-min-width fijo */
+    -fx-padding: 12 10; /* Reducido de 12 15 */
+    -fx-alignment: CENTER_LEFT;
+}
+
+.dashboard-card {
+    /* Sin -fx-min-width, -fx-min-height, -fx-max-width fijos */
+    -fx-pref-height: 240px;
+    -fx-padding: 25 20; /* Reducido de 30 */
+}
+```
+
+### Ventajas del Diseño Responsive
+
+✅ **Adaptabilidad**: El contenido se ajusta automáticamente al tamaño de ventana  
+✅ **Sin overflow**: El menú y las tarjetas no sobresalen de la ventana  
+✅ **Scroll inteligente**: Solo cuando es necesario  
+✅ **Mejor UX**: Mantiene la proporción en diferentes resoluciones  
+✅ **Mantenibilidad**: Código más limpio sin valores hardcoded  
+
 ## 📝 Checklist de Diseño
 
 - [x] Paleta de colores coherente
@@ -310,6 +383,7 @@ Spacing: 20px horizontal y vertical entre cards
 - [x] Navegación intuitiva
 - [x] Tablas legibles
 - [x] Búsqueda funcional
+- [x] Diseño responsive
 - [ ] Formularios validados
 - [ ] Mensajes de error claros
 - [ ] Loading states
@@ -318,4 +392,6 @@ Spacing: 20px horizontal y vertical entre cards
 ---
 
 Este documento debe servir como guía para mantener la consistencia del diseño en futuras actualizaciones y nuevas funcionalidades.
+
+
 
