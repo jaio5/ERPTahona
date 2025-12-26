@@ -16,8 +16,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Servicio de impresión para facturas y albaranes
- * Genera documentos en formato HTML optimizados para impresión en blanco y negro
+ * Servicio de impresiÃ³n para facturas y albaranes
+ * Genera documentos en formato HTML optimizados para impresiÃ³n en blanco y negro
  */
 @Service
 public class PrintService {
@@ -25,10 +25,10 @@ public class PrintService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public enum PrintDesign {
-        CLASICO("Clásico", "Diseño tradicional con bordes"),
-        MODERNO("Moderno", "Diseño minimalista sin bordes"),
-        COMPACTO("Compacto", "Diseño compacto para ahorrar papel"),
-        RECIBO_PANADERIA("Recibo Panadería", "Formato tipo ticket de panadería");
+        CLASICO("ClÃ¡sico", "DiseÃ±o tradicional con bordes"),
+        MODERNO("Moderno", "DiseÃ±o minimalista sin bordes"),
+        COMPACTO("Compacto", "DiseÃ±o compacto para ahorrar papel"),
+        RECIBO_PANADERIA("Recibo PanaderÃ­a", "Formato tipo ticket de panaderÃ­a");
 
         private final String nombre;
         private final String descripcion;
@@ -46,12 +46,12 @@ public class PrintService {
      * Genera un archivo HTML para imprimir una factura
      */
     public File generarImpresionFactura(Factura factura, List<FacturaLinea> lineas, PrintDesign design) throws IOException {
-        log.info("Generando impresión de factura {} con diseño {}", factura.getNumero(), design.name());
+        log.info("Generando impresiÃ³n de factura {} con diseÃ±o {}", factura.getNumero(), design.name());
 
         StringBuilder html = new StringBuilder();
         html.append(getHtmlHeader("Factura " + factura.getNumero(), design));
 
-        // Contenido según diseño
+        // Contenido segÃºn diseÃ±o
         switch (design) {
             case CLASICO:
                 html.append(generarFacturaClasica(factura, lineas));
@@ -72,20 +72,20 @@ public class PrintService {
             writer.write(html.toString());
         }
 
-        log.info("Archivo de impresión generado: {}", tempFile.getAbsolutePath());
+        log.info("Archivo de impresiÃ³n generado: {}", tempFile.getAbsolutePath());
         return tempFile;
     }
 
     /**
-     * Genera un archivo HTML para imprimir un albarán
+     * Genera un archivo HTML para imprimir un albarÃ¡n
      */
     public File generarImpresionAlbaran(AlbaranVenta albaran, List<AlbaranVentaLinea> lineas, PrintDesign design) throws IOException {
-        log.info("Generando impresión de albarán {} con diseño {}", albaran.getNumero(), design.name());
+        log.info("Generando impresiÃ³n de albarÃ¡n {} con diseÃ±o {}", albaran.getNumero(), design.name());
 
         StringBuilder html = new StringBuilder();
-        html.append(getHtmlHeader("Albarán " + albaran.getNumero(), design));
+        html.append(getHtmlHeader("AlbarÃ¡n " + albaran.getNumero(), design));
 
-        // Contenido según diseño
+        // Contenido segÃºn diseÃ±o
         switch (design) {
             case CLASICO:
                 html.append(generarAlbaranClasico(albaran, lineas));
@@ -109,7 +109,7 @@ public class PrintService {
             writer.write(html.toString());
         }
 
-        log.info("Archivo de impresión generado: {}", tempFile.getAbsolutePath());
+        log.info("Archivo de impresiÃ³n generado: {}", tempFile.getAbsolutePath());
         return tempFile;
     }
 
@@ -264,14 +264,14 @@ public class PrintService {
         StringBuilder html = new StringBuilder();
 
         html.append("<div class='header'>");
-        html.append("<div class='company-name'>PANADERÍA TAHONA</div>");
+        html.append("<div class='company-name'>PANADERÃA TAHONA</div>");
         html.append("<div>NIF: B12345678 | Tel: 123 456 789</div>");
         html.append("<div>Calle Principal, 123 - 03001 Alicante</div>");
         html.append("<div class='doc-title'>FACTURA</div>");
         html.append("</div>");
 
         html.append("<div class='info-section'>");
-        html.append("<div class='info-row'><span class='label'>Número:</span><span>").append(factura.getNumero()).append("</span></div>");
+        html.append("<div class='info-row'><span class='label'>NÃºmero:</span><span>").append(factura.getNumero()).append("</span></div>");
         html.append("<div class='info-row'><span class='label'>Fecha:</span><span>")
             .append(factura.getFecha() != null ? factura.getFecha().format(DATE_FORMATTER) : "").append("</span></div>");
         if (factura.getCliente() != null) {
@@ -293,12 +293,12 @@ public class PrintService {
     }
 
     private String generarFacturaModerna(Factura factura, List<FacturaLinea> lineas) {
-        // Similar pero sin bordes, más espacios en blanco
+        // Similar pero sin bordes, mÃ¡s espacios en blanco
         return generarFacturaClasica(factura, lineas).replace("border:", "");
     }
 
     private String generarFacturaCompacta(Factura factura, List<FacturaLinea> lineas) {
-        // Versión más compacta con menos espacios
+        // VersiÃ³n mÃ¡s compacta con menos espacios
         return generarFacturaClasica(factura, lineas)
             .replace("margin: 20px", "margin: 10px")
             .replace("padding: 15px", "padding: 5px");
@@ -308,7 +308,7 @@ public class PrintService {
         StringBuilder html = new StringBuilder();
         html.append("<table>");
         html.append("<thead><tr>");
-        html.append("<th>Descripción</th>");
+        html.append("<th>DescripciÃ³n</th>");
         html.append("<th class='text-right'>Cant.</th>");
         html.append("<th class='text-right'>Precio</th>");
         html.append("<th class='text-right'>IVA %</th>");
@@ -353,12 +353,12 @@ public class PrintService {
         return html.toString();
     }
 
-    // Métodos similares para albaranes
+    // MÃ©todos similares para albaranes
     private String generarAlbaranClasico(AlbaranVenta albaran, List<AlbaranVentaLinea> lineas) {
         return generarFacturaClasica(
             convertirAlbaranAFactura(albaran),
             convertirLineasAlbaranAFactura(lineas)
-        ).replace("FACTURA", "ALBARÁN DE ENTREGA");
+        ).replace("FACTURA", "ALBARÃN DE ENTREGA");
     }
 
     private String generarAlbaranModerno(AlbaranVenta albaran, List<AlbaranVentaLinea> lineas) {
@@ -371,7 +371,7 @@ public class PrintService {
             .replace("padding: 15px", "padding: 5px");
     }
 
-    // Métodos auxiliares
+    // MÃ©todos auxiliares
     private Factura convertirAlbaranAFactura(AlbaranVenta albaran) {
         Factura f = new Factura();
         f.setNumero(albaran.getNumero());
@@ -413,13 +413,13 @@ public class PrintService {
     }
 
     /**
-     * Genera un albarán en formato tipo recibo de panadería
-     * Formato exacto según imagen proporcionada del cliente
+     * Genera un albarÃ¡n en formato tipo recibo de panaderÃ­a
+     * Formato exacto segÃºn imagen proporcionada del cliente
      */
     private String generarAlbaranReciboPanaderia(AlbaranVenta albaran, List<AlbaranVentaLinea> lineas) {
         StringBuilder html = new StringBuilder();
 
-        // Estilo base: Courier New, tamaño reducido, sin colores
+        // Estilo base: Courier New, tamaÃ±o reducido, sin colores
         html.append("<div style='font-family: \"Courier New\", monospace; font-size: 9pt; color: #000; max-width: 800px; margin: 0 auto; padding: 20px;'>");
 
         // ENCABEZADO: Empresa (izquierda) y Datos fiscales (derecha)
@@ -428,7 +428,7 @@ public class PrintService {
         // IZQUIERDA: Datos de empresa
         html.append("<td style='width:50%; vertical-align:top; border:none; padding:0;'>");
         html.append("<div style='font-size:10pt; margin-bottom:2px;'><strong>GRUPO BABO, S.Coop.V.L.</strong></div>");
-        html.append("<div style='font-size:9pt;'>Armada Española, P.2 Nº213</div>");
+        html.append("<div style='font-size:9pt;'>Armada EspaÃ±ola, P.2 NÂº213</div>");
         html.append("<div style='font-size:9pt;'>03195 El Altet - ELCHE</div>");
         html.append("</td>");
 
@@ -447,16 +447,16 @@ public class PrintService {
 
         html.append("</tr></table>");
 
-        // Línea divisoria
+        // LÃ­nea divisoria
         html.append("<hr style='border:none; border-top:1px solid #000; margin:8px 0;'/>");
 
-        // SECCIÓN INTERMEDIA: Orden/Cliente (izquierda) y Recuadro Fecha/Albarán (derecha)
+        // SECCIÃ“N INTERMEDIA: Orden/Cliente (izquierda) y Recuadro Fecha/AlbarÃ¡n (derecha)
         html.append("<table style='width:100%; border:none; border-collapse:collapse; margin-bottom:10px;'><tr>");
 
-        // IZQUIERDA: Número de orden, cliente y local
+        // IZQUIERDA: NÃºmero de orden, cliente y local
         html.append("<td style='width:65%; vertical-align:top; border:none; padding:0;'>");
 
-        // Número de orden interno (008)
+        // NÃºmero de orden interno (008)
         html.append("<div style='margin-left:60px; margin-bottom:8px; font-size:9pt;'>");
         html.append(String.format("%03d", albaran.getId() != null ? albaran.getId() % 1000 : 0));
         html.append("</div>");
@@ -468,7 +468,7 @@ public class PrintService {
             html.append("</div>");
         }
 
-        // Almacén/Local
+        // AlmacÃ©n/Local
         if (albaran.getAlmacen() != null) {
             html.append("<div style='font-size:9pt; margin-bottom:5px;'>");
             html.append(albaran.getAlmacen().getNombre());
@@ -477,14 +477,14 @@ public class PrintService {
 
         html.append("</td>");
 
-        // DERECHA: Recuadro con fecha y número de albarán
+        // DERECHA: Recuadro con fecha y nÃºmero de albarÃ¡n
         html.append("<td style='width:35%; vertical-align:top; border:none; padding:0; text-align:right;'>");
         html.append("<div style='border:2px solid #000; display:inline-block; padding:8px 15px; text-align:center;'>");
         html.append("<div style='font-size:8pt; margin-bottom:3px;'><em>FECHA/LOTE</em></div>");
         html.append("<div style='font-size:10pt; font-weight:bold; margin-bottom:8px;'>");
         html.append(albaran.getFecha() != null ? albaran.getFecha().format(DATE_FORMATTER) : "");
         html.append("</div>");
-        html.append("<div style='font-size:8pt; margin-bottom:3px;'><em>Nº ALBARAN</em></div>");
+        html.append("<div style='font-size:8pt; margin-bottom:3px;'><em>NÂº ALBARAN</em></div>");
         html.append("<div style='font-size:11pt; font-weight:bold;'>");
         html.append(albaran.getNumero() != null ? albaran.getNumero() : "");
         html.append("</div>");
@@ -493,7 +493,7 @@ public class PrintService {
 
         html.append("</tr></table>");
 
-        // Línea divisoria antes de productos
+        // LÃ­nea divisoria antes de productos
         html.append("<hr style='border:none; border-top:1px solid #000; margin:10px 0;'/>");
 
         // TABLA DE PRODUCTOS sin bordes visibles
@@ -509,7 +509,7 @@ public class PrintService {
 
         html.append("<tbody>");
 
-        // Líneas de productos
+        // LÃ­neas de productos
         for (AlbaranVentaLinea linea : lineas) {
             BigDecimal cantidad = linea.getCantidad() != null ? linea.getCantidad() : BigDecimal.ZERO;
             BigDecimal precio = linea.getPrecio() != null ? linea.getPrecio() : BigDecimal.ZERO;
@@ -522,17 +522,17 @@ public class PrintService {
             html.append(formatDecimal(cantidad));
             html.append("</td>");
 
-            // Descripción (izquierda)
+            // DescripciÃ³n (izquierda)
             html.append("<td style='text-align:left; padding:4px 5px; border:none; font-size:9pt;'>");
             html.append(linea.getArticulo() != null ? linea.getArticulo().getDescripcion().toUpperCase() : "");
             html.append("</td>");
 
-            // Precio (derecha, sin símbolo €)
+            // Precio (derecha, sin sÃ­mbolo â‚¬)
             html.append("<td style='text-align:right; padding:4px 5px; border:none; font-size:9pt;'>");
             html.append(formatNumberOnly(precio));
             html.append("</td>");
 
-            // Importe (derecha, sin símbolo €)
+            // Importe (derecha, sin sÃ­mbolo â‚¬)
             html.append("<td style='text-align:right; padding:4px 5px; border:none; font-size:9pt;'>");
             html.append(formatNumberOnly(importe));
             html.append("</td>");
@@ -557,11 +557,12 @@ public class PrintService {
     }
 
     /**
-     * Formatea un número sin símbolo de moneda (para el formato de albarán)
+     * Formatea un nÃºmero sin sÃ­mbolo de moneda (para el formato de albarÃ¡n)
      */
     private String formatNumberOnly(BigDecimal value) {
         if (value == null) return "0.00";
         return String.format("%.2f", value);
     }
 }
+
 

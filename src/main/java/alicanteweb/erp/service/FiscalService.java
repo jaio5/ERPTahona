@@ -10,14 +10,14 @@ import java.time.LocalDate;
 import java.util.regex.Pattern;
 
 /**
- * Servicio de validaciones y cálculos fiscales según normativa española
+ * Servicio de validaciones y cÃ¡lculos fiscales segÃºn normativa espaÃ±ola
  */
 @Service
 public class FiscalService {
 
     private static final Logger log = LoggerFactory.getLogger(FiscalService.class);
 
-    // Tipos de IVA en España
+    // Tipos de IVA en EspaÃ±a
     public static final BigDecimal IVA_GENERAL = new BigDecimal("21");
     public static final BigDecimal IVA_REDUCIDO = new BigDecimal("10");
     public static final BigDecimal IVA_SUPERREDUCIDO = new BigDecimal("4");
@@ -26,13 +26,13 @@ public class FiscalService {
     public static final BigDecimal IRPF_PROFESIONALES = new BigDecimal("15");
     public static final BigDecimal IRPF_ACTIVIDADES = new BigDecimal("7");
 
-    // Patrones de validación
+    // Patrones de validaciÃ³n
     private static final Pattern CIF_PATTERN = Pattern.compile("^[A-Z][0-9]{8}$");
     private static final Pattern NIF_PATTERN = Pattern.compile("^[0-9]{8}[A-Z]$");
     private static final Pattern NIE_PATTERN = Pattern.compile("^[XYZ][0-9]{7}[A-Z]$");
 
     /**
-     * Valida un CIF español
+     * Valida un CIF espaÃ±ol
      */
     public boolean validarCIF(String cif) {
         if (cif == null || cif.isEmpty()) {
@@ -45,12 +45,12 @@ public class FiscalService {
             return false;
         }
 
-        // Validación del dígito de control
+        // ValidaciÃ³n del dÃ­gito de control
         String tipoOrganizacion = cif.substring(0, 1);
         String numero = cif.substring(1, 8);
         String digitoControl = cif.substring(8);
 
-        // Calcular dígito de control
+        // Calcular dÃ­gito de control
         int suma = 0;
         for (int i = 0; i < numero.length(); i++) {
             int digito = Character.getNumericValue(numero.charAt(i));
@@ -68,7 +68,7 @@ public class FiscalService {
         int unidad = suma % 10;
         int digitoCalculado = (unidad == 0) ? 0 : (10 - unidad);
 
-        // Para ciertos tipos de organización, el dígito es una letra
+        // Para ciertos tipos de organizaciÃ³n, el dÃ­gito es una letra
         if ("NPQRSW".contains(tipoOrganizacion)) {
             String letras = "JABCDEFGHI";
             return digitoControl.equals(String.valueOf(letras.charAt(digitoCalculado)));
@@ -78,7 +78,7 @@ public class FiscalService {
     }
 
     /**
-     * Valida un NIF español
+     * Valida un NIF espaÃ±ol
      */
     public boolean validarNIF(String nif) {
         if (nif == null || nif.isEmpty()) {
@@ -100,7 +100,7 @@ public class FiscalService {
     }
 
     /**
-     * Valida un NIE español
+     * Valida un NIE espaÃ±ol
      */
     public boolean validarNIE(String nie) {
         if (nie == null || nie.isEmpty()) {
@@ -113,7 +113,7 @@ public class FiscalService {
             return false;
         }
 
-        // Convertir primera letra a número
+        // Convertir primera letra a nÃºmero
         char primeraLetra = nie.charAt(0);
         String numero = nie.substring(1, 8);
 
@@ -128,7 +128,7 @@ public class FiscalService {
     }
 
     /**
-     * Valida cualquier identificador fiscal español (NIF, NIE o CIF)
+     * Valida cualquier identificador fiscal espaÃ±ol (NIF, NIE o CIF)
      */
     public boolean validarIdentificadorFiscal(String identificador) {
         if (identificador == null || identificador.isEmpty()) {
@@ -164,7 +164,7 @@ public class FiscalService {
     }
 
     /**
-     * Calcula la retención IRPF de una cantidad
+     * Calcula la retenciÃ³n IRPF de una cantidad
      */
     public BigDecimal calcularIRPF(BigDecimal base, BigDecimal tipoIRPF) {
         if (base == null || tipoIRPF == null) {
@@ -183,7 +183,7 @@ public class FiscalService {
             return false;
         }
 
-        // Países de la UE (excepto España)
+        // PaÃ­ses de la UE (excepto EspaÃ±a)
         String[] paisesUE = {
             "ALEMANIA", "AUSTRIA", "BELGICA", "BULGARIA", "CHIPRE", "CROACIA",
             "DINAMARCA", "ESLOVAQUIA", "ESLOVENIA", "ESTONIA", "FINLANDIA",
@@ -203,7 +203,7 @@ public class FiscalService {
     }
 
     /**
-     * Valida que una fecha de factura sea válida según normativa española
+     * Valida que una fecha de factura sea vÃ¡lida segÃºn normativa espaÃ±ola
      */
     public boolean validarFechaFactura(LocalDate fechaFactura) {
         if (fechaFactura == null) {
@@ -218,7 +218,7 @@ public class FiscalService {
             return false;
         }
 
-        // No puede ser anterior a 4 años (prescripción)
+        // No puede ser anterior a 4 aÃ±os (prescripciÃ³n)
         LocalDate hace4Anios = hoy.minusYears(4);
         if (fechaFactura.isBefore(hace4Anios)) {
             log.warn("Fecha de factura demasiado antigua: {}", fechaFactura);
@@ -229,27 +229,27 @@ public class FiscalService {
     }
 
     /**
-     * Genera número de factura según formato español
+     * Genera nÃºmero de factura segÃºn formato espaÃ±ol
      */
     public String generarNumeroFactura(String serie, int numero, int anio) {
-        // Formato: SERIE/NUMERO/AÑO
+        // Formato: SERIE/NUMERO/AÃ‘O
         return String.format("%s/%06d/%04d", serie, numero, anio);
     }
 
     /**
-     * Valida número de factura español
+     * Valida nÃºmero de factura espaÃ±ol
      */
     public boolean validarNumeroFactura(String numeroFactura) {
         if (numeroFactura == null || numeroFactura.isEmpty()) {
             return false;
         }
 
-        // Formato común: SERIE/NUMERO o SERIE-NUMERO o solo NUMERO
+        // Formato comÃºn: SERIE/NUMERO o SERIE-NUMERO o solo NUMERO
         return numeroFactura.matches("^[A-Z0-9]{1,10}(/|-)?[0-9]{1,10}(/[0-9]{4})?$");
     }
 
     /**
-     * Obtiene el tipo de IVA recomendado para un producto de panadería
+     * Obtiene el tipo de IVA recomendado para un producto de panaderÃ­a
      */
     public BigDecimal getIVAPanaderia(String tipoProducto) {
         if (tipoProducto == null) {
@@ -258,12 +258,12 @@ public class FiscalService {
 
         String tipo = tipoProducto.toUpperCase();
 
-        // Pan común: IVA superreducido 4%
+        // Pan comÃºn: IVA superreducido 4%
         if (tipo.contains("PAN") && (tipo.contains("COMUN") || tipo.contains("BARRA"))) {
             return IVA_SUPERREDUCIDO;
         }
 
-        // Pan especial, bollería: IVA reducido 10%
+        // Pan especial, bollerÃ­a: IVA reducido 10%
         if (tipo.contains("BOLLERIA") || tipo.contains("CROISSANT") ||
             tipo.contains("NAPOLITANA") || tipo.contains("ESPECIAL")) {
             return IVA_REDUCIDO;
@@ -274,14 +274,14 @@ public class FiscalService {
     }
 
     /**
-     * Calcula el recargo de equivalencia (para minoristas en régimen especial)
+     * Calcula el recargo de equivalencia (para minoristas en rÃ©gimen especial)
      */
     public BigDecimal calcularRecargoEquivalencia(BigDecimal tipoIVA) {
         if (tipoIVA == null) {
             return BigDecimal.ZERO;
         }
 
-        // Tabla de recargos según tipo de IVA
+        // Tabla de recargos segÃºn tipo de IVA
         if (tipoIVA.compareTo(IVA_GENERAL) == 0) {
             return new BigDecimal("5.2"); // 5.2% para IVA 21%
         } else if (tipoIVA.compareTo(IVA_REDUCIDO) == 0) {
@@ -294,7 +294,7 @@ public class FiscalService {
     }
 
     /**
-     * Verifica si un proveedor está sujeto a retención IRPF
+     * Verifica si un proveedor estÃ¡ sujeto a retenciÃ³n IRPF
      */
     public boolean sujetoARetencionIRPF(String tipoProveedor) {
         if (tipoProveedor == null) {
@@ -303,11 +303,12 @@ public class FiscalService {
 
         String tipo = tipoProveedor.toUpperCase();
 
-        // Profesionales y artistas sujetos a retención
+        // Profesionales y artistas sujetos a retenciÃ³n
         return tipo.contains("PROFESIONAL") ||
                tipo.contains("AUTONOMO") ||
                tipo.contains("ASESOR") ||
                tipo.contains("CONSULTOR");
     }
 }
+
 

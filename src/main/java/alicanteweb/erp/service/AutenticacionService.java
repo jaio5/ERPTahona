@@ -1,0 +1,209 @@
+package alicanteweb.erp.service;
+
+import alicanteweb.erp.entities.Usuario;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+/**
+ * Servicio de autenticaciÃ³n y gestiÃ³n de sesiÃ³n
+ */
+@Service
+@Slf4j
+public class AutenticacionService {
+
+    private final UsuarioService usuarioService;
+    private final AuditoriaService auditoriaService;
+
+    // Usuario actualmente autenticado (sesiÃ³n)
+    private Usuario usuarioActual;
+
+    public AutenticacionService(UsuarioService usuarioService, AuditoriaService auditoriaService) {
+        this.usuarioService = usuarioService;
+        this.auditoriaService = auditoriaService;
+    }
+
+    /**
+     * Realiza el login de un usuario
+     * @param username Nombre de usuario
+     * @param password ContraseÃ±a en texto plano
+     * @return Usuario si las credenciales son vÃ¡lidas, null si no
+     */
+    public Usuario login(String username, String password) {
+        log.info("Intento de login: {}", username);
+
+        // Buscar usuario
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorUsername(username);
+
+        if (usuarioOpt.isEmpty()) {
+            log.warn("Usuario no encontrado: {}", username);
+            auditoriaService.registrarError(null, "Usuario", username,
+                    "Intento de login - usuario no encontrado");
+            return null;
+        }
+
+        Usuario usuario = usuarioOpt.get();
+
+        // Verificar si estÃ¡ activo
+        if (!Boolean.TRUE.equals(usuario.getActivo())) {
+            log.warn("Usuario inactivo: {}", username);
+            auditoriaService.registrarError(usuario, "Usuario", usuario.getId().toString(),
+                    "Intento de login - usuario inactivo");
+            return null;
+        }
+
+        // Verificar si estÃ¡ bloqueado
+        if (Boolean.TRUE.equals(usuario.getBloqueado())) {
+            log.warn("Usuario bloqueado: {}", username);
+            auditoriaService.registrarError(usuario, "Usuario", usuario.getId().toString(),
+                    "Intento de login - usuario bloqueado");
+            return null;
+        }
+
+        // Validar credenciales
+        boolean credencialesValidas = usuarioService.validarCredenciales(username, password);
+
+        if (!credencialesValidas) {
+            log.warn("Credenciales invÃ¡lidas para: {}", username);
+            auditoriaService.registrarLogin(usuario, null, false);
+            return null;
+        }
+
+        // Login exitoso
+        usuarioActual = usuario;
+        usuarioService.actualizarUltimoLogin(usuario.getId());
+        auditoriaService.registrarLogin(usuario, null, true);
+
+        log.info("Login exitoso: {}", username);
+        return usuario;
+    }
+
+    /**
+     * Realiza el logout del usuario actual
+     */
+    public void logout() {
+        if (usuarioActual != null) {
+            log.info("Logout: {}", usuarioActual.getUsername());
+            auditoriaService.registrarLogout(usuarioActual);
+            usuarioActual = null;
+        }
+    }
+
+    /**
+     * Obtiene el usuario actualmente autenticado
+     * @return Usuario actual o null si no hay sesiÃ³n
+     */
+    public Usuario getUsuarioActual() {
+        return usuarioActual;
+    }
+
+    /**
+     * Verifica si hay un usuario autenticado
+     * @return true si hay sesiÃ³n activa
+     */
+    public boolean haySesionActiva() {
+        return usuarioActual != null;
+    }
+
+    /**
+     * Verifica si el usuario actual tiene un permiso especÃ­fico
+     * @param modulo MÃ³dulo a verificar (ej: "clientes", "facturas")
+     * @param accion AcciÃ³n a verificar (ej: "ver", "crear", "editar", "eliminar")
+     * @return true si tiene el permiso
+     */
+    public boolean tienePermiso(String modulo, String accion) {
+        if (usuarioActual == null) {
+            return false;
+        }
+
+        if (usuarioActual.getRol() == null) {
+            log.warn("Usuario sin rol asignado: {}", usuarioActual.getUsername());
+            return false;
+        }
+
+        if (usuarioActual.getRol().getPermisos() == null) {
+            log.warn("Rol sin permisos definidos: {}", usuarioActual.getRol().getNombre());
+            return false;
+        }
+
+        // Verificar permisos del rol
+        var permisos = usuarioActual.getRol().getPermisos();
+        if (!permisos.containsKey(modulo)) {
+            return false;
+        }
+
+        var permisosModulo = permisos.get(modulo);
+        if (permisosModulo == null || !permisosModulo.containsKey(accion)) {
+            return false;
+        }
+
+        Boolean tienePermiso = permisosModulo.get(accion);
+        if (!Boolean.TRUE.equals(tienePermiso)) {
+            // Auditar acceso denegado
+            auditoriaService.registrarAccesoDenegado(usuarioActual, modulo, accion);
+        }
+
+        return Boolean.TRUE.equals(tienePermiso);
+    }
+
+    /**
+     * Verifica si el usuario actual es administrador
+     * @return true si es administrador
+     */
+    public boolean esAdministrador() {
+        if (usuarioActual == null || usuarioActual.getRol() == null) {
+            return false;
+        }
+        return "ADMINISTRADOR".equals(usuarioActual.getRol().getNombre());
+    }
+
+    /**
+     * Obtiene el nombre del usuario actual
+     * @return Nombre del usuario o "Invitado" si no hay sesiÃ³n
+     */
+    public String getNombreUsuarioActual() {
+        if (usuarioActual == null) {
+            return "Invitado";
+        }
+        return usuarioActual.getNombreCompleto() != null ?
+                usuarioActual.getNombreCompleto() : usuarioActual.getUsername();
+    }
+
+    /**
+     * Obtiene el ID del usuario actual
+     * @return ID del usuario o null si no hay sesiÃ³n
+     */
+    public Long getIdUsuarioActual() {
+        return usuarioActual != null ? usuarioActual.getId() : null;
+    }
+
+    /**
+     * Verifica que haya sesiÃ³n activa, lanza excepciÃ³n si no
+     */
+    public void verificarSesion() {
+        if (!haySesionActiva()) {
+            throw new IllegalStateException("No hay sesiÃ³n activa. Por favor, inicie sesiÃ³n.");
+        }
+    }
+
+    /**
+     * Verifica que el usuario tenga un permiso, lanza excepciÃ³n si no
+     */
+    public void verificarPermiso(String modulo, String accion) {
+        verificarSesion();
+        if (!tienePermiso(modulo, accion)) {
+            throw new SecurityException("No tiene permisos para realizar esta acciÃ³n: " +
+                    modulo + " - " + accion);
+        }
+    }
+
+    /**
+     * Establece manualmente el usuario actual (Ãºtil para testing)
+     */
+    public void setUsuarioActual(Usuario usuario) {
+        this.usuarioActual = usuario;
+    }
+}
+
+

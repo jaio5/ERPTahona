@@ -39,23 +39,25 @@ public class ErpLauncher extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        log.info("Iniciando aplicación JavaFX...");
+        log.info("Iniciando aplicaciÃ³n JavaFX...");
         try {
-            log.info("Cargando vista principal: /ui/main_panel.fxml");
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/main_panel.fxml"));
+            // Cargar pantalla de login primero
+            log.info("Cargando vista de login: /ui/login.fxml");
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/login.fxml"));
             loader.setControllerFactory(springContext::getBean);
             Parent root = loader.load();
 
             Scene scene = new Scene(root);
-            stage.setTitle("ERP Panadería Tahona");
+            stage.setTitle("ERP PanaderÃ­a Tahona - Iniciar SesiÃ³n");
             stage.setScene(scene);
-            stage.setMaximized(true);
+            stage.setResizable(false); // Login no redimensionable
+            stage.centerOnScreen();
             stage.show();
 
-            log.info("Aplicación JavaFX iniciada correctamente");
+            log.info("Pantalla de login cargada correctamente");
         } catch (Throwable t) {
-            log.error("Error crítico al iniciar la aplicación JavaFX", t);
-            // Guardar traza en archivo para diagnóstico local
+            log.error("Error crÃ­tico al iniciar la aplicaciÃ³n JavaFX", t);
+            // Guardar traza en archivo para diagnÃ³stico local
             try {
                 StringWriter sw = new StringWriter();
                 t.printStackTrace(new PrintWriter(sw));
@@ -66,24 +68,25 @@ public class ErpLauncher extends Application {
             } catch (IOException ioe) {
                 log.error("Error al escribir run_error.log", ioe);
             }
-            // Re-lanzar para que la aplicación falle con excepción visible
+            // Re-lanzar para que la aplicaciÃ³n falle con excepciÃ³n visible
             throw t;
         }
     }
 
     @Override
     public void stop() {
-        log.info("Deteniendo aplicación...");
+        log.info("Deteniendo aplicaciÃ³n...");
         if (springContext != null) {
             springContext.close();
             log.info("Contexto de Spring cerrado");
         }
         Platform.exit();
-        log.info("Aplicación detenida");
+        log.info("AplicaciÃ³n detenida");
     }
 
     public static void main(String[] args) {
-        log.info("Lanzando aplicación ERP Panadería Tahona...");
+        log.info("Lanzando aplicaciÃ³n ERP PanaderÃ­a Tahona...");
         Application.launch(ErpLauncher.class, args);
     }
 }
+
