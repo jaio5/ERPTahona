@@ -18,14 +18,27 @@
         </VBox>
     </HBox>
 
-    <HBox styleClass="toolbar" alignment="CENTER_LEFT" spacing="15">
-        <TextField fx:id="txtBuscar" promptText="Buscar..." styleClass="search-field"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Nueva" styleClass="btn-success" onAction="#onCreate"/>
-        <Button text="Ver" styleClass="btn-primary" onAction="#onEdit"/>
-        <Button text="Imprimir" styleClass="btn-secondary" onAction="#onPrint"/>
-        <Button text="Refrescar" styleClass="btn-secondary" onAction="#onRefresh"/>
-    </HBox>
+    <VBox spacing="10" styleClass="toolbar-container">
+        <!-- Primera fila: Búsqueda y acciones básicas -->
+        <HBox styleClass="toolbar" alignment="CENTER_LEFT" spacing="10">
+            <TextField fx:id="txtBuscar" promptText="🔍 Buscar factura..." styleClass="search-field" prefWidth="250"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="📄 Nueva Factura" styleClass="btn-success" onAction="#onCreate" prefWidth="140"/>
+            <Button text="👁️ Ver Detalles" styleClass="btn-primary" onAction="#onEdit" prefWidth="130"/>
+            <Button text="🖨️ Imprimir" styleClass="btn-secondary" onAction="#onPrint" prefWidth="110"/>
+            <Button text="🔄 Refrescar" styleClass="btn-secondary" onAction="#onRefresh" prefWidth="110"/>
+        </HBox>
+
+        <!-- Segunda fila: Gestión de estados Verifactu -->
+        <HBox styleClass="toolbar" alignment="CENTER_LEFT" spacing="10">
+            <Label text="Gestión de Estados:" style="-fx-font-weight: bold; -fx-text-fill: #666;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="📝 Enviar a Revisión" styleClass="btn-warning" onAction="#onEnviarARevision" prefWidth="160"/>
+            <Button text="✅ Aprobar y Emitir" styleClass="btn-success" onAction="#onAprobarYEmitir" prefWidth="160"/>
+            <Button text="↩️ Volver a Borrador" styleClass="btn-info" onAction="#onVolverABorrador" prefWidth="160"/>
+            <Button text="❌ Anular Factura" styleClass="btn-danger" onAction="#onAnular" prefWidth="140"/>
+        </HBox>
+    </VBox>
 
     <StackPane VBox.vgrow="ALWAYS">
         <padding>

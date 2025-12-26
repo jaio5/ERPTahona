@@ -288,10 +288,15 @@
     -fx-font-size: 14px;
 }
 
-.toolbar {
+.toolbar-container {
     -fx-background-color: -fx-white;
-    -fx-padding: 15 25;
+    -fx-padding: 10 25;
+}
+
+.toolbar {
+    -fx-padding: 8 0;
     -fx-spacing: 10;
+    -fx-alignment: CENTER_LEFT;
 }
 
 .search-field {
@@ -299,7 +304,7 @@
     -fx-background-radius: 25px;
     -fx-padding: 10 20;
     -fx-font-size: 14px;
-    -fx-min-width: 300px;
+    -fx-min-width: 250px;
     -fx-border-color: transparent;
 }
 
@@ -314,8 +319,9 @@
     -fx-background-color: -fx-primary;
     -fx-text-fill: -fx-white;
     -fx-background-radius: 8px;
-    -fx-padding: 10 20;
+    -fx-padding: 10 15;
     -fx-font-weight: bold;
+    -fx-font-size: 13px;
     -fx-cursor: hand;
 }
 
@@ -329,8 +335,9 @@
     -fx-background-color: -fx-medium-gray;
     -fx-text-fill: -fx-white;
     -fx-background-radius: 8px;
-    -fx-padding: 10 20;
+    -fx-padding: 10 15;
     -fx-font-weight: bold;
+    -fx-font-size: 13px;
     -fx-cursor: hand;
 }
 
@@ -342,8 +349,9 @@
     -fx-background-color: -fx-success;
     -fx-text-fill: -fx-white;
     -fx-background-radius: 8px;
-    -fx-padding: 10 20;
+    -fx-padding: 10 15;
     -fx-font-weight: bold;
+    -fx-font-size: 13px;
     -fx-cursor: hand;
 }
 
@@ -351,12 +359,41 @@
     -fx-background-color: derive(-fx-success, -10%);
 }
 
+.btn-warning {
+    -fx-background-color: -fx-warning;
+    -fx-text-fill: -fx-dark;
+    -fx-background-radius: 8px;
+    -fx-padding: 10 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.btn-warning:hover {
+    -fx-background-color: derive(-fx-warning, -10%);
+}
+
+.btn-info {
+    -fx-background-color: -fx-info;
+    -fx-text-fill: -fx-white;
+    -fx-background-radius: 8px;
+    -fx-padding: 10 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.btn-info:hover {
+    -fx-background-color: derive(-fx-info, -10%);
+}
+
 .btn-danger {
     -fx-background-color: -fx-danger;
     -fx-text-fill: -fx-white;
     -fx-background-radius: 8px;
-    -fx-padding: 10 20;
+    -fx-padding: 10 15;
     -fx-font-weight: bold;
+    -fx-font-size: 13px;
     -fx-cursor: hand;
 }
 

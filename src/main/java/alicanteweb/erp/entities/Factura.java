@@ -9,6 +9,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -45,10 +46,36 @@ public class Factura {
     @Column(name = "pagada", nullable = false)
     private boolean pagada;
 
+    // Nuevos campos para gestión de estado y Verifactu
+    @Size(max = 20)
+    @ColumnDefault("'BORRADOR'")
+    @Column(name = "estado", length = 20)
+    private String estado; // BORRADOR, REVISION, EMITIDA, ANULADA
+
+    @ColumnDefault("FALSE")
+    @Column(name = "verifactu_enviada")
+    private Boolean verifactuEnviada;
+
+    @Column(name = "fecha_emision_verifactu")
+    private LocalDateTime fechaEmisionVerifactu;
+
+    @Lob
+    @Column(name = "observaciones_revision")
+    private String observacionesRevision;
+
     @OneToMany(mappedBy = "facturas")
     private Set<AlbaranVentaFactura> albaranesVentaFacturas = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "factura")
     private Set<FacturaLinea> facturaLineas = new LinkedHashSet<>();
 
+    @PrePersist
+    protected void onCreate() {
+        if (estado == null || estado.isEmpty()) {
+            estado = "BORRADOR";
+        }
+        if (verifactuEnviada == null) {
+            verifactuEnviada = false;
+        }
+    }
 }

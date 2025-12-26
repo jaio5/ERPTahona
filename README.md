@@ -1,350 +1,105 @@
-# 🍞 ERP Panadería Tahona
+# 🍞 ERP Tahona - GRUPO BABO
+## Sistema de Gestión Empresarial con Verifactu
 
-Sistema de gestión empresarial completo para panaderías, desarrollado con JavaFX, Spring Boot y MySQL.
+**Versión:** 1.0.0  
+**Empresa:** GRUPO BABO, S.Coop.V.L. (CIF: F54059985)
 
 ---
 
-## 🎉 ¡FRONTEND MODERNO COMPLETADO!
+## 📋 Descripción
 
-El ERP ahora cuenta con una **interfaz gráfica moderna, profesional y completamente funcional**.
+ERP completo para gestión empresarial con integración Verifactu de la Agencia Tributaria Española.
 
-### ✨ Características del Frontend
-- 🎨 **Diseño Material Design** con tema personalizado de panadería
-- 📊 **6 módulos funcionales**: Clientes, Proveedores, Artículos, Facturas, Almacenes, Verifactu
-- 🔍 **Búsqueda en tiempo real** en todos los módulos
-- 🎯 **Navegación intuitiva** con sidebar persistente
-- 💫 **Animaciones suaves** y efectos hover profesionales
-- 🎨 **Iconos FontAwesome** en toda la interfaz
-- 📱 **Diseño responsive** y adaptativo
+**Características principales:**
+- ✅ Gestión de Clientes, Proveedores y Artículos
+- ✅ Albaranes y Facturación
+- ✅ Control de Almacenes
+- ✅ Integración Verifactu/AEAT
+- ✅ Validaciones fiscales españolas
+- ✅ Impresión de documentos
+- ✅ Interfaz moderna JavaFX
 
 ---
 
 ## 🚀 Inicio Rápido
 
-### 1. Ejecutar la Aplicación
+### 1. Requisitos
 
-**Opción A: Usar script de arranque (RECOMENDADO)**
+| Software | Versión |
+|----------|---------|
+| Java JDK | 17+ |
+| MySQL | 8.0+ |
+| Maven | 3.8+ (incluido) |
+
+### 2. Instalación (3 pasos)
+
 ```bash
-# Windows - Doble clic o desde terminal
+# Paso 1: Configurar base de datos (5 min)
+configurar_bd.bat
+
+# Paso 2: Compilar (2 min)
+.\mvnw clean compile
+
+# Paso 3: Arrancar (1 min)
 .\arrancar.bat
-
-# PowerShell
-.\arrancar.ps1
 ```
 
-**Opción B: Maven directamente**
-```bash
-mvn javafx:run
-```
-
-**Opción C: Desde IntelliJ IDEA**
-1. Abrir el proyecto
-2. Ejecutar `ErpLauncher.java` (clic derecho → Run)
-
-**Opción D: Compilar y ejecutar manualmente**
-```bash
-mvn clean compile
-mvn javafx:run
-```
-
-### 2. Configurar Base de Datos
-
-Ver instrucciones detalladas en: **[README_DB.md](README_DB.md)**
+**¡Listo!** La aplicación arranca con datos de GRUPO BABO preconfigurados.
 
 ---
 
-## 📚 Documentación
+## 📖 Documentación
 
-### 📖 Guías Principales
-- **[REFERENCIA_RAPIDA.txt](REFERENCIA_RAPIDA.txt)** - ⭐ Referencia rápida visual
-- **[INICIO_RAPIDO.txt](INICIO_RAPIDO.txt)** - Comandos básicos de inicio
-- **[ESTADO_PROYECTO.md](ESTADO_PROYECTO.md)** - Estado completo del proyecto
-- **[GUIA_ARRANQUE.md](GUIA_ARRANQUE.md)** - Guía detallada de arranque y troubleshooting
-- **[GUIA_PERSONALIZACION_IMPRESION.md](GUIA_PERSONALIZACION_IMPRESION.md)** - Personalizar formatos de impresión
-
-### 📖 Documentación Técnica
-- **[docs/UI_UX_GUIDE.md](docs/UI_UX_GUIDE.md)** - Guía de diseño UI/UX
-- **[docs/VISTA_PREVIA_UI.md](docs/VISTA_PREVIA_UI.md)** - Vista previa visual
-- **[docs/estructura.md](docs/estructura.md)** - Estructura del proyecto
-- **[docs/PROYECTO_ERP_PANADERIA.md](docs/PROYECTO_ERP_PANADERIA.md)** - Documentación del proyecto
+| Documento | Descripción |
+|-----------|-------------|
+| **[INSTALACION.md](docs/INSTALACION.md)** | Instalación paso a paso |
+| **[GUIA_USO.md](docs/GUIA_USO.md)** | Manual de usuario completo |
+| **[GUIA_DESPLIEGUE_COMPLETA.md](GUIA_DESPLIEGUE_COMPLETA.md)** | Despliegue en producción |
 
 ---
 
-## 📦 Tecnologías
-
-### Frontend
-- **JavaFX 21.0.5** - Framework de interfaz gráfica
-- **FXML** - Diseño declarativo de vistas
-- **CSS3** - Estilos personalizados (Material Design)
-- **Ikonli FontAwesome** - Iconografía profesional
-
-### Backend
-- **Spring Boot 3.5.7** - Framework principal
-- **Spring Data JPA** - Persistencia de datos
-- **Hibernate** - ORM
-- **MySQL / H2** - Base de datos
-
-### Build & Tools
-- **Maven 3.x** - Gestión de dependencias
-- **Java 17** - Lenguaje de programación
-- **Lombok** - Reducción de código boilerplate
-
----
-
-## 🎨 Vista Previa del Frontend
-
-### Dashboard Principal
-```
-┌─────────────┐
-│  MÓDULOS    │   ┌──────────┬──────────┬──────────┐
-├─────────────┤   │ Clientes │Proveed.  │Artículos │
-│ 👥 Clientes │   ├──────────┼──────────┼──────────┤
-│ 🚚 Proveed. │   │ Facturas │Almacenes │Verifactu │
-│ 📦 Artículos│   └──────────┴──────────┴──────────┘
-│ 💰 Facturas │
-│ 🏭 Almacenes│
-│ 🛡️ Verifactu│
-└─────────────┘
-```
-
-### Módulos Disponibles
-
-| Módulo | Icono | Descripción | Columnas | Estado |
-|--------|-------|-------------|----------|--------|
-| Clientes | 👥 | Gestión de clientes y contactos | 8 | ✅ |
-| Proveedores | 🚚 | Gestión de proveedores | 8 | ✅ |
-| Artículos | 📦 | Catálogo de productos | 8 | ✅ |
-| Facturas | 💰 | Facturación y ventas | 7 | ✅ |
-| Almacenes | 🏭 | Control de inventario | 3 | ✅ |
-| Verifactu | 🛡️ | Sistema de verificación | 5 + Stats | ✅ |
-
----
-
-## 🎯 Funcionalidades
-
-### Implementadas ✅
-- ✅ **Dashboard interactivo** con 6 módulos
-- ✅ **Navegación fluida** entre vistas
-- ✅ **Búsqueda en tiempo real** en todos los módulos
-- ✅ **Visualización de datos** desde base de datos
-- ✅ **Eliminación de registros** con confirmación
-- ✅ **Actualización de datos** (refresh)
-- ✅ **Filtrado inteligente** por múltiples campos
-- ✅ **Tema visual personalizado** para panadería
-- ✅ **Responsive design** adaptativo
-
-### En Desarrollo 🔄
-- 🔄 Formularios de alta/edición
-- 🔄 Validación de campos
-- 🔄 Notificaciones visuales (toasts)
-- 🔄 Exportación a PDF
-- 🔄 Gráficos y estadísticas
-
-### Planificadas 📝
-- 📝 Gestión de usuarios y permisos
-- 📝 Reportes personalizados
-- 📝 Tema oscuro
-- 📝 Exportación a Excel
-- 📝 Impresión de documentos
-
----
-
-## 📁 Estructura del Proyecto
+## 🏢 Datos Configurados
 
 ```
-ERP/
-├── src/
-│   ├── main/
-│   │   ├── java/alicanteweb/erp/
-│   │   │   ├── ErpLauncher.java          ← Punto de entrada
-│   │   │   ├── controller/               ← Controladores UI
-│   │   │   ├── entities/                 ← Entidades JPA
-│   │   │   ├── repository/               ← Repositorios
-│   │   │   └── service/                  ← Servicios de negocio
-│   │   └── resources/
-│   │       ├── ui/                       ← Vistas FXML (7)
-│   │       ├── css/                      ← Estilos CSS
-│   │       ├── images/                   ← Iconos e imágenes
-│   │       └── application.properties    ← Configuración
-│   └── test/                             ← Tests
-├── docs/                                 ← Documentación
-├── basesdedatos/                         ← Scripts SQL
-├── run.bat                               ← Script de ejecución
-├── run-jar.bat                           ← Script alternativo
-└── pom.xml                               ← Configuración Maven
+GRUPO BABO, S.Coop.V.L.
+CIF: F54059985
+Tel: 965 68 73 58
+Dirección: Armada Española, P.2 Nº213
+03195 El Altet - ELCHE
 ```
+
+Estos datos se usan automáticamente en facturas, albaranes y Verifactu.
 
 ---
 
-## ⚙️ Requisitos
+## 🔄 Flujo de Facturación
 
-### Software Necesario
-- ☕ **Java 17** o superior
-- 📦 **Maven 3.6+**
-- 🗄️ **MySQL 8.0+** o **MariaDB**
-- 💻 **Windows** (o adaptar scripts para Linux/Mac)
+```
+BORRADOR → REVISION → EMITIDA (Verifactu/AEAT)
+```
 
-### Opcional
-- 🔧 **IntelliJ IDEA** (recomendado)
-- 🎨 **Scene Builder** (para editar FXML)
+1. **Crear factura** (BORRADOR)
+2. **Enviar a revisión** (REVISION)
+3. **Aprobar y emitir** (EMITIDA - envía a AEAT)
 
 ---
 
-## 🔧 Configuración
+## 💻 Tecnologías
 
-### Base de Datos MySQL
-
-1. **Crear la base de datos**
-```sql
-CREATE DATABASE tahonaerp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-2. **Importar datos**
-```bash
-mysql -u root -p tahonaerp < basesdedatos/definitivo/tahonaerp.sql
-```
-
-3. **Configurar credenciales**
-
-Editar `src/main/resources/application-dev.properties`:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/tahonaerp
-spring.datasource.username=tu_usuario
-spring.datasource.password=tu_contraseña
-```
-
-### Perfiles de Ejecución
-
-- **Desarrollo con MySQL**: `application-dev.properties`
-- **Desarrollo con H2**: `application-dev-h2.properties`
-- **Producción**: `application.properties`
-
----
-
-## 🎨 Tema Visual
-
-### Paleta de Colores
-- 🟡 **Primario (Dorado)**: `#D4922B` - Representa el pan dorado
-- 🟤 **Secundario (Marrón)**: `#8B4513` - Color del pan
-- 🟢 **Éxito**: `#28A745`
-- 🔵 **Información**: `#17A2B8`
-- 🟡 **Advertencia**: `#FFC107`
-- 🔴 **Peligro**: `#DC3545`
-- 🟣 **Verifactu**: `#6F42C1`
-
-### Tipografía
-- **Principal**: Segoe UI, Roboto, sans-serif
-- **Tamaño base**: 14px
-- **Títulos**: 18-24px
-
----
-
-## 🐛 Solución de Problemas
-
-### La aplicación no arranca
-```bash
-# Verificar versión de Java
-java -version
-
-# Limpiar y recompilar
-mvn clean compile
-```
-
-### Error de módulo JavaFX
-```bash
-# Usar el script run.bat
-.\run.bat
-```
-
-### Los datos no se muestran
-1. Verificar que MySQL está corriendo
-2. Revisar credenciales en `application-dev.properties`
-3. Comprobar que la base de datos tiene datos
-4. Ver logs en consola
-
-### Error de compilación
-```bash
-# Limpiar proyecto
-mvn clean
-
-# Recompilar
-mvn compile -DskipTests
-```
-
----
-
-## 📊 Estadísticas del Proyecto
-
-| Categoría | Cantidad |
-|-----------|----------|
-| Vistas FXML | 7 |
-| Controladores | 7 |
-| Entidades JPA | 15+ |
-| Servicios | 7+ |
-| Líneas de CSS | 500+ |
-| Módulos | 6 |
-| Iconos | 11+ |
-
----
-
-## 🤝 Contribuir
-
-Este es un proyecto privado para Panadería Tahona. Para sugerencias o mejoras:
-
-1. Revisar la documentación en `/docs`
-2. Consultar las guías de diseño UI/UX
-3. Seguir los patrones establecidos
-4. Documentar cambios
-
----
-
-## 📝 Licencia
-
-Proyecto propietario - Panadería Tahona © 2025
+- **Frontend:** JavaFX 17
+- **Backend:** Spring Boot 3.5
+- **Base de Datos:** MySQL 8.0
+- **Build:** Maven 3.8
 
 ---
 
 ## 📞 Soporte
 
-### Documentación
-- Ver carpeta `/docs` para guías detalladas
-- Consultar `INICIO_RAPIDO.md` para empezar
-- Revisar `README_FRONTEND.md` para la UI
-
-### Logs
-- Archivo: `run_error.log`
-- Consola: Salida estándar
+**GRUPO BABO, S.Coop.V.L.**  
+Tel: 965 68 73 58  
+Email: administracion@grupobaelo.com
 
 ---
 
-## 🎓 Recursos de Aprendizaje
+**Copyright © 2025 GRUPO BABO, S.Coop.V.L.**
 
-- [JavaFX Documentation](https://openjfx.io/)
-- [Spring Boot Guide](https://spring.io/guides)
-- [Material Design](https://material.io/design)
-- [FontAwesome Icons](https://fontawesome.com/icons)
-
----
-
-## 🎉 ¡Empezar Ahora!
-
-```bash
-# 1. Clonar/Abrir proyecto
-cd D:\Programación\ERP
-
-# 2. Ejecutar
-.\run.bat
-
-# 3. ¡Disfrutar del ERP moderno!
-```
-
----
-
-**Desarrollado con ❤️ para Panadería Tahona**  
-**Versión 1.0.0** | **Diciembre 2025**
-
-🍞 **¡Bienvenido al futuro de la gestión de panaderías!** 🥐
-
-#   E R P T a h o n a 
- 
- 
