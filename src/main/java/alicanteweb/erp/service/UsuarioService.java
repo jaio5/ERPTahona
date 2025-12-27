@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Servicio de gestiÃ³n de usuarios
+ * Servicio de gestión de usuarios
  */
 @Service
 @Slf4j
@@ -46,10 +46,10 @@ public class UsuarioService {
 
         // Validar que no exista el email
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
-            throw new IllegalArgumentException("El email ya estÃ¡ registrado");
+            throw new IllegalArgumentException("El email ya está registrado");
         }
 
-        // Cifrar la contraseÃ±a
+        // Cifrar la contraseña
         usuario.setPassword(cifradoService.hashPassword(passwordPlain));
         usuario.setFechaCreacion(LocalDateTime.now());
         usuario.setFechaCambioPassword(LocalDateTime.now());
@@ -77,21 +77,21 @@ public class UsuarioService {
         Usuario existente = usuarioRepository.findById(usuario.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        // Validar username Ãºnico (si cambiÃ³)
+        // Validar username único (si cambió)
         if (!existente.getUsername().equals(usuario.getUsername())) {
             if (usuarioRepository.existsByUsername(usuario.getUsername())) {
                 throw new IllegalArgumentException("El nombre de usuario ya existe");
             }
         }
 
-        // Validar email Ãºnico (si cambiÃ³)
+        // Validar email único (si cambió)
         if (!existente.getEmail().equals(usuario.getEmail())) {
             if (usuarioRepository.existsByEmail(usuario.getEmail())) {
-                throw new IllegalArgumentException("El email ya estÃ¡ registrado");
+                throw new IllegalArgumentException("El email ya está registrado");
             }
         }
 
-        // No permitir cambio de contraseÃ±a aquÃ­ (usar cambiarPassword)
+        // No permitir cambio de contraseña aquí (usar cambiarPassword)
         usuario.setPassword(existente.getPassword());
         usuario.setFechaCreacion(existente.getFechaCreacion());
 
@@ -106,21 +106,21 @@ public class UsuarioService {
     }
 
     /**
-     * Cambiar contraseÃ±a de un usuario
+     * Cambiar contraseña de un usuario
      */
     @Transactional
     public void cambiarPassword(Long usuarioId, String oldPassword, String newPassword) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        // Verificar contraseÃ±a anterior
+        // Verificar contraseña anterior
         if (!cifradoService.verificarPassword(oldPassword, usuario.getPassword())) {
             auditoriaService.registrarError(usuario, "Usuario", usuarioId.toString(),
-                    "Intento de cambio de contraseÃ±a fallido (contraseÃ±a incorrecta)");
-            throw new IllegalArgumentException("La contraseÃ±a actual es incorrecta");
+                    "Intento de cambio de contraseña fallido (contraseña incorrecta)");
+            throw new IllegalArgumentException("La contraseña actual es incorrecta");
         }
 
-        // Actualizar contraseÃ±a
+        // Actualizar contraseña
         usuario.setPassword(cifradoService.hashPassword(newPassword));
         usuario.setFechaCambioPassword(LocalDateTime.now());
         usuario.setRequiereCambioPassword(false);
@@ -128,9 +128,9 @@ public class UsuarioService {
 
         // Auditar
         auditoriaService.registrarAccion(usuario, "CAMBIO_PASSWORD", "Usuario", usuarioId.toString(),
-                "ContraseÃ±a cambiada exitosamente");
+                "Contraseña cambiada exitosamente");
 
-        log.info("ContraseÃ±a cambiada para usuario: {}", usuario.getUsername());
+        log.info("Contraseña cambiada para usuario: {}", usuario.getUsername());
     }
 
     /**
@@ -145,13 +145,13 @@ public class UsuarioService {
 
         Usuario usuario = usuarioOpt.get();
 
-        // Verificar si estÃ¡ bloqueado
+        // Verificar si está bloqueado
         if (Boolean.TRUE.equals(usuario.getBloqueado())) {
             log.warn("Intento de login en usuario bloqueado: {}", username);
             return false;
         }
 
-        // Verificar contraseÃ±a
+        // Verificar contraseña
         boolean valido = cifradoService.verificarPassword(password, usuario.getPassword());
 
         if (valido) {
@@ -256,12 +256,12 @@ public class UsuarioService {
         int intentos = (usuario.getIntentosFallidos() != null ? usuario.getIntentosFallidos() : 0) + 1;
         usuario.setIntentosFallidos(intentos);
 
-        // Bloquear si supera el mÃ¡ximo
+        // Bloquear si supera el máximo
         if (intentos >= MAX_INTENTOS_FALLIDOS) {
             usuario.setBloqueado(true);
             log.warn("Usuario bloqueado por {} intentos fallidos: {}", intentos, usuario.getUsername());
             auditoriaService.registrarAccion(usuario, "BLOQUEO_AUTOMATICO", "Usuario", usuarioId.toString(),
-                    "Usuario bloqueado automÃ¡ticamente por " + intentos + " intentos fallidos");
+                    "Usuario bloqueado automáticamente por " + intentos + " intentos fallidos");
         }
 
         usuarioRepository.save(usuario);
@@ -280,7 +280,7 @@ public class UsuarioService {
     }
 
     /**
-     * Generar token de recuperaciÃ³n de contraseÃ±a
+     * Generar token de recuperación de contraseña
      */
     @Transactional
     public String generarTokenRecuperacion(String email) {
@@ -289,25 +289,25 @@ public class UsuarioService {
 
         String token = cifradoService.generarTokenSeguro(TOKEN_LENGTH);
         usuario.setTokenRecuperacion(token);
-        usuario.setFechaExpiracionToken(LocalDateTime.now().plusHours(24)); // Token vÃ¡lido 24 horas
+        usuario.setFechaExpiracionToken(LocalDateTime.now().plusHours(24)); // Token válido 24 horas
         usuarioRepository.save(usuario);
 
         auditoriaService.registrarAccion(usuario, "TOKEN_RECUPERACION", "Usuario", usuario.getId().toString(),
-                "Token de recuperaciÃ³n generado");
+                "Token de recuperación generado");
 
-        log.info("Token de recuperaciÃ³n generado para: {}", email);
+        log.info("Token de recuperación generado para: {}", email);
         return token;
     }
 
     /**
-     * Recuperar contraseÃ±a usando token
+     * Recuperar contraseña usando token
      */
     @Transactional
     public void recuperarPassword(String token, String newPassword) {
         Usuario usuario = usuarioRepository.findByTokenRecuperacionValido(token)
-                .orElseThrow(() -> new IllegalArgumentException("Token invÃ¡lido o expirado"));
+                .orElseThrow(() -> new IllegalArgumentException("Token inválido o expirado"));
 
-        // Actualizar contraseÃ±a
+        // Actualizar contraseña
         usuario.setPassword(cifradoService.hashPassword(newPassword));
         usuario.setFechaCambioPassword(LocalDateTime.now());
         usuario.setTokenRecuperacion(null);
@@ -316,13 +316,13 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
 
         auditoriaService.registrarAccion(usuario, "RECUPERACION_PASSWORD", "Usuario", usuario.getId().toString(),
-                "ContraseÃ±a recuperada mediante token");
+                "Contraseña recuperada mediante token");
 
-        log.info("ContraseÃ±a recuperada para usuario: {}", usuario.getUsername());
+        log.info("Contraseña recuperada para usuario: {}", usuario.getUsername());
     }
 
     /**
-     * Actualizar Ãºltimo login
+     * Actualizar último login
      */
     @Transactional
     public void actualizarUltimoLogin(Long usuarioId) {

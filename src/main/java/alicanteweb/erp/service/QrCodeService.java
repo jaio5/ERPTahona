@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Servicio para generaciÃ³n de cÃ³digos QR
+ * Servicio para generación de códigos QR
  * Usado principalmente para VeriFactu
  */
 @Service
@@ -28,7 +28,7 @@ public class QrCodeService {
     private static final int QR_HEIGHT = 300;
 
     /**
-     * Genera un cÃ³digo QR a partir de un texto
+     * Genera un código QR a partir de un texto
      * @param texto Texto a codificar
      * @return Imagen QR en Base64
      */
@@ -37,15 +37,15 @@ public class QrCodeService {
     }
 
     /**
-     * Genera un cÃ³digo QR con tamaÃ±o personalizado
+     * Genera un código QR con tamño personalizado
      * @param texto Texto a codificar
-     * @param width Ancho en pÃ­xeles
-     * @param height Alto en pÃ­xeles
+     * @param width Ancho en píxeles
+     * @param height Alto en píxeles
      * @return Imagen QR en Base64
      */
     public String generarQR(String texto, int width, int height) {
         try {
-            // Configurar parÃ¡metros del QR
+            // Configurar parámetros del QR
             Map<EncodeHintType, Object> hints = new HashMap<>();
             hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
             hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
@@ -67,23 +67,23 @@ public class QrCodeService {
             return base64Image;
 
         } catch (WriterException | IOException e) {
-            log.error("Error generando cÃ³digo QR", e);
-            throw new RuntimeException("Error generando cÃ³digo QR", e);
+            log.error("Error generando código QR", e);
+            throw new RuntimeException("Error generando código QR", e);
         }
     }
 
     /**
-     * Genera un QR para VeriFactu con la URL de verificaciÃ³n de AEAT
+     * Genera un QR para VeriFactu con la URL de verificación de AEAT
      * @param hash Hash de la factura
      * @param nif NIF del emisor
-     * @param numeroFactura NÃºmero de factura
-     * @param fechaExpedicion Fecha de expediciÃ³n (formato dd-MM-yyyy)
+     * @param numeroFactura Número de factura
+     * @param fechaExpedicion Fecha de expedición (formato dd-MM-yyyy)
      * @param importeTotal Importe total de la factura
      * @return Imagen QR en Base64
      */
     public String generarQRVeriFactu(String hash, String nif, String numeroFactura,
                                      String fechaExpedicion, String importeTotal) {
-        // URL de verificaciÃ³n de AEAT
+        // URL de verificación de AEAT
         // Formato: https://www2.agenciatributaria.gob.es/wlpl/AVAC-FACT/verificar?hash=...&nif=...&numero=...&fecha=...&importe=...
         String url = String.format(
                 "https://www2.agenciatributaria.gob.es/wlpl/AVAC-FACT/verificar?hash=%s&nif=%s&numero=%s&fecha=%s&importe=%s",
@@ -104,9 +104,9 @@ public class QrCodeService {
     }
 
     /**
-     * Verifica si una cadena es un QR vÃ¡lido (tiene contenido)
+     * Verifica si una cadena es un QR válido (tiene contenido)
      * @param qrBase64 QR en Base64
-     * @return true si es vÃ¡lido
+     * @return true si es válido
      */
     public boolean esQRValido(String qrBase64) {
         if (qrBase64 == null || qrBase64.trim().isEmpty()) {
@@ -117,15 +117,15 @@ public class QrCodeService {
             byte[] decoded = Base64.getDecoder().decode(qrBase64);
             return decoded.length > 0;
         } catch (IllegalArgumentException e) {
-            log.warn("QR invÃ¡lido (no es Base64 vÃ¡lido)");
+            log.warn("QR inválido (no es Base64 válido)");
             return false;
         }
     }
 
     /**
-     * Obtiene el tamaÃ±o de un QR en bytes
+     * Obtiene el tamño de un QR en bytes
      * @param qrBase64 QR en Base64
-     * @return TamaÃ±o en bytes
+     * @return Tamño en bytes
      */
     public int obtenerTamanoQR(String qrBase64) {
         if (qrBase64 == null || qrBase64.trim().isEmpty()) {
@@ -143,7 +143,7 @@ public class QrCodeService {
     /**
      * Genera un QR para datos de contacto (vCard)
      * @param nombre Nombre
-     * @param telefono TelÃ©fono
+     * @param telefono Teléfono
      * @param email Email
      * @param empresa Empresa
      * @return Imagen QR en Base64
@@ -170,7 +170,7 @@ public class QrCodeService {
     /**
      * Genera un QR para WiFi
      * @param ssid Nombre de la red
-     * @param password ContraseÃ±a
+     * @param password Contraseña
      * @param tipo Tipo de seguridad (WPA, WEP, nopass)
      * @return Imagen QR en Base64
      */

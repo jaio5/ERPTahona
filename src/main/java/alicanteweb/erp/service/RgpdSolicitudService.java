@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Servicio de gestiÃ³n de solicitudes RGPD (derechos ARCO)
- * ARCO: Acceso, RectificaciÃ³n, CancelaciÃ³n (SupresiÃ³n), OposiciÃ³n
- * TambiÃ©n: Portabilidad y LimitaciÃ³n del tratamiento
+ * Servicio de gestión de solicitudes RGPD (derechos ARCO)
+ * ARCO: Acceso, Rectificación, Cancelación (Supresión), Oposición
+ * También: Portabilidad y Limitación del tratamiento
  */
 @Service
 @Slf4j
@@ -48,7 +48,7 @@ public class RgpdSolicitudService {
         solicitud.setTipoDerecho(tipoDerecho);
         solicitud.setEstado("PENDIENTE");
         solicitud.setFechaSolicitud(LocalDateTime.now());
-        // RGPD: mÃ¡ximo 1 mes (30 dÃ­as) para responder
+        // RGPD: máximo 1 mes (30 días) para responder
         solicitud.setFechaLimiteRespuesta(LocalDateTime.now().plusDays(30));
         solicitud.setDescripcion(descripcion);
         solicitud.setCanal(canal);
@@ -143,10 +143,10 @@ public class RgpdSolicitudService {
     }
 
     /**
-     * AÃ±adir notas internas
+     * Añadir notas internas
      */
     @Transactional
-    public void aÃ±adirNotas(Long solicitudId, Usuario usuario, String notas) {
+    public void anadirNotas(Long solicitudId, Usuario usuario, String notas) {
         RgpdSolicitud solicitud = solicitudRepository.findById(solicitudId)
                 .orElseThrow(() -> new IllegalArgumentException("Solicitud no encontrada"));
 
@@ -160,7 +160,7 @@ public class RgpdSolicitudService {
         }
 
         solicitudRepository.save(solicitud);
-        log.info("Notas aÃ±adidas a solicitud {}", solicitudId);
+        log.info("Notas ñadidas a solicitud {}", solicitudId);
     }
 
     /**
@@ -207,7 +207,7 @@ public class RgpdSolicitudService {
     }
 
     /**
-     * Obtener solicitudes prÃ³ximas a vencer (dentro de N dÃ­as)
+     * Obtener solicitudes próximas a vencer (dentro de N días)
      */
     public List<RgpdSolicitud> obtenerProximasAVencer(int dias) {
         LocalDateTime fechaLimite = LocalDateTime.now().plusDays(dias);
@@ -250,14 +250,14 @@ public class RgpdSolicitudService {
     }
 
     /**
-     * Obtener estadÃ­sticas por tipo de derecho
+     * Obtener estadísticas por tipo de derecho
      */
     public List<Object[]> obtenerEstadisticasPorTipoDerecho() {
         return solicitudRepository.estadisticasPorTipoDerecho();
     }
 
     /**
-     * Obtener estadÃ­sticas por estado
+     * Obtener estadísticas por estado
      */
     public List<Object[]> obtenerEstadisticasPorEstado() {
         return solicitudRepository.estadisticasPorEstado();
@@ -299,9 +299,9 @@ public class RgpdSolicitudService {
         datos.put("cliente_id", clienteId);
         datos.put("fecha_exportacion", LocalDateTime.now());
 
-        // AquÃ­ se agregarÃ­an todos los datos del cliente
+        // Aquí se agregarían todos los datos del cliente
         // Por ahora solo un placeholder
-        datos.put("nota", "Implementar exportaciÃ³n completa de datos del cliente");
+        datos.put("nota", "Implementar exportación completa de datos del cliente");
 
         return datos;
     }
@@ -317,9 +317,9 @@ public class RgpdSolicitudService {
         auditoriaService.registrarAccion(usuario, "ANONIMIZACION_CLIENTE", "Cliente",
                 clienteId.toString(), "Datos anonimizados por derecho al olvido");
 
-        // AquÃ­ se implementarÃ­a la lÃ³gica de anonimizaciÃ³n
+        // Aquí se implementaría la lógica de anonimización
         // Por ahora solo un placeholder
-        log.warn("IMPLEMENTAR: AnonimizaciÃ³n completa de datos del cliente");
+        log.warn("IMPLEMENTAR: Anonimización completa de datos del cliente");
     }
 }
 

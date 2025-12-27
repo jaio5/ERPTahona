@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Servicio de gestiÃ³n de accesos a datos personales (RGPD)
+ * Servicio de gestión de accesos a datos personales (RGPD)
  */
 @Service
 @Slf4j
@@ -54,12 +54,12 @@ public class RgpdAccesoDatosService {
                     usuario != null ? usuario.getUsername() : "SISTEMA");
         } catch (Exception e) {
             log.error("Error registrando acceso a datos", e);
-            // No propagar excepciÃ³n para no afectar operaciÃ³n principal
+            // No propagar excepción para no afectar operación principal
         }
     }
 
     /**
-     * Registrar acceso con campos especÃ­ficos
+     * Registrar acceso con campos específicos
      */
     @Transactional
     public void registrarAccesoConCampos(Usuario usuario, Cliente cliente, String tipoAcceso,
@@ -114,7 +114,7 @@ public class RgpdAccesoDatosService {
     }
 
     /**
-     * Obtener accesos por mÃ³dulo
+     * Obtener accesos por módulo
      */
     public List<RgpdAccesoDatos> obtenerPorModulo(String modulo) {
         return accesoDatosRepository.findByModuloOrderByFechaAccesoDesc(modulo);
@@ -148,7 +148,7 @@ public class RgpdAccesoDatosService {
     }
 
     /**
-     * Obtener accesos recientes (Ãºltimas 24 horas)
+     * Obtener accesos recientes (últimas 24 horas)
      */
     public List<RgpdAccesoDatos> obtenerAccesosRecientes() {
         LocalDateTime hace24h = LocalDateTime.now().minusHours(24);
@@ -177,14 +177,14 @@ public class RgpdAccesoDatosService {
     }
 
     /**
-     * Obtener estadÃ­sticas por mÃ³dulo
+     * Obtener estadísticas por módulo
      */
     public List<Object[]> obtenerEstadisticasPorModulo() {
         return accesoDatosRepository.estadisticasPorModulo();
     }
 
     /**
-     * Obtener estadÃ­sticas por usuario
+     * Obtener estadísticas por usuario
      */
     public List<Object[]> obtenerEstadisticasPorUsuario() {
         return accesoDatosRepository.estadisticasPorUsuario();
@@ -202,7 +202,7 @@ public class RgpdAccesoDatosService {
         informe.put("fecha_generacion", LocalDateTime.now());
         informe.put("accesos", accesos);
 
-        // EstadÃ­sticas
+        // Estadísticas
         Map<String, Long> porTipo = new HashMap<>();
         Map<String, Long> porModulo = new HashMap<>();
         Map<String, Long> porUsuario = new HashMap<>();
@@ -212,7 +212,7 @@ public class RgpdAccesoDatosService {
             String tipo = acceso.getTipoAcceso();
             porTipo.put(tipo, porTipo.getOrDefault(tipo, 0L) + 1);
 
-            // Por mÃ³dulo
+            // Por módulo
             String modulo = acceso.getModulo();
             if (modulo != null) {
                 porModulo.put(modulo, porModulo.getOrDefault(modulo, 0L) + 1);

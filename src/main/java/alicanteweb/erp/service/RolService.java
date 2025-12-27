@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Servicio de gestiÃ³n de roles
+ * Servicio de gestión de roles
  */
 @Service
 @Slf4j
@@ -65,7 +65,7 @@ public class RolService {
             throw new IllegalArgumentException("No se pueden modificar roles del sistema");
         }
 
-        // Validar nombre Ãºnico (si cambiÃ³)
+        // Validar nombre único (si cambió)
         if (!existente.getNombre().equals(rol.getNombre())) {
             if (rolRepository.existsByNombre(rol.getNombre())) {
                 throw new IllegalArgumentException("Ya existe un rol con ese nombre");
@@ -208,7 +208,7 @@ public class RolService {
     }
 
     /**
-     * Verificar si un rol tiene un permiso especÃ­fico
+     * Verificar si un rol tiene un permiso específico
      */
     public boolean tienePermiso(Long rolId, String modulo, String accion) {
         Optional<Rol> rolOpt = rolRepository.findById(rolId);

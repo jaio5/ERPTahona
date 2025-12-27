@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 /**
- * Servicio de autenticaciÃ³n y gestiÃ³n de sesiÃ³n
+ * Servicio de autenticación y gestión de sesión
  */
 @Service
 @Slf4j
@@ -16,7 +16,7 @@ public class AutenticacionService {
     private final UsuarioService usuarioService;
     private final AuditoriaService auditoriaService;
 
-    // Usuario actualmente autenticado (sesiÃ³n)
+    // Usuario actualmente autenticado (sesión)
     private Usuario usuarioActual;
 
     public AutenticacionService(UsuarioService usuarioService, AuditoriaService auditoriaService) {
@@ -27,8 +27,8 @@ public class AutenticacionService {
     /**
      * Realiza el login de un usuario
      * @param username Nombre de usuario
-     * @param password ContraseÃ±a en texto plano
-     * @return Usuario si las credenciales son vÃ¡lidas, null si no
+     * @param password Contraseña en texto plano
+     * @return Usuario si las credenciales son válidas, null si no
      */
     public Usuario login(String username, String password) {
         log.info("Intento de login: {}", username);
@@ -45,7 +45,7 @@ public class AutenticacionService {
 
         Usuario usuario = usuarioOpt.get();
 
-        // Verificar si estÃ¡ activo
+        // Verificar si está activo
         if (!Boolean.TRUE.equals(usuario.getActivo())) {
             log.warn("Usuario inactivo: {}", username);
             auditoriaService.registrarError(usuario, "Usuario", usuario.getId().toString(),
@@ -53,7 +53,7 @@ public class AutenticacionService {
             return null;
         }
 
-        // Verificar si estÃ¡ bloqueado
+        // Verificar si está bloqueado
         if (Boolean.TRUE.equals(usuario.getBloqueado())) {
             log.warn("Usuario bloqueado: {}", username);
             auditoriaService.registrarError(usuario, "Usuario", usuario.getId().toString(),
@@ -65,7 +65,7 @@ public class AutenticacionService {
         boolean credencialesValidas = usuarioService.validarCredenciales(username, password);
 
         if (!credencialesValidas) {
-            log.warn("Credenciales invÃ¡lidas para: {}", username);
+            log.warn("Credenciales inválidas para: {}", username);
             auditoriaService.registrarLogin(usuario, null, false);
             return null;
         }
@@ -92,7 +92,7 @@ public class AutenticacionService {
 
     /**
      * Obtiene el usuario actualmente autenticado
-     * @return Usuario actual o null si no hay sesiÃ³n
+     * @return Usuario actual o null si no hay sesión
      */
     public Usuario getUsuarioActual() {
         return usuarioActual;
@@ -100,16 +100,16 @@ public class AutenticacionService {
 
     /**
      * Verifica si hay un usuario autenticado
-     * @return true si hay sesiÃ³n activa
+     * @return true si hay sesión activa
      */
     public boolean haySesionActiva() {
         return usuarioActual != null;
     }
 
     /**
-     * Verifica si el usuario actual tiene un permiso especÃ­fico
-     * @param modulo MÃ³dulo a verificar (ej: "clientes", "facturas")
-     * @param accion AcciÃ³n a verificar (ej: "ver", "crear", "editar", "eliminar")
+     * Verifica si el usuario actual tiene un permiso específico
+     * @param modulo Módulo a verificar (ej: "clientes", "facturas")
+     * @param accion Acción a verificar (ej: "ver", "crear", "editar", "eliminar")
      * @return true si tiene el permiso
      */
     public boolean tienePermiso(String modulo, String accion) {
@@ -160,7 +160,7 @@ public class AutenticacionService {
 
     /**
      * Obtiene el nombre del usuario actual
-     * @return Nombre del usuario o "Invitado" si no hay sesiÃ³n
+     * @return Nombre del usuario o "Invitado" si no hay sesión
      */
     public String getNombreUsuarioActual() {
         if (usuarioActual == null) {
@@ -172,34 +172,34 @@ public class AutenticacionService {
 
     /**
      * Obtiene el ID del usuario actual
-     * @return ID del usuario o null si no hay sesiÃ³n
+     * @return ID del usuario o null si no hay sesión
      */
     public Long getIdUsuarioActual() {
         return usuarioActual != null ? usuarioActual.getId() : null;
     }
 
     /**
-     * Verifica que haya sesiÃ³n activa, lanza excepciÃ³n si no
+     * Verifica que haya sesión activa, lanza excepción si no
      */
     public void verificarSesion() {
         if (!haySesionActiva()) {
-            throw new IllegalStateException("No hay sesiÃ³n activa. Por favor, inicie sesiÃ³n.");
+            throw new IllegalStateException("No hay sesión activa. Por favor, inicie sesión.");
         }
     }
 
     /**
-     * Verifica que el usuario tenga un permiso, lanza excepciÃ³n si no
+     * Verifica que el usuario tenga un permiso, lanza excepción si no
      */
     public void verificarPermiso(String modulo, String accion) {
         verificarSesion();
         if (!tienePermiso(modulo, accion)) {
-            throw new SecurityException("No tiene permisos para realizar esta acciÃ³n: " +
+            throw new SecurityException("No tiene permisos para realizar esta acción: " +
                     modulo + " - " + accion);
         }
     }
 
     /**
-     * Establece manualmente el usuario actual (Ãºtil para testing)
+     * Establece manualmente el usuario actual (útil para testing)
      */
     public void setUsuarioActual(Usuario usuario) {
         this.usuarioActual = usuario;

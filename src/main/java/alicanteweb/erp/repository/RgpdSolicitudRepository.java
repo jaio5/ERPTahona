@@ -46,13 +46,13 @@ public interface RgpdSolicitudRepository extends JpaRepository<RgpdSolicitud, Lo
     List<RgpdSolicitud> findByUsuarioResponsableIdOrderByFechaSolicitudDesc(Long usuarioId);
 
     /**
-     * Buscar solicitudes con fecha lÃ­mite prÃ³xima (dentro de los prÃ³ximos N dÃ­as)
+     * Buscar solicitudes con fecha límite próxima (dentro de los próximos N días)
      */
     @Query("SELECT s FROM RgpdSolicitud s WHERE s.fechaLimiteRespuesta <= :fecha AND s.estado IN ('PENDIENTE', 'EN_PROCESO') ORDER BY s.fechaLimiteRespuesta ASC")
     List<RgpdSolicitud> findProximasAVencer(@Param("fecha") LocalDateTime fecha);
 
     /**
-     * Buscar solicitudes vencidas (pasada la fecha lÃ­mite y sin resolver)
+     * Buscar solicitudes vencidas (pasada la fecha límite y sin resolver)
      */
     @Query("SELECT s FROM RgpdSolicitud s WHERE s.fechaLimiteRespuesta < CURRENT_TIMESTAMP AND s.estado IN ('PENDIENTE', 'EN_PROCESO') ORDER BY s.fechaLimiteRespuesta ASC")
     List<RgpdSolicitud> findVencidas();
@@ -81,13 +81,13 @@ public interface RgpdSolicitudRepository extends JpaRepository<RgpdSolicitud, Lo
     long countVencidas();
 
     /**
-     * EstadÃ­sticas por tipo de derecho
+     * Estadísticas por tipo de derecho
      */
     @Query("SELECT s.tipoDerecho, COUNT(s) FROM RgpdSolicitud s GROUP BY s.tipoDerecho ORDER BY COUNT(s) DESC")
     List<Object[]> estadisticasPorTipoDerecho();
 
     /**
-     * EstadÃ­sticas por estado
+     * Estadísticas por estado
      */
     @Query("SELECT s.estado, COUNT(s) FROM RgpdSolicitud s GROUP BY s.estado ORDER BY COUNT(s) DESC")
     List<Object[]> estadisticasPorEstado();

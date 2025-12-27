@@ -39,7 +39,7 @@ public class ErpLauncher extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        log.info("Iniciando aplicaciÃ³n JavaFX...");
+        log.info("Iniciando aplicación JavaFX...");
         try {
             // Cargar pantalla de login primero
             log.info("Cargando vista de login: /ui/login.fxml");
@@ -48,7 +48,7 @@ public class ErpLauncher extends Application {
             Parent root = loader.load();
 
             Scene scene = new Scene(root);
-            stage.setTitle("ERP PanaderÃ­a Tahona - Iniciar SesiÃ³n");
+            stage.setTitle("ERP Panadería Tahona - Iniciar Sesión");
             stage.setScene(scene);
             stage.setResizable(false); // Login no redimensionable
             stage.centerOnScreen();
@@ -56,8 +56,8 @@ public class ErpLauncher extends Application {
 
             log.info("Pantalla de login cargada correctamente");
         } catch (Throwable t) {
-            log.error("Error crÃ­tico al iniciar la aplicaciÃ³n JavaFX", t);
-            // Guardar traza en archivo para diagnÃ³stico local
+            log.error("Error crítico al iniciar la aplicación JavaFX", t);
+            // Guardar traza en archivo para diagnóstico local
             try {
                 StringWriter sw = new StringWriter();
                 t.printStackTrace(new PrintWriter(sw));
@@ -68,24 +68,24 @@ public class ErpLauncher extends Application {
             } catch (IOException ioe) {
                 log.error("Error al escribir run_error.log", ioe);
             }
-            // Re-lanzar para que la aplicaciÃ³n falle con excepciÃ³n visible
+            // Re-lanzar para que la aplicación falle con excepción visible
             throw t;
         }
     }
 
     @Override
     public void stop() {
-        log.info("Deteniendo aplicaciÃ³n...");
+        log.info("Deteniendo aplicación...");
         if (springContext != null) {
             springContext.close();
             log.info("Contexto de Spring cerrado");
         }
         Platform.exit();
-        log.info("AplicaciÃ³n detenida");
+        log.info("Aplicación detenida");
     }
 
     public static void main(String[] args) {
-        log.info("Lanzando aplicaciÃ³n ERP PanaderÃ­a Tahona...");
+        log.info("Lanzando aplicación ERP Panadería Tahona...");
         Application.launch(ErpLauncher.class, args);
     }
 }

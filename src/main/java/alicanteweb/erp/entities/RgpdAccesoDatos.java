@@ -14,7 +14,7 @@ import java.util.Map;
 
 /**
  * Registro de accesos a datos personales
- * Para cumplir con el derecho de informaciÃ³n del RGPD
+ * Para cumplir con el derecho de información del RGPD
  */
 @Getter
 @Setter
@@ -32,7 +32,7 @@ public class RgpdAccesoDatos {
     private Long id;
 
     /**
-     * Usuario que accediÃ³ a los datos
+     * Usuario que accedió a los datos
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
@@ -61,14 +61,14 @@ public class RgpdAccesoDatos {
     private LocalDateTime fechaAcceso;
 
     /**
-     * IP desde la que se accediÃ³
+     * IP desde la que se accedió
      */
     @Size(max = 45)
     @Column(name = "ip", length = 45)
     private String ip;
 
     /**
-     * MÃ³dulo o pantalla desde donde se accediÃ³
+     * Módulo o pantalla desde donde se accedió
      */
     @Size(max = 100)
     @Column(name = "modulo", length = 100)
@@ -81,7 +81,7 @@ public class RgpdAccesoDatos {
     private String motivo;
 
     /**
-     * Campos especÃ­ficos accedidos (JSON)
+     * Campos específicos accedidos (JSON)
      */
     @Column(name = "campos_accedidos")
     @JdbcTypeCode(SqlTypes.JSON)

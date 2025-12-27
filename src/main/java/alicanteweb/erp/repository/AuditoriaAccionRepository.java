@@ -16,54 +16,54 @@ import java.util.List;
 public interface AuditoriaAccionRepository extends JpaRepository<AuditoriaAccion, Long> {
 
     /**
-     * Buscar auditorÃ­as por usuario
+     * Buscar auditorías por usuario
      */
     List<AuditoriaAccion> findByUsuarioIdOrderByFechaDesc(Long usuarioId);
 
     /**
-     * Buscar auditorÃ­as por tipo de acciÃ³n
+     * Buscar auditorías por tipo de acción
      */
     List<AuditoriaAccion> findByTipoAccionOrderByFechaDesc(String tipoAccion);
 
     /**
-     * Buscar auditorÃ­as por entidad
+     * Buscar auditorías por entidad
      */
     List<AuditoriaAccion> findByEntidadTipoAndEntidadIdOrderByFechaDesc(String entidadTipo, String entidadId);
 
     /**
-     * Buscar auditorÃ­as por mÃ³dulo
+     * Buscar auditorías por módulo
      */
     List<AuditoriaAccion> findByModuloOrderByFechaDesc(String modulo);
 
     /**
-     * Buscar auditorÃ­as por rango de fechas
+     * Buscar auditorías por rango de fechas
      */
     List<AuditoriaAccion> findByFechaBetweenOrderByFechaDesc(LocalDateTime inicio, LocalDateTime fin);
 
     /**
-     * Buscar auditorÃ­as por usuario y rango de fechas
+     * Buscar auditorías por usuario y rango de fechas
      */
     List<AuditoriaAccion> findByUsuarioIdAndFechaBetweenOrderByFechaDesc(
         Long usuarioId, LocalDateTime inicio, LocalDateTime fin);
 
     /**
-     * Buscar auditorÃ­as por resultado
+     * Buscar auditorías por resultado
      */
     List<AuditoriaAccion> findByResultadoOrderByFechaDesc(String resultado);
 
     /**
-     * Buscar auditorÃ­as con errores
+     * Buscar auditorías con errores
      */
     List<AuditoriaAccion> findByResultadoInOrderByFechaDesc(List<String> resultados);
 
     /**
-     * Buscar auditorÃ­as recientes (Ãºltimas N horas)
+     * Buscar auditorías recientes (últimas N horas)
      */
     @Query("SELECT a FROM AuditoriaAccion a WHERE a.fecha >= :fecha ORDER BY a.fecha DESC")
     List<AuditoriaAccion> findRecientes(@Param("fecha") LocalDateTime fecha);
 
     /**
-     * Buscar auditorÃ­as de un mÃ³dulo por usuario
+     * Buscar auditorías de un módulo por usuario
      */
     List<AuditoriaAccion> findByUsuarioIdAndModuloOrderByFechaDesc(Long usuarioId, String modulo);
 
@@ -78,30 +78,30 @@ public interface AuditoriaAccionRepository extends JpaRepository<AuditoriaAccion
     long countByTipoAccion(String tipoAccion);
 
     /**
-     * Contar acciones por mÃ³dulo
+     * Contar acciones por módulo
      */
     long countByModulo(String modulo);
 
     /**
-     * EstadÃ­sticas por mÃ³dulo
+     * Estadísticas por módulo
      */
     @Query("SELECT a.modulo, COUNT(a) FROM AuditoriaAccion a GROUP BY a.modulo ORDER BY COUNT(a) DESC")
     List<Object[]> estadisticasPorModulo();
 
     /**
-     * EstadÃ­sticas por usuario
+     * Estadísticas por usuario
      */
     @Query("SELECT u.username, COUNT(a) FROM AuditoriaAccion a JOIN a.usuario u GROUP BY u.username ORDER BY COUNT(a) DESC")
     List<Object[]> estadisticasPorUsuario();
 
     /**
-     * EstadÃ­sticas por acciÃ³n
+     * Estadísticas por acción
      */
     @Query("SELECT a.tipoAccion, COUNT(a) FROM AuditoriaAccion a GROUP BY a.tipoAccion ORDER BY COUNT(a) DESC")
     List<Object[]> estadisticasPorAccion();
 
     /**
-     * EstadÃ­sticas por resultado
+     * Estadísticas por resultado
      */
     @Query("SELECT a.resultado, COUNT(a) FROM AuditoriaAccion a GROUP BY a.resultado")
     List<Object[]> estadisticasPorResultado();

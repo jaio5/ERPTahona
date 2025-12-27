@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Servicio de auditorÃ­a de acciones
+ * Servicio de auditoría de acciones
  * Registra todas las operaciones realizadas en el sistema para cumplimiento RGPD
  */
 @Service
@@ -26,7 +26,7 @@ public class AuditoriaService {
     }
 
     /**
-     * Registra una acciÃ³n genÃ©rica en el sistema
+     * Registra una acción genérica en el sistema
      */
     @Transactional
     public void registrarAccion(Usuario usuario, String tipoAccion, String entidadTipo,
@@ -35,7 +35,7 @@ public class AuditoriaService {
     }
 
     /**
-     * Registra una acciÃ³n completa con todos los detalles
+     * Registra una acción completa con todos los detalles
      */
     @Transactional
     public void registrarAccion(Usuario usuario, String tipoAccion, String entidadTipo,
@@ -56,13 +56,13 @@ public class AuditoriaService {
             auditoria.setResultado("EXITO");
 
             // IP y User Agent se pueden obtener del contexto web si existe
-            // Por ahora lo dejamos null para aplicaciÃ³n de escritorio
+            // Por ahora lo dejamos null para aplicación de escritorio
 
             auditoriaRepository.save(auditoria);
-            log.debug("AcciÃ³n auditada: {} - {} - {}", tipoAccion, entidadTipo, descripcion);
+            log.debug("Acción auditada: {} - {} - {}", tipoAccion, entidadTipo, descripcion);
         } catch (Exception e) {
-            log.error("Error registrando auditorÃ­a", e);
-            // No propagar la excepciÃ³n para no afectar la operaciÃ³n principal
+            log.error("Error registrando auditoría", e);
+            // No propagar la excepción para no afectar la operación principal
         }
     }
 
@@ -91,7 +91,7 @@ public class AuditoriaService {
     @Transactional
     public void registrarLogout(Usuario usuario) {
         registrarAccion(usuario, "LOGOUT", null, null,
-                "Usuario cerrÃ³ sesiÃ³n", "AUTENTICACION", null, null);
+                "Usuario cerró sesión", "AUTENTICACION", null, null);
     }
 
     /**
@@ -113,7 +113,7 @@ public class AuditoriaService {
     }
 
     /**
-     * Registra una creaciÃ³n de entidad
+     * Registra una creación de entidad
      */
     @Transactional
     public void registrarCreacion(Usuario usuario, String entidadTipo, String entidadId, String descripcion) {
@@ -121,7 +121,7 @@ public class AuditoriaService {
     }
 
     /**
-     * Registra una actualizaciÃ³n de entidad
+     * Registra una actualización de entidad
      */
     @Transactional
     public void registrarActualizacion(Usuario usuario, String entidadTipo, String entidadId, String descripcion) {
@@ -129,7 +129,7 @@ public class AuditoriaService {
     }
 
     /**
-     * Registra una actualizaciÃ³n con valores anteriores y nuevos
+     * Registra una actualización con valores anteriores y nuevos
      */
     @Transactional
     public void registrarCambio(Usuario usuario, String entidadTipo, String entidadId,
@@ -139,7 +139,7 @@ public class AuditoriaService {
     }
 
     /**
-     * Registra una eliminaciÃ³n de entidad
+     * Registra una eliminación de entidad
      */
     @Transactional
     public void registrarEliminacion(Usuario usuario, String entidadTipo, String entidadId, String descripcion) {
@@ -167,7 +167,7 @@ public class AuditoriaService {
     }
 
     /**
-     * Registra una exportaciÃ³n de datos
+     * Registra una exportación de datos
      */
     @Transactional
     public void registrarExportacion(Usuario usuario, String tipoExportacion, String descripcion) {
@@ -175,7 +175,7 @@ public class AuditoriaService {
     }
 
     /**
-     * Registra una impresiÃ³n
+     * Registra una impresión
      */
     @Transactional
     public void registrarImpresion(Usuario usuario, String tipoDocumento, String documentoId, String descripcion) {
@@ -204,14 +204,14 @@ public class AuditoriaService {
     }
 
     /**
-     * Obtiene acciones por mÃ³dulo
+     * Obtiene acciones por módulo
      */
     public List<AuditoriaAccion> obtenerPorModulo(String modulo) {
         return auditoriaRepository.findByModuloOrderByFechaDesc(modulo);
     }
 
     /**
-     * Obtiene acciones recientes (Ãºltimas 24 horas)
+     * Obtiene acciones recientes (últimas 24 horas)
      */
     public List<AuditoriaAccion> obtenerRecientes() {
         return auditoriaRepository.findRecientes(LocalDateTime.now().minusHours(24));
@@ -239,21 +239,21 @@ public class AuditoriaService {
     }
 
     /**
-     * Obtiene estadÃ­sticas por mÃ³dulo
+     * Obtiene estadísticas por módulo
      */
     public List<Object[]> obtenerEstadisticasPorModulo() {
         return auditoriaRepository.estadisticasPorModulo();
     }
 
     /**
-     * Obtiene estadÃ­sticas por usuario
+     * Obtiene estadísticas por usuario
      */
     public List<Object[]> obtenerEstadisticasPorUsuario() {
         return auditoriaRepository.estadisticasPorUsuario();
     }
 
     /**
-     * Obtiene estadÃ­sticas por acciÃ³n
+     * Obtiene estadísticas por acción
      */
     public List<Object[]> obtenerEstadisticasPorAccion() {
         return auditoriaRepository.estadisticasPorAccion();
@@ -274,7 +274,7 @@ public class AuditoriaService {
     }
 
     /**
-     * Cuenta acciones por mÃ³dulo
+     * Cuenta acciones por módulo
      */
     public long contarPorModulo(String modulo) {
         return auditoriaRepository.countByModulo(modulo);

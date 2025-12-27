@@ -31,7 +31,7 @@ public interface RgpdAccesoDatosRepository extends JpaRepository<RgpdAccesoDatos
     List<RgpdAccesoDatos> findByTipoAccesoOrderByFechaAccesoDesc(String tipoAcceso);
 
     /**
-     * Buscar accesos por mÃ³dulo
+     * Buscar accesos por módulo
      */
     List<RgpdAccesoDatos> findByModuloOrderByFechaAccesoDesc(String modulo);
 
@@ -54,7 +54,7 @@ public interface RgpdAccesoDatosRepository extends JpaRepository<RgpdAccesoDatos
         Long usuarioId, LocalDateTime inicio, LocalDateTime fin);
 
     /**
-     * Buscar accesos recientes (Ãºltimas 24 horas)
+     * Buscar accesos recientes (últimas 24 horas)
      */
     @Query("SELECT a FROM RgpdAccesoDatos a WHERE a.fechaAcceso >= :fecha ORDER BY a.fechaAcceso DESC")
     List<RgpdAccesoDatos> findAccesosRecientes(@Param("fecha") LocalDateTime fecha);
@@ -75,13 +75,13 @@ public interface RgpdAccesoDatosRepository extends JpaRepository<RgpdAccesoDatos
     long countByTipoAcceso(String tipoAcceso);
 
     /**
-     * EstadÃ­sticas de accesos por mÃ³dulo
+     * Estadísticas de accesos por módulo
      */
     @Query("SELECT a.modulo, COUNT(a) FROM RgpdAccesoDatos a GROUP BY a.modulo ORDER BY COUNT(a) DESC")
     List<Object[]> estadisticasPorModulo();
 
     /**
-     * EstadÃ­sticas de accesos por usuario
+     * Estadísticas de accesos por usuario
      */
     @Query("SELECT u.username, COUNT(a) FROM RgpdAccesoDatos a JOIN a.usuario u GROUP BY u.username ORDER BY COUNT(a) DESC")
     List<Object[]> estadisticasPorUsuario();

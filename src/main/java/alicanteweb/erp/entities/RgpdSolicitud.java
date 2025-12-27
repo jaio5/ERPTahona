@@ -13,11 +13,11 @@ import java.time.LocalDateTime;
 /**
  * Solicitudes de ejercicio de derechos RGPD (ARCO)
  * - Acceso
- * - RectificaciÃ³n
- * - CancelaciÃ³n / SupresiÃ³n
- * - OposiciÃ³n
+ * - Rectificación
+ * - Cancelación / Supresión
+ * - Oposición
  * - Portabilidad
- * - LimitaciÃ³n del tratamiento
+ * - Limitación del tratamiento
  */
 @Getter
 @Setter
@@ -79,7 +79,7 @@ public class RgpdSolicitud {
     private LocalDateTime fechaSolicitud;
 
     /**
-     * Fecha lÃ­mite de respuesta (mÃ¡ximo 1 mes segÃºn RGPD)
+     * Fecha límite de respuesta (máximo 1 mes según RGPD)
      */
     @NotNull
     @Column(name = "fecha_limite_respuesta", nullable = false)
@@ -92,7 +92,7 @@ public class RgpdSolicitud {
     private LocalDateTime fechaRespuesta;
 
     /**
-     * DescripciÃ³n de la solicitud
+     * Descripción de la solicitud
      */
     @Column(name = "descripcion", columnDefinition = "TEXT")
     private String descripcion;
@@ -111,21 +111,21 @@ public class RgpdSolicitud {
     private Usuario usuarioResponsable;
 
     /**
-     * IP desde la que se realizÃ³ la solicitud
+     * IP desde la que se realizó la solicitud
      */
     @Size(max = 45)
     @Column(name = "ip_origen", length = 45)
     private String ipOrigen;
 
     /**
-     * Canal por el que se recibiÃ³ la solicitud
+     * Canal por el que se recibió la solicitud
      */
     @Size(max = 50)
     @Column(name = "canal", length = 50)
     private String canal; // WEB, EMAIL, PRESENCIAL, TELEFONO, CORREO_POSTAL
 
     /**
-     * Documento de identificaciÃ³n verificado
+     * Documento de identificación verificado
      */
     @ColumnDefault("false")
     @Column(name = "identidad_verificada")
@@ -150,7 +150,7 @@ public class RgpdSolicitud {
             fechaSolicitud = LocalDateTime.now();
         }
         if (fechaLimiteRespuesta == null) {
-            // RGPD establece mÃ¡ximo 1 mes (30 dÃ­as)
+            // RGPD establece máximo 1 mes (30 días)
             fechaLimiteRespuesta = fechaSolicitud.plusDays(30);
         }
         if (estado == null || estado.isEmpty()) {

@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Entidad Rol para sistema de autorizaciÃ³n
+ * Entidad Rol para sistema de autorización
  */
 @Getter
 @Setter
@@ -36,7 +36,7 @@ public class Rol {
     private String nombre; // ADMINISTRADOR, GERENTE, VENDEDOR, ALMACEN, CONTABLE, etc.
 
     /**
-     * DescripciÃ³n del rol
+     * Descripción del rol
      */
     @Size(max = 255)
     @Column(name = "descripcion")

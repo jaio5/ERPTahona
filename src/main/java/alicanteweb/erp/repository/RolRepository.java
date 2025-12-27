@@ -51,7 +51,7 @@ public interface RolRepository extends JpaRepository<Rol, Long> {
     List<Rol> findByEsSistemaFalseAndActivoTrue();
 
     /**
-     * BÃºsqueda flexible
+     * Búsqueda flexible
      */
     @Query("SELECT r FROM Rol r WHERE " +
            "LOWER(r.nombre) LIKE LOWER(CONCAT('%', :search, '%')) OR " +

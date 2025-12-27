@@ -15,7 +15,7 @@ import java.util.Map;
 
 /**
  * Entidad para gestionar consentimientos RGPD
- * Cumplimiento con RGPD (UE 2016/679) y LOPDGDD (Ley OrgÃ¡nica 3/2018)
+ * Cumplimiento con RGPD (UE 2016/679) y LOPDGDD (Ley Orgánica 3/2018)
  */
 @Getter
 @Setter

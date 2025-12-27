@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * Entidad para auditorÃ­a de todas las acciones en el sistema
+ * Entidad para auditoría de todas las acciones en el sistema
  * Cumplimiento RGPD y trazabilidad completa
  */
 @Getter
@@ -31,7 +31,7 @@ public class AuditoriaAccion {
     private Long id;
 
     /**
-     * Usuario que realizÃ³ la acciÃ³n
+     * Usuario que realizó la acción
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
@@ -45,7 +45,7 @@ public class AuditoriaAccion {
     private String usuarioNombre;
 
     /**
-     * Tipo de acciÃ³n
+     * Tipo de acción
      */
     @NotNull
     @Size(max = 50)
@@ -53,7 +53,7 @@ public class AuditoriaAccion {
     private String tipoAccion; // CREAR, LEER, ACTUALIZAR, ELIMINAR, LOGIN, LOGOUT, EXPORTAR, IMPRIMIR
 
     /**
-     * Fecha y hora de la acciÃ³n
+     * Fecha y hora de la acción
      */
     @NotNull
     @Column(name = "fecha", nullable = false)
@@ -74,20 +74,20 @@ public class AuditoriaAccion {
     private String entidadId;
 
     /**
-     * DescripciÃ³n de la acciÃ³n
+     * Descripción de la acción
      */
     @Column(name = "descripcion", columnDefinition = "TEXT")
     private String descripcion;
 
     /**
-     * MÃ³dulo de la aplicaciÃ³n
+     * Módulo de la aplicación
      */
     @Size(max = 100)
     @Column(name = "modulo", length = 100)
     private String modulo; // CLIENTES, FACTURAS, ARTICULOS, CONFIGURACION, etc.
 
     /**
-     * IP desde la que se realizÃ³ la acciÃ³n
+     * IP desde la que se realizó la acción
      */
     @Size(max = 45)
     @Column(name = "ip", length = 45)
@@ -115,7 +115,7 @@ public class AuditoriaAccion {
     private Map<String, Object> valoresNuevos;
 
     /**
-     * Resultado de la acciÃ³n
+     * Resultado de la acción
      */
     @Size(max = 20)
     @Column(name = "resultado", length = 20)

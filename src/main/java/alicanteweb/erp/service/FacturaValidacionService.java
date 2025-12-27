@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Servicio de validaciÃ³n de facturas segÃºn normativa espaÃ±ola
- * RD 1619/2012 - Reglamento de facturaciÃ³n
+ * Servicio de validación de facturas según normativa espñola
+ * RD 1619/2012 - Reglamento de facturación
  */
 @Service
 @Slf4j
@@ -29,56 +29,56 @@ public class FacturaValidacionService {
     }
 
     /**
-     * Valida una factura antes de emisiÃ³n
-     * @return Lista de errores (vacÃ­a si vÃ¡lida)
+     * Valida una factura antes de emisión
+     * @return Lista de errores (vacía si válida)
      */
     public List<String> validarParaEmision(Factura factura) {
-        log.info("Validando factura {} para emisiÃ³n", factura.getNumero());
+        log.info("Validando factura {} para emisión", factura.getNumero());
 
         List<String> errores = new ArrayList<>();
 
-        // 1. Validaciones bÃ¡sicas obligatorias (RD 1619/2012 Art. 6)
+        // 1. Validaciones básicas obligatorias (RD 1619/2012 Art. 6)
         validarCamposObligatorios(factura, errores);
 
         // 2. Validar cliente
         validarCliente(factura, errores);
 
-        // 3. Validar lÃ­neas de factura
+        // 3. Validar líneas de factura
         validarLineas(factura, errores);
 
         // 4. Validar importes
         validarImportes(factura, errores);
 
-        // 5. Validar numeraciÃ³n
+        // 5. Validar numeración
         validarNumeracion(factura, errores);
 
-        // 6. Validar segÃºn tipo de factura
+        // 6. Validar según tipo de factura
         validarSegunTipo(factura, errores);
 
-        // 7. Validar VeriFactu si estÃ¡ habilitado
+        // 7. Validar VeriFactu si está habilitado
         validarVeriFactu(factura, errores);
 
         if (errores.isEmpty()) {
-            log.info("Factura {} vÃ¡lida para emisiÃ³n", factura.getNumero());
+            log.info("Factura {} válida para emisión", factura.getNumero());
         } else {
-            log.warn("Factura {} tiene {} errores de validaciÃ³n", factura.getNumero(), errores.size());
+            log.warn("Factura {} tiene {} errores de validación", factura.getNumero(), errores.size());
         }
 
         return errores;
     }
 
     /**
-     * Valida campos obligatorios segÃºn RD 1619/2012
+     * Valida campos obligatorios según RD 1619/2012
      */
     private void validarCamposObligatorios(Factura factura, List<String> errores) {
-        // NÃºmero de factura (Art. 6.1.a)
+        // Número de factura (Art. 6.1.a)
         if (factura.getNumero() == null || factura.getNumero().trim().isEmpty()) {
-            errores.add("El nÃºmero de factura es obligatorio");
+            errores.add("El número de factura es obligatorio");
         }
 
-        // Fecha de expediciÃ³n (Art. 6.1.b)
+        // Fecha de expedición (Art. 6.1.b)
         if (factura.getFecha() == null) {
-            errores.add("La fecha de expediciÃ³n es obligatoria");
+            errores.add("La fecha de expedición es obligatoria");
         }
 
         // Serie
@@ -106,40 +106,40 @@ public class FacturaValidacionService {
         if (cif == null || cif.trim().isEmpty()) {
             errores.add("El cliente debe tener CIF/NIF");
         } else if (!validarCifNif(cif)) {
-            errores.add("El CIF/NIF del cliente no es vÃ¡lido: " + cif);
+            errores.add("El CIF/NIF del cliente no es válido: " + cif);
         }
 
         // Nombre del cliente
         if (factura.getCliente().getNombre() == null ||
             factura.getCliente().getNombre().trim().isEmpty()) {
-            errores.add("El cliente debe tener nombre/razÃ³n social");
+            errores.add("El cliente debe tener nombre/razón social");
         }
     }
 
     /**
-     * Valida las lÃ­neas de factura
+     * Valida las líneas de factura
      */
     private void validarLineas(Factura factura, List<String> errores) {
         if (factura.getId() == null) {
-            errores.add("La factura debe guardarse antes de validar lÃ­neas");
+            errores.add("La factura debe guardarse antes de validar líneas");
             return;
         }
 
         List<FacturaLinea> lineas = facturaLineaService.findByFacturaId(factura.getId());
 
         if (lineas == null || lineas.isEmpty()) {
-            errores.add("La factura debe tener al menos una lÃ­nea");
+            errores.add("La factura debe tener al menos una línea");
             return;
         }
 
-        // Validar cada lÃ­nea
+        // Validar cada línea
         for (int i = 0; i < lineas.size(); i++) {
             FacturaLinea linea = lineas.get(i);
-            String prefijo = "LÃ­nea " + (i + 1) + ": ";
+            String prefijo = "Línea " + (i + 1) + ": ";
 
-            // ArtÃ­culo obligatorio
+            // Artículo obligatorio
             if (linea.getArticulo() == null) {
-                errores.add(prefijo + "Debe tener un artÃ­culo asignado");
+                errores.add(prefijo + "Debe tener un artículo asignado");
             }
 
             // Cantidad > 0
@@ -152,7 +152,7 @@ public class FacturaValidacionService {
                 errores.add(prefijo + "El precio no puede ser negativo");
             }
 
-            // IVA vÃ¡lido (0, 4, 10, 21 son los tipos habituales)
+            // IVA válido (0, 4, 10, 21 son los tipos habituales)
             if (linea.getIva() != null) {
                 BigDecimal iva = linea.getIva();
                 if (iva.compareTo(BigDecimal.ZERO) < 0 || iva.compareTo(new BigDecimal("100")) > 0) {
@@ -183,7 +183,7 @@ public class FacturaValidacionService {
             errores.add("El total de IVA no puede ser negativo");
         }
 
-        // Verificar que base + IVA - retenciÃ³n = total (aproximadamente)
+        // Verificar que base + IVA - retención = total (aproximadamente)
         if (factura.getBaseImponible() != null && factura.getTotalIva() != null) {
             BigDecimal calculado = factura.getBaseImponible()
                     .add(factura.getTotalIva())
@@ -206,22 +206,22 @@ public class FacturaValidacionService {
     }
 
     /**
-     * Valida la numeraciÃ³n de la factura
+     * Valida la numeración de la factura
      */
     private void validarNumeracion(Factura factura, List<String> errores) {
         String numero = factura.getNumero();
 
-        // Debe tener formato vÃ¡lido
+        // Debe tener formato válido
         if (numero != null && !numero.matches("^[A-Z0-9\\-/]+$")) {
-            errores.add("El nÃºmero de factura contiene caracteres no vÃ¡lidos");
+            errores.add("El número de factura contiene caracteres no válidos");
         }
 
-        // TODO: Verificar numeraciÃ³n correlativa por serie
-        // Esto requerirÃ­a consultar la Ãºltima factura de la serie
+        // TODO: Verificar numeración correlativa por serie
+        // Esto requeriría consultar la última factura de la serie
     }
 
     /**
-     * Valida segÃºn el tipo de factura
+     * Valida según el tipo de factura
      */
     private void validarSegunTipo(Factura factura, List<String> errores) {
         String tipo = factura.getTipoFactura();
@@ -230,7 +230,7 @@ public class FacturaValidacionService {
             // Factura rectificativa debe referenciar la original
             if (factura.getFacturaRectificadaNumero() == null ||
                 factura.getFacturaRectificadaNumero().trim().isEmpty()) {
-                errores.add("Factura rectificativa: Debe indicar el nÃºmero de factura original");
+                errores.add("Factura rectificativa: Debe indicar el número de factura original");
             }
 
             if (factura.getFacturaRectificadaFecha() == null) {
@@ -239,7 +239,7 @@ public class FacturaValidacionService {
 
             if (factura.getMotivoRectificacion() == null ||
                 factura.getMotivoRectificacion().trim().isEmpty()) {
-                errores.add("Factura rectificativa: Debe indicar el motivo de rectificaciÃ³n");
+                errores.add("Factura rectificativa: Debe indicar el motivo de rectificación");
             }
         }
 
@@ -260,13 +260,13 @@ public class FacturaValidacionService {
         // Si ya tiene hash, ya fue enviada a VeriFactu
         if (factura.getVerifactuHash() != null && !factura.getVerifactuHash().isEmpty()) {
             if (factura.getVerifactuQr() == null || factura.getVerifactuQr().isEmpty()) {
-                errores.add("VeriFactu: Falta el cÃ³digo QR");
+                errores.add("VeriFactu: Falta el código QR");
             }
         }
     }
 
     /**
-     * Valida un CIF/NIF/NIE espaÃ±ol
+     * Valida un CIF/NIF/NIE espñol
      */
     public boolean validarCifNif(String documento) {
         if (documento == null || documento.trim().isEmpty()) {
@@ -294,10 +294,10 @@ public class FacturaValidacionService {
     }
 
     /**
-     * Valida un CIF espaÃ±ol
+     * Valida un CIF espñol
      */
     private boolean validarCIF(String cif) {
-        // Algoritmo de validaciÃ³n del CIF
+        // Algoritmo de validación del CIF
         String letra = cif.substring(0, 1);
         String numeros = cif.substring(1, 8);
         String control = cif.substring(8);
@@ -326,7 +326,7 @@ public class FacturaValidacionService {
     }
 
     /**
-     * Valida un NIF espaÃ±ol
+     * Valida un NIF espñol
      */
     private boolean validarNIF(String nif) {
         String numeros = nif.substring(0, 8);
@@ -340,7 +340,7 @@ public class FacturaValidacionService {
     }
 
     /**
-     * Valida un NIE espaÃ±ol
+     * Valida un NIE espñol
      */
     private boolean validarNIE(String nie) {
         // Convertir NIE a NIF
@@ -356,13 +356,13 @@ public class FacturaValidacionService {
     }
 
     /**
-     * Obtiene un informe detallado de validaciÃ³n
+     * Obtiene un informe detallado de validación
      */
     public String obtenerInformeValidacion(Factura factura) {
         List<String> errores = validarParaEmision(factura);
 
         if (errores.isEmpty()) {
-            return "âœ… La factura es vÃ¡lida y puede ser emitida";
+            return "âœ… La factura es válida y puede ser emitida";
         }
 
         StringBuilder informe = new StringBuilder();

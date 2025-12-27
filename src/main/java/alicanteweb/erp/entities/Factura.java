@@ -46,7 +46,7 @@ public class Factura {
     @Column(name = "pagada", nullable = false)
     private boolean pagada;
 
-    // Nuevos campos para gestiÃ³n de estado y Verifactu
+    // Nuevos campos para gestión de estado y Verifactu
     @Size(max = 20)
     @ColumnDefault("'BORRADOR'")
     @Column(name = "estado", length = 20)
@@ -73,14 +73,14 @@ public class Factura {
     private String serie;
 
     /**
-     * Fecha de operaciÃ³n (si difiere de fecha de expediciÃ³n)
+     * Fecha de operación (si difiere de fecha de expedición)
      * Art. 6.1.d RD 1619/2012
      */
     @Column(name = "fecha_operacion")
     private LocalDate fechaOperacion;
 
     /**
-     * Tipo de factura segÃºn RD 1619/2012
+     * Tipo de factura según RD 1619/2012
      */
     @Size(max = 30)
     @ColumnDefault("'ORDINARIA'")
@@ -96,14 +96,14 @@ public class Factura {
     private String medioCobro; // EFECTIVO, TARJETA, TRANSFERENCIA, BIZUM, CHEQUE, PAGARE, etc.
 
     /**
-     * RetenciÃ³n IRPF (si aplica)
+     * Retención IRPF (si aplica)
      */
     @ColumnDefault("0.00")
     @Column(name = "retencion_irpf", precision = 10, scale = 2)
     private BigDecimal retencionIrpf;
 
     /**
-     * Porcentaje de retenciÃ³n IRPF
+     * Porcentaje de retención IRPF
      */
     @ColumnDefault("0.00")
     @Column(name = "porcentaje_retencion", precision = 5, scale = 2)
@@ -123,35 +123,35 @@ public class Factura {
     private String referenciaPedido;
 
     /**
-     * NÃºmero de albarÃ¡n (si existe)
+     * Número de albarán (si existe)
      */
     @Size(max = 50)
     @Column(name = "numero_albaran", length = 50)
     private String numeroAlbaran;
 
     /**
-     * InversiÃ³n del sujeto pasivo (Art. 84 Ley IVA)
+     * Inversión del sujeto pasivo (Art. 84 Ley IVA)
      */
     @ColumnDefault("false")
     @Column(name = "inversion_sujeto_pasivo")
     private Boolean inversionSujetoPasivo;
 
     /**
-     * RÃ©gimen especial de criterio de caja (Art. 163 undecies Ley IVA)
+     * Régimen especial de criterio de caja (Art. 163 undecies Ley IVA)
      */
     @ColumnDefault("false")
     @Column(name = "criterio_caja")
     private Boolean criterioCaja;
 
     /**
-     * OperaciÃ³n triangular
+     * Operación triangular
      */
     @ColumnDefault("false")
     @Column(name = "operacion_triangular")
     private Boolean operacionTriangular;
 
     /**
-     * Factura rectificativa - NÃºmero de factura original
+     * Factura rectificativa - Número de factura original
      */
     @Size(max = 50)
     @Column(name = "factura_rectificada_numero", length = 50)
@@ -164,14 +164,14 @@ public class Factura {
     private LocalDate facturaRectificadaFecha;
 
     /**
-     * Factura rectificativa - Motivo de rectificaciÃ³n
+     * Factura rectificativa - Motivo de rectificación
      */
     @Size(max = 500)
     @Column(name = "motivo_rectificacion", length = 500)
     private String motivoRectificacion;
 
     /**
-     * Factura rectificativa - Tipo de rectificaciÃ³n
+     * Factura rectificativa - Tipo de rectificación
      */
     @Size(max = 20)
     @Column(name = "tipo_rectificacion", length = 20)

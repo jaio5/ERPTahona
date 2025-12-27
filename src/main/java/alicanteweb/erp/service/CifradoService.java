@@ -17,7 +17,7 @@ import java.util.Base64;
 /**
  * Servicio de cifrado para cumplimiento RGPD
  * - AES-256 para datos personales
- * - BCrypt para contraseÃ±as
+ * - BCrypt para contraseñas
  */
 @Service
 @Slf4j
@@ -78,20 +78,20 @@ public class CifradoService {
     }
 
     /**
-     * Cifra una contraseÃ±a usando BCrypt
-     * @param password ContraseÃ±a en texto plano
+     * Cifra una contraseña usando BCrypt
+     * @param password Contraseña en texto plano
      * @return Hash BCrypt
      */
     public String hashPassword(String password) {
         if (password == null || password.isEmpty()) {
-            throw new IllegalArgumentException("La contraseÃ±a no puede estar vacÃ­a");
+            throw new IllegalArgumentException("La contraseña no puede estar vacía");
         }
         return passwordEncoder.encode(password);
     }
 
     /**
-     * Verifica si una contraseÃ±a coincide con un hash BCrypt
-     * @param password ContraseÃ±a en texto plano
+     * Verifica si una contraseña coincide con un hash BCrypt
+     * @param password Contraseña en texto plano
      * @param hash Hash BCrypt almacenado
      * @return true si coinciden
      */
@@ -118,7 +118,7 @@ public class CifradoService {
     }
 
     /**
-     * Obtiene la clave secreta desde la configuraciÃ³n
+     * Obtiene la clave secreta desde la configuración
      */
     private SecretKey getSecretKey() {
         try {
@@ -144,7 +144,7 @@ public class CifradoService {
     }
 
     /**
-     * Genera un token aleatorio seguro (para recuperaciÃ³n de contraseÃ±a, etc.)
+     * Genera un token aleatorio seguro (para recuperación de contraseña, etc.)
      * @param length Longitud del token
      * @return Token aleatorio
      */

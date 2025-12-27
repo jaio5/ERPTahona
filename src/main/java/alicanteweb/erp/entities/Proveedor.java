@@ -5,9 +5,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 @Getter
 @Setter
 @Entity
@@ -57,7 +54,5 @@ public class Proveedor {
     @Column(name = "activo")
     private Boolean activo = true;
 
-    @OneToMany(mappedBy = "idProveedor")
-    private Set<PedidoCompra> pedidosCompras = new LinkedHashSet<>();
 
 }

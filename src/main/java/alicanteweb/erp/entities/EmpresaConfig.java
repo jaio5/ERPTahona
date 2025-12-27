@@ -10,7 +10,7 @@ import org.hibernate.annotations.ColumnDefault;
 import java.time.LocalDateTime;
 
 /**
- * ConfiguraciÃ³n de la empresa para facturas y Verifactu
+ * Configuración de la empresa para facturas y Verifactu
  * Solo debe haber una fila activa
  */
 @Getter
@@ -55,7 +55,7 @@ public class EmpresaConfig {
     private String provincia;
 
     @Size(max = 100)
-    @ColumnDefault("'EspaÃ±a'")
+    @ColumnDefault("'Espña'")
     @Column(name = "pais", length = 100)
     private String pais;
 
@@ -79,7 +79,7 @@ public class EmpresaConfig {
     @Column(name = "registro_sanitario", length = 100)
     private String registroSanitario;
 
-    // ConfiguraciÃ³n Verifactu
+    // Configuración Verifactu
     @ColumnDefault("TRUE")
     @Column(name = "verifactu_habilitado")
     private Boolean verifactuHabilitado;

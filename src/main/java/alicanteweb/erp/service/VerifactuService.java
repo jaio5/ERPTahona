@@ -107,12 +107,12 @@ public class VerifactuService {
         if (this.enabled) {
             log.info("Verifactu inicializado usando keystore {}", keystorePath);
         } else {
-            log.info("Verifactu deshabilitado â€” la aplicaciÃ³n continuarÃ¡ sin registrar evidencias");
+            log.info("Verifactu deshabilitado â€” la aplicación continuará sin registrar evidencias");
         }
     }
 
     /**
-     * Indica si el servicio VeriFactu estÃ¡ habilitado
+     * Indica si el servicio VeriFactu está habilitado
      */
     public boolean isEnabled() {
         return enabled;
@@ -143,7 +143,7 @@ public class VerifactuService {
      */
     public byte[] firmarDatos(byte[] datos) throws Exception {
         if (!enabled) {
-            throw new IllegalStateException("VeriFactu no estÃ¡ habilitado - no se puede firmar");
+            throw new IllegalStateException("VeriFactu no está habilitado - no se puede firmar");
         }
 
         Signature signature = Signature.getInstance("SHA256withRSA");
@@ -157,7 +157,7 @@ public class VerifactuService {
      */
     public boolean verificarFirma(byte[] datos, byte[] firma) throws Exception {
         if (!enabled) {
-            throw new IllegalStateException("VeriFactu no estÃ¡ habilitado - no se puede verificar");
+            throw new IllegalStateException("VeriFactu no está habilitado - no se puede verificar");
         }
 
         Signature signature = Signature.getInstance("SHA256withRSA");
@@ -185,7 +185,7 @@ public class VerifactuService {
     }
 
     /**
-     * Obtiene el hash anterior de la cadena (Ãºltimo registro guardado)
+     * Obtiene el hash anterior de la cadena (último registro guardado)
      */
     public String obtenerHashAnterior(String serie) {
         Optional<VerifactuEvidence> ultimaEvidencia = evidenceRepository.findFirstBySerieOrderByFechaEmisionDesc(serie);
@@ -219,7 +219,7 @@ public class VerifactuService {
             try {
                 is = new java.io.FileInputStream(keystorePath);
             } catch (Exception ex) {
-                // No es necesario loggear aquÃ­, ya se hace en el constructor
+                // No es necesario loggear aquí, ya se hace en el constructor
             }
         }
         return is;
@@ -237,7 +237,7 @@ public class VerifactuService {
      * Genera el XML de Verifactu para una factura usando datos de empresa_config
      */
     public String generarXMLFactura(Factura factura, List<FacturaLinea> lineas) {
-        // Obtener configuraciÃ³n de empresa (GRUPO BABO)
+        // Obtener configuración de empresa (GRUPO BABO)
         EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
 
         StringBuilder xml = new StringBuilder();
@@ -251,7 +251,7 @@ public class VerifactuService {
         xml.append("      <NombreRazonSocial>").append(escapeXml(empresa.getNombreEmpresa())).append("</NombreRazonSocial>\n");
         xml.append("    </Emisor>\n");
 
-        // Sistema informÃ¡tico (de empresa_config)
+        // Sistema informático (de empresa_config)
         xml.append("    <SistemaInformatico>\n");
         xml.append("      <NombreSistema>").append(escapeXml(empresa.getVerifactuNombreSistema())).append("</NombreSistema>\n");
         xml.append("      <Version>").append(escapeXml(empresa.getVerifactuVersionSistema())).append("</Version>\n");
@@ -277,7 +277,7 @@ public class VerifactuService {
             xml.append("    </Destinatario>\n");
         }
 
-        // LÃ­neas de factura
+        // Líneas de factura
         if (lineas != null && !lineas.isEmpty()) {
             xml.append("    <Desglose>\n");
             BigDecimal baseImponible = BigDecimal.ZERO;
@@ -320,21 +320,21 @@ public class VerifactuService {
     }
 
     /**
-     * EnvÃ­a una factura a Verifactu/AEAT con todas las validaciones
+     * Envía una factura a Verifactu/AEAT con todas las validaciones
      */
     public void enviarFacturaVerifactu(Factura factura) throws Exception {
-        log.info("Iniciando envÃ­o de factura {} a Verifactu", factura.getNumero());
+        log.info("Iniciando envío de factura {} a Verifactu", factura.getNumero());
 
-        // 1. Verificar que existe configuraciÃ³n de empresa
+        // 1. Verificar que existe configuración de empresa
         if (!empresaConfigService.existeConfiguracionActiva()) {
             throw new IllegalStateException("Configure los datos de empresa antes de enviar facturas a Verifactu");
         }
 
         EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
 
-        // 2. Verificar que Verifactu estÃ¡ habilitado en la empresa
+        // 2. Verificar que Verifactu está habilitado en la empresa
         if (!Boolean.TRUE.equals(empresa.getVerifactuHabilitado())) {
-            throw new IllegalStateException("Verifactu estÃ¡ deshabilitado en la configuraciÃ³n de empresa");
+            throw new IllegalStateException("Verifactu está deshabilitado en la configuración de empresa");
         }
 
         // 3. Verificar estado de la factura
@@ -342,28 +342,28 @@ public class VerifactuService {
             throw new IllegalStateException("Solo se pueden emitir facturas en estado REVISION. Estado actual: " + factura.getEstado());
         }
 
-        // 4. Verificar que no se enviÃ³ antes
+        // 4. Verificar que no se envió antes
         if (Boolean.TRUE.equals(factura.getVerifactuEnviada())) {
             throw new IllegalStateException("Esta factura ya fue enviada a Verifactu el " +
                 (factura.getFechaEmisionVerifactu() != null ? factura.getFechaEmisionVerifactu().format(DATETIME_FORMATTER) : ""));
         }
 
-        // 5. Verificar que el servicio Verifactu estÃ¡ habilitado (certificado)
+        // 5. Verificar que el servicio Verifactu está habilitado (certificado)
         if (!this.enabled) {
             log.warn("Certificado Verifactu no disponible - registrando evidencia local solamente");
         }
 
-        // 6. Obtener lÃ­neas de la factura
+        // 6. Obtener líneas de la factura
         List<FacturaLinea> lineas = facturaLineaService.findByFacturaId(factura.getId());
         if (lineas == null || lineas.isEmpty()) {
-            throw new IllegalStateException("La factura no tiene lÃ­neas, no se puede emitir");
+            throw new IllegalStateException("La factura no tiene líneas, no se puede emitir");
         }
 
         // 7. Generar XML con datos de GRUPO BABO
         String xml = generarXMLFactura(factura, lineas);
         log.info("XML generado para factura {}: {} caracteres", factura.getNumero(), xml.length());
 
-        // 8. Generar hash y firmar (si estÃ¡ habilitado)
+        // 8. Generar hash y firmar (si está habilitado)
         String hash = generarHash(xml);
         byte[] firma = null;
         if (this.enabled) {
@@ -371,7 +371,7 @@ public class VerifactuService {
             log.info("Factura {} firmada digitalmente", factura.getNumero());
         }
 
-        // 8.5 Generar cÃ³digo QR con la URL de verificaciÃ³n
+        // 8.5 Generar código QR con la URL de verificación
         String qrBase64 = qrCodeService.generarQRVeriFactu(
                 hash,
                 empresa.getCif(),
@@ -389,7 +389,7 @@ public class VerifactuService {
         factura.setVerifactuEnviada(true);
         factura.setFechaEmisionVerifactu(LocalDateTime.now());
         factura.setEstado("EMITIDA");
-        // La factura se guardarÃ¡ despuÃ©s por el controlador
+        // La factura se guardará después por el controlador
 
         // 9. Guardar evidencia en BD
         VerifactuEvidence evidencia = new VerifactuEvidence();
@@ -417,7 +417,7 @@ public class VerifactuService {
         evidenceRepository.save(evidencia);
         log.info("Evidencia guardada para factura {} con ID {}", factura.getNumero(), evidencia.getId());
 
-        // 10. EnvÃ­o real a la AEAT (si estÃ¡ habilitado)
+        // 10. Envío real a la AEAT (si está habilitado)
         if (aeatEnabled && this.enabled) {
             try {
                 log.info("Enviando factura {} a AEAT endpoint: {}", factura.getNumero(), aeatEndpoint);
@@ -443,7 +443,7 @@ public class VerifactuService {
             }
         } else {
             if (!aeatEnabled) {
-                log.info("â„¹ï¸ EnvÃ­o a AEAT deshabilitado (verifactu.aeat.enabled=false). Evidencia guardada localmente.");
+                log.info("â„¹ï¸ Envío a AEAT deshabilitado (verifactu.aeat.enabled=false). Evidencia guardada localmente.");
             }
             if (!this.enabled) {
                 log.info("â„¹ï¸ Certificado no disponible. Evidencia guardada localmente sin firma digital.");
@@ -453,11 +453,11 @@ public class VerifactuService {
     }
 
     /**
-     * EnvÃ­a el XML de la factura a la AEAT mediante HTTP POST
+     * Envía el XML de la factura a la AEAT mediante HTTP POST
      * @param xml El XML de la factura
      * @param firma La firma digital (puede ser null)
      * @return La respuesta de la AEAT
-     * @throws Exception Si hay error en el envÃ­o
+     * @throws Exception Si hay error en el envío
      */
     private String enviarXMLaAEAT(String xml, byte[] firma) throws Exception {
         try {
@@ -515,10 +515,10 @@ public class VerifactuService {
         } catch (java.net.http.HttpTimeoutException e) {
             throw new Exception("Timeout al conectar con AEAT", e);
         } catch (java.io.IOException e) {
-            throw new Exception("Error de conexiÃ³n con AEAT", e);
+            throw new Exception("Error de conexión con AEAT", e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new Exception("EnvÃ­o interrumpido", e);
+            throw new Exception("Envío interrumpido", e);
         }
     }
 

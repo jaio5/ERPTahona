@@ -1,18 +1,18 @@
 package alicanteweb.erp.entities;
 
 /**
- * Estados posibles de una factura en el flujo de emisiÃ³n
+ * Estados posibles de una factura en el flujo de emisión
  */
 public enum EstadoFactura {
     /**
-     * Factura reciÃ©n creada, en ediciÃ³n
+     * Factura recién creada, en edición
      */
-    BORRADOR("Borrador", "Factura en ediciÃ³n, no emitida"),
+    BORRADOR("Borrador", "Factura en edición, no emitida"),
 
     /**
-     * Factura pendiente de revisiÃ³n antes de emitir
+     * Factura pendiente de revisión antes de emitir
      */
-    REVISION("En RevisiÃ³n", "Pendiente de revisiÃ³n y aprobaciÃ³n"),
+    REVISION("En Revisión", "Pendiente de revisión y aprobación"),
 
     /**
      * Factura emitida y enviada a Verifactu/AEAT
@@ -20,7 +20,7 @@ public enum EstadoFactura {
     EMITIDA("Emitida", "Factura emitida y registrada"),
 
     /**
-     * Factura anulada, no vÃ¡lida
+     * Factura anulada, no válida
      */
     ANULADA("Anulada", "Factura anulada o cancelada");
 
@@ -55,7 +55,7 @@ public enum EstadoFactura {
     }
 
     /**
-     * Verifica si la factura puede pasar a revisiÃ³n
+     * Verifica si la factura puede pasar a revisión
      */
     public boolean puedeIrARevision() {
         return this == BORRADOR;

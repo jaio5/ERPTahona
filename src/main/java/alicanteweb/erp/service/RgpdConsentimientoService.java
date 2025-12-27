@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Servicio de gestiÃ³n de consentimientos RGPD
+ * Servicio de gestión de consentimientos RGPD
  */
 @Service
 @Slf4j
@@ -108,7 +108,7 @@ public class RgpdConsentimientoService {
     }
 
     /**
-     * Obtener Ãºltimo consentimiento de un cliente por tipo
+     * Obtener último consentimiento de un cliente por tipo
      */
     public RgpdConsentimiento obtenerUltimoConsentimiento(Long clienteId, String tipo) {
         return consentimientoRepository
@@ -166,18 +166,18 @@ public class RgpdConsentimientoService {
     }
 
     /**
-     * Actualizar polÃ­tica de privacidad
-     * Marca todos los consentimientos activos para revalidaciÃ³n
+     * Actualizar política de privacidad
+     * Marca todos los consentimientos activos para revalidación
      */
     @Transactional
     public void actualizarPoliticaPrivacidad(String nuevaVersion, Usuario usuario) {
-        log.warn("Actualizando polÃ­tica de privacidad a versiÃ³n: {}", nuevaVersion);
+        log.warn("Actualizando política de privacidad a versión: {}", nuevaVersion);
 
         List<RgpdConsentimiento> consentimientosActivos =
                 consentimientoRepository.findByOtorgadoTrueAndActivoTrue();
 
         for (RgpdConsentimiento consentimiento : consentimientosActivos) {
-            // Marcar para revalidaciÃ³n
+            // Marcar para revalidación
             consentimiento.setActivo(false);
             Map<String, Object> metadata = consentimiento.getMetadata();
             if (metadata == null) {
@@ -194,9 +194,9 @@ public class RgpdConsentimientoService {
         // Auditar
         auditoriaService.registrarAccion(usuario, "ACTUALIZACION_POLITICA_PRIVACIDAD",
                 "PoliticaPrivacidad", nuevaVersion,
-                "PolÃ­tica actualizada - " + consentimientosActivos.size() + " consentimientos requieren revalidaciÃ³n");
+                "Política actualizada - " + consentimientosActivos.size() + " consentimientos requieren revalidación");
 
-        log.info("PolÃ­tica de privacidad actualizada. {} consentimientos requieren revalidaciÃ³n",
+        log.info("Política de privacidad actualizada. {} consentimientos requieren revalidación",
                 consentimientosActivos.size());
     }
 }

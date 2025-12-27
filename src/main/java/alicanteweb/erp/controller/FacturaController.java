@@ -129,7 +129,7 @@ public class FacturaController {
             Button btnGuardar = (Button) formRoot.lookup("#btnGuardar");
             Button btnCancelar = (Button) formRoot.lookup("#btnCancelar");
 
-            // Configurar tabla de lÃ­neas
+            // Configurar tabla de líneas
             ObservableList<FacturaLineaDTO> lineas = FXCollections.observableArrayList();
             configurarTablaLineas(tableLineas, lineas, lblBaseImponible, lblIva, lblTotal);
 
@@ -160,10 +160,10 @@ public class FacturaController {
             stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             stage.setScene(new javafx.scene.Scene(formRoot));
 
-            // BotÃ³n agregar lÃ­nea
+            // Botón agregar línea
             btnAgregarLinea.setOnAction(e -> agregarLineaFactura(tableLineas, lineas, lblBaseImponible, lblIva, lblTotal));
 
-            // BotÃ³n eliminar lÃ­nea
+            // Botón eliminar línea
             btnEliminarLinea.setOnAction(e -> {
                 FacturaLineaDTO selected = tableLineas.getSelectionModel().getSelectedItem();
                 if (selected != null) {
@@ -172,14 +172,14 @@ public class FacturaController {
                 }
             });
 
-            // BotÃ³n guardar
+            // Botón guardar
             btnGuardar.setOnAction(e -> {
                 if (validarFactura(txtNumero, cbCliente, lineas)) {
                     guardarFactura(txtNumero.getText(), dpFecha.getValue(), cbCliente.getValue(), lineas, stage);
                 }
             });
 
-            // BotÃ³n cancelar
+            // Botón cancelar
             btnCancelar.setOnAction(e -> stage.close());
 
             stage.showAndWait();
@@ -228,22 +228,22 @@ public class FacturaController {
 
     private void agregarLineaFactura(TableView<FacturaLineaDTO> table, ObservableList<FacturaLineaDTO> lineas,
                                      Label lblBase, Label lblIva, Label lblTotal) {
-        // Mostrar diÃ¡logo para seleccionar artÃ­culo
+        // Mostrar diálogo para seleccionar artículo
         List<Articulo> articulos = articuloService.findAll().stream()
             .filter(a -> a.getActivo() == null || a.getActivo())
             .toList();
 
         if (articulos.isEmpty()) {
-            mostrarError("No hay artÃ­culos disponibles. Crea artÃ­culos primero.");
+            mostrarError("No hay artículos disponibles. Crea artículos primero.");
             return;
         }
 
         ChoiceDialog<Articulo> dialog = new ChoiceDialog<>(articulos.get(0), articulos);
-        dialog.setTitle("Seleccionar ArtÃ­culo");
-        dialog.setHeaderText("Agregar lÃ­nea a la factura");
-        dialog.setContentText("Selecciona un artÃ­culo:");
+        dialog.setTitle("Seleccionar Artículo");
+        dialog.setHeaderText("Agregar línea a la factura");
+        dialog.setContentText("Selecciona un artículo:");
 
-        // Configurar el converter para mostrar cÃ³digo y descripciÃ³n
+        // Configurar el converter para mostrar código y descripción
         ComboBox<Articulo> comboBox = (ComboBox<Articulo>) dialog.getDialogPane().lookup(".combo-box");
         if (comboBox != null) {
             comboBox.setConverter(new StringConverter<Articulo>() {
@@ -286,7 +286,7 @@ public class FacturaController {
 
     private boolean validarFactura(TextField txtNumero, ComboBox<Cliente> cbCliente, ObservableList<FacturaLineaDTO> lineas) {
         if (txtNumero.getText() == null || txtNumero.getText().trim().isEmpty()) {
-            mostrarError("El nÃºmero de factura es obligatorio");
+            mostrarError("El número de factura es obligatorio");
             return false;
         }
         if (cbCliente.getValue() == null) {
@@ -294,7 +294,7 @@ public class FacturaController {
             return false;
         }
         if (lineas.isEmpty()) {
-            mostrarError("Debes agregar al menos una lÃ­nea a la factura");
+            mostrarError("Debes agregar al menos una línea a la factura");
             return false;
         }
         return true;
@@ -320,7 +320,7 @@ public class FacturaController {
             // Guardar factura
             Factura facturaSaved = facturaService.save(factura);
 
-            // Crear y guardar lÃ­neas
+            // Crear y guardar líneas
             for (FacturaLineaDTO dto : lineasDTO) {
                 FacturaLinea linea = new FacturaLinea();
                 linea.setFactura(facturaSaved);
@@ -328,7 +328,7 @@ public class FacturaController {
                 linea.setCantidad(dto.getCantidad());
                 linea.setPrecio(dto.getPrecio());
                 linea.setIva(dto.getIva());
-                // Las lÃ­neas se guardan en cascada o se necesita un servicio especÃ­fico
+                // Las líneas se guardan en cascada o se necesita un servicio específico
             }
 
             loadAll();
@@ -366,7 +366,7 @@ public class FacturaController {
 
             return String.format("FAC%03d", maxNumero + 1);
         } catch (Exception e) {
-            log.error("Error generando nÃºmero de factura", e);
+            log.error("Error generando número de factura", e);
             return "FAC001";
         }
     }
@@ -406,14 +406,14 @@ public class FacturaController {
             return;
         }
 
-        // Mostrar diÃ¡logo para seleccionar diseÃ±o
+        // Mostrar diálogo para seleccionar diseño
         ChoiceDialog<alicanteweb.erp.service.PrintService.PrintDesign> dialog = new ChoiceDialog<>(
             alicanteweb.erp.service.PrintService.PrintDesign.CLASICO,
             alicanteweb.erp.service.PrintService.PrintDesign.values()
         );
-        dialog.setTitle("Seleccionar DiseÃ±o de ImpresiÃ³n");
-        dialog.setHeaderText("Elige el diseÃ±o para imprimir la factura");
-        dialog.setContentText("DiseÃ±o:");
+        dialog.setTitle("Seleccionar Diseño de Impresión");
+        dialog.setHeaderText("Elige el diseño para imprimir la factura");
+        dialog.setContentText("Diseño:");
 
         // Configurar converter para mostrar nombres legibles
         ComboBox<alicanteweb.erp.service.PrintService.PrintDesign> comboBox =
@@ -431,24 +431,24 @@ public class FacturaController {
 
         dialog.showAndWait().ifPresent(design -> {
             try {
-                // Obtener lÃ­neas de la factura (simulaciÃ³n - en producciÃ³n usar servicio)
+                // Obtener líneas de la factura (simulación - en producción usar servicio)
                 List<FacturaLinea> lineas = new java.util.ArrayList<>();
-                // TODO: Cargar lÃ­neas reales de la base de datos
+                // TODO: Cargar líneas reales de la base de datos
 
-                // Generar HTML de impresiÃ³n
+                // Generar HTML de impresión
                 java.io.File htmlFile = printService.generarImpresionFactura(seleccionada, lineas, design);
 
                 // Abrir en navegador predeterminado
                 if (java.awt.Desktop.isDesktopSupported()) {
                     java.awt.Desktop.getDesktop().browse(htmlFile.toURI());
-                    mostrarInfo("Documento de impresiÃ³n generado. Se abrirÃ¡ en tu navegador.");
+                    mostrarInfo("Documento de impresión generado. Se abrirá en tu navegador.");
                 } else {
                     mostrarInfo("Archivo generado en: " + htmlFile.getAbsolutePath());
                 }
 
             } catch (Exception e) {
-                log.error("Error generando impresiÃ³n", e);
-                mostrarError("Error al generar documento de impresiÃ³n: " + e.getMessage());
+                log.error("Error generando impresión", e);
+                mostrarError("Error al generar documento de impresión: " + e.getMessage());
             }
         });
     }
@@ -459,39 +459,39 @@ public class FacturaController {
     }
 
     /**
-     * EnvÃ­a una factura a estado de REVISION
+     * Envía una factura a estado de REVISION
      */
     @FXML
     public void onEnviarARevision() {
         Factura factura = tableFacturas.getSelectionModel().getSelectedItem();
         if (factura == null) {
-            mostrarError("Selecciona una factura para enviar a revisiÃ³n");
+            mostrarError("Selecciona una factura para enviar a revisión");
             return;
         }
 
         if (!"BORRADOR".equals(factura.getEstado())) {
-            mostrarError("Solo las facturas en estado BORRADOR pueden enviarse a revisiÃ³n.\nEstado actual: " + factura.getEstado());
+            mostrarError("Solo las facturas en estado BORRADOR pueden enviarse a revisión.\nEstado actual: " + factura.getEstado());
             return;
         }
 
-        // Confirmar acciÃ³n
+        // Confirmar acción
         Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmacion.setTitle("Confirmar EnvÃ­o a RevisiÃ³n");
-        confirmacion.setHeaderText("Â¿Enviar factura " + factura.getNumero() + " a revisiÃ³n?");
-        confirmacion.setContentText("La factura quedarÃ¡ pendiente de aprobaciÃ³n antes de emitirse a la AEAT.");
+        confirmacion.setTitle("Confirmar Envío a Revisión");
+        confirmacion.setHeaderText("Â¿Enviar factura " + factura.getNumero() + " a revisión?");
+        confirmacion.setContentText("La factura quedará pendiente de aprobación antes de emitirse a la AEAT.");
 
         confirmacion.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 try {
                     factura.setEstado("REVISION");
-                    factura.setObservacionesRevision("Enviada a revisiÃ³n el " + LocalDate.now());
+                    factura.setObservacionesRevision("Enviada a revisión el " + LocalDate.now());
                     facturaService.save(factura);
                     loadAll();
-                    mostrarInfo("Factura " + factura.getNumero() + " enviada a revisiÃ³n correctamente");
+                    mostrarInfo("Factura " + factura.getNumero() + " enviada a revisión correctamente");
                     log.info("Factura {} cambiada a estado REVISION", factura.getNumero());
                 } catch (Exception e) {
-                    log.error("Error enviando factura a revisiÃ³n", e);
-                    mostrarError("Error al enviar a revisiÃ³n: " + e.getMessage());
+                    log.error("Error enviando factura a revisión", e);
+                    mostrarError("Error al enviar a revisión: " + e.getMessage());
                 }
             }
         });
@@ -513,19 +513,19 @@ public class FacturaController {
             return;
         }
 
-        // Confirmar acciÃ³n con advertencia
+        // Confirmar acción con advertencia
         Alert confirmacion = new Alert(Alert.AlertType.WARNING);
-        confirmacion.setTitle("Confirmar EmisiÃ³n a AEAT");
+        confirmacion.setTitle("Confirmar Emisión a AEAT");
         confirmacion.setHeaderText("Â¿Aprobar y emitir factura " + factura.getNumero() + " a Verifactu/AEAT?");
-        confirmacion.setContentText("Esta acciÃ³n enviarÃ¡ la factura a la Agencia Tributaria con los datos de GRUPO BABO.\n" +
-                                   "Una vez emitida, NO se podrÃ¡ modificar.\n\n" +
+        confirmacion.setContentText("Esta acción enviará la factura a la Agencia Tributaria con los datos de GRUPO BABO.\n" +
+                                   "Una vez emitida, NO se podrá modificar.\n\n" +
                                    "Â¿Deseas continuar?");
         confirmacion.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
 
         confirmacion.showAndWait().ifPresent(response -> {
             if (response == ButtonType.YES) {
                 try {
-                    log.info("Iniciando emisiÃ³n de factura {} a Verifactu", factura.getNumero());
+                    log.info("Iniciando emisión de factura {} a Verifactu", factura.getNumero());
 
                     // Enviar a Verifactu
                     verifactuService.enviarFacturaVerifactu(factura);
@@ -540,14 +540,14 @@ public class FacturaController {
 
                     loadAll();
 
-                    // Mostrar mensaje de Ã©xito con detalles
+                    // Mostrar mensaje de éxito con detalles
                     Alert success = new Alert(Alert.AlertType.INFORMATION);
                     success.setTitle("âœ… Factura Emitida Correctamente");
                     success.setHeaderText("Factura " + factura.getNumero() + " emitida a AEAT");
                     success.setContentText("La factura ha sido enviada correctamente a Verifactu con los datos de:\n\n" +
                                          "GRUPO BABO, S.Coop.V.L.\n" +
                                          "CIF: F54059985\n\n" +
-                                         "Fecha de emisiÃ³n: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+                                         "Fecha de emisión: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
                     success.showAndWait();
 
                     log.info("âœ… Factura {} emitida correctamente a Verifactu", factura.getNumero());
@@ -560,7 +560,7 @@ public class FacturaController {
                     error.setHeaderText("No se pudo emitir la factura " + factura.getNumero());
                     error.setContentText("Error: " + e.getMessage() + "\n\n" +
                                        "La factura permanece en estado REVISION.\n" +
-                                       "Revisa la configuraciÃ³n de Verifactu y vuelve a intentarlo.");
+                                       "Revisa la configuración de Verifactu y vuelve a intentarlo.");
                     error.showAndWait();
                 }
             }
@@ -583,11 +583,11 @@ public class FacturaController {
             return;
         }
 
-        // Pedir motivo de anulaciÃ³n
+        // Pedir motivo de anulación
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Anular Factura");
         dialog.setHeaderText("Anular factura " + factura.getNumero());
-        dialog.setContentText("Motivo de anulaciÃ³n:");
+        dialog.setContentText("Motivo de anulación:");
 
         dialog.showAndWait().ifPresent(motivo -> {
             if (motivo != null && !motivo.trim().isEmpty()) {
@@ -604,7 +604,7 @@ public class FacturaController {
                     mostrarError("Error al anular factura: " + e.getMessage());
                 }
             } else {
-                mostrarError("Debes indicar el motivo de anulaciÃ³n");
+                mostrarError("Debes indicar el motivo de anulación");
             }
         });
     }
@@ -641,7 +641,7 @@ public class FacturaController {
 
     private void mostrarInfo(String mensaje) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, mensaje);
-        alert.setHeaderText("InformaciÃ³n");
+        alert.setHeaderText("Información");
         alert.showAndWait();
     }
 
