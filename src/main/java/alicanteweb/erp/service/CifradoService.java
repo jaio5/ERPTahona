@@ -92,14 +92,35 @@ public class CifradoService {
     /**
      * Verifica si una contraseña coincide con un hash BCrypt
      * @param password Contraseña en texto plano
-     * @param hash Hash BCrypt almacenado
+     * @param hash Hash BCrypt almacenado o texto plano
      * @return true si coinciden
      */
     public boolean verificarPassword(String password, String hash) {
         if (password == null || hash == null) {
             return false;
         }
-        return passwordEncoder.matches(password, hash);
+
+        log.info("🔍 Verificando password - Input: '{}', Hash en BD: '{}'", password, hash.substring(0, Math.min(20, hash.length())));
+
+        // PRIORIDAD 1: Comparación directa (texto plano)
+        if (password.equals(hash)) {
+            log.warn("✅ MATCH DIRECTO - Contraseña en texto plano");
+            return true;
+        }
+
+        // PRIORIDAD 2: Verificación BCrypt
+        try {
+            boolean bcryptMatch = passwordEncoder.matches(password, hash);
+            if (bcryptMatch) {
+                log.info("✅ MATCH BCRYPT");
+            } else {
+                log.warn("❌ NO MATCH - Ni texto plano ni BCrypt coinciden");
+            }
+            return bcryptMatch;
+        } catch (Exception e) {
+            log.error("❌ Error verificando BCrypt: {}", e.getMessage());
+            return false;
+        }
     }
 
     /**

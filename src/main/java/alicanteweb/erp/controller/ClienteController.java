@@ -128,6 +128,41 @@ public class ClienteController {
         mostrarFormulario(seleccionado);
     }
 
+    @FXML
+    public void onDelete() {
+        Cliente seleccionado = tableClientes.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarError("Selecciona un cliente para dar de baja");
+            return;
+        }
+
+        // Confirmar
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirmar baja");
+        confirm.setHeaderText("¿Dar de baja al cliente?");
+        confirm.setContentText(seleccionado.getNombre() + " - " + seleccionado.getCif());
+
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                try {
+                    clienteService.darDeBaja(seleccionado.getId());
+                    mostrarInfo("Cliente dado de baja correctamente");
+                    loadAll();
+                } catch (Exception e) {
+                    log.error("Error dando de baja cliente", e);
+                    mostrarError("Error: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @FXML
+    public void onRefresh() {
+        log.info("Refrescando tabla de clientes...");
+        loadAll();
+        mostrarInfo("Tabla actualizada");
+    }
+
     private void mostrarFormulario(Cliente cliente) {
         try {
             // Cargar el FXML del formulario
@@ -214,47 +249,6 @@ public class ClienteController {
             return false;
         }
         return true;
-    }
-
-    @FXML
-    public void onDelete() {
-        if (tableClientes == null) { mostrarError("Tabla no disponible"); return; }
-        Cliente sel = tableClientes.getSelectionModel().getSelectedItem();
-        if (sel == null) { mostrarInfo("Selecciona un cliente"); return; }
-        if (sel.getId() == null) { mostrarError("El cliente seleccionado no tiene id"); return; }
-
-        // Verificar estado actual
-        boolean estaActivo = sel.getActivo() == null || sel.getActivo();
-        String accion = estaActivo ? "dar de baja" : "activar";
-        String mensaje = estaActivo ?
-            "¿Estás seguro de dar de baja el cliente '" + sel.getNombre() + "'?" :
-            "¿Estás seguro de activar el cliente '" + sel.getNombre() + "'?";
-
-        // Confirmar acción
-        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmacion.setTitle("Confirmar " + accion);
-        confirmacion.setHeaderText(mensaje);
-        confirmacion.setContentText("Esta operación cambiará el estado del cliente.");
-
-        confirmacion.showAndWait().ifPresent(response -> {
-            if (response == javafx.scene.control.ButtonType.OK) {
-                try {
-                    // Cambiar estado
-                    sel.setActivo(!estaActivo);
-                    clienteService.save(sel);
-                    loadAll();
-                    mostrarInfo("Cliente " + (estaActivo ? "dado de baja" : "activado") + " correctamente");
-                } catch (Exception e) {
-                    log.error("Error cambiando estado del cliente", e);
-                    mostrarError("Error cambiando estado: " + e.getMessage());
-                }
-            }
-        });
-    }
-
-    @FXML
-    public void onRefresh() {
-        loadAll();
     }
 
     private void mostrarInfo(String mensaje) {

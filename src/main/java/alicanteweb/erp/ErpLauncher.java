@@ -17,6 +17,55 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Clase principal del sistema ERP Panadería Tahona.
+ *
+ * <p>Esta clase es el punto de entrada de la aplicación y gestiona la integración
+ * entre Spring Boot y JavaFX. Extiende {@link Application} de JavaFX para
+ * proporcionar una interfaz gráfica rica y moderna.</p>
+ *
+ * <h3>Arquitectura:</h3>
+ * <ul>
+ *   <li><strong>Backend:</strong> Spring Boot 3.5.7 con Spring Data JPA</li>
+ *   <li><strong>Frontend:</strong> JavaFX 21 con FXML</li>
+ *   <li><strong>Base de Datos:</strong> MySQL 8.0</li>
+ *   <li><strong>Seguridad:</strong> BCrypt para contraseñas</li>
+ * </ul>
+ *
+ * <h3>Flujo de inicio:</h3>
+ * <ol>
+ *   <li>{@link #init()} - Inicializa el contexto de Spring Boot</li>
+ *   <li>{@link #start(Stage)} - Carga la pantalla de login de JavaFX</li>
+ *   <li>Usuario se autentica</li>
+ *   <li>Se muestra el panel principal con los módulos del ERP</li>
+ * </ol>
+ *
+ * <h3>Módulos disponibles:</h3>
+ * <ul>
+ *   <li>Gestión de Clientes</li>
+ *   <li>Gestión de Proveedores</li>
+ *   <li>Catálogo de Artículos</li>
+ *   <li>Albaranes de Venta</li>
+ *   <li>Facturación (conforme RD 1619/2012)</li>
+ *   <li>Control de Almacenes</li>
+ *   <li>Verifactu (integración con AEAT)</li>
+ * </ul>
+ *
+ * <h3>Cumplimiento normativo:</h3>
+ * <ul>
+ *   <li>RD 1619/2012 - Reglamento de facturación</li>
+ *   <li>RGPD (UE 2016/679) - Protección de datos</li>
+ *   <li>Ley 37/1992 - Ley del IVA</li>
+ *   <li>Orden HAP/2194/2013 - Verifactu AEAT</li>
+ * </ul>
+ *
+ * @author ERP Tahona Development Team
+ * @version 0.0.1
+ * @since 2025-12-27
+ *
+ * @see org.springframework.boot.autoconfigure.SpringBootApplication
+ * @see javafx.application.Application
+ */
 @SpringBootApplication(scanBasePackages = "alicanteweb.erp")
 public class ErpLauncher extends Application {
     private static final Logger log = LoggerFactory.getLogger(ErpLauncher.class);

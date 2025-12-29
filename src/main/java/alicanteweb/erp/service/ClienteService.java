@@ -47,5 +47,20 @@ public class ClienteService {
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
-}
 
+    @Transactional
+    public void darDeBaja(Long id) {
+        Cliente cliente = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con id: " + id));
+        cliente.setActivo(false);
+        repository.save(cliente);
+    }
+
+    @Transactional
+    public void activar(Long id) {
+        Cliente cliente = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado con id: " + id));
+        cliente.setActivo(true);
+        repository.save(cliente);
+    }
+}

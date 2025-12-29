@@ -1,33 +1,62 @@
-HELP.md
+# Compiled class files
+*.class
 target/
+
+# Log files
+*.log
+logs/
+
+# Package Files
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+.mvn/timing.properties
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IDE
+.idea/
 *.iml
 *.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+*.iws
 .vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Application specific
+data/
+*.mv.db
+*.trace.db
+app_output.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Certificates (security)
+*.p12
+*.jks
+*.pem
+certs/*
+!certs/.gitkeep
+
+# Local config overrides
+application-local.properties
+

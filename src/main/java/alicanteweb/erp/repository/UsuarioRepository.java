@@ -22,11 +22,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("SELECT u FROM Usuario u WHERE u.username = :login OR u.email = :login")
     Optional<Usuario> findByUsernameOrEmail(@Param("login") String login);
 
-    List<Usuario> findByActivoTrue();
-
-    List<Usuario> findByRolId(Long rolId);
-
-    List<Usuario> findByRolIdAndActivoTrue(Long rolId);
+    List<Usuario> findByEnabledTrue();
 
     boolean existsByUsername(String username);
 
@@ -34,15 +30,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     List<Usuario> findByBloqueadoTrue();
 
-    List<Usuario> findByRequiereCambioPasswordTrue();
-
-    @Query("SELECT u FROM Usuario u WHERE u.tokenRecuperacion = :token AND u.fechaExpiracionToken > CURRENT_TIMESTAMP")
-    Optional<Usuario> findByTokenRecuperacionValido(@Param("token") String token);
-
-    long countByActivoTrue();
+    long countByEnabledTrue();
 
     @Query("SELECT u FROM Usuario u WHERE " +
-           "LOWER(u.nombreCompleto) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(u.nombre) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))")
     List<Usuario> buscar(@Param("search") String search);

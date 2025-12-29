@@ -45,11 +45,11 @@ public class AutenticacionService {
 
         Usuario usuario = usuarioOpt.get();
 
-        // Verificar si está activo
-        if (!Boolean.TRUE.equals(usuario.getActivo())) {
-            log.warn("Usuario inactivo: {}", username);
+        // Verificar si está activo (enabled)
+        if (!Boolean.TRUE.equals(usuario.getEnabled())) {
+            log.warn("Usuario deshabilitado: {}", username);
             auditoriaService.registrarError(usuario, "Usuario", usuario.getId().toString(),
-                    "Intento de login - usuario inactivo");
+                    "Intento de login - usuario deshabilitado");
             return null;
         }
 
@@ -117,34 +117,14 @@ public class AutenticacionService {
             return false;
         }
 
-        if (usuarioActual.getRol() == null) {
-            log.warn("Usuario sin rol asignado: {}", usuarioActual.getUsername());
-            return false;
+        // Si es ROLE_ADMIN, tiene todos los permisos
+        if ("ROLE_ADMIN".equals(usuarioActual.getRole())) {
+            return true;
         }
 
-        if (usuarioActual.getRol().getPermisos() == null) {
-            log.warn("Rol sin permisos definidos: {}", usuarioActual.getRol().getNombre());
-            return false;
-        }
-
-        // Verificar permisos del rol
-        var permisos = usuarioActual.getRol().getPermisos();
-        if (!permisos.containsKey(modulo)) {
-            return false;
-        }
-
-        var permisosModulo = permisos.get(modulo);
-        if (permisosModulo == null || !permisosModulo.containsKey(accion)) {
-            return false;
-        }
-
-        Boolean tienePermiso = permisosModulo.get(accion);
-        if (!Boolean.TRUE.equals(tienePermiso)) {
-            // Auditar acceso denegado
-            auditoriaService.registrarAccesoDenegado(usuarioActual, modulo, accion);
-        }
-
-        return Boolean.TRUE.equals(tienePermiso);
+        // Por ahora, si no es admin, no tiene permisos
+        // TODO: implementar sistema de roles más complejo
+        return false;
     }
 
     /**
@@ -152,10 +132,10 @@ public class AutenticacionService {
      * @return true si es administrador
      */
     public boolean esAdministrador() {
-        if (usuarioActual == null || usuarioActual.getRol() == null) {
+        if (usuarioActual == null) {
             return false;
         }
-        return "ADMINISTRADOR".equals(usuarioActual.getRol().getNombre());
+        return "ROLE_ADMIN".equals(usuarioActual.getRole());
     }
 
     /**
@@ -166,8 +146,8 @@ public class AutenticacionService {
         if (usuarioActual == null) {
             return "Invitado";
         }
-        return usuarioActual.getNombreCompleto() != null ?
-                usuarioActual.getNombreCompleto() : usuarioActual.getUsername();
+        return usuarioActual.getNombre() != null ?
+                usuarioActual.getNombre() : usuarioActual.getUsername();
     }
 
     /**

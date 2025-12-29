@@ -15,7 +15,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "usuarios")
+@Table(name = "users")
 public class Usuario {
 
     @Id
@@ -33,63 +33,73 @@ public class Usuario {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @NotNull
-    @Email
-    @Size(max = 100)
-    @Column(name = "email", nullable = false, unique = true, length = 100)
-    private String email;
-
-    @NotNull
-    @Size(max = 100)
-    @Column(name = "nombre_completo", nullable = false, length = 100)
-    private String nombreCompleto;
+    @ColumnDefault("true")
+    @Column(name = "enabled", nullable = false)
+    private Boolean enabled;
 
     @Size(max = 20)
-    @Column(name = "telefono", length = 20)
-    private String telefono;
+    @Column(name = "role", length = 20)
+    private String role;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "rol_id")
-    private Rol rol;
+    @Size(max = 100)
+    @Column(name = "nombre", length = 100)
+    private String nombre;
 
-    @NotNull
-    @ColumnDefault("true")
-    @Column(name = "activo", nullable = false)
-    private Boolean activo;
+    @Email
+    @Size(max = 100)
+    @Column(name = "email", length = 100)
+    private String email;
 
-    @NotNull
-    @ColumnDefault("false")
-    @Column(name = "bloqueado", nullable = false)
-    private Boolean bloqueado;
-
-    @NotNull
-    @Column(name = "fecha_creacion", nullable = false)
+    @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
-    @Column(name = "ultimo_login")
-    private LocalDateTime ultimoLogin;
-
-    @Column(name = "fecha_cambio_password")
-    private LocalDateTime fechaCambioPassword;
+    @Column(name = "fecha_modificacion")
+    private LocalDateTime fechaModificacion;
 
     @ColumnDefault("0")
     @Column(name = "intentos_fallidos")
     private Integer intentosFallidos;
 
-    @NotNull
     @ColumnDefault("false")
-    @Column(name = "requiere_cambio_password", nullable = false)
-    private Boolean requiereCambioPassword;
+    @Column(name = "bloqueado")
+    private Boolean bloqueado;
 
-    @Size(max = 255)
-    @Column(name = "token_recuperacion", length = 255)
-    private String tokenRecuperacion;
+    @Column(name = "fecha_bloqueo")
+    private LocalDateTime fechaBloqueo;
 
-    @Column(name = "fecha_expiracion_token")
-    private LocalDateTime fechaExpiracionToken;
+    @Column(name = "ultimo_acceso")
+    private LocalDateTime ultimoAcceso;
 
-    @Column(name = "observaciones", columnDefinition = "TEXT")
-    private String observaciones;
+    // Para compatibilidad con código existente
+    @Transient
+    public Boolean getActivo() {
+        return enabled;
+    }
+
+    @Transient
+    public void setActivo(Boolean activo) {
+        this.enabled = activo;
+    }
+
+    @Transient
+    public String getNombreCompleto() {
+        return nombre;
+    }
+
+    @Transient
+    public void setNombreCompleto(String nombreCompleto) {
+        this.nombre = nombreCompleto;
+    }
+
+    @Transient
+    public LocalDateTime getUltimoLogin() {
+        return ultimoAcceso;
+    }
+
+    @Transient
+    public void setUltimoLogin(LocalDateTime ultimoLogin) {
+        this.ultimoAcceso = ultimoLogin;
+    }
 
     @OneToMany(mappedBy = "usuario")
     private Set<AuditoriaAccion> auditoriasAcciones = new LinkedHashSet<>();
@@ -108,8 +118,8 @@ public class Usuario {
         if (fechaCreacion == null) {
             fechaCreacion = LocalDateTime.now();
         }
-        if (activo == null) {
-            activo = true;
+        if (enabled == null) {
+            enabled = true;
         }
         if (bloqueado == null) {
             bloqueado = false;
@@ -117,16 +127,11 @@ public class Usuario {
         if (intentosFallidos == null) {
             intentosFallidos = 0;
         }
-        if (requiereCambioPassword == null) {
-            requiereCambioPassword = false;
-        }
     }
 
     @PreUpdate
     protected void onUpdate() {
-        if (fechaCambioPassword == null) {
-            fechaCambioPassword = LocalDateTime.now();
-        }
+        fechaModificacion = LocalDateTime.now();
     }
 }
 

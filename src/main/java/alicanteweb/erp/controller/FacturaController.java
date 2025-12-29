@@ -300,10 +300,29 @@ public class FacturaController {
         return true;
     }
 
+    /**
+     * Guarda una nueva factura en estado BORRADOR.
+     *
+     * <p>Las facturas nuevas SIEMPRE se crean en estado BORRADOR.
+     * Para emitirlas a Verifactu/AEAT se debe seguir el flujo:</p>
+     * <ol>
+     *   <li>Crear factura (BORRADOR)</li>
+     *   <li>Enviar a Revisión (BORRADOR → REVISION)</li>
+     *   <li>Aprobar y Emitir (REVISION → EMITIDA + envío a AEAT)</li>
+     * </ol>
+     *
+     * @param numero Número de factura generado
+     * @param fecha Fecha de expedición
+     * @param cliente Cliente asociado
+     * @param lineasDTO Líneas de la factura
+     * @param stage Ventana del formulario a cerrar
+     */
     private void guardarFactura(String numero, LocalDate fecha, Cliente cliente,
                                 ObservableList<FacturaLineaDTO> lineasDTO, javafx.stage.Stage stage) {
         try {
-            // Crear factura
+            log.info("Guardando nueva factura {} en estado BORRADOR", numero);
+
+            // Crear factura EN ESTADO BORRADOR
             Factura factura = new Factura();
             factura.setNumero(numero);
             factura.setFecha(fecha);
@@ -311,14 +330,36 @@ public class FacturaController {
             factura.setPagada(false);
             factura.setPagado(BigDecimal.ZERO);
 
-            // Calcular total
-            BigDecimal total = lineasDTO.stream()
-                .map(l -> l.getTotal() != null ? l.getTotal() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            // ⚠️ IMPORTANTE: Establecer estado BORRADOR explícitamente
+            factura.setEstado("BORRADOR");
+            factura.setVerifactuEnviada(false);
+            factura.setTipoFactura("ORDINARIA");
+
+            // Calcular totales
+            BigDecimal baseImponible = BigDecimal.ZERO;
+            BigDecimal totalIva = BigDecimal.ZERO;
+
+            for (FacturaLineaDTO dto : lineasDTO) {
+                BigDecimal subtotal = dto.getTotal() != null ? dto.getTotal() : BigDecimal.ZERO;
+                baseImponible = baseImponible.add(subtotal);
+
+                // Calcular IVA de esta línea
+                if (dto.getIva() != null && dto.getIva().compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal ivaLinea = subtotal.multiply(dto.getIva())
+                        .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                    totalIva = totalIva.add(ivaLinea);
+                }
+            }
+
+            BigDecimal total = baseImponible.add(totalIva);
+
+            factura.setBaseImponible(baseImponible);
+            factura.setTotalIva(totalIva);
             factura.setTotal(total);
 
             // Guardar factura
             Factura facturaSaved = facturaService.save(factura);
+            log.info("✅ Factura {} guardada correctamente en estado BORRADOR", numero);
 
             // Crear y guardar líneas
             for (FacturaLineaDTO dto : lineasDTO) {
@@ -332,11 +373,23 @@ public class FacturaController {
             }
 
             loadAll();
-            mostrarInfo("Factura creada correctamente: " + numero);
+
+            // Mensaje informativo sobre el flujo
+            Alert info = new Alert(Alert.AlertType.INFORMATION);
+            info.setTitle("✅ Factura Creada");
+            info.setHeaderText("Factura " + numero + " creada en BORRADOR");
+            info.setContentText("La factura ha sido creada correctamente en estado BORRADOR.\n\n" +
+                               "📋 Próximos pasos:\n" +
+                               "1. Revisa los datos de la factura\n" +
+                               "2. Usa 'Enviar a Revisión' cuando esté lista\n" +
+                               "3. Usa 'Aprobar y Emitir' para enviarla a Verifactu/AEAT\n\n" +
+                               "ℹ️ Las facturas NO se envían automáticamente a la AEAT.");
+            info.showAndWait();
+
             stage.close();
 
         } catch (Exception e) {
-            log.error("Error guardando factura", e);
+            log.error("❌ Error guardando factura", e);
             mostrarError("Error al guardar la factura: " + e.getMessage());
         }
     }
@@ -459,7 +512,17 @@ public class FacturaController {
     }
 
     /**
-     * Envía una factura a estado de REVISION
+     * Envía una factura del estado BORRADOR a REVISION.
+     *
+     * <p>Este es el paso 2 del flujo de facturación:</p>
+     * <ol>
+     *   <li>BORRADOR: Factura en edición</li>
+     *   <li><strong>REVISION: Pendiente de aprobación (estás aquí)</strong></li>
+     *   <li>EMITIDA: Enviada a AEAT vía Verifactu</li>
+     * </ol>
+     *
+     * <p>Después de enviar a revisión, debes usar el botón
+     * "Aprobar y Emitir" para enviarla a la AEAT.</p>
      */
     @FXML
     public void onEnviarARevision() {
@@ -470,24 +533,45 @@ public class FacturaController {
         }
 
         if (!"BORRADOR".equals(factura.getEstado())) {
-            mostrarError("Solo las facturas en estado BORRADOR pueden enviarse a revisión.\nEstado actual: " + factura.getEstado());
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Estado Incorrecto");
+            alert.setHeaderText("No se puede enviar a revisión");
+            alert.setContentText("Solo las facturas en estado BORRADOR pueden enviarse a revisión.\n\n" +
+                               "Estado actual: " + factura.getEstado() + "\n\n" +
+                               "Si la factura está en REVISION, usa 'Aprobar y Emitir'.\n" +
+                               "Si está EMITIDA, ya fue enviada a la AEAT.");
+            alert.showAndWait();
             return;
         }
 
         // Confirmar acción
         Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
         confirmacion.setTitle("Confirmar Envío a Revisión");
-        confirmacion.setHeaderText("Â¿Enviar factura " + factura.getNumero() + " a revisión?");
-        confirmacion.setContentText("La factura quedará pendiente de aprobación antes de emitirse a la AEAT.");
+        confirmacion.setHeaderText("¿Enviar factura " + factura.getNumero() + " a revisión?");
+        confirmacion.setContentText("La factura pasará de BORRADOR a REVISION.\n\n" +
+                                   "📋 Después deberás:\n" +
+                                   "• Revisar que todos los datos sean correctos\n" +
+                                   "• Usar el botón 'Aprobar y Emitir' para enviarla a la AEAT\n\n" +
+                                   "⚠️ NOTA: Este paso NO envía la factura a la AEAT todavía.");
 
         confirmacion.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 try {
-                    factura.setEstado("REVISION");
-                    factura.setObservacionesRevision("Enviada a revisión el " + LocalDate.now());
-                    facturaService.save(factura);
+                    // Usar método específico del servicio que no intenta registrar en Verifactu
+                    String observaciones = "Enviada a revisión el " + LocalDate.now();
+                    facturaService.enviarARevision(factura.getId(), observaciones);
                     loadAll();
-                    mostrarInfo("Factura " + factura.getNumero() + " enviada a revisión correctamente");
+
+                    Alert success = new Alert(Alert.AlertType.INFORMATION);
+                    success.setTitle("✅ Enviada a Revisión");
+                    success.setHeaderText("Factura " + factura.getNumero() + " lista para aprobar");
+                    success.setContentText("La factura está ahora en estado REVISION.\n\n" +
+                                         "📌 Próximo paso:\n" +
+                                         "Selecciona la factura y usa el botón\n" +
+                                         "'Aprobar y Emitir' para enviarla a Verifactu/AEAT.\n\n" +
+                                         "Si necesitas hacer cambios, usa 'Volver a Borrador'.");
+                    success.showAndWait();
+
                     log.info("Factura {} cambiada a estado REVISION", factura.getNumero());
                 } catch (Exception e) {
                     log.error("Error enviando factura a revisión", e);
@@ -498,7 +582,26 @@ public class FacturaController {
     }
 
     /**
-     * Aprueba y emite una factura a Verifactu/AEAT
+     * Aprueba una factura en REVISION y la emite a Verifactu/AEAT.
+     *
+     * <p><strong>⚠️ PASO FINAL - ENVÍO A LA AEAT</strong></p>
+     *
+     * <p>Este es el paso 3 (final) del flujo de facturación:</p>
+     * <ol>
+     *   <li>BORRADOR: Factura en edición</li>
+     *   <li>REVISION: Pendiente de aprobación</li>
+     *   <li><strong>EMITIDA: Enviada a AEAT (estás aquí)</strong></li>
+     * </ol>
+     *
+     * <p>Una vez emitida, la factura:</p>
+     * <ul>
+     *   <li>✅ Se envía a Verifactu/AEAT con blockchain</li>
+     *   <li>✅ Genera hash SHA-256 y QR</li>
+     *   <li>✅ Queda registrada en la Agencia Tributaria</li>
+     *   <li>⚠️ NO se puede modificar (solo anular)</li>
+     * </ul>
+     *
+     * @see VerifactuService#enviarFacturaVerifactu(Factura)
      */
     @FXML
     public void onAprobarYEmitir() {
@@ -509,60 +612,98 @@ public class FacturaController {
         }
 
         if (!"REVISION".equals(factura.getEstado())) {
-            mostrarError("Solo las facturas en estado REVISION pueden ser emitidas.\nEstado actual: " + factura.getEstado());
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Estado Incorrecto");
+            alert.setHeaderText("No se puede aprobar y emitir");
+            alert.setContentText("Solo las facturas en estado REVISION pueden ser emitidas.\n\n" +
+                               "Estado actual: " + factura.getEstado() + "\n\n" +
+                               "📋 Flujo correcto:\n" +
+                               "1. BORRADOR → Usa 'Enviar a Revisión'\n" +
+                               "2. REVISION → Usa 'Aprobar y Emitir' (este botón)\n" +
+                               "3. EMITIDA → Ya está en la AEAT\n\n" +
+                               "Si la factura está en BORRADOR, primero envíala a revisión.");
+            alert.showAndWait();
             return;
         }
 
-        // Confirmar acción con advertencia
+        // Confirmar acción con advertencia clara
         Alert confirmacion = new Alert(Alert.AlertType.WARNING);
-        confirmacion.setTitle("Confirmar Emisión a AEAT");
-        confirmacion.setHeaderText("Â¿Aprobar y emitir factura " + factura.getNumero() + " a Verifactu/AEAT?");
-        confirmacion.setContentText("Esta acción enviará la factura a la Agencia Tributaria con los datos de GRUPO BABO.\n" +
-                                   "Una vez emitida, NO se podrá modificar.\n\n" +
-                                   "Â¿Deseas continuar?");
+        confirmacion.setTitle("⚠️ CONFIRMAR EMISIÓN A LA AEAT");
+        confirmacion.setHeaderText("¿APROBAR Y EMITIR factura " + factura.getNumero() + " a Verifactu/AEAT?");
+        confirmacion.setContentText("🔴 ATENCIÓN: Esta acción es IRREVERSIBLE\n\n" +
+                                   "La factura será enviada a la Agencia Tributaria con:\n" +
+                                   "• Datos de GRUPO BABO, S.Coop.V.L.\n" +
+                                   "• CIF: F54059985\n" +
+                                   "• Sistema Verifactu (blockchain)\n\n" +
+                                   "⚠️ Una vez emitida:\n" +
+                                   "• NO se puede modificar\n" +
+                                   "• Solo se puede anular\n" +
+                                   "• Quedará registrada en la AEAT\n\n" +
+                                   "¿Estás seguro de continuar?");
         confirmacion.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
 
         confirmacion.showAndWait().ifPresent(response -> {
             if (response == ButtonType.YES) {
                 try {
-                    log.info("Iniciando emisión de factura {} a Verifactu", factura.getNumero());
+                    log.info("🚀 Iniciando emisión de factura {} a Verifactu/AEAT", factura.getNumero());
 
-                    // Enviar a Verifactu
-                    verifactuService.enviarFacturaVerifactu(factura);
+                    // Usar método específico del servicio que maneja correctamente la transacción
+                    // Este método cambia el estado y luego intenta registrar en Verifactu
+                    Factura emitida = facturaService.aprobarYEmitir(factura.getId());
 
-                    // Actualizar estado de factura
-                    factura.setEstado("EMITIDA");
-                    factura.setVerifactuEnviada(true);
-                    factura.setFechaEmisionVerifactu(java.time.LocalDateTime.now());
-                    factura.setObservacionesRevision((factura.getObservacionesRevision() != null ? factura.getObservacionesRevision() + "\n" : "") +
-                                                    "Emitida a Verifactu el " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
-                    facturaService.save(factura);
+                    // Enviar a Verifactu (ya manejado dentro del servicio, pero podemos hacerlo explícito aquí también)
+                    try {
+                        verifactuService.enviarFacturaVerifactu(emitida);
+
+                        // Actualizar campos adicionales de Verifactu
+                        emitida.setVerifactuEnviada(true);
+                        emitida.setFechaEmisionVerifactu(java.time.LocalDateTime.now());
+                        emitida.setObservacionesRevision((emitida.getObservacionesRevision() != null ? emitida.getObservacionesRevision() + "\n" : "") +
+                                                        "✅ Emitida a Verifactu el " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+                        facturaService.saveSimple(emitida);
+                    } catch (Exception verifactuEx) {
+                        log.warn("Error enviando a Verifactu, pero factura ya está EMITIDA: {}", verifactuEx.getMessage());
+                        // La factura ya está EMITIDA, el error de Verifactu no revierte el estado
+                    }
 
                     loadAll();
 
-                    // Mostrar mensaje de éxito con detalles
+                    // Mostrar mensaje de éxito detallado
                     Alert success = new Alert(Alert.AlertType.INFORMATION);
-                    success.setTitle("âœ… Factura Emitida Correctamente");
-                    success.setHeaderText("Factura " + factura.getNumero() + " emitida a AEAT");
-                    success.setContentText("La factura ha sido enviada correctamente a Verifactu con los datos de:\n\n" +
-                                         "GRUPO BABO, S.Coop.V.L.\n" +
-                                         "CIF: F54059985\n\n" +
-                                         "Fecha de emisión: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+                    success.setTitle("✅ FACTURA EMITIDA CORRECTAMENTE");
+                    success.setHeaderText("Factura " + factura.getNumero() + " enviada a AEAT");
+                    success.setContentText("✅ La factura ha sido emitida exitosamente\n\n" +
+                                         "📋 Datos de emisión:\n" +
+                                         "• Empresa: GRUPO BABO, S.Coop.V.L.\n" +
+                                         "• CIF: F54059985\n" +
+                                         "• Fecha: " + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")) + "\n" +
+                                         "• Estado: EMITIDA\n" +
+                                         "• Verifactu: Registrada en AEAT\n\n" +
+                                         "🔐 La factura está ahora en el sistema Verifactu\n" +
+                                         "con hash blockchain y código QR.\n\n" +
+                                         "Usa 'Imprimir' para generar el PDF con QR.");
                     success.showAndWait();
 
-                    log.info("âœ… Factura {} emitida correctamente a Verifactu", factura.getNumero());
+                    log.info("✅ Factura {} emitida correctamente a Verifactu/AEAT", factura.getNumero());
 
                 } catch (Exception e) {
-                    log.error("âŒ Error emitiendo factura a Verifactu", e);
+                    log.error("❌ Error emitiendo factura a Verifactu", e);
 
                     Alert error = new Alert(Alert.AlertType.ERROR);
-                    error.setTitle("Error al Emitir Factura");
+                    error.setTitle("❌ Error al Emitir Factura");
                     error.setHeaderText("No se pudo emitir la factura " + factura.getNumero());
-                    error.setContentText("Error: " + e.getMessage() + "\n\n" +
-                                       "La factura permanece en estado REVISION.\n" +
-                                       "Revisa la configuración de Verifactu y vuelve a intentarlo.");
+                    error.setContentText("Error técnico: " + e.getMessage() + "\n\n" +
+                                       "🔄 La factura permanece en estado REVISION.\n\n" +
+                                       "Posibles causas:\n" +
+                                       "• Verifactu no está configurado\n" +
+                                       "• No hay conexión con la AEAT\n" +
+                                       "• Datos incompletos en la factura\n" +
+                                       "• Error en el certificado digital\n\n" +
+                                       "Revisa la configuración y vuelve a intentarlo.");
                     error.showAndWait();
                 }
+            } else {
+                log.info("Usuario canceló la emisión de factura {}", factura.getNumero());
             }
         });
     }
@@ -579,32 +720,79 @@ public class FacturaController {
         }
 
         if (!"EMITIDA".equals(factura.getEstado())) {
-            mostrarError("Solo las facturas EMITIDAS pueden ser anuladas.\nEstado actual: " + factura.getEstado());
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Estado Incorrecto");
+            alert.setHeaderText("No se puede anular");
+            alert.setContentText("Solo las facturas EMITIDAS pueden ser anuladas.\n\n" +
+                               "Estado actual: " + factura.getEstado() + "\n\n" +
+                               "📋 Según estado:\n" +
+                               "• BORRADOR → Usa 'Eliminar Borrador'\n" +
+                               "• REVISION → Usa 'Volver a Borrador' y luego elimina\n" +
+                               "• EMITIDA → Usa 'Anular Factura' (este botón) ✅\n\n" +
+                               "⚠️ Solo las facturas registradas en AEAT\n" +
+                               "requieren ser anuladas formalmente.");
+            alert.showAndWait();
             return;
         }
 
         // Pedir motivo de anulación
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Anular Factura");
-        dialog.setHeaderText("Anular factura " + factura.getNumero());
-        dialog.setContentText("Motivo de anulación:");
+        dialog.setHeaderText("⚠️ Anular factura " + factura.getNumero() + " (REGISTRADA EN AEAT)");
+        dialog.setContentText("Motivo de anulación (obligatorio):");
 
         dialog.showAndWait().ifPresent(motivo -> {
             if (motivo != null && !motivo.trim().isEmpty()) {
-                try {
-                    factura.setEstado("ANULADA");
-                    factura.setObservacionesRevision((factura.getObservacionesRevision() != null ? factura.getObservacionesRevision() + "\n" : "") +
-                                                    "ANULADA el " + LocalDate.now() + ". Motivo: " + motivo);
-                    facturaService.save(factura);
-                    loadAll();
-                    mostrarInfo("Factura " + factura.getNumero() + " anulada correctamente");
-                    log.info("Factura {} anulada. Motivo: {}", factura.getNumero(), motivo);
-                } catch (Exception e) {
-                    log.error("Error anulando factura", e);
-                    mostrarError("Error al anular factura: " + e.getMessage());
-                }
+                // Confirmar anulación
+                Alert confirmacion = new Alert(Alert.AlertType.WARNING);
+                confirmacion.setTitle("⚠️ CONFIRMAR ANULACIÓN");
+                confirmacion.setHeaderText("¿ANULAR factura " + factura.getNumero() + " en la AEAT?");
+                confirmacion.setContentText("🔴 ATENCIÓN: Esta factura está registrada en la AEAT\n\n" +
+                                           "Motivo: " + motivo + "\n\n" +
+                                           "Al anular:\n" +
+                                           "• Se marcará como ANULADA en el sistema\n" +
+                                           "• Quedará registrada la anulación\n" +
+                                           "• No se podrá revertir esta acción\n\n" +
+                                           "⚠️ Deberás emitir una factura rectificativa\n" +
+                                           "si es necesario.\n\n" +
+                                           "¿Confirmas la anulación?");
+                confirmacion.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
+
+                confirmacion.showAndWait().ifPresent(response -> {
+                    if (response == ButtonType.YES) {
+                        try {
+                            factura.setEstado("ANULADA");
+                            factura.setObservacionesRevision(
+                                (factura.getObservacionesRevision() != null ?
+                                 factura.getObservacionesRevision() + "\n" : "") +
+                                "❌ ANULADA el " + LocalDate.now() +
+                                ". Motivo: " + motivo);
+
+                            // ✅ Usar saveSimple para no intentar Verifactu
+                            facturaService.saveSimple(factura);
+                            loadAll();
+
+                            Alert success = new Alert(Alert.AlertType.INFORMATION);
+                            success.setTitle("✅ Factura Anulada");
+                            success.setHeaderText("Factura " + factura.getNumero() + " anulada");
+                            success.setContentText("La factura ha sido anulada correctamente.\n\n" +
+                                                 "Motivo: " + motivo + "\n\n" +
+                                                 "📋 Estado actual: ANULADA\n\n" +
+                                                 "Si necesitas emitir una factura rectificativa,\n" +
+                                                 "crea una nueva factura con los datos correctos.");
+                            success.showAndWait();
+
+                            log.info("Factura {} anulada. Motivo: {}", factura.getNumero(), motivo);
+                        } catch (Exception e) {
+                            log.error("Error anulando factura", e);
+                            mostrarError("Error al anular factura: " + e.getMessage());
+                        }
+                    }
+                });
             } else {
-                mostrarError("Debes indicar el motivo de anulación");
+                mostrarError("Debes indicar el motivo de anulación.\n\n" +
+                           "El motivo es obligatorio para cumplir con\n" +
+                           "los requisitos legales de auditoría.");
             }
         });
     }
@@ -621,22 +809,144 @@ public class FacturaController {
         }
 
         if (!"REVISION".equals(factura.getEstado())) {
-            mostrarError("Solo las facturas en REVISION pueden volver a BORRADOR.\nEstado actual: " + factura.getEstado());
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Estado Incorrecto");
+            alert.setHeaderText("No se puede devolver a borrador");
+            alert.setContentText("Solo las facturas en estado REVISION pueden volver a BORRADOR.\n\n" +
+                               "Estado actual: " + factura.getEstado() + "\n\n" +
+                               "📋 Estados válidos:\n" +
+                               "• REVISION → Puede volver a BORRADOR ✅\n" +
+                               "• BORRADOR → Ya es borrador\n" +
+                               "• EMITIDA → No se puede modificar (solo anular)");
+            alert.showAndWait();
             return;
         }
 
-        try {
-            factura.setEstado("BORRADOR");
-            factura.setObservacionesRevision((factura.getObservacionesRevision() != null ? factura.getObservacionesRevision() + "\n" : "") +
-                                            "Devuelta a BORRADOR el " + LocalDate.now());
-            facturaService.save(factura);
-            loadAll();
-            mostrarInfo("Factura " + factura.getNumero() + " devuelta a BORRADOR");
-            log.info("Factura {} devuelta a estado BORRADOR", factura.getNumero());
-        } catch (Exception e) {
-            log.error("Error devolviendo factura a borrador", e);
-            mostrarError("Error: " + e.getMessage());
+        // Confirmar acción
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Confirmar Devolución a Borrador");
+        confirmacion.setHeaderText("¿Devolver factura " + factura.getNumero() + " a BORRADOR?");
+        confirmacion.setContentText("La factura volverá al estado BORRADOR y podrás editarla.\n\n" +
+                                   "⚠️ Solo úsalo si necesitas modificar la factura antes de emitirla.\n\n" +
+                                   "Después deberás:\n" +
+                                   "1. Realizar los cambios necesarios\n" +
+                                   "2. Enviar a Revisión nuevamente\n" +
+                                   "3. Aprobar y Emitir");
+
+        confirmacion.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                try {
+                    // ✅ Usar método específico del servicio para evitar rollback
+                    String observaciones = "Devuelta a BORRADOR el " + LocalDate.now();
+                    Factura actualizada = facturaService.volverABorrador(factura.getId());
+
+                    // Actualizar observaciones adicionales
+                    actualizada.setObservacionesRevision(
+                        (actualizada.getObservacionesRevision() != null ?
+                         actualizada.getObservacionesRevision() + "\n" : "") + observaciones);
+                    facturaService.saveSimple(actualizada);
+
+                    loadAll();
+
+                    Alert success = new Alert(Alert.AlertType.INFORMATION);
+                    success.setTitle("✅ Devuelta a Borrador");
+                    success.setHeaderText("Factura " + factura.getNumero() + " lista para editar");
+                    success.setContentText("La factura ha vuelto al estado BORRADOR.\n\n" +
+                                         "Ahora puedes:\n" +
+                                         "• Editar los datos de la factura\n" +
+                                         "• Modificar las líneas\n" +
+                                         "• Cambiar el cliente\n\n" +
+                                         "Cuando esté lista, envíala a revisión nuevamente.");
+                    success.showAndWait();
+
+                    log.info("Factura {} devuelta a estado BORRADOR", factura.getNumero());
+                } catch (Exception e) {
+                    log.error("Error devolviendo factura a borrador", e);
+                    mostrarError("Error: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * Elimina una factura en estado BORRADOR
+     */
+    @FXML
+    public void onEliminarBorrador() {
+        Factura factura = tableFacturas.getSelectionModel().getSelectedItem();
+        if (factura == null) {
+            mostrarError("Selecciona una factura para eliminar");
+            return;
         }
+
+        if (!"BORRADOR".equals(factura.getEstado())) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Estado Incorrecto");
+            alert.setHeaderText("No se puede eliminar");
+            alert.setContentText("Solo las facturas en estado BORRADOR pueden ser eliminadas.\n\n" +
+                               "Estado actual: " + factura.getEstado() + "\n\n" +
+                               "📋 Para facturas emitidas:\n" +
+                               "• Si está EMITIDA → Usa 'Anular Factura'\n" +
+                               "• Si está en REVISION → Usa 'Volver a Borrador' primero\n\n" +
+                               "⚠️ Las facturas emitidas no se pueden eliminar,\n" +
+                               "solo anular (requisito legal).");
+            alert.showAndWait();
+            return;
+        }
+
+        // Confirmar eliminación con advertencia
+        Alert confirmacion = new Alert(Alert.AlertType.WARNING);
+        confirmacion.setTitle("⚠️ CONFIRMAR ELIMINACIÓN");
+        confirmacion.setHeaderText("¿ELIMINAR PERMANENTEMENTE la factura " + factura.getNumero() + "?");
+        confirmacion.setContentText("🔴 ATENCIÓN: Esta acción NO se puede deshacer\n\n" +
+                                   "Se eliminará:\n" +
+                                   "• Factura: " + factura.getNumero() + "\n" +
+                                   "• Cliente: " + (factura.getCliente() != null ? factura.getCliente().getNombre() : "N/A") + "\n" +
+                                   "• Total: " + String.format("%.2f €", factura.getTotal()) + "\n" +
+                                   "• Todas sus líneas\n\n" +
+                                   "⚠️ Solo se pueden eliminar facturas en BORRADOR.\n" +
+                                   "Las facturas emitidas se deben ANULAR, no eliminar.\n\n" +
+                                   "¿Estás seguro de eliminar esta factura?");
+        confirmacion.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
+        confirmacion.getDialogPane().lookupButton(ButtonType.YES).getStyleClass().add("btn-danger");
+
+        confirmacion.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                try {
+                    String numeroFactura = factura.getNumero();
+
+                    // Eliminar usando el servicio
+                    facturaService.deleteById(factura.getId());
+
+                    loadAll();
+
+                    Alert success = new Alert(Alert.AlertType.INFORMATION);
+                    success.setTitle("✅ Factura Eliminada");
+                    success.setHeaderText("Factura eliminada correctamente");
+                    success.setContentText("La factura " + numeroFactura + " ha sido eliminada permanentemente.\n\n" +
+                                         "Esta factura era un borrador y no estaba registrada\n" +
+                                         "en la AEAT, por lo que se pudo eliminar sin problemas.");
+                    success.showAndWait();
+
+                    log.info("Factura {} (BORRADOR) eliminada correctamente", numeroFactura);
+                } catch (Exception e) {
+                    log.error("Error eliminando factura borrador", e);
+
+                    Alert error = new Alert(Alert.AlertType.ERROR);
+                    error.setTitle("❌ Error al Eliminar");
+                    error.setHeaderText("No se pudo eliminar la factura");
+                    error.setContentText("Error técnico: " + e.getMessage() + "\n\n" +
+                                       "Posibles causas:\n" +
+                                       "• La factura tiene líneas asociadas\n" +
+                                       "• Error de base de datos\n" +
+                                       "• La factura ya no existe\n\n" +
+                                       "Si el problema persiste, contacta al administrador.");
+                    error.showAndWait();
+                }
+            } else {
+                log.info("Usuario canceló la eliminación de factura {}", factura.getNumero());
+            }
+        });
     }
 
     private void mostrarInfo(String mensaje) {

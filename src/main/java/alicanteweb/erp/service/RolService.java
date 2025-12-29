@@ -155,9 +155,12 @@ public class RolService {
         }
 
         // Verificar que no haya usuarios con este rol
+        // TODO: La base de datos actual no soporta esta relación
+        /*
         if (!rol.getUsuarios().isEmpty()) {
             throw new IllegalArgumentException("No se puede eliminar el rol porque tiene usuarios asignados");
         }
+        */
 
         rol.setActivo(false);
         rolRepository.save(rol);

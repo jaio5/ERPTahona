@@ -73,9 +73,10 @@ public class Rol {
 
     /**
      * Usuarios con este rol
+     * TODO: La base de datos actual no soporta esta relación - el rol está en la columna 'role' de 'users'
      */
-    @OneToMany(mappedBy = "rol")
-    private Set<Usuario> usuarios = new LinkedHashSet<>();
+    // @OneToMany(mappedBy = "rol")
+    // private Set<Usuario> usuarios = new LinkedHashSet<>();
 
     @PrePersist
     protected void onCreate() {

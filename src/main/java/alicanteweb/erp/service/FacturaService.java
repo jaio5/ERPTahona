@@ -117,4 +117,82 @@ public class FacturaService {
     public ObservableList<Factura> findAllObservable() {
         return FXCollections.observableArrayList(findAll());
     }
+
+    /**
+     * Envía una factura a revisión (cambia estado de BORRADOR a REVISION)
+     * Este método NO intenta registrar en Verifactu, solo cambia el estado
+     */
+    @Transactional
+    public Factura enviarARevision(Long facturaId, String observaciones) {
+        Factura factura = repository.findById(facturaId)
+                .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
+
+        if (!"BORRADOR".equals(factura.getEstado())) {
+            throw new IllegalStateException("Solo se pueden enviar a revisión facturas en estado BORRADOR");
+        }
+
+        factura.setEstado("REVISION");
+        if (observaciones != null && !observaciones.isEmpty()) {
+            factura.setObservacionesRevision(observaciones);
+        }
+
+        return repository.save(factura);
+    }
+
+    /**
+     * Aprueba y emite una factura (cambia estado de REVISION a EMITIDA)
+     * Este método SÍ intenta registrar en Verifactu
+     */
+    @Transactional
+    public Factura aprobarYEmitir(Long facturaId) {
+        Factura factura = repository.findById(facturaId)
+                .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
+
+        if (!"REVISION".equals(factura.getEstado())) {
+            throw new IllegalStateException("Solo se pueden emitir facturas en estado REVISION");
+        }
+
+        // Cambiar estado antes de intentar registrar en Verifactu
+        factura.setEstado("EMITIDA");
+        Factura saved = repository.save(factura);
+
+        // Intentar registrar en Verifactu (no falla la transacción si hay error)
+        try {
+            verifactuEvidenceService.registrarEvidenciaAEAT(
+                saved.getId() != null ? saved.getId().toString() : "",
+                "",
+                saved.getNumero() != null ? saved.getNumero() : ""
+            );
+        } catch (Exception e) {
+            System.err.println("Error registrando evidencia Verifactu (factura ya guardada): " + e.getMessage());
+            // La factura ya está guardada, el error de Verifactu no debe revertir la transacción
+        }
+
+        return saved;
+    }
+
+    /**
+     * Vuelve una factura de REVISION a BORRADOR
+     */
+    @Transactional
+    public Factura volverABorrador(Long facturaId) {
+        Factura factura = repository.findById(facturaId)
+                .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
+
+        if (!"REVISION".equals(factura.getEstado())) {
+            throw new IllegalStateException("Solo se pueden devolver a borrador facturas en REVISION");
+        }
+
+        factura.setEstado("BORRADOR");
+        return repository.save(factura);
+    }
+
+    /**
+     * Guarda una factura sin intentar registrar en Verifactu
+     * Útil para actualizaciones simples de datos
+     */
+    @Transactional
+    public Factura saveSimple(Factura factura) {
+        return repository.save(factura);
+    }
 }

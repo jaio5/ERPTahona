@@ -52,9 +52,8 @@ public class UsuarioService {
         // Cifrar la contraseña
         usuario.setPassword(cifradoService.hashPassword(passwordPlain));
         usuario.setFechaCreacion(LocalDateTime.now());
-        usuario.setFechaCambioPassword(LocalDateTime.now());
         usuario.setIntentosFallidos(0);
-        usuario.setActivo(true);
+        usuario.setEnabled(true);
         usuario.setBloqueado(false);
 
         Usuario guardado = usuarioRepository.save(usuario);
@@ -122,8 +121,6 @@ public class UsuarioService {
 
         // Actualizar contraseña
         usuario.setPassword(cifradoService.hashPassword(newPassword));
-        usuario.setFechaCambioPassword(LocalDateTime.now());
-        usuario.setRequiereCambioPassword(false);
         usuarioRepository.save(usuario);
 
         // Auditar
@@ -136,6 +133,7 @@ public class UsuarioService {
     /**
      * Validar credenciales de usuario
      */
+    @Transactional
     public boolean validarCredenciales(String username, String password) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByUsername(username);
 
@@ -144,6 +142,12 @@ public class UsuarioService {
         }
 
         Usuario usuario = usuarioOpt.get();
+
+        // Verificar si está activo (enabled)
+        if (!Boolean.TRUE.equals(usuario.getEnabled())) {
+            log.warn("Intento de login en usuario deshabilitado: {}", username);
+            return false;
+        }
 
         // Verificar si está bloqueado
         if (Boolean.TRUE.equals(usuario.getBloqueado())) {
@@ -155,11 +159,23 @@ public class UsuarioService {
         boolean valido = cifradoService.verificarPassword(password, usuario.getPassword());
 
         if (valido) {
-            // Reset intentos fallidos
-            resetearIntentosFallidos(usuario.getId());
+            // Reset intentos fallidos - ahora dentro de la misma transacción
+            usuario.setIntentosFallidos(0);
+            usuarioRepository.save(usuario);
         } else {
-            // Incrementar intentos fallidos
-            incrementarIntentosFallidos(usuario.getId());
+            // Incrementar intentos fallidos - dentro de la misma transacción
+            int intentos = (usuario.getIntentosFallidos() != null ? usuario.getIntentosFallidos() : 0) + 1;
+            usuario.setIntentosFallidos(intentos);
+
+            // Bloquear si supera el máximo
+            if (intentos >= MAX_INTENTOS_FALLIDOS) {
+                usuario.setBloqueado(true);
+                log.warn("Usuario bloqueado por {} intentos fallidos: {}", intentos, usuario.getUsername());
+                auditoriaService.registrarAccion(usuario, "BLOQUEO_AUTOMATICO", "Usuario", usuario.getId().toString(),
+                        "Usuario bloqueado automáticamente por " + intentos + " intentos fallidos");
+            }
+            
+            usuarioRepository.save(usuario);
         }
 
         return valido;
@@ -197,7 +213,7 @@ public class UsuarioService {
      * Listar usuarios activos
      */
     public List<Usuario> listarActivos() {
-        return usuarioRepository.findByActivoTrue();
+        return usuarioRepository.findByEnabledTrue();
     }
 
     /**
@@ -281,7 +297,9 @@ public class UsuarioService {
 
     /**
      * Generar token de recuperación de contraseña
+     * TODO: Requiere campos adicionales en la base de datos
      */
+    /*
     @Transactional
     public String generarTokenRecuperacion(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
@@ -298,10 +316,13 @@ public class UsuarioService {
         log.info("Token de recuperación generado para: {}", email);
         return token;
     }
+    */
 
     /**
      * Recuperar contraseña usando token
+     * TODO: Requiere campos adicionales en la base de datos
      */
+    /*
     @Transactional
     public void recuperarPassword(String token, String newPassword) {
         Usuario usuario = usuarioRepository.findByTokenRecuperacionValido(token)
@@ -309,7 +330,6 @@ public class UsuarioService {
 
         // Actualizar contraseña
         usuario.setPassword(cifradoService.hashPassword(newPassword));
-        usuario.setFechaCambioPassword(LocalDateTime.now());
         usuario.setTokenRecuperacion(null);
         usuario.setFechaExpiracionToken(null);
         usuario.setRequiereCambioPassword(false);
@@ -320,6 +340,7 @@ public class UsuarioService {
 
         log.info("Contraseña recuperada para usuario: {}", usuario.getUsername());
     }
+    */
 
     /**
      * Actualizar último login
@@ -329,7 +350,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        usuario.setUltimoLogin(LocalDateTime.now());
+        usuario.setUltimoAcceso(LocalDateTime.now());
         usuarioRepository.save(usuario);
     }
 
@@ -337,7 +358,7 @@ public class UsuarioService {
      * Contar usuarios activos
      */
     public long contarActivos() {
-        return usuarioRepository.countByActivoTrue();
+        return usuarioRepository.countByEnabledTrue();
     }
 
     /**
@@ -348,7 +369,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        usuario.setActivo(false);
+        usuario.setEnabled(false);
         usuarioRepository.save(usuario);
 
         auditoriaService.registrarEliminacion(null, "Usuario", usuarioId.toString(),
