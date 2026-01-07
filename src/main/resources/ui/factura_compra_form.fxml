@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.FacturaCompraFormController"
+      styleClass="main-container" spacing="15">
+    <stylesheets><String fx:value="@/styles/unified-styles.css"/></stylesheets>
+
+    <Label text="📥 FACTURA DE COMPRA" styleClass="title-panel"/>
+
+    <ScrollPane fitToWidth="true">
+        <VBox spacing="15" style="-fx-padding: 15;">
+            <TitledPane text="📋 Datos de Factura" collapsible="false" style="-fx-font-weight: bold;">
+                <GridPane hgap="20" vgap="15" style="-fx-padding: 15;">
+                    <columnConstraints><ColumnConstraints percentWidth="50"/><ColumnConstraints percentWidth="50"/></columnConstraints>
+                    <Label text="Número:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="txtNumero" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-min-height: 35;"/>
+                    <Label text="Fecha Recepción:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                    <DatePicker fx:id="dpFecha" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-min-height: 35;"/>
+                    <Label text="Proveedor:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                    <ComboBox fx:id="cbProveedor" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-min-height: 35;"/>
+                    <Label text="Nº Factura Proveedor:" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="txtNumFacturaProveedor" GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-min-height: 35;"/>
+                </GridPane>
+            </TitledPane>
+
+            <TitledPane text="📦 Líneas" collapsible="false" style="-fx-font-weight: bold;">
+                <VBox spacing="10" style="-fx-padding: 15;">
+                    <TableView fx:id="tableLineas" prefHeight="200">
+                        <columns>
+                            <TableColumn fx:id="colArticulo" text="Artículo" prefWidth="150"/>
+                            <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="80"/>
+                            <TableColumn fx:id="colPrecio" text="Precio" prefWidth="100"/>
+                        </columns>
+                    </TableView>
+                    <HBox spacing="10"><Button text="➕ Agregar" onAction="#onAgregarLinea" style="-fx-padding: 8 16;"/><Button text="🗑️ Eliminar" onAction="#onEliminarLinea" style="-fx-padding: 8 16;"/></HBox>
+                </VBox>
+            </TitledPane>
+
+            <TitledPane text="💰 Total" collapsible="false">
+                <GridPane hgap="20" vgap="15" style="-fx-padding: 15;">
+                    <columnConstraints><ColumnConstraints percentWidth="50"/><ColumnConstraints percentWidth="50"/></columnConstraints>
+                    <Label text="TOTAL:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="txtTotal" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-min-height: 35;"/>
+                </GridPane>
+            </TitledPane>
+        </VBox>
+    </ScrollPane>
+
+    <Separator/><HBox spacing="15" style="-fx-alignment: center-right; -fx-padding: 15;"><Region HBox.hgrow="ALWAYS"/><Button text="💾 Guardar" onAction="#onGuardar" style="-fx-padding: 12 30;"/><Button text="✓ Registrar" onAction="#onRegistrar" style="-fx-padding: 12 30;"/><Button text="❌ Cancelar" onAction="#onCancelar" style="-fx-padding: 12 30;"/></HBox>
+</VBox>

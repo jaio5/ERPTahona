@@ -8,6 +8,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +31,10 @@ public class LoginController {
     private Label errorLabel;
 
     @FXML
-    private Button loginButton;
+    private javafx.scene.layout.HBox errorContainer;
 
     @FXML
-    private CheckBox rememberMeCheckbox;
+    private Button loginButton;
 
     private final AutenticacionService autenticacionService;
     private final ConfigurableApplicationContext springContext;
@@ -47,12 +49,29 @@ public class LoginController {
     public void initialize() {
         log.info("LoginController inicializado");
 
-        // Enter en password también hace login
-        passwordField.setOnAction(event -> handleLogin());
-
         // Limpiar error al escribir
         usernameField.textProperty().addListener((obs, old, newVal) -> hideError());
         passwordField.textProperty().addListener((obs, old, newVal) -> hideError());
+
+        // Focus en username al iniciar
+        Platform.runLater(() -> usernameField.requestFocus());
+    }
+
+    /**
+     * Maneja eventos de teclado (Enter para navegar entre campos)
+     */
+    @FXML
+    public void onKeyPressed(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            if (event.getSource() == usernameField) {
+                // Si está en usuario, pasar a contraseña
+                passwordField.requestFocus();
+            } else if (event.getSource() == passwordField) {
+                // Si está en contraseña, hacer login
+                handleLogin();
+            }
+            event.consume();
+        }
     }
 
     @FXML
@@ -84,7 +103,7 @@ public class LoginController {
             Usuario usuario = autenticacionService.login(username, password);
 
             if (usuario != null) {
-                log.info("Login exitoso: {}", username);
+                log.info("✅ Login exitoso: {}", username);
 
                 // Login exitoso - abrir panel principal
                 Platform.runLater(() -> {
@@ -92,14 +111,14 @@ public class LoginController {
                         abrirPanelPrincipal(usuario);
                     } catch (Exception e) {
                         log.error("Error al abrir panel principal", e);
-                        showError("Error al cargar la aplicación");
+                        showError("Error al cargar la aplicación: " + e.getMessage());
                         loginButton.setDisable(false);
                         loginButton.setText("Iniciar Sesión");
                     }
                 });
 
             } else {
-                log.warn("Login fallido: {}", username);
+                log.warn("❌ Login fallido: {}", username);
                 showError("Usuario o contraseña incorrectos");
                 passwordField.clear();
                 passwordField.requestFocus();
@@ -108,7 +127,7 @@ public class LoginController {
             }
 
         } catch (Exception e) {
-            log.error("Error en autenticación", e);
+            log.error("❌ Error en autenticación", e);
             showError("Error en el servidor. Intenta de nuevo.");
             loginButton.setDisable(false);
             loginButton.setText("Iniciar Sesión");
@@ -124,30 +143,34 @@ public class LoginController {
         Parent root = loader.load();
 
         // Crear nueva escena
-        Scene scene = new Scene(root, 1200, 800);
+        Scene scene = new Scene(root, 1400, 900);
 
         // Obtener el stage actual
         Stage stage = (Stage) loginButton.getScene().getWindow();
-        stage.setTitle("ERP Panadería Tahona - " + usuario.getNombreCompleto());
+        stage.setTitle("ERP Panadería Tahona - " + usuario.getNombre());
         stage.setScene(scene);
         stage.setMaximized(true);
         stage.centerOnScreen();
 
-        log.info("Panel principal cargado exitosamente");
+        log.info("✅ Panel principal cargado exitosamente");
     }
 
     private void showError(String message) {
-        errorLabel.setText(message);
-        errorLabel.setVisible(true);
-        errorLabel.setManaged(true);
-
-        // Efecto de shake (opcional)
-        // Aquí podrías agregar una animación
+        if (errorLabel != null) {
+            errorLabel.setText(message);
+        }
+        if (errorContainer != null) {
+            errorContainer.setVisible(true);
+            errorContainer.setManaged(true);
+        }
     }
 
     private void hideError() {
-        errorLabel.setVisible(false);
-        errorLabel.setManaged(false);
+        if (errorContainer != null) {
+            errorContainer.setVisible(false);
+            errorContainer.setManaged(false);
+        }
     }
 }
+
 

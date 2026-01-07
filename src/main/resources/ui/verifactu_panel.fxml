@@ -1,48 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" 
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.VerifactuController"
-      spacing="10" styleClass="panel-container">
-    <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
-    <HBox alignment="CENTER_LEFT" spacing="10">
-        <Label text="Verifactu - Sistema de Verificación" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+      stylesheets="@/styles/simple-theme.css"
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="VeriFacTur" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblEstado" text="● Deshabilitado" style="-fx-text-fill: #6c757d;"/>
     </HBox>
-    <Separator/>
-    <!-- Tarjetas de estadísticas -->
-    <HBox spacing="15" alignment="CENTER_LEFT">
-        <VBox spacing="5" style="-fx-background-color: #e3f2fd; -fx-padding: 15; -fx-background-radius: 5;" HBox.hgrow="ALWAYS">
-            <Label text="Total Verificaciones" style="-fx-font-size: 12px; -fx-text-fill: #1976d2;"/>
-            <Label fx:id="lblTotalVerificaciones" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1976d2;"/>
-        </VBox>
-        <VBox spacing="5" style="-fx-background-color: #fff3e0; -fx-padding: 15; -fx-background-radius: 5;" HBox.hgrow="ALWAYS">
-            <Label text="Pendientes" style="-fx-font-size: 12px; -fx-text-fill: #f57c00;"/>
-            <Label fx:id="lblPendientes" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #f57c00;"/>
-        </VBox>
-        <VBox spacing="5" style="-fx-background-color: #ffebee; -fx-padding: 15; -fx-background-radius: 5;" HBox.hgrow="ALWAYS">
-            <Label text="Errores" style="-fx-font-size: 12px; -fx-text-fill: #d32f2f;"/>
-            <Label fx:id="lblErrores" text="0" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #d32f2f;"/>
-        </VBox>
-    </HBox>
-    <Separator/>
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <Label text="Evidencias Registradas" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="btnRefrescar" text="🔄 Refrescar" onAction="#onRefresh" styleClass="btn-secondary"/>
-    </HBox>
-    <TableView fx:id="tableEvidencias" VBox.vgrow="ALWAYS">
-        <columns>
-            <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
-            <TableColumn fx:id="colFactura" text="Factura" prefWidth="120"/>
-            <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
-            <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
-            <TableColumn fx:id="colHash" text="Hash" prefWidth="350"/>
-        </columns>
-    </TableView>
-    <Separator/>
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <Label text="ℹ️ Las evidencias se registran automáticamente al crear facturas" style="-fx-text-fill: #666; -fx-font-size: 11px;"/>
-    </HBox>
+
+    <VBox styleClass="card" spacing="16">
+        <Label text="Configuración" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
+
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="Estado:" prefWidth="150"/>
+            <CheckBox fx:id="chkHabilitado" text="Habilitado"/>
+        </HBox>
+
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="Certificado:" prefWidth="150"/>
+            <TextField fx:id="txtCertificado" HBox.hgrow="ALWAYS" promptText="Ruta del certificado"/>
+            <Button text="..." onAction="#onSeleccionarCertificado" styleClass="button"/>
+        </HBox>
+
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="Contraseña:" prefWidth="150"/>
+            <PasswordField fx:id="txtPassword" prefWidth="200"/>
+        </HBox>
+
+        <HBox spacing="12">
+            <Button text="💾 Guardar" onAction="#onGuardar" styleClass="button-success"/>
+            <Button text="🧪 Probar Conexión" onAction="#onProbar" styleClass="button-primary"/>
+        </HBox>
+    </VBox>
+
+    <VBox VBox.vgrow="ALWAYS">
+        <Label text="Registro de Envíos" style="-fx-font-weight: 600; -fx-font-size: 15;"/>
+        <TableView fx:id="tableEnvios" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
+                <TableColumn fx:id="colFactura" text="Factura" prefWidth="120"/>
+                <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
+                <TableColumn fx:id="colMensaje" text="Mensaje" prefWidth="300"/>
+            </columns>
+        </TableView>
+    </VBox>
+
 </VBox>
+

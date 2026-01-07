@@ -1,0 +1,572 @@
+/* ================================================================
+   ESTILOS GLOBALES - ERP PANADERÍA TAHONA v1.3.0
+   Sistema de diseño consistente para toda la aplicación
+   ================================================================ */
+
+/* ================================================================
+   COLORES PRINCIPALES
+   ================================================================ */
+.root {
+    -fx-base: #f5f5f5;
+    -fx-control-inner-background: #ffffff;
+    -fx-focus-color: #0078d4;
+    -fx-faint-focus-color: #0078d422;
+}
+
+/* ================================================================
+   COLORES PERSONALIZADOS
+   ================================================================ */
+.primary-color { -fx-text-fill: #0078d4; }
+.success-color { -fx-text-fill: #107c10; }
+.warning-color { -fx-text-fill: #ff8c00; }
+.danger-color { -fx-text-fill: #d13438; }
+.info-color { -fx-text-fill: #0078d4; }
+
+/* ================================================================
+   FONDOS
+   ================================================================ */
+.bg-primary { -fx-background-color: #0078d4; }
+.bg-success { -fx-background-color: #107c10; }
+.bg-warning { -fx-background-color: #ff8c00; }
+.bg-danger { -fx-background-color: #d13438; }
+.bg-light { -fx-background-color: #f5f5f5; }
+.bg-dark { -fx-background-color: #1e1e1e; }
+.bg-white { -fx-background-color: #ffffff; }
+
+/* ================================================================
+   CONTENEDOR PRINCIPAL
+   ================================================================ */
+.main-container {
+    -fx-padding: 15;
+    -fx-background-color: #f5f5f5;
+    -fx-spacing: 10;
+}
+
+.panel-container {
+    -fx-padding: 15;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1;
+    -fx-spacing: 10;
+}
+
+/* ================================================================
+   TÍTULOS Y TEXTOS
+   ================================================================ */
+.title-panel {
+    -fx-font-size: 20;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e1e1e;
+    -fx-padding: 10 0 5 0;
+}
+
+.title-form {
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e1e1e;
+    -fx-padding: 5 0;
+}
+
+.subtitle {
+    -fx-font-size: 13;
+    -fx-text-fill: #666666;
+    -fx-padding: 0 0 10 0;
+}
+
+.label-field {
+    -fx-font-size: 12;
+    -fx-text-fill: #333333;
+    -fx-font-weight: bold;
+}
+
+.label-info {
+    -fx-font-size: 11;
+    -fx-text-fill: #666666;
+}
+
+/* ================================================================
+   CAMPOS DE ENTRADA
+   ================================================================ */
+.text-field,
+.text-area,
+.combo-box,
+.date-picker {
+    -fx-font-size: 11;
+    -fx-padding: 8;
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-color: #ffffff;
+}
+
+.text-field:focused,
+.text-area:focused,
+.combo-box:focused,
+.date-picker:focused {
+    -fx-border-color: #0078d4;
+    -fx-border-width: 2;
+    -fx-background-color: #fafafa;
+}
+
+.text-field:disabled,
+.text-area:disabled,
+.combo-box:disabled {
+    -fx-background-color: #f0f0f0;
+    -fx-text-fill: #999999;
+}
+
+/* ================================================================
+   BOTONES
+   ================================================================ */
+.button {
+    -fx-padding: 10 20;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+/* Botón primario (OK, Guardar) */
+.button-primary {
+    -fx-background-color: #0078d4;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 10 20;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.button-primary:hover {
+    -fx-background-color: #006ab3;
+}
+
+.button-primary:pressed {
+    -fx-background-color: #005a9e;
+}
+
+/* Botón secundario (Cancelar) */
+.button-secondary {
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: #333333;
+    -fx-padding: 10 20;
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.button-secondary:hover {
+    -fx-background-color: #d0d0d0;
+}
+
+.button-secondary:pressed {
+    -fx-background-color: #c0c0c0;
+}
+
+/* Botón de acción (Nuevo, Editar) */
+.button-action {
+    -fx-background-color: #107c10;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 8 16;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.button-action:hover {
+    -fx-background-color: #0d6e0d;
+}
+
+/* Botón de peligro (Eliminar) */
+.button-danger {
+    -fx-background-color: #d13438;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 8 16;
+    -fx-font-size: 11;
+    -fx-font-weight: bold;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.button-danger:hover {
+    -fx-background-color: #c1252c;
+}
+
+/* Botón neutro */
+.button-neutral {
+    -fx-background-color: #f0f0f0;
+    -fx-text-fill: #333333;
+    -fx-padding: 8 16;
+    -fx-font-size: 11;
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.button-neutral:hover {
+    -fx-background-color: #e8e8e8;
+}
+
+/* ================================================================
+   TABLAS
+   ================================================================ */
+.table-view {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1;
+    -fx-font-size: 11;
+}
+
+.table-view .column-header {
+    -fx-background-color: #f0f0f0;
+    -fx-text-fill: #333333;
+    -fx-font-weight: bold;
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 0 0 2 0;
+    -fx-padding: 8;
+    -fx-font-size: 11;
+}
+
+.table-view .table-row-cell {
+    -fx-padding: 8;
+    -fx-border-color: #f0f0f0;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .table-row-cell:hover {
+    -fx-background-color: #f5f5f5;
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: #e3f2fd;
+    -fx-text-fill: #0078d4;
+}
+
+/* ================================================================
+   ACORDEONES Y PANELES COLAPSABLES
+   ================================================================ */
+.titled-pane {
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+}
+
+.titled-pane .title {
+    -fx-background-color: #f0f0f0;
+    -fx-padding: 10;
+    -fx-font-weight: bold;
+    -fx-font-size: 12;
+}
+
+.titled-pane .content {
+    -fx-padding: 10;
+    -fx-background-color: #ffffff;
+}
+
+/* ================================================================
+   BARRAS DE HERRAMIENTAS
+   ================================================================ */
+.toolbar {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 10;
+    -fx-spacing: 10;
+}
+
+.toolbar-button {
+    -fx-padding: 8 12;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-cursor: hand;
+}
+
+.toolbar-button:hover {
+    -fx-background-color: #f0f0f0;
+    -fx-border-color: #0078d4;
+}
+
+/* ================================================================
+   BARRAS DE ESTADO
+   ================================================================ */
+.status-bar {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 10;
+    -fx-spacing: 10;
+}
+
+.status-label {
+    -fx-font-size: 11;
+    -fx-text-fill: #666666;
+}
+
+/* ================================================================
+   NAVEGACIÓN LATERAL (SIDEBAR)
+   ================================================================ */
+.sidebar {
+    -fx-background-color: #1e1e1e;
+    -fx-padding: 0;
+    -fx-spacing: 0;
+}
+
+.sidebar-button {
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: #e0e0e0;
+    -fx-padding: 15 20;
+    -fx-font-size: 12;
+    -fx-border-radius: 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 0 4;
+    -fx-text-alignment: left;
+}
+
+.sidebar-button:hover {
+    -fx-background-color: #2d2d2d;
+    -fx-text-fill: #ffffff;
+}
+
+.sidebar-button:pressed,
+.sidebar-button:focused {
+    -fx-background-color: #0078d4;
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #0078d4;
+}
+
+.sidebar-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 18;
+    -fx-font-weight: bold;
+    -fx-padding: 20;
+    -fx-border-color: #333333;
+    -fx-border-width: 0 0 2 0;
+}
+
+/* ================================================================
+   CUADROS DE DIÁLOGO
+   ================================================================ */
+.dialog-pane {
+    -fx-padding: 20;
+    -fx-background-color: #ffffff;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: #f5f5f5;
+    -fx-padding: 15;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 0 0 1 0;
+}
+
+.dialog-pane .content {
+    -fx-padding: 15;
+}
+
+.dialog-pane .button-bar {
+    -fx-padding: 15;
+    -fx-spacing: 10;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ================================================================
+   PESTAÑAS (TABS)
+   ================================================================ */
+.tab-pane {
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1;
+}
+
+.tab-pane .tab-header-background {
+    -fx-background-color: #f5f5f5;
+}
+
+.tab-pane .tab {
+    -fx-background-color: #f5f5f5;
+    -fx-border-color: #d0d0d0;
+    -fx-padding: 10 20;
+    -fx-font-size: 11;
+    -fx-cursor: hand;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #0078d4;
+    -fx-border-width: 0 0 2 0;
+    -fx-text-fill: #0078d4;
+}
+
+.tab-pane .tab:hover {
+    -fx-background-color: #ebebeb;
+}
+
+/* ================================================================
+   VENTANAS EMERGENTES (POPUPS)
+   ================================================================ */
+.context-menu {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 1;
+    -fx-padding: 5;
+}
+
+.context-menu .menu-item {
+    -fx-padding: 8 15;
+    -fx-font-size: 11;
+}
+
+.context-menu .menu-item:hover {
+    -fx-background-color: #e3f2fd;
+    -fx-text-fill: #0078d4;
+}
+
+/* ================================================================
+   ALERTS Y NOTIFICACIONES
+   ================================================================ */
+.alert-info {
+    -fx-border-color: #0078d4;
+    -fx-border-left-width: 4;
+    -fx-border-top-width: 0;
+    -fx-border-right-width: 0;
+    -fx-border-bottom-width: 0;
+    -fx-background-color: #e3f2fd;
+    -fx-padding: 12;
+}
+
+.alert-success {
+    -fx-border-color: #107c10;
+    -fx-border-left-width: 4;
+    -fx-border-top-width: 0;
+    -fx-border-right-width: 0;
+    -fx-border-bottom-width: 0;
+    -fx-background-color: #e8f5e9;
+    -fx-padding: 12;
+}
+
+.alert-warning {
+    -fx-border-color: #ff8c00;
+    -fx-border-left-width: 4;
+    -fx-border-top-width: 0;
+    -fx-border-right-width: 0;
+    -fx-border-bottom-width: 0;
+    -fx-background-color: #fff3e0;
+    -fx-padding: 12;
+}
+
+.alert-danger {
+    -fx-border-color: #d13438;
+    -fx-border-left-width: 4;
+    -fx-border-top-width: 0;
+    -fx-border-right-width: 0;
+    -fx-border-bottom-width: 0;
+    -fx-background-color: #ffebee;
+    -fx-padding: 12;
+}
+
+/* ================================================================
+   SEPARADORES Y DIVISORES
+   ================================================================ */
+.separator {
+    -fx-border-color: #e0e0e0;
+}
+
+/* ================================================================
+   BARRA DE BÚSQUEDA
+   ================================================================ */
+.search-bar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 1;
+    -fx-border-radius: 20;
+    -fx-padding: 8 15;
+}
+
+.search-bar:focused {
+    -fx-border-color: #0078d4;
+    -fx-border-width: 2;
+}
+
+/* ================================================================
+   SPINNER Y PROGRESS
+   ================================================================ */
+.progress-bar {
+    -fx-accent: #0078d4;
+}
+
+.spinner {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+}
+
+/* ================================================================
+   SCROLLBAR
+   ================================================================ */
+.scroll-bar {
+    -fx-background-color: #f5f5f5;
+}
+
+.scroll-bar:vertical .increment-button,
+.scroll-bar:vertical .decrement-button {
+    -fx-padding: 0;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #cccccc;
+    -fx-background-radius: 5;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #bbbbbb;
+}
+
+/* ================================================================
+   EFECTOS DE ANIMACIÓN
+   ================================================================ */
+.button:hover {
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 4, 0, 0, 1);
+}
+
+/* ================================================================
+   ESPACIADO UTILIDADES
+   ================================================================ */
+.padding-small { -fx-padding: 5; }
+.padding-medium { -fx-padding: 10; }
+.padding-large { -fx-padding: 15; }
+
+.spacing-small { -fx-spacing: 5; }
+.spacing-medium { -fx-spacing: 10; }
+.spacing-large { -fx-spacing: 15; }
+
+.margin-small { -fx-margin: 5; }
+.margin-medium { -fx-margin: 10; }
+.margin-large { -fx-margin: 15; }
+
+/* ================================================================
+   VISTA OSCURA (Opcional)
+   ================================================================ */
+.dark-mode {
+    -fx-base: #2d2d2d;
+    -fx-control-inner-background: #1e1e1e;
+}
+
+.dark-mode .label {
+    -fx-text-fill: #e0e0e0;
+}
+
+.dark-mode .text-field,
+.dark-mode .text-area,
+.dark-mode .combo-box {
+    -fx-background-color: #3d3d3d;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #505050;
+}
+

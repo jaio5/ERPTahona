@@ -1,39 +1,41 @@
 package alicanteweb.erp.controller;
 
+import alicanteweb.erp.ErpLauncher;
 import alicanteweb.erp.entities.Proveedor;
 import alicanteweb.erp.service.ProveedorService;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import org.springframework.stereotype.Controller;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-@Controller
+@Slf4j
+@Component
 public class ProveedorController {
-    private static final Logger log = LoggerFactory.getLogger(ProveedorController.class);
 
     @FXML private TableView<Proveedor> tableProveedores;
-    @FXML private TableColumn<Proveedor, Integer> colId;
+    @FXML private TableColumn<Proveedor, Long> colId;
+    @FXML private TableColumn<Proveedor, String> colCodigo;
     @FXML private TableColumn<Proveedor, String> colNombre;
-    @FXML private TableColumn<Proveedor, String> colCif;
+    @FXML private TableColumn<Proveedor, String> colCIF;
     @FXML private TableColumn<Proveedor, String> colTelefono;
     @FXML private TableColumn<Proveedor, String> colEmail;
-    @FXML private TableColumn<Proveedor, String> colDireccion;
-    @FXML private TableColumn<Proveedor, String> colCiudad;
-    @FXML private TableColumn<Proveedor, String> colProvincia;
+    @FXML private TableColumn<Proveedor, String> colPoblacion;
+
     @FXML private TextField txtBuscar;
 
     private final ProveedorService proveedorService;
-    private final ObservableList<Proveedor> proveedoresList = FXCollections.observableArrayList();
+    private ObservableList<Proveedor> proveedores;
 
     public ProveedorController(ProveedorService proveedorService) {
         this.proveedorService = proveedorService;
@@ -41,205 +43,119 @@ public class ProveedorController {
 
     @FXML
     public void initialize() {
-        if (colId != null) colId.setCellValueFactory(cell -> new SimpleObjectProperty<>(cell.getValue() == null ? null : cell.getValue().getId()));
-        if (colNombre != null) colNombre.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getNombre()).orElse("")));
-        if (colCif != null) colCif.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getCif()).orElse("")));
-        if (colTelefono != null) colTelefono.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getTelefono()).orElse("")));
-        if (colEmail != null) colEmail.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getEmail()).orElse("")));
-        if (colDireccion != null) colDireccion.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getDireccion()).orElse("")));
-        if (colCiudad != null) colCiudad.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getCiudad()).orElse("")));
-        if (colProvincia != null) colProvincia.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getProvincia()).orElse("")));
+        log.info("Inicializando ProveedorController");
 
-        if (tableProveedores != null) tableProveedores.setItems(proveedoresList);
-        loadAll();
+        // Configurar columnas
+        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
+        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        colCIF.setCellValueFactory(new PropertyValueFactory<>("cif"));
+        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
+        colPoblacion.setCellValueFactory(new PropertyValueFactory<>("poblacion"));
 
-        if (txtBuscar != null) {
-            txtBuscar.textProperty().addListener((obs, oldV, newV) -> filtrarProveedores(newV));
-        }
+        // Aplicar estilo a la tabla
+        tableProveedores.setStyle("-fx-background-color: #2b2b2b;");
+
+        // Cargar datos
+        cargarProveedores();
     }
 
-    private void loadAll() {
+    private void cargarProveedores() {
         try {
-            log.info("Cargando proveedores desde la base de datos...");
-            List<Proveedor> todos = proveedorService.findAll();
-            log.info("Se encontraron {} proveedores en la base de datos", todos.size());
-            proveedoresList.setAll(todos);
-            log.info("Proveedores cargados en la lista: {}", proveedoresList.size());
+            List<Proveedor> lista = proveedorService.findAll();
+            proveedores = FXCollections.observableArrayList(lista);
+            tableProveedores.setItems(proveedores);
 
-            // Forzar actualización de la tabla en el hilo de JavaFX
-            javafx.application.Platform.runLater(() -> {
-                if (tableProveedores != null) {
-                    tableProveedores.refresh();
-                    log.info("Tabla de proveedores refrescada. Items: {}", tableProveedores.getItems().size());
-                }
-            });
+            log.info("Proveedores cargados: {}", proveedores.size());
         } catch (Exception e) {
             log.error("Error cargando proveedores", e);
-            mostrarError("Error cargando proveedores: " + e.getMessage());
-        }
-    }
-
-    private void filtrarProveedores(String filtro) {
-        if (filtro == null || filtro.isBlank()) {
-            loadAll();
-            return;
-        }
-        try {
-            List<Proveedor> encontrados = proveedorService.searchByNombre(filtro.trim());
-            proveedoresList.setAll(encontrados);
-        } catch (Exception e) {
-            log.error("Error filtrando proveedores", e);
+            mostrarError("Error", "No se pudieron cargar los proveedores: " + e.getMessage());
         }
     }
 
     @FXML
-    public void onCreate() {
-        mostrarFormulario(null);
+    private void onCreate() {
+        log.info("Abriendo formulario de nuevo proveedor");
+        abrirFormulario(null);
     }
 
     @FXML
-    public void onEdit() {
+    private void onEdit() {
         Proveedor seleccionado = tableProveedores.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
-            mostrarError("Selecciona un proveedor para editar");
+            mostrarAdvertencia("Selección requerida", "Por favor, selecciona un proveedor para editar.");
             return;
         }
-        mostrarFormulario(seleccionado);
-    }
 
-    private void mostrarFormulario(Proveedor proveedor) {
-        try {
-            // Cargar el FXML del formulario
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/proveedor_form.fxml"));
-            VBox formRoot = loader.load();
-
-            // Obtener los campos del formulario
-            TextField txtNombre = (TextField) formRoot.lookup("#txtNombre");
-            TextField txtCif = (TextField) formRoot.lookup("#txtCif");
-            TextField txtTelefono = (TextField) formRoot.lookup("#txtTelefono");
-            TextField txtEmail = (TextField) formRoot.lookup("#txtEmail");
-            TextField txtDireccion = (TextField) formRoot.lookup("#txtDireccion");
-            TextField txtCiudad = (TextField) formRoot.lookup("#txtCiudad");
-            TextField txtProvincia = (TextField) formRoot.lookup("#txtProvincia");
-            TextField txtCp = (TextField) formRoot.lookup("#txtCp");
-            TextField txtPais = (TextField) formRoot.lookup("#txtPais");
-            Button btnGuardar = (Button) formRoot.lookup("#btnGuardar");
-            Button btnCancelar = (Button) formRoot.lookup("#btnCancelar");
-
-            // Si estamos editando, rellenar los campos
-            boolean esNuevo = (proveedor == null);
-            Proveedor proveedorEditar = esNuevo ? new Proveedor() : proveedor;
-
-            if (!esNuevo) {
-                txtNombre.setText(proveedor.getNombre());
-                txtCif.setText(proveedor.getCif());
-                txtTelefono.setText(proveedor.getTelefono());
-                txtEmail.setText(proveedor.getEmail());
-                txtDireccion.setText(proveedor.getDireccion());
-                txtCiudad.setText(proveedor.getCiudad());
-                txtProvincia.setText(proveedor.getProvincia());
-                txtCp.setText(proveedor.getCp());
-                txtPais.setText(proveedor.getPais());
-            }
-
-            // Crear Stage modal
-            javafx.stage.Stage stage = new javafx.stage.Stage();
-            stage.setTitle(esNuevo ? "Nuevo Proveedor" : "Editar Proveedor");
-            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
-            stage.setScene(new javafx.scene.Scene(formRoot));
-
-            // Configurar botones
-            btnGuardar.setOnAction(e -> {
-                if (validarFormulario(txtNombre)) {
-                    proveedorEditar.setNombre(txtNombre.getText().trim());
-                    proveedorEditar.setCif(txtCif.getText() != null ? txtCif.getText().trim() : null);
-                    proveedorEditar.setTelefono(txtTelefono.getText() != null ? txtTelefono.getText().trim() : null);
-                    proveedorEditar.setEmail(txtEmail.getText() != null ? txtEmail.getText().trim() : null);
-                    proveedorEditar.setDireccion(txtDireccion.getText() != null ? txtDireccion.getText().trim() : null);
-                    proveedorEditar.setCiudad(txtCiudad.getText() != null ? txtCiudad.getText().trim() : null);
-                    proveedorEditar.setProvincia(txtProvincia.getText() != null ? txtProvincia.getText().trim() : null);
-                    proveedorEditar.setCp(txtCp.getText() != null ? txtCp.getText().trim() : null);
-                    proveedorEditar.setPais(txtPais.getText() != null ? txtPais.getText().trim() : null);
-
-                    try {
-                        proveedorService.save(proveedorEditar);
-                        loadAll();
-                        mostrarInfo(esNuevo ? "Proveedor creado correctamente" : "Proveedor actualizado correctamente");
-                        stage.close();
-                    } catch (Exception ex) {
-                        log.error("Error guardando proveedor", ex);
-                        mostrarError("Error al guardar: " + ex.getMessage());
-                    }
-                }
-            });
-
-            btnCancelar.setOnAction(e -> stage.close());
-
-            stage.showAndWait();
-        } catch (Exception e) {
-            log.error("Error mostrando formulario", e);
-            mostrarError("Error al abrir el formulario: " + e.getMessage());
-        }
-    }
-
-    private boolean validarFormulario(TextField txtNombre) {
-        if (txtNombre.getText() == null || txtNombre.getText().trim().isEmpty()) {
-            mostrarError("El nombre es obligatorio");
-            return false;
-        }
-        return true;
+        log.info("Editando proveedor: {}", seleccionado.getCodigo());
+        abrirFormulario(seleccionado);
     }
 
     @FXML
-    public void onDelete() {
-        if (tableProveedores == null) { mostrarError("Tabla no disponible"); return; }
-        Proveedor sel = tableProveedores.getSelectionModel().getSelectedItem();
-        if (sel == null) { mostrarInfo("Selecciona un proveedor"); return; }
-        if (sel.getId() == null) { mostrarError("El proveedor seleccionado no tiene id"); return; }
+    private void onDelete() {
+        Proveedor seleccionado = tableProveedores.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAdvertencia("Selección requerida", "Por favor, selecciona un proveedor para eliminar.");
+            return;
+        }
 
-        // Verificar estado actual
-        boolean estaActivo = sel.getActivo() == null || sel.getActivo();
-        String accion = estaActivo ? "dar de baja" : "activar";
-        String mensaje = estaActivo ?
-            "¿Estás seguro de dar de baja el proveedor '" + sel.getNombre() + "'?" :
-            "¿Estás seguro de activar el proveedor '" + sel.getNombre() + "'?";
-
-        // Confirmar acción
         Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmacion.setTitle("Confirmar " + accion);
-        confirmacion.setHeaderText(mensaje);
-        confirmacion.setContentText("Esta operación cambiará el estado del proveedor.");
+        confirmacion.setTitle("Confirmar Eliminación");
+        confirmacion.setHeaderText("¿Eliminar proveedor?");
+        confirmacion.setContentText("¿Estás seguro de que deseas eliminar el proveedor: " + seleccionado.getNombre() + "?");
 
-        confirmacion.showAndWait().ifPresent(response -> {
-            if (response == javafx.scene.control.ButtonType.OK) {
-                try {
-                    // Cambiar estado
-                    sel.setActivo(!estaActivo);
-                    proveedorService.save(sel);
-                    loadAll();
-                    mostrarInfo("Proveedor " + (estaActivo ? "dado de baja" : "activado") + " correctamente");
-                } catch (Exception e) {
-                    log.error("Error cambiando estado del proveedor", e);
-                    mostrarError("Error cambiando estado: " + e.getMessage());
-                }
+        Optional<ButtonType> resultado = confirmacion.showAndWait();
+        if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
+            try {
+                proveedorService.delete(seleccionado.getId());
+                mostrarInfo("Éxito", "Proveedor eliminado correctamente");
+                cargarProveedores();
+            } catch (Exception e) {
+                log.error("Error eliminando proveedor", e);
+                mostrarError("Error", "No se pudo eliminar el proveedor: " + e.getMessage());
             }
-        });
+        }
+    }
+
+
+    private void abrirFormulario(Proveedor proveedor) {
+        try {
+            mostrarInfo("Información", "Función en desarrollo");
+        } catch (Exception e) {
+            log.error("Error abriendo formulario", e);
+            mostrarError("Error", "Error: " + e.getMessage());
+        }
+    }
+
+    private void mostrarError(String titulo, String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
+    }
+
+    private void mostrarAdvertencia(String titulo, String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
+    }
+
+    private void mostrarInfo(String titulo, String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
     }
 
     @FXML
-    public void onRefresh() {
-        loadAll();
-    }
-
-    private void mostrarInfo(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, mensaje);
-        alert.setHeaderText("Información");
-        alert.showAndWait();
-    }
-
-    private void mostrarError(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR, mensaje);
-        alert.setHeaderText("Error");
-        alert.showAndWait();
+    private void onRefresh() {
+        log.info("Refrescando lista de proveedores");
+        cargarProveedores();
     }
 }
+

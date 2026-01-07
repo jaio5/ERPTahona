@@ -266,4 +266,23 @@ public class Factura {
             porcentajeRetencion = BigDecimal.ZERO;
         }
     }
+
+    // ========== CAMPOS VERIFACTU (RD 596/2016) ==========
+
+    @ColumnDefault("false")
+    @Column(name = "verifactu_procesado")
+    private Boolean verifactuProcessado = false;
+
+    @Size(max = 16)
+    @Column(name = "verifactu_csv", length = 16)
+    private String verifactuCsv;
+
+    @Size(max = 20)
+    @Column(name = "verifactu_estado", length = 20)
+    private String verifactuEstado;
+
+    @Column(name = "verifactu_fecha_registro")
+    private LocalDateTime verifactuFechaRegistro;
 }
+
+

@@ -84,7 +84,7 @@ class UsuarioServiceTest {
     }
 
     @Test
-    void testBloquearUsuarioPorIntentosF allidos() {
+    void testBloquearUsuarioPorIntentosFallidos() {
         // Given
         Usuario usuario = new Usuario();
         usuario.setUsername("test_bloqueo_" + System.currentTimeMillis());

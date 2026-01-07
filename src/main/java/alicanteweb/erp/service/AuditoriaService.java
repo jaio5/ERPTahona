@@ -3,7 +3,8 @@ package alicanteweb.erp.service;
 import alicanteweb.erp.entities.AuditoriaAccion;
 import alicanteweb.erp.entities.Usuario;
 import alicanteweb.erp.repository.AuditoriaAccionRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +17,8 @@ import java.util.Map;
  * Registra todas las operaciones realizadas en el sistema para cumplimiento RGPD
  */
 @Service
-@Slf4j
 public class AuditoriaService {
+    private static final Logger log = LoggerFactory.getLogger(AuditoriaService.class);
 
     private final AuditoriaAccionRepository auditoriaRepository;
 

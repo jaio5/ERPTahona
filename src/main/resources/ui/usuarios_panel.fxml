@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.UsuarioController"
+      stylesheets="@/styles/simple-theme.css"
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="Usuarios" styleClass="title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
+        <Button text="+ Nuevo Usuario" onAction="#onNuevo" styleClass="button-success"/>
+    </HBox>
+
+    <HBox spacing="12">
+        <TextField fx:id="txtBuscar" promptText="🔍 Buscar usuario..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
+        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableUsuarios" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colUsername" text="Usuario" prefWidth="150"/>
+                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="200"/>
+                <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
+                <TableColumn fx:id="colRole" text="Rol" prefWidth="120"/>
+                <TableColumn fx:id="colActivo" text="Estado" prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <HBox spacing="12">
+        <Button text="✏️ Editar" onAction="#onEditar" styleClass="button-primary"/>
+        <Button text="🔒 Cambiar Contraseña" onAction="#onCambiarPassword" styleClass="button"/>
+        <Button text="🗑️ Eliminar" onAction="#onEliminar" styleClass="button-danger"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblTotal" text="0 usuarios" style="-fx-text-fill: #6c757d;"/>
+    </HBox>
+
+</VBox>
+

@@ -2,21 +2,84 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" spacing="15" prefWidth="400" prefHeight="250">
-    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
-    <Label text="Datos del Almacén" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-    <GridPane hgap="10" vgap="15">
-        <columnConstraints>
-            <ColumnConstraints minWidth="100" prefWidth="100"/>
-            <ColumnConstraints hgrow="ALWAYS"/>
-        </columnConstraints>
-        <Label text="Código:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-        <TextField fx:id="txtCodigo" GridPane.columnIndex="1" GridPane.rowIndex="0" promptText="Código del almacén"/>
-        <Label text="Nombre:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-        <TextField fx:id="txtNombre" GridPane.columnIndex="1" GridPane.rowIndex="1" promptText="Nombre del almacén"/>
-    </GridPane>
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="btnGuardar" text="Guardar" defaultButton="true" styleClass="btn-primary"/>
-        <Button fx:id="btnCancelar" text="Cancelar" cancelButton="true" styleClass="btn-secondary"/>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.AlmacenFormController"
+      styleClass="main-container" spacing="15">
+
+    <stylesheets>
+        <String fx:value="@/styles/unified-styles.css"/>
+    </stylesheets>
+
+    <Label text="🏭 FORMULARIO DE ALMACÉN" styleClass="title-panel"/>
+
+    <ScrollPane fitToWidth="true">
+        <VBox spacing="15" style="-fx-padding: 15;">
+
+            <!-- DATOS BÁSICOS -->
+            <TitledPane text="📋 Datos Básicos" collapsible="false" style="-fx-font-weight: bold;">
+                <GridPane hgap="20" vgap="15" style="-fx-padding: 15;">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50"/>
+                        <ColumnConstraints percentWidth="50"/>
+                    </columnConstraints>
+
+                    <Label text="Código Almacén:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="txtCodigo" promptText="ej. ALM01" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-min-height: 35;"/>
+
+                    <Label text="Nombre:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="txtNombre" promptText="ej. Almacén Principal" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-min-height: 35;"/>
+
+                    <Label text="Descripción:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                    <TextArea fx:id="txtDescripcion" promptText="Descripción del almacén..." GridPane.columnIndex="1" GridPane.rowIndex="2" prefRowCount="3" style="-fx-min-height: 60;"/>
+                </GridPane>
+            </TitledPane>
+
+            <!-- DATOS DE CAPACIDAD -->
+            <TitledPane text="📦 Capacidad" collapsible="false" style="-fx-font-weight: bold;">
+                <GridPane hgap="20" vgap="15" style="-fx-padding: 15;">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50"/>
+                        <ColumnConstraints percentWidth="50"/>
+                    </columnConstraints>
+
+                    <Label text="Capacidad Total (m³):" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="txtCapacidad" promptText="ej. 500" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-min-height: 35;"/>
+
+                    <Label text="Espacio Disponible (m³):" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="txtDisponible" promptText="ej. 250" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-min-height: 35;"/>
+                </GridPane>
+            </TitledPane>
+
+            <!-- DATOS DE UBICACIÓN -->
+            <TitledPane text="📍 Ubicación" collapsible="false" style="-fx-font-weight: bold;">
+                <GridPane hgap="20" vgap="15" style="-fx-padding: 15;">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50"/>
+                        <ColumnConstraints percentWidth="50"/>
+                    </columnConstraints>
+
+                    <Label text="Localidad:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="txtLocalidad" promptText="ej. Alicante" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-min-height: 35;"/>
+
+                    <Label text="Responsable:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="txtResponsable" promptText="ej. Juan García" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-min-height: 35;"/>
+                </GridPane>
+            </TitledPane>
+
+            <!-- ESTADO -->
+            <HBox spacing="20" style="-fx-padding: 10;">
+                <CheckBox fx:id="chkActivo" text="✓ Almacén Activo" selected="true" style="-fx-font-size: 13;"/>
+            </HBox>
+        </VBox>
+    </ScrollPane>
+
+    <Separator/>
+
+    <!-- BOTONES -->
+    <HBox spacing="15" style="-fx-alignment: center-right; -fx-padding: 15;">
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="💾 Guardar" styleClass="button-primary" onAction="#onGuardar" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
+        <Button text="❌ Cancelar" styleClass="button-neutral" onAction="#onCancelar" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
     </HBox>
 </VBox>

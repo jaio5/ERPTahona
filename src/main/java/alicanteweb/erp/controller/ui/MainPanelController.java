@@ -20,15 +20,12 @@ public class MainPanelController {
 
     private final ApplicationContext springContext;
 
-    @FXML private Button btnClientes;
-    @FXML private Button btnProveedores;
-    @FXML private Button btnArticulos;
-    @FXML private Button btnAlbaranes;
-    @FXML private Button btnFacturas;
-    @FXML private Button btnAlmacenes;
-    @FXML private Button btnVerifactu;
-    @FXML private StackPane mainContent;
-    @FXML private GridPane gridModulos;
+    @FXML private StackPane contentArea;
+    @FXML private javafx.scene.control.Label lblUsuarioHeader;
+    @FXML private javafx.scene.control.Label lblUsuario;
+    @FXML private javafx.scene.control.Label lblEstado;
+    @FXML private javafx.scene.control.Label lblFecha;
+    @FXML private javafx.scene.control.Label lblHora;
 
     public MainPanelController(ApplicationContext springContext) {
         this.springContext = springContext;
@@ -36,29 +33,14 @@ public class MainPanelController {
 
     @FXML
     public void initialize() {
-        // Solo añadir animaciones hover, no sobrescribir onAction
-        addButtonAnimation(btnClientes);
-        addButtonAnimation(btnProveedores);
-        addButtonAnimation(btnArticulos);
-        addButtonAnimation(btnAlbaranes);
-        addButtonAnimation(btnFacturas);
-        addButtonAnimation(btnAlmacenes);
-        addButtonAnimation(btnVerifactu);
-    }
-
-    private void addButtonAnimation(Button button) {
-        button.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> {
-            ScaleTransition st = new ScaleTransition(Duration.millis(150), button);
-            st.setToX(1.08);
-            st.setToY(1.08);
-            st.play();
-        });
-        button.addEventHandler(MouseEvent.MOUSE_EXITED, e -> {
-            ScaleTransition st = new ScaleTransition(Duration.millis(150), button);
-            st.setToX(1.0);
-            st.setToY(1.0);
-            st.play();
-        });
+        log.info("MainPanelController inicializado correctamente");
+        if (contentArea != null) {
+            log.info("✅ contentArea cargado correctamente");
+            // Cargar dashboard por defecto
+            cargarVistaModulo("/ui/dashboard.fxml");
+        } else {
+            log.warn("⚠️ contentArea es null");
+        }
     }
 
     private void cargarVistaModulo(String fxmlPath) {
@@ -80,12 +62,12 @@ public class MainPanelController {
             Parent view = loader.load();
             log.info("FXML cargado OK. Tipo de vista: {}", view.getClass().getSimpleName());
 
-            log.info("Reemplazando contenido de mainContent...");
-            mainContent.getChildren().setAll(view);
+            log.info("Reemplazando contenido de contentArea...");
+            contentArea.getChildren().setAll(view);
 
             log.info("=====================================");
             log.info("VISTA CARGADA EXITOSAMENTE: {}", fxmlPath);
-            log.info("Elementos en mainContent: {}", mainContent.getChildren().size());
+            log.info("Elementos en contentArea: {}", contentArea.getChildren().size());
             log.info("=====================================");
         } catch (Exception e) {
             log.error("=====================================");
@@ -105,9 +87,6 @@ public class MainPanelController {
         }
     }
 
-    private void mostrarMenuPrincipal() {
-        mainContent.getChildren().setAll(gridModulos);
-    }
 
     @FXML
     public void onClientes() {
@@ -149,5 +128,84 @@ public class MainPanelController {
     public void onVerifactu() {
         log.info(">>> BOTÓN VERIFACTU PRESIONADO <<<");
         cargarVistaModulo("/ui/verifactu_panel.fxml");
+    }
+
+    @FXML
+    public void onFacturasCompra() {
+        log.info(">>> BOTÓN FACTURAS DE COMPRA PRESIONADO <<<");
+        cargarVistaModulo("/ui/facturas_compra_panel.fxml");
+    }
+
+    @FXML
+    public void onPedidosCompra() {
+        log.info(">>> BOTÓN PEDIDOS DE COMPRA PRESIONADO <<<");
+        cargarVistaModulo("/ui/pedidos_compra_panel.fxml");
+    }
+
+    @FXML
+    public void onUsuarios() {
+        log.info(">>> BOTÓN USUARIOS PRESIONADO <<<");
+        cargarVistaModulo("/ui/usuarios_panel.fxml");
+    }
+
+    @FXML
+    public void onAuditoria() {
+        log.info(">>> BOTÓN AUDITORÍA PRESIONADO <<<");
+        cargarVistaModulo("/ui/auditoria_panel.fxml");
+    }
+
+    @FXML
+    public void onAsientos() {
+        log.info(">>> BOTÓN ASIENTOS CONTABLES PRESIONADO <<<");
+        cargarVistaModulo("/ui/asientos_panel.fxml");
+    }
+
+    @FXML
+    public void onPlanContable() {
+        log.info(">>> BOTÓN PLAN CONTABLE PRESIONADO <<<");
+        cargarVistaModulo("/ui/plan_contable_panel.fxml");
+    }
+
+    @FXML
+    public void onModelo347() {
+        log.info(">>> BOTÓN MODELO 347 PRESIONADO <<<");
+        cargarVistaModulo("/ui/modelo347_panel.fxml");
+    }
+
+    @FXML
+    public void onPresupuestos() {
+        log.info(">>> BOTÓN PRESUPUESTOS PRESIONADO <<<");
+        cargarVistaModulo("/ui/presupuestos_panel.fxml");
+    }
+
+    @FXML
+    public void onPedidosVenta() {
+        log.info(">>> BOTÓN PEDIDOS DE VENTA PRESIONADO <<<");
+        cargarVistaModulo("/ui/pedidos_venta_panel.fxml");
+    }
+
+    @FXML
+    public void onCaja() {
+        log.info(">>> BOTÓN CAJA PRESIONADO <<<");
+        cargarVistaModulo("/ui/caja_panel.fxml");
+    }
+
+    @FXML
+    public void onMovimientosBanco() {
+        log.info(">>> BOTÓN MOVIMIENTOS BANCARIOS PRESIONADO <<<");
+        cargarVistaModulo("/ui/movimientos_banco_panel.fxml");
+    }
+
+    @FXML
+    public void onEmpresaConfig() {
+        log.info(">>> BOTÓN CONFIGURACIÓN DE EMPRESA PRESIONADO <<<");
+        cargarVistaModulo("/ui/empresa_config_panel.fxml");
+    }
+
+    @FXML
+    public void onSalir() {
+        log.info(">>> BOTÓN SALIR PRESIONADO <<<");
+        javafx.stage.Stage stage = (javafx.stage.Stage) contentArea.getScene().getWindow();
+        stage.close();
     }
 }

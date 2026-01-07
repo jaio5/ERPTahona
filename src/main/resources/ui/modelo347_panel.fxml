@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.NormativaController"
+      stylesheets="@/styles/simple-theme.css"
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="Modelo 347" styleClass="title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="📊 Generar Modelo" onAction="#onGenerar" styleClass="button-success"/>
+    </HBox>
+
+    <VBox styleClass="card" spacing="16">
+        <Label text="Configuración" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
+
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="Ejercicio:" prefWidth="100"/>
+            <ComboBox fx:id="cmbEjercicio" prefWidth="150"/>
+        </HBox>
+
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="Umbral:" prefWidth="100"/>
+            <TextField fx:id="txtUmbral" text="3005.06" prefWidth="150"/>
+            <Label text="€"/>
+        </HBox>
+    </VBox>
+
+    <VBox VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableOperaciones" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colCIF" text="CIF/NIF" prefWidth="120"/>
+                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="250"/>
+                <TableColumn fx:id="colImporte" text="Importe" prefWidth="120"/>
+                <TableColumn fx:id="colTrimestre" text="Trimestre" prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <HBox spacing="12">
+        <Button text="📄 Exportar" onAction="#onExportar" styleClass="button-primary"/>
+        <Button text="📋 Informe" onAction="#onInforme" styleClass="button"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblTotal" text="0 operaciones" style="-fx-text-fill: #6c757d;"/>
+    </HBox>
+
+</VBox>
+

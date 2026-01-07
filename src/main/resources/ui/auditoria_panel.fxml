@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.AuditoriaController"
+      stylesheets="@/styles/simple-theme.css"
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="Auditoría del Sistema" styleClass="title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
+    </HBox>
+
+    <HBox spacing="12">
+        <TextField fx:id="txtBuscar" promptText="🔍 Buscar..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
+        <ComboBox fx:id="cmbUsuario" promptText="Usuario" prefWidth="150"/>
+        <ComboBox fx:id="cmbAccion" promptText="Acción" prefWidth="150"/>
+        <DatePicker fx:id="dpFechaDesde" promptText="Desde" prefWidth="130"/>
+        <DatePicker fx:id="dpFechaHasta" promptText="Hasta" prefWidth="130"/>
+        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableAuditoria" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="140"/>
+                <TableColumn fx:id="colUsuario" text="Usuario" prefWidth="120"/>
+                <TableColumn fx:id="colAccion" text="Acción" prefWidth="150"/>
+                <TableColumn fx:id="colModulo" text="Módulo" prefWidth="120"/>
+                <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="250"/>
+                <TableColumn fx:id="colResultado" text="Estado" prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <HBox spacing="12">
+        <Button text="👁️ Ver Detalles" onAction="#onVerDetalles" styleClass="button"/>
+        <Button text="📄 Exportar" onAction="#onExportar" styleClass="button-primary"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblTotal" text="0 registros" style="-fx-text-fill: #6c757d;"/>
+    </HBox>
+
+</VBox>
+

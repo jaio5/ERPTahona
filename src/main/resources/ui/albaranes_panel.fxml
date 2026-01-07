@@ -1,34 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" 
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.AlbaranController"
-      spacing="10" styleClass="panel-container">
-    <padding><Insets top="15" right="15" bottom="15" left="15"/></padding>
-    <HBox alignment="CENTER_LEFT" spacing="10">
-        <Label text="Albaranes de Venta" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+      stylesheets="@/styles/simple-theme.css"
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="Albaranes" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <TextField fx:id="txtBuscar" promptText="🔍 Buscar albarán..." prefWidth="250"/>
+        <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
+        <Button text="+ Nuevo Albarán" onAction="#onNuevo" styleClass="button-success"/>
     </HBox>
-    <Separator/>
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <Button fx:id="btnNuevo" text="📄 Nuevo Albarán" onAction="#onCreate" styleClass="btn-primary"/>
-        <Button fx:id="btnEditar" text="✏️ Ver Detalles" onAction="#onEdit" styleClass="btn-secondary"/>
-        <Button fx:id="btnImprimir" text="🖨️ Imprimir" onAction="#onPrint" styleClass="btn-success"/>
-        <Button fx:id="btnEliminar" text="🗑️ Eliminar" onAction="#onDelete" styleClass="btn-danger"/>
+
+    <HBox spacing="12">
+        <TextField fx:id="txtBuscar" promptText="🔍 Buscar albarán..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
+        <ComboBox fx:id="cmbEstado" promptText="Estado" prefWidth="130"/>
+        <DatePicker fx:id="dpFechaDesde" promptText="Desde" prefWidth="130"/>
+        <DatePicker fx:id="dpFechaHasta" promptText="Hasta" prefWidth="130"/>
+        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableAlbaranes" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colNumero" text="Número" prefWidth="120"/>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
+                <TableColumn fx:id="colCliente" text="Cliente" prefWidth="250"/>
+                <TableColumn fx:id="colTotal" text="Total" prefWidth="120"/>
+                <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <HBox spacing="12">
+        <Button text="👁️ Ver" onAction="#onVer" styleClass="button"/>
+        <Button text="✏️ Editar" onAction="#onEditar" styleClass="button-primary"/>
+        <Button text="🖨️ Imprimir" onAction="#onImprimir" styleClass="button"/>
+        <Button text="📄 Facturar" onAction="#onFacturar" styleClass="button-success"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="btnRefrescar" text="🔄 Refrescar" onAction="#onRefresh" styleClass="btn-secondary"/>
+        <Label fx:id="lblTotal" text="0 albaranes" style="-fx-text-fill: #6c757d;"/>
     </HBox>
-    <TableView fx:id="tableAlbaranes" VBox.vgrow="ALWAYS">
-        <columns>
-            <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
-            <TableColumn fx:id="colNumero" text="Número" prefWidth="120"/>
-            <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
-            <TableColumn fx:id="colCliente" text="Cliente" prefWidth="250"/>
-            <TableColumn fx:id="colAlmacen" text="Almacén" prefWidth="150"/>
-            <TableColumn fx:id="colTotal" text="Total" prefWidth="100"/>
-            <TableColumn fx:id="colObservaciones" text="Observaciones" prefWidth="200"/>
-        </columns>
-    </TableView>
+
 </VBox>
+

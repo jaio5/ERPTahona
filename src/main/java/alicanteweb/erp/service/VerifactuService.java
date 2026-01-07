@@ -51,6 +51,7 @@ public class VerifactuService {
     private final EmpresaConfigService empresaConfigService;
     private final FacturaLineaService facturaLineaService;
     private final QrCodeService qrCodeService;
+    private final VerifactuAeatSoapClient aeatSoapClient;
     private final KeyStore keyStore;
     private final PrivateKey privateKey;
     private final X509Certificate certificate;
@@ -59,11 +60,13 @@ public class VerifactuService {
     public VerifactuService(VerifactuEvidenceRepository evidenceRepository,
                            EmpresaConfigService empresaConfigService,
                            FacturaLineaService facturaLineaService,
-                           QrCodeService qrCodeService) {
+                           QrCodeService qrCodeService,
+                           VerifactuAeatSoapClient aeatSoapClient) {
         this.evidenceRepository = evidenceRepository;
         this.empresaConfigService = empresaConfigService;
         this.facturaLineaService = facturaLineaService;
         this.qrCodeService = qrCodeService;
+        this.aeatSoapClient = aeatSoapClient;
         KeyStore ks = null;
         PrivateKey pk = null;
         X509Certificate cert = null;
@@ -461,253 +464,40 @@ public class VerifactuService {
      * @return La respuesta de la AEAT en formato XML o JSON
      * @throws Exception Si hay error en el envío
      */
+    /**
+     * Envía el XML de la factura a la AEAT mediante SOAP
+     * Este método implementa el envío REAL a la AEAT usando el cliente SOAP
+     *
+     * @param xml El XML de la factura según esquema Verifactu
+     * @param firma La firma digital (puede ser null si no hay certificado)
+     * @return La respuesta de la AEAT
+     * @throws Exception Si hay error en el envío
+     */
     private String enviarXMLaAEAT(String xml, byte[] firma) throws Exception {
         log.info("═══════════════════════════════════════════════════════════════");
-        log.info("   INICIANDO ENVÍO REAL A LA AEAT");
+        log.info("   ENVIANDO FACTURA A LA AEAT VÍA SOAP");
         log.info("═══════════════════════════════════════════════════════════════");
         log.info("Endpoint: {}", aeatEndpoint);
         log.info("Tamaño XML: {} caracteres", xml.length());
-        log.info("Firma digital: {}", firma != null ? "SÍ (" + firma.length + " bytes)" : "NO (sin certificado)");
+        log.info("Firma digital: {}", firma != null ? "SÍ (" + firma.length + " bytes)" : "NO");
 
         try {
-            // Crear cliente HTTP con soporte SSL/TLS para AEAT
-            javax.net.ssl.SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("TLSv1.2");
-
-            // Si tenemos certificado, configurar SSL con el certificado
-            if (this.enabled && this.keyStore != null) {
-                log.info("Configurando SSL con certificado del keystore...");
-
-                // Crear KeyManagerFactory con nuestro keystore
-                javax.net.ssl.KeyManagerFactory kmf =
-                    javax.net.ssl.KeyManagerFactory.getInstance(
-                        javax.net.ssl.KeyManagerFactory.getDefaultAlgorithm());
-                kmf.init(this.keyStore, this.keyPassword.toCharArray());
-
-                // Crear TrustManagerFactory para validar certificado de la AEAT
-                javax.net.ssl.TrustManagerFactory tmf =
-                    javax.net.ssl.TrustManagerFactory.getInstance(
-                        javax.net.ssl.TrustManagerFactory.getDefaultAlgorithm());
-                tmf.init((KeyStore) null); // Usa el truststore por defecto del JRE
-
-                sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new java.security.SecureRandom());
-                log.info("✅ SSL configurado correctamente");
-            } else {
-                log.warn("⚠️  SSL sin certificado cliente (solo validará servidor AEAT)");
-                sslContext.init(null, null, null);
-            }
-
-            // Crear cliente HTTP con configuración SSL
-            java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
-                .version(java.net.http.HttpClient.Version.HTTP_1_1)
-                .connectTimeout(java.time.Duration.ofSeconds(30))
-                .sslContext(sslContext)
-                .followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
-                .build();
-
-            // Preparar el body según el protocolo SOAP de la AEAT
-            // La AEAT espera un mensaje SOAP con el XML embebido
-            String soapEnvelope = construirMensajeSOAP(xml, firma);
-
-            log.info("Mensaje SOAP preparado: {} caracteres", soapEnvelope.length());
-            if (log.isDebugEnabled()) {
-                log.debug("Mensaje SOAP completo:\n{}", soapEnvelope);
-            }
-
-            // Crear request HTTP POST con el mensaje SOAP
-            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
-                .uri(java.net.URI.create(aeatEndpoint))
-                .timeout(java.time.Duration.ofSeconds(90)) // AEAT puede tardar
-                .header("Content-Type", "text/xml; charset=UTF-8")
-                .header("SOAPAction", "\"http://www2.agenciatributaria.gob.es/hal/verifactu/EnviarFactura\"")
-                .header("Accept", "text/xml, application/xml")
-                .header("User-Agent", "ERP-Tahona/1.0 (GRUPO BABO)")
-                .header("Connection", "keep-alive")
-                .POST(java.net.http.HttpRequest.BodyPublishers.ofString(soapEnvelope, StandardCharsets.UTF_8))
-                .build();
-
-            log.info("Enviando request a la AEAT...");
-
-            // Enviar request y obtener respuesta
-            java.net.http.HttpResponse<String> response = client.send(request,
-                java.net.http.HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
-            // Procesar respuesta
-            int statusCode = response.statusCode();
-            String responseBody = response.body();
+            // Delegar al cliente SOAP real
+            String respuesta = aeatSoapClient.enviarFacturaAeat(xml, firma);
 
             log.info("═══════════════════════════════════════════════════════════════");
-            log.info("   RESPUESTA DE LA AEAT");
+            log.info("   ✅ RESPUESTA RECIBIDA DE LA AEAT");
             log.info("═══════════════════════════════════════════════════════════════");
-            log.info("Status HTTP: {}", statusCode);
-            log.info("Content-Type: {}", response.headers().firstValue("Content-Type").orElse("N/A"));
-            log.info("Tamaño respuesta: {} caracteres", responseBody.length());
+            log.info("Resultado: {}", respuesta);
 
-            if (log.isDebugEnabled()) {
-                log.debug("Respuesta completa:\n{}", responseBody);
-            } else {
-                // Log de primeros 500 caracteres en modo INFO
-                log.info("Respuesta (primeros 500 chars): {}",
-                    responseBody.substring(0, Math.min(500, responseBody.length())));
-            }
-
-            // Verificar código de respuesta HTTP
-            if (statusCode >= 200 && statusCode < 300) {
-                log.info("✅ Respuesta HTTP exitosa ({})", statusCode);
-
-                // Parsear respuesta SOAP para extraer el resultado
-                String resultado = parsearRespuestaSOAP(responseBody);
-
-                log.info("═══════════════════════════════════════════════════════════════");
-                log.info("   ✅ FACTURA ENVIADA EXITOSAMENTE A LA AEAT");
-                log.info("═══════════════════════════════════════════════════════════════");
-
-                return resultado;
-
-            } else if (statusCode == 400) {
-                log.error("❌ Error 400 - Petición mal formada");
-                log.error("El XML o el formato SOAP no es válido");
-                throw new Exception("Error 400: Petición mal formada - " + extraerMensajeError(responseBody));
-
-            } else if (statusCode == 401 || statusCode == 403) {
-                log.error("❌ Error {} - Autenticación/Autorización", statusCode);
-                log.error("El certificado no es válido o no tiene permisos");
-                throw new Exception("Error " + statusCode + ": Certificado no autorizado - " + extraerMensajeError(responseBody));
-
-            } else if (statusCode == 500) {
-                log.error("❌ Error 500 - Error interno de la AEAT");
-                throw new Exception("Error 500: Error del servidor AEAT - " + extraerMensajeError(responseBody));
-
-            } else if (statusCode == 503) {
-                log.error("❌ Error 503 - Servicio AEAT no disponible");
-                throw new Exception("Error 503: Servicio AEAT temporalmente no disponible - Intenta más tarde");
-
-            } else {
-                log.error("❌ Error HTTP inesperado: {}", statusCode);
-                throw new Exception("Error HTTP " + statusCode + ": " + extraerMensajeError(responseBody));
-            }
-
-        } catch (java.net.http.HttpTimeoutException e) {
-            log.error("❌ Timeout al conectar con AEAT (>90 segundos)");
-            throw new Exception("Timeout al conectar con AEAT - Verifica tu conexión a internet", e);
-
-        } catch (java.net.ConnectException e) {
-            log.error("❌ No se pudo conectar con la AEAT");
-            log.error("URL: {}", aeatEndpoint);
-            throw new Exception("No se pudo conectar con AEAT - Verifica el endpoint y tu conexión", e);
-
-        } catch (javax.net.ssl.SSLHandshakeException e) {
-            log.error("❌ Error en handshake SSL/TLS");
-            log.error("Posibles causas:");
-            log.error("  - Certificado caducado o no válido");
-            log.error("  - Certificado no reconocido por la AEAT");
-            log.error("  - Problemas con el truststore de Java");
-            throw new Exception("Error SSL/TLS - Verifica el certificado digital", e);
-
-        } catch (java.io.IOException e) {
-            log.error("❌ Error de I/O al comunicar con AEAT: {}", e.getMessage());
-            throw new Exception("Error de conexión con AEAT - " + e.getMessage(), e);
-
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("❌ Envío interrumpido");
-            throw new Exception("Envío interrumpido por el usuario", e);
+            return respuesta;
 
         } catch (Exception e) {
-            log.error("❌ Error inesperado al enviar a AEAT: {}", e.getMessage());
-            if (log.isDebugEnabled()) {
-                log.debug("Stack trace completo:", e);
-            }
-            throw new Exception("Error al enviar a AEAT: " + e.getMessage(), e);
+            log.error("❌ Error al enviar a AEAT: {}", e.getMessage());
+            throw e;
         }
     }
 
-    /**
-     * Construye un mensaje SOAP para enviar a la AEAT
-     */
-    private String construirMensajeSOAP(String xml, byte[] firma) {
-        StringBuilder soap = new StringBuilder();
-
-        soap.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-        soap.append("<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" ");
-        soap.append("xmlns:verifactu=\"http://www2.agenciatributaria.gob.es/hal/verifactu\">\n");
-        soap.append("  <soapenv:Header/>\n");
-        soap.append("  <soapenv:Body>\n");
-        soap.append("    <verifactu:EnviarFactura>\n");
-        soap.append("      <verifactu:RegistroFactura>\n");
-
-        // Insertar el XML de la factura (escapado si es necesario)
-        soap.append(xml);
-
-        soap.append("      </verifactu:RegistroFactura>\n");
-
-        // Si hay firma, incluirla
-        if (firma != null) {
-            soap.append("      <verifactu:Firma>");
-            soap.append(Base64.getEncoder().encodeToString(firma));
-            soap.append("</verifactu:Firma>\n");
-        }
-
-        soap.append("    </verifactu:EnviarFactura>\n");
-        soap.append("  </soapenv:Body>\n");
-        soap.append("</soapenv:Envelope>");
-
-        return soap.toString();
-    }
-
-    /**
-     * Parsea la respuesta SOAP de la AEAT para extraer el resultado
-     */
-    private String parsearRespuestaSOAP(String soapResponse) {
-        // Buscar el estado en la respuesta
-        // La AEAT devuelve algo como: <EstadoEnvio>Aceptada</EstadoEnvio>
-
-        if (soapResponse.contains("<EstadoEnvio>Aceptada</EstadoEnvio>") ||
-            soapResponse.contains("Aceptada") ||
-            soapResponse.contains("ACEPTADA")) {
-            return "ACEPTADA";
-        }
-
-        if (soapResponse.contains("<EstadoEnvio>AceptadaConErrores</EstadoEnvio>") ||
-            soapResponse.contains("AceptadaConErrores")) {
-            return "ACEPTADA_CON_ERRORES";
-        }
-
-        if (soapResponse.contains("<EstadoEnvio>Rechazada</EstadoEnvio>") ||
-            soapResponse.contains("Rechazada") ||
-            soapResponse.contains("RECHAZADA")) {
-            return "RECHAZADA";
-        }
-
-        // Si no encontramos un estado conocido, devolver la respuesta completa
-        return soapResponse;
-    }
-
-    /**
-     * Extrae el mensaje de error de una respuesta SOAP de error
-     */
-    private String extraerMensajeError(String soapResponse) {
-        // Buscar tags comunes de error
-        int inicioError = soapResponse.indexOf("<DescripcionError>");
-        if (inicioError > 0) {
-            int finError = soapResponse.indexOf("</DescripcionError>", inicioError);
-            if (finError > inicioError) {
-                return soapResponse.substring(inicioError + 18, finError);
-            }
-        }
-
-        inicioError = soapResponse.indexOf("<faultstring>");
-        if (inicioError > 0) {
-            int finError = soapResponse.indexOf("</faultstring>", inicioError);
-            if (finError > inicioError) {
-                return soapResponse.substring(inicioError + 13, finError);
-            }
-        }
-
-        // Si no encontramos mensaje específico, devolver parte de la respuesta
-        return soapResponse.length() > 200 ?
-            soapResponse.substring(0, 200) + "..." :
-            soapResponse;
-    }
 
     /**
      * Escapa caracteres especiales XML

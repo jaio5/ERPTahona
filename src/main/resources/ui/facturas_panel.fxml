@@ -1,63 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
-
-<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="alicanteweb.erp.controller.FacturaController"
-      styleClass="module-panel"
-      stylesheets="@/css/main_panel.css"
-      spacing="0">
-
-    <HBox styleClass="module-header" alignment="CENTER_LEFT" spacing="15">
-        <FontIcon iconLiteral="fas-file-invoice-dollar" iconSize="36"/>
-        <VBox spacing="3">
-            <Label text="Facturas" styleClass="module-title"/>
-            <Label text="Facturacion" styleClass="module-subtitle"/>
-        </VBox>
-    </HBox>
-
-    <VBox spacing="10" styleClass="toolbar-container">
-        <!-- Primera fila: Búsqueda y acciones básicas -->
-        <HBox styleClass="toolbar" alignment="CENTER_LEFT" spacing="10">
-            <TextField fx:id="txtBuscar" promptText="🔍 Buscar factura..." styleClass="search-field" prefWidth="250"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="📄 Nueva Factura" styleClass="btn-success" onAction="#onCreate" prefWidth="140"/>
-            <Button text="👁️ Ver Detalles" styleClass="btn-primary" onAction="#onEdit" prefWidth="130"/>
-            <Button text="🖨️ Imprimir" styleClass="btn-secondary" onAction="#onPrint" prefWidth="110"/>
-            <Button text="🔄 Refrescar" styleClass="btn-secondary" onAction="#onRefresh" prefWidth="110"/>
-        </HBox>
-
-        <!-- Segunda fila: Gestión de estados Verifactu -->
-        <HBox styleClass="toolbar" alignment="CENTER_LEFT" spacing="10">
-            <Label text="Gestión de Estados:" style="-fx-font-weight: bold; -fx-text-fill: #666;"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="📝 Enviar a Revisión" styleClass="btn-warning" onAction="#onEnviarARevision" prefWidth="160"/>
-            <Button text="✅ Aprobar y Emitir" styleClass="btn-success" onAction="#onAprobarYEmitir" prefWidth="160"/>
-            <Button text="↩️ Volver a Borrador" styleClass="btn-info" onAction="#onVolverABorrador" prefWidth="160"/>
-            <Button text="❌ Anular Factura" styleClass="btn-danger" onAction="#onAnular" prefWidth="140"/>
-        </HBox>
-    </VBox>
-
-    <StackPane VBox.vgrow="ALWAYS">
-        <padding>
-            <Insets top="20" right="25" bottom="25" left="25"/>
-        </padding>
-        <TableView fx:id="tableFacturas">
-            <columns>
-                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
-                <TableColumn fx:id="colNumero" text="Numero" prefWidth="130"/>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
-                <TableColumn fx:id="colCliente" text="Cliente" prefWidth="250"/>
-                <TableColumn fx:id="colTotal" text="Total" prefWidth="120"/>
-                <TableColumn fx:id="colPagado" text="Pagado" prefWidth="120"/>
-                <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
-            </columns>
-            <columnResizePolicy>
-                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
-            </columnResizePolicy>
-        </TableView>
-    </StackPane>
 </VBox>
+
+    </HBox>
+        <Label fx:id="lblTotal" text="0 facturas" style="-fx-text-fill: #6c757d;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="✅ Enviar" onAction="#onEnviarAeat" styleClass="button-success"/>
+        <Button text="🖨️ Imprimir" onAction="#onImprimir" styleClass="button"/>
+        <Button text="✏️ Editar" onAction="#onEditar" styleClass="button-primary"/>
+        <Button text="👁️ Ver" onAction="#onVer" styleClass="button"/>
+    <HBox spacing="12">
+
+    </VBox>
+        </TableView>
+            </columns>
+                <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
+                <TableColumn fx:id="colTotal" text="Total" prefWidth="120"/>
+                <TableColumn fx:id="colIVA" text="IVA" prefWidth="80"/>
+                <TableColumn fx:id="colBase" text="Base" prefWidth="100"/>
+                <TableColumn fx:id="colCliente" text="Cliente" prefWidth="250"/>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
+                <TableColumn fx:id="colNumero" text="Número" prefWidth="120"/>
+            <columns>
+        <TableView fx:id="tableFacturas" VBox.vgrow="ALWAYS">
+    <VBox VBox.vgrow="ALWAYS">
+
+    </HBox>
+        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+        <DatePicker fx:id="dpFechaHasta" promptText="Hasta" prefWidth="130"/>
+        <DatePicker fx:id="dpFechaDesde" promptText="Desde" prefWidth="130"/>
+        <ComboBox fx:id="cmbEstado" promptText="Estado" prefWidth="130"/>
+                   style="-fx-min-height: 40px;"/>
+        <TextField fx:id="txtBuscar" promptText="🔍 Buscar factura..." HBox.hgrow="ALWAYS"
+    <HBox spacing="12">
+
+    </HBox>
+        <Button text="+ Nueva Factura" onAction="#onNuevo" styleClass="button-success"/>
+        <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Facturas" styleClass="title"/>
+    <HBox alignment="CENTER_LEFT" spacing="16">
+
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+      stylesheets="@/styles/simple-theme.css"
+      fx:controller="alicanteweb.erp.controller.FacturaController"
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
 

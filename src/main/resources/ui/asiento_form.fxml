@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.AsientoFormController"
+            stylesheets="@/styles/modern-theme.css"
+            style="-fx-background-color: #f8fafc;">
+
+    <!-- HEADER -->
+    <top>
+        <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
+            <Label fx:id="lblTitulo" text="✏️ Nuevo Asiento Contable" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblBalance" text="Balance: 0.00 €" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
+        </HBox>
+    </top>
+
+    <!-- CONTENIDO -->
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+            <VBox spacing="15" style="-fx-padding: 20;">
+
+                <!-- DATOS GENERALES -->
+                <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+                    <Label text="Datos del Asiento" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                    <Separator/>
+
+                    <GridPane hgap="15" vgap="12">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="25"/>
+                            <ColumnConstraints percentWidth="25"/>
+                            <ColumnConstraints percentWidth="50"/>
+                        </columnConstraints>
+
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <Label text="Número Asiento" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <TextField fx:id="txtNumero" promptText="Auto" editable="false"
+                                       style="-fx-background-color: #f1f5f9; -fx-padding: 10;"/>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <Label text="Fecha *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <DatePicker fx:id="dpFecha" prefWidth="200" style="-fx-padding: 10;"/>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                            <Label text="Descripción *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <TextField fx:id="txtDescripcion" promptText="Descripción del asiento"
+                                       style="-fx-padding: 10;"/>
+                        </VBox>
+                    </GridPane>
+                </VBox>
+
+                <!-- APUNTES CONTABLES -->
+                <VBox VBox.vgrow="ALWAYS" spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Apuntes Contables" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="➕ Añadir Apunte" styleClass="button-success" onAction="#onAgregarApunte"
+                                style="-fx-font-size: 12; -fx-padding: 8 16;"/>
+                    </HBox>
+                    <Separator/>
+
+                    <TableView fx:id="tableApuntes" prefHeight="300" style="-fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 8;">
+                        <columns>
+                            <TableColumn fx:id="colCuenta" text="Cuenta" prefWidth="100"/>
+                            <TableColumn fx:id="colNombreCuenta" text="Nombre" prefWidth="200"/>
+                            <TableColumn fx:id="colConcepto" text="Concepto" prefWidth="200"/>
+                            <TableColumn fx:id="colDebe" text="Debe" prefWidth="120" style="-fx-alignment: CENTER-RIGHT;"/>
+                            <TableColumn fx:id="colHaber" text="Haber" prefWidth="120" style="-fx-alignment: CENTER-RIGHT;"/>
+                            <TableColumn fx:id="colAcciones" text="" prefWidth="80"/>
+                        </columns>
+                    </TableView>
+
+                    <!-- TOTALES -->
+                    <HBox spacing="20" alignment="CENTER_RIGHT" style="-fx-background-color: #f8fafc; -fx-padding: 12 16; -fx-border-radius: 8; -fx-background-radius: 8;">
+                        <Label fx:id="lblTotalDebe" text="Total Debe: 0.00 €" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                        <Label fx:id="lblTotalHaber" text="Total Haber: 0.00 €" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                        <Label fx:id="lblDiferencia" text="Diferencia: 0.00 €" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
+                    </HBox>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <!-- FOOTER CON BOTONES -->
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
+            <Button text="Cancelar" onAction="#onCancelar"
+                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Button text="Guardar como Borrador" onAction="#onGuardarBorrador" styleClass="button-warning"
+                    style="-fx-padding: 10 24; -fx-font-size: 13;"/>
+            <Button text="✓ Guardar y Contabilizar" onAction="#onGuardar" styleClass="button-success"
+                    style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
+

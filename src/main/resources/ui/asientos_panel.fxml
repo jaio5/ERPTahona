@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.AsientoContableController"
+      stylesheets="@/styles/simple-theme.css"
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="Asientos Contables" styleClass="title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
+        <Button text="+ Nuevo Asiento" onAction="#onNuevo" styleClass="button-success"/>
+    </HBox>
+
+    <HBox spacing="12">
+        <TextField fx:id="txtBuscar" promptText="🔍 Buscar asiento..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
+        <DatePicker fx:id="dpFechaDesde" promptText="Desde" prefWidth="130"/>
+        <DatePicker fx:id="dpFechaHasta" promptText="Hasta" prefWidth="130"/>
+        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableAsientos" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colNumero" text="Número" prefWidth="100"/>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
+                <TableColumn fx:id="colConcepto" text="Concepto" prefWidth="300"/>
+                <TableColumn fx:id="colDebe" text="Debe" prefWidth="120"/>
+                <TableColumn fx:id="colHaber" text="Haber" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <HBox spacing="12">
+        <Button text="👁️ Ver" onAction="#onVer" styleClass="button"/>
+        <Button text="✏️ Editar" onAction="#onEditar" styleClass="button-primary"/>
+        <Button text="🗑️ Eliminar" onAction="#onEliminar" styleClass="button-danger"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblTotal" text="0 asientos" style="-fx-text-fill: #6c757d;"/>
+    </HBox>
+
+</VBox>
+

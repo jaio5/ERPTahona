@@ -1,0 +1,625 @@
+/* ============================================
+   🎨 TEMA MODERNO PROFESIONAL - ERP TAHONA 2026
+   Sistema de Diseño Limpio, Intuitivo y Elegante
+   ============================================ */
+
+/* ============================================
+   🔧 VARIABLES GLOBALES
+   ============================================ */
+
+.root {
+    /* Colores primarios */
+    -primary-color: #3b82f6;
+    -primary-hover: #2563eb;
+    -primary-light: #dbeafe;
+    -primary-dark: #1e40af;
+
+    /* Colores secundarios */
+    -success-color: #10b981;
+    -danger-color: #ef4444;
+    -warning-color: #f59e0b;
+    -info-color: #3b82f6;
+
+    /* Grises */
+    -gray-50: #f9fafb;
+    -gray-100: #f3f4f6;
+    -gray-200: #e5e7eb;
+    -gray-300: #d1d5db;
+    -gray-400: #9ca3af;
+    -gray-500: #6b7280;
+    -gray-600: #4b5563;
+    -gray-700: #374151;
+    -gray-800: #1f2937;
+    -gray-900: #111827;
+
+    /* Tipografía */
+    -fx-font-family: "Segoe UI", "Inter", -apple-system, system-ui, sans-serif;
+    -fx-font-smoothing-type: gray;
+    -fx-font-size: 14px;
+    -fx-background-color: #f9fafb;
+}
+
+/* ============================================
+   🔐 PANTALLA DE LOGIN
+   ============================================ */
+
+.login-background {
+    -fx-background-color: linear-gradient(to bottom right, #3b82f6, #1e40af);
+}
+
+.login-container {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-padding: 48;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 30, 0, 0, 10);
+    -fx-max-width: 440px;
+}
+
+.login-logo {
+    -fx-font-size: 64;
+}
+
+.login-title {
+    -fx-font-size: 32;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111827;
+    -fx-letter-spacing: -0.5;
+}
+
+.login-subtitle {
+    -fx-font-size: 15;
+    -fx-text-fill: #6b7280;
+    -fx-font-weight: 400;
+}
+
+.login-field {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 14 16;
+    -fx-font-size: 14;
+    -fx-text-fill: #111827;
+    -fx-prompt-text-fill: #9ca3af;
+}
+
+.login-field:focused {
+    -fx-background-color: white;
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.2), 10, 0, 0, 0);
+}
+
+.login-button {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-size: 16;
+    -fx-font-weight: 600;
+    -fx-padding: 16 32;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.3), 12, 0, 0, 4);
+}
+
+.login-button:hover {
+    -fx-background-color: #2563eb;
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.4), 16, 0, 0, 6);
+}
+
+.login-button:pressed {
+    -fx-background-color: #1e40af;
+}
+
+/* ============================================
+   🎯 BOTONES GENERALES
+   ============================================ */
+
+.button {
+    -fx-background-color: white;
+    -fx-text-fill: #374151;
+    -fx-font-size: 14;
+    -fx-font-weight: 500;
+    -fx-padding: 10 20;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1;
+}
+
+.button:hover {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #9ca3af;
+}
+
+.button:pressed {
+    -fx-background-color: #f3f4f6;
+}
+
+.button-primary {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-border-width: 0;
+    -fx-font-weight: 600;
+}
+
+.button-primary:hover {
+    -fx-background-color: #2563eb;
+}
+
+.button-primary:pressed {
+    -fx-background-color: #1e40af;
+}
+
+.button-success {
+    -fx-background-color: #10b981;
+    -fx-text-fill: white;
+    -fx-border-width: 0;
+    -fx-font-weight: 600;
+}
+
+.button-success:hover {
+    -fx-background-color: #059669;
+}
+
+.button-danger {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+    -fx-border-width: 0;
+    -fx-font-weight: 600;
+}
+
+.button-danger:hover {
+    -fx-background-color: #dc2626;
+}
+
+.button-warning {
+    -fx-background-color: #f59e0b;
+    -fx-text-fill: white;
+    -fx-border-width: 0;
+    -fx-font-weight: 600;
+}
+
+.button-warning:hover {
+    -fx-background-color: #d97706;
+}
+
+/* ============================================
+   📝 INPUTS Y FORMULARIOS
+   ============================================ */
+
+.text-field, .text-area, .password-field {
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10 14;
+    -fx-font-size: 14;
+    -fx-text-fill: #111827;
+    -fx-prompt-text-fill: #9ca3af;
+}
+
+.text-field:focused, .text-area:focused, .password-field:focused {
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.15), 8, 0, 0, 0);
+}
+
+.combo-box {
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.combo-box:focused {
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 2;
+}
+
+.date-picker {
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.date-picker:focused {
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 2;
+}
+
+/* ============================================
+   📊 TABLAS
+   ============================================ */
+
+.table-view {
+    -fx-background-color: white;
+    -fx-border-width: 0;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 10, 0, 0, 2);
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #f9fafb;
+    -fx-border-width: 0 0 2 0;
+    -fx-border-color: #e5e7eb;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 12 16;
+}
+
+.table-view .column-header .label {
+    -fx-font-size: 13;
+    -fx-font-weight: 600;
+    -fx-text-fill: #4b5563;
+}
+
+.table-view .table-cell {
+    -fx-padding: 12 16;
+    -fx-font-size: 14;
+    -fx-text-fill: #111827;
+    -fx-border-width: 0;
+}
+
+.table-row-cell {
+    -fx-background-color: white;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #f3f4f6;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #f9fafb;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #dbeafe;
+}
+
+.table-row-cell:selected .table-cell {
+    -fx-text-fill: #1e40af;
+    -fx-font-weight: 500;
+}
+
+/* ============================================
+   📦 CONTENEDORES Y CARDS
+   ============================================ */
+
+.card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 12, 0, 0, 3);
+}
+
+.main-container {
+    -fx-background-color: #f9fafb;
+    -fx-padding: 24;
+}
+
+/* ============================================
+   🏷️ TEXTOS Y LABELS
+   ============================================ */
+
+.label {
+    -fx-text-fill: #374151;
+    -fx-font-size: 14;
+}
+
+.title-panel {
+    -fx-font-size: 24;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111827;
+}
+
+.section-title {
+    -fx-font-size: 18;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1f2937;
+}
+
+.label-secondary {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 14;
+}
+
+/* ============================================
+   🎨 SIDEBAR
+   ============================================ */
+
+.sidebar {
+    -fx-background-color: white;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 10, 0, 2, 0);
+}
+
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6b7280;
+    -fx-padding: 12 16;
+    -fx-font-size: 14;
+    -fx-font-weight: 500;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.sidebar-button:hover {
+    -fx-background-color: #f9fafb;
+    -fx-text-fill: #3b82f6;
+}
+
+.sidebar-button:selected {
+    -fx-background-color: #dbeafe;
+    -fx-text-fill: #3b82f6;
+    -fx-font-weight: 600;
+}
+
+/* ============================================
+   🔝 HEADER
+   ============================================ */
+
+.header {
+    -fx-background-color: white;
+    -fx-padding: 20 24;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 8, 0, 0, 2);
+}
+
+.toolbar {
+    -fx-background-color: white;
+    -fx-padding: 12 16;
+    -fx-spacing: 12;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+
+/* ============================================
+   🔍 SEARCH BOX
+   ============================================ */
+
+.search-box {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 10 16;
+    -fx-font-size: 14;
+    -fx-prompt-text-fill: #9ca3af;
+}
+
+.search-box:focused {
+    -fx-background-color: white;
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 1.5;
+}
+
+/* ============================================
+   ↕️ SCROLLBARS
+   ============================================ */
+
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8;
+}
+
+.scroll-bar:horizontal {
+    -fx-background-color: transparent;
+    -fx-pref-height: 8;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #d1d5db;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #9ca3af;
+}
+
+.scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+}
+
+/* ============================================
+   ☑️ CHECKBOXES
+   ============================================ */
+
+.check-box {
+    -fx-text-fill: #374151;
+    -fx-font-size: 14;
+}
+
+.check-box .box {
+    -fx-background-color: white;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+.check-box:selected .box {
+    -fx-background-color: #3b82f6;
+    -fx-border-color: #3b82f6;
+}
+
+.check-box .mark {
+    -fx-background-color: white;
+}
+
+/* ============================================
+   💬 TOOLTIPS
+   ============================================ */
+
+.tooltip {
+    -fx-background-color: rgba(17, 24, 39, 0.95);
+    -fx-text-fill: white;
+    -fx-font-size: 12;
+    -fx-padding: 6 10;
+    -fx-background-radius: 6;
+}
+
+/* ============================================
+   ⚡ PROGRESS BARS
+   ============================================ */
+
+.progress-bar .bar {
+    -fx-background-color: #3b82f6;
+    -fx-background-radius: 8;
+}
+
+.progress-bar .track {
+    -fx-background-color: #e5e7eb;
+    -fx-background-radius: 8;
+}
+
+/* ============================================
+   ⚠️ ALERTAS
+   ============================================ */
+
+.alert-success {
+    -fx-background-color: #d1fae5;
+    -fx-border-color: #10b981;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 12 16;
+}
+
+.alert-danger {
+    -fx-background-color: #fee2e2;
+    -fx-border-color: #ef4444;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 12 16;
+}
+
+.alert-warning {
+    -fx-background-color: #fef3c7;
+    -fx-border-color: #f59e0b;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 12 16;
+}
+
+.alert-info {
+    -fx-background-color: #dbeafe;
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 12 16;
+}
+
+/* ============================================
+   🎨 BADGES
+   ============================================ */
+
+.badge {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-padding: 4 10;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-font-size: 11;
+    -fx-font-weight: 600;
+}
+
+.badge-success {
+    -fx-background-color: #10b981;
+}
+
+.badge-danger {
+    -fx-background-color: #ef4444;
+}
+
+.badge-warning {
+    -fx-background-color: #f59e0b;
+}
+
+/* ============================================
+   ➖ SEPARADORES
+   ============================================ */
+
+.separator .line {
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ============================================
+   🚫 ESTADO DISABLED
+   ============================================ */
+
+.button:disabled,
+.text-field:disabled,
+.combo-box:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: not-allowed;
+}
+
+/* ============================================
+   📊 STATUS BAR
+   ============================================ */
+
+.status-bar {
+    -fx-background-color: white;
+    -fx-padding: 12 24;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1 0 0 0;
+}
+
+.status-label {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 12;
+}
+
+/* ============================================
+   🎯 DASHBOARD BUTTONS
+   ============================================ */
+
+.dashboard-button {
+    -fx-background-color: linear-gradient(to bottom, #3b82f6, #2563eb);
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-padding: 12 20;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.3), 8, 0, 0, 2);
+    -fx-min-width: 160px;
+    -fx-pref-width: 160px;
+}
+
+.dashboard-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #2563eb, #1e40af);
+    -fx-scale-y: 1.03;
+    -fx-scale-x: 1.03;
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.5), 12, 0, 0, 4);
+}
+
+.dashboard-button:pressed {
+    -fx-background-color: #1e40af;
+    -fx-scale-y: 0.98;
+    -fx-scale-x: 0.98;
+}

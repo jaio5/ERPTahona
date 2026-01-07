@@ -71,6 +71,14 @@ public class ErpLauncher extends Application {
     private static final Logger log = LoggerFactory.getLogger(ErpLauncher.class);
     private static ConfigurableApplicationContext springContext;
 
+    /**
+     * Obtiene el contexto de Spring para uso en controladores JavaFX
+     * @return El contexto de Spring Boot
+     */
+    public static ConfigurableApplicationContext getSpringContext() {
+        return springContext;
+    }
+
     @Override
     public void init() {
         log.info("Inicializando contexto de Spring Boot...");
