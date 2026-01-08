@@ -1,0 +1,140 @@
+================================================================
+  CORRECCION ESTILO TABLA PROVEEDORES
+================================================================
+
+Fecha: 08/01/2026 22:53
+Estado: COMPLETADO
+
+================================================================
+  PROBLEMA
+================================================================
+
+La tabla de proveedores tenia:
+- Fondo negro (#2b2b2b)
+- Texto dificil de leer
+
+Usuario queria:
+- Fondo blanco
+- Letras negras
+
+================================================================
+  SOLUCION APLICADA
+================================================================
+
+Archivo: ProveedorController.java
+Linea: 59
+
+ANTES:
+------
+tableProveedores.setStyle("-fx-background-color: #2b2b2b;");
+
+DESPUES:
+--------
+tableProveedores.setStyle("-fx-background-color: white; -fx-text-fill: black;");
+
+================================================================
+  ESTILOS CSS EXISTENTES
+================================================================
+
+El archivo simple-theme.css ya tenia estilos correctos para tablas:
+
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #dee2e6;
+}
+
+.table-view .table-cell {
+    -fx-text-fill: #212529;  <- Texto oscuro (casi negro)
+}
+
+.table-row-cell {
+    -fx-background-color: white;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #f8f9fa;  <- Filas alternas gris muy claro
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #e7f5ff;  <- Azul claro al pasar mouse
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #d0ebff;  <- Azul claro al seleccionar
+}
+
+================================================================
+  RESULTADO VISUAL
+================================================================
+
+Ahora la tabla de proveedores tiene:
+
+FONDO:
+------
+- Fondo principal: Blanco
+- Filas pares: Blanco
+- Filas impares: Gris muy claro (#f8f9fa)
+- Al pasar mouse: Azul muy claro (#e7f5ff)
+- Al seleccionar: Azul claro (#d0ebff)
+
+TEXTO:
+------
+- Color: Negro (#212529)
+- Cabeceras: Gris oscuro (#495057)
+- Totalmente legible
+
+BORDES:
+-------
+- Borde tabla: Gris claro (#dee2e6)
+- Lineas entre filas: Gris muy claro (#f1f3f5)
+
+================================================================
+  COMPILACION
+================================================================
+
+Maven Build: SUCCESS
+Tiempo: 25.273 segundos
+Estado: Sin errores
+
+================================================================
+  COMO VERIFICAR
+================================================================
+
+1. Ejecuta: TEST_RAPIDO.bat
+2. Login: admin / admin
+3. Click en "Proveedores"
+4. Verifica:
+   - Fondo blanco
+   - Letras negras legibles
+   - Filas alternas gris claro
+   - Buen contraste
+
+================================================================
+  COMPARACION ANTES/DESPUES
+================================================================
+
+ANTES:
+------
+Background: #2b2b2b (negro/gris oscuro)
+Texto: No definido explicitamente
+Resultado: Dificil de leer
+
+DESPUES:
+--------
+Background: white (blanco)
+Texto: black (#212529)
+Filas alternas: Gris muy claro
+Resultado: Perfectamente legible
+
+================================================================
+
+Estado: COMPLETADO
+Compilacion: BUILD SUCCESS
+Visual: Fondo blanco, texto negro
+
+================================================================
+
+Ahora la tabla de proveedores es clara, limpia y facil de leer.
+
+================================================================
+

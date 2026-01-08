@@ -44,7 +44,7 @@ public class PedidoCompraController {
         colTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
-        tablePedidos.setStyle("-fx-background-color: #2b2b2b;");
+        tablePedidos.setStyle("-fx-background-color: white; -fx-text-fill: black;");
 
         cargarPedidos();
     }

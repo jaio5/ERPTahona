@@ -3,8 +3,7 @@ package alicanteweb.erp.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -16,8 +15,7 @@ import java.util.Set;
 /**
  * Entidad Rol para sistema de autorización
  */
-@Getter
-@Setter
+@Data
 @Entity
 @Table(name = "roles")
 public class Rol {

@@ -202,6 +202,41 @@ public class MainPanelController {
         cargarVistaModulo("/ui/empresa_config_panel.fxml");
     }
 
+    // Métodos para accesos rápidos del dashboard
+    public void cargarVista(String vista) {
+        cargarVistaModulo(vista);
+    }
+
+    @FXML
+    public void onDashboard() {
+        log.info(">>> BOTÓN DASHBOARD PRESIONADO <<<");
+        cargarVistaModulo("/ui/dashboard.fxml");
+    }
+
+    @FXML
+    public void onConfiguracion() {
+        log.info(">>> BOTÓN CONFIGURACIÓN PRESIONADO <<<");
+        cargarVistaModulo("/ui/empresa_config_panel.fxml");
+    }
+
+    @FXML
+    public void onCerrarSesion() {
+        log.info(">>> CERRANDO SESIÓN <<<");
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.control.Alert confirmacion = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
+            confirmacion.setTitle("Cerrar Sesión");
+            confirmacion.setHeaderText("¿Desea cerrar sesión?");
+            confirmacion.setContentText("Se cerrará la aplicación");
+
+            confirmacion.showAndWait().ifPresent(response -> {
+                if (response == javafx.scene.control.ButtonType.OK) {
+                    javafx.stage.Stage stage = (javafx.stage.Stage) contentArea.getScene().getWindow();
+                    stage.close();
+                }
+            });
+        });
+    }
+
     @FXML
     public void onSalir() {
         log.info(">>> BOTÓN SALIR PRESIONADO <<<");

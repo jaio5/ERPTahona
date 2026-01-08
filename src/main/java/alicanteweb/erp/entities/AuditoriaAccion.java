@@ -3,8 +3,7 @@ package alicanteweb.erp.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -15,8 +14,7 @@ import java.util.Map;
  * Entidad para auditoría de todas las acciones en el sistema
  * Cumplimiento RGPD y trazabilidad completa
  */
-@Getter
-@Setter
+@Data
 @Entity
 @Table(name = "auditoria_acciones", indexes = {
     @Index(name = "idx_auditoria_fecha", columnList = "fecha"),

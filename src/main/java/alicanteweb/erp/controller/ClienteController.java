@@ -19,6 +19,14 @@ import java.util.List;
 public class ClienteController extends BaseController<Cliente> {
     private static final Logger log = LoggerFactory.getLogger(ClienteController.class);
 
+    @FXML
+    private javafx.scene.control.TableView<Cliente> tableClientes;
+    @FXML
+    private javafx.scene.control.TextField txtBuscar;
+    @FXML
+    private javafx.scene.control.ComboBox<String> cmbActivo;
+    @FXML
+    private javafx.scene.control.Label lblTotal;
 
     @FXML
     private TableColumn<Cliente, Long> colId;
@@ -27,13 +35,15 @@ public class ClienteController extends BaseController<Cliente> {
     @FXML
     private TableColumn<Cliente, String> colNombre;
     @FXML
-    private TableColumn<Cliente, String> colCif;
+    private TableColumn<Cliente, String> colCIF;
     @FXML
     private TableColumn<Cliente, String> colDireccion;
     @FXML
     private TableColumn<Cliente, String> colPoblacion;
     @FXML
     private TableColumn<Cliente, String> colProvincia;
+    @FXML
+    private TableColumn<Cliente, Boolean> colActivo;
 
     @Autowired
     private ClienteService clienteService;
@@ -42,14 +52,28 @@ public class ClienteController extends BaseController<Cliente> {
     public void initialize() {
         log.info("Inicializando ClienteController");
 
+        // Asignar la tabla del FXML a la tabla base
+        this.table = tableClientes;
+
         // Configurar columnas de la tabla
-        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
-        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        colCif.setCellValueFactory(new PropertyValueFactory<>("cif"));
-        colDireccion.setCellValueFactory(new PropertyValueFactory<>("direccion"));
-        colPoblacion.setCellValueFactory(new PropertyValueFactory<>("poblacion"));
-        colProvincia.setCellValueFactory(new PropertyValueFactory<>("provincia"));
+        if (colCodigo != null) colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
+        if (colNombre != null) colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        if (colCIF != null) colCIF.setCellValueFactory(new PropertyValueFactory<>("cif"));
+        if (colDireccion != null) colDireccion.setCellValueFactory(new PropertyValueFactory<>("direccion"));
+        if (colPoblacion != null) colPoblacion.setCellValueFactory(new PropertyValueFactory<>("poblacion"));
+        if (colProvincia != null) colProvincia.setCellValueFactory(new PropertyValueFactory<>("provincia"));
+        if (colActivo != null) colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
+
+        // Configurar ComboBox de estado
+        if (cmbActivo != null) {
+            cmbActivo.getItems().addAll("Todos", "Activos", "Inactivos");
+            cmbActivo.setValue("Activos");
+        }
+
+        // Configurar label para el BaseController
+        if (lblTotal != null) {
+            this.lblEstado = lblTotal;
+        }
 
         // Inicializar controlador base
         initController();

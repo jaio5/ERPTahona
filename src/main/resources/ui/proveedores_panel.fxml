@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.ProveedorController"
+      stylesheets="@/styles/simple-theme.css"
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="PROVEEDORES" styleClass="title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Refrescar" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 14;"/>
+        <Button text="+ Nuevo Proveedor" onAction="#onNuevo" styleClass="button-success"/>
+    </HBox>
+
+    <HBox spacing="12">
+        <TextField fx:id="txtBuscar" promptText="Buscar proveedor..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
+        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableProveedores" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colCodigo" text="Codigo" prefWidth="100"/>
+                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="250"/>
+                <TableColumn fx:id="colCIF" text="CIF/NIF" prefWidth="120"/>
+                <TableColumn fx:id="colTelefono" text="Telefono" prefWidth="120"/>
+                <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
+                <TableColumn fx:id="colPoblacion" text="Poblacion" prefWidth="150"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <HBox spacing="12">
+        <Button text="Ver" onAction="#onVer" styleClass="button"/>
+        <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
+        <Button text="Dar de Baja" onAction="#onDarBaja" styleClass="button-danger"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblTotal" text="0 proveedores" style="-fx-text-fill: #6c757d;"/>
+    </HBox>
+
+</VBox>
+

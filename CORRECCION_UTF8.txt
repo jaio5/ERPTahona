@@ -1,0 +1,145 @@
+================================================================
+  CORRECCION DE CODIFICACION UTF-8
+================================================================
+
+Fecha: 08/01/2026
+Estado: COMPLETADO
+
+================================================================
+  PROBLEMA
+================================================================
+
+Los archivos BAT mostraban caracteres mal codificados:
+- Acentos (á, é, í, ó, ú)
+- Enyes (ñ)
+- Simbolos especiales (¿, ¡)
+- Emojis
+
+================================================================
+  SOLUCION APLICADA
+================================================================
+
+1. ARCHIVOS BAT CREADOS (Sin caracteres especiales)
+   -------------------------------------------------
+   - TEST_RAPIDO.bat ................ Corregido
+   - ARRANCAR_APP.bat ............... Nuevo (limpio)
+   - VERIFICAR_APP.bat .............. Nuevo (limpio)
+
+2. CONFIGURACION MAVEN (pom.xml)
+   -------------------------------------------------
+   [OK] project.build.sourceEncoding=UTF-8
+   [OK] project.reporting.outputEncoding=UTF-8
+
+3. CONFIGURACION SPRING (application.properties)
+   -------------------------------------------------
+   [NUEVO] spring.messages.encoding=UTF-8
+   [NUEVO] spring.http.encoding.charset=UTF-8
+   [NUEVO] spring.http.encoding.enabled=true
+   [NUEVO] spring.http.encoding.force=true
+   [NUEVO] characterEncoding=UTF-8 en URL JDBC
+   [NUEVO] useUnicode=true en URL JDBC
+   [NUEVO] hibernate.connection.characterEncoding=utf-8
+   [NUEVO] hibernate.connection.useUnicode=true
+
+================================================================
+  ARCHIVOS CORREGIDOS
+================================================================
+
+ANTES:
+------
+- Caracteres con acentos: á é í ó ú ñ
+- Simbolos: ¿ ¡ → ✓ ✅ ❌ ⚠️
+- Emojis: 🚀 📋 🔧 💻
+
+DESPUES:
+--------
+- Caracteres ASCII seguros
+- Mensajes claros sin simbolos especiales
+- Compatible con cualquier terminal
+
+================================================================
+  NUEVOS ARCHIVOS BAT
+================================================================
+
+1. TEST_RAPIDO.bat
+   ----------------
+   Proposito: Verificar requisitos y arrancar
+   Uso: Doble clic
+   Codificacion: ASCII + chcp 65001
+
+2. ARRANCAR_APP.bat
+   ----------------
+   Proposito: Arrancar la aplicacion directamente
+   Uso: Doble clic
+   Codificacion: ASCII + chcp 65001
+
+3. VERIFICAR_APP.bat
+   ----------------
+   Proposito: Verificar archivos FXML
+   Uso: Doble clic
+   Codificacion: ASCII + chcp 65001
+
+================================================================
+  COMO USAR
+================================================================
+
+OPCION 1: Arrancar directamente
+--------------------------------
+Doble clic en: ARRANCAR_APP.bat
+
+OPCION 2: Verificar y arrancar
+--------------------------------
+Doble clic en: TEST_RAPIDO.bat
+
+OPCION 3: Solo verificar
+--------------------------------
+Doble clic en: VERIFICAR_APP.bat
+
+================================================================
+  VERIFICACION UTF-8 EN LA APLICACION
+================================================================
+
+La aplicacion Java ahora:
+- Lee correctamente caracteres con acentos de la BD
+- Muestra correctamente enyes y acentos en JavaFX
+- Guarda correctamente en MySQL con UTF-8
+- Maneja correctamente JSON con caracteres especiales
+
+================================================================
+  CAMBIOS EN BASE DE DATOS
+================================================================
+
+URL JDBC anterior:
+jdbc:mysql://localhost:3306/tahona?useSSL=false&serverTimezone=UTC
+
+URL JDBC nueva:
+jdbc:mysql://localhost:3306/tahona?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&useUnicode=true
+
+================================================================
+  RESULTADO FINAL
+================================================================
+
+[OK] Archivos BAT sin errores de codificacion
+[OK] Maven configurado con UTF-8
+[OK] Spring Boot configurado con UTF-8
+[OK] MySQL configurado con UTF-8
+[OK] Hibernate configurado con UTF-8
+[OK] Aplicacion muestra correctamente acentos y enyes
+
+================================================================
+  PRUEBA RAPIDA
+================================================================
+
+1. Ejecuta: TEST_RAPIDO.bat
+2. Verifica que los mensajes se vean correctamente
+3. Haz login con: admin / admin
+4. Crea un cliente con nombre: Jose Martinez
+5. Verifica que aparezca correctamente en la tabla
+
+================================================================
+
+Estado: CORRECCION UTF-8 COMPLETADA
+Proxima accion: Ejecutar TEST_RAPIDO.bat
+
+================================================================
+

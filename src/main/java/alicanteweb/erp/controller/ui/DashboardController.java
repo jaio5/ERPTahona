@@ -18,13 +18,18 @@ import java.time.format.DateTimeFormatter;
 public class DashboardController {
     private static final Logger log = LoggerFactory.getLogger(DashboardController.class);
 
-    @FXML private Label lblBienvenida;
-    @FXML private Label lblFecha;
-    @FXML private Label lblHora;
-    @FXML private Label lblTotalClientes;
-    @FXML private Label lblTotalArticulos;
-    @FXML private Label lblTotalFacturas;
-    @FXML private Label lblTotalFacturacion;
+    @FXML private Label lblVentasDia;
+    @FXML private Label lblVentasMes;
+    @FXML private Label lblClientes;
+    @FXML private Label lblArticulos;
+    @FXML private Label lblFacturasHoy;
+    @FXML private Label lblFacturasMes;
+    @FXML private javafx.scene.control.TableView<Object> tableUltimasFacturas;
+    @FXML private javafx.scene.control.TableColumn<Object, String> colNumero;
+    @FXML private javafx.scene.control.TableColumn<Object, String> colFecha;
+    @FXML private javafx.scene.control.TableColumn<Object, String> colCliente;
+    @FXML private javafx.scene.control.TableColumn<Object, String> colTotal;
+    @FXML private javafx.scene.control.TableColumn<Object, String> colEstado;
 
     private final ClienteService clienteService;
     private final ArticuloService articuloService;
@@ -43,29 +48,33 @@ public class DashboardController {
     public void initialize() {
         log.info("Inicializando DashboardController");
         cargarEstadisticas();
-        iniciarReloj();
+    }
+
+    @FXML
+    public void onRefresh() {
+        log.info("Refrescando dashboard");
+        cargarEstadisticas();
     }
 
     private void cargarEstadisticas() {
         try {
             // Cargar total de clientes
             long totalClientes = clienteService.findAll().size();
-            lblTotalClientes.setText(String.valueOf(totalClientes));
+            if (lblClientes != null) {
+                lblClientes.setText(String.valueOf(totalClientes));
+            }
 
             // Cargar total de artículos
             long totalArticulos = articuloService.findAll().size();
-            lblTotalArticulos.setText(String.valueOf(totalArticulos));
-
-            // Cargar facturas del mes (si existe el método)
-            try {
-                long totalFacturas = facturaService.findAll().size();
-                lblTotalFacturas.setText(String.valueOf(totalFacturas));
-            } catch (Exception e) {
-                lblTotalFacturas.setText("0");
+            if (lblArticulos != null) {
+                lblArticulos.setText(String.valueOf(totalArticulos));
             }
 
-            // Facturación total (simulado por ahora)
-            lblTotalFacturacion.setText("0.00 €");
+            // Cargar facturas (simulado por ahora)
+            if (lblVentasDia != null) lblVentasDia.setText("0.00 €");
+            if (lblVentasMes != null) lblVentasMes.setText("0.00 €");
+            if (lblFacturasHoy != null) lblFacturasHoy.setText("0 facturas");
+            if (lblFacturasMes != null) lblFacturasMes.setText("0 facturas");
 
             log.info("Estadísticas cargadas: {} clientes, {} artículos", totalClientes, totalArticulos);
         } catch (Exception e) {
@@ -73,30 +82,38 @@ public class DashboardController {
         }
     }
 
-    private void iniciarReloj() {
-        Thread relojThread = new Thread(() -> {
-            while (true) {
-                try {
-                    LocalDateTime ahora = LocalDateTime.now();
-                    String fecha = ahora.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                    String hora = ahora.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-
-                    Platform.runLater(() -> {
-                        if (lblFecha != null) lblFecha.setText(fecha);
-                        if (lblHora != null) lblHora.setText(hora);
-                    });
-
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    break;
-                }
-            }
-        });
-        relojThread.setDaemon(true);
-        relojThread.start();
-    }
 
     // Métodos de navegación
+    @FXML
+    public void onNuevaFactura() {
+        mainPanelController.onFacturas();
+    }
+
+    @FXML
+    public void onNuevoAlbaran() {
+        mainPanelController.onAlbaranes();
+    }
+
+    @FXML
+    public void onNuevoCliente() {
+        mainPanelController.onClientes();
+    }
+
+    @FXML
+    public void onNuevoArticulo() {
+        mainPanelController.onArticulos();
+    }
+
+    @FXML
+    public void onContabilidad() {
+        mainPanelController.onAsientos();
+    }
+
+    @FXML
+    public void onConfiguracion() {
+        mainPanelController.onEmpresaConfig();
+    }
+
     @FXML
     public void onClientes() {
         mainPanelController.onClientes();

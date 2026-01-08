@@ -106,8 +106,52 @@ public class FacturaController {
 
     @FXML
     public void onCreate() {
+        log.info("Crear nueva factura");
         mostrarFormularioFactura(null);
     }
+
+    @FXML
+    public void onNuevo() {
+        onCreate();
+    }
+
+    @FXML
+    public void onBuscar() {
+        String termino = txtBuscar != null ? txtBuscar.getText() : "";
+        filtrarFacturas(termino);
+    }
+
+    @FXML
+    public void onVer() {
+        Factura selected = tableFacturas.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            log.info("Ver factura: {}", selected.getNumero());
+            mostrarFormularioFactura(selected);
+        } else {
+            mostrarAdvertencia("Selecciona una factura primero");
+        }
+    }
+
+    @FXML
+    public void onEditar() {
+        onEdit();
+    }
+
+    @FXML
+    public void onImprimir() {
+        onPrint();
+    }
+
+    @FXML
+    public void onEnviarAeat() {
+        Factura selected = tableFacturas.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            onAprobarYEmitir();
+        } else {
+            mostrarAdvertencia("Selecciona una factura primero");
+        }
+    }
+
 
     private void mostrarFormularioFactura(Factura factura) {
         try {
@@ -952,6 +996,12 @@ public class FacturaController {
     private void mostrarInfo(String mensaje) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, mensaje);
         alert.setHeaderText("Información");
+        alert.showAndWait();
+    }
+
+    private void mostrarAdvertencia(String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.WARNING, mensaje);
+        alert.setHeaderText("Advertencia");
         alert.showAndWait();
     }
 

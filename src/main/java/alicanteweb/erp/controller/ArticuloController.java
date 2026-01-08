@@ -76,6 +76,55 @@ public class ArticuloController {
     }
 
     @FXML
+    public void onBuscar() {
+        log.info("Buscar artículos");
+        String busqueda = txtBuscar != null ? txtBuscar.getText() : "";
+        filtrarArticulos(busqueda);
+    }
+
+    @FXML
+    public void onVer() {
+        Articulo selected = tableArticulos.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            log.info("Ver artículo: {}", selected.getCodigo());
+            mostrarInfo("Función en desarrollo");
+        } else {
+            mostrarAdvertencia("Selecciona un artículo primero");
+        }
+    }
+
+    @FXML
+    public void onDarBaja() {
+        Articulo selected = tableArticulos.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            log.info("Dar de baja artículo: {}", selected.getCodigo());
+            mostrarInfo("Función en desarrollo");
+        } else {
+            mostrarAdvertencia("Selecciona un artículo primero");
+        }
+    }
+
+    private void filtrarArticulos(String termino) {
+        try {
+            var articulos = articuloService.findAll();
+            if (termino != null && !termino.isEmpty()) {
+                articulos = articulos.stream()
+                    .filter(a -> a.getCodigo().toLowerCase().contains(termino.toLowerCase()) ||
+                                a.getDescripcion().toLowerCase().contains(termino.toLowerCase()))
+                    .toList();
+            }
+            if (tableArticulos != null) {
+                tableArticulos.setItems(FXCollections.observableArrayList(articulos));
+            }
+            if (lblTotal != null) {
+                lblTotal.setText(articulos.size() + " artículos encontrados");
+            }
+        } catch (Exception e) {
+            log.error("Error filtrando artículos", e);
+        }
+    }
+
+    @FXML
     public void onNuevo() {
         log.info("Crear nuevo artículo");
         mostrarInfo("Función en desarrollo");
@@ -103,11 +152,6 @@ public class ArticuloController {
         }
     }
 
-    @FXML
-    public void onBuscar() {
-        log.info("Buscando artículos");
-        cargarDatos();
-    }
 
     private void mostrarError(String mensaje) {
         Alert alert = new Alert(Alert.AlertType.ERROR);

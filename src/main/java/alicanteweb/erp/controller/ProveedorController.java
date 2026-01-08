@@ -33,6 +33,7 @@ public class ProveedorController {
     @FXML private TableColumn<Proveedor, String> colPoblacion;
 
     @FXML private TextField txtBuscar;
+    @FXML private Label lblTotal;
 
     private final ProveedorService proveedorService;
     private ObservableList<Proveedor> proveedores;
@@ -54,8 +55,8 @@ public class ProveedorController {
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colPoblacion.setCellValueFactory(new PropertyValueFactory<>("poblacion"));
 
-        // Aplicar estilo a la tabla
-        tableProveedores.setStyle("-fx-background-color: #2b2b2b;");
+        // Aplicar estilo a la tabla - fondo blanco, texto negro
+        tableProveedores.setStyle("-fx-background-color: white; -fx-text-fill: black;");
 
         // Cargar datos
         cargarProveedores();
@@ -67,6 +68,7 @@ public class ProveedorController {
             proveedores = FXCollections.observableArrayList(lista);
             tableProveedores.setItems(proveedores);
 
+            actualizarContador();
             log.info("Proveedores cargados: {}", proveedores.size());
         } catch (Exception e) {
             log.error("Error cargando proveedores", e);
@@ -74,10 +76,73 @@ public class ProveedorController {
         }
     }
 
+    private void actualizarContador() {
+        if (lblTotal != null) {
+            int total = proveedores != null ? proveedores.size() : 0;
+            lblTotal.setText(total + " proveedor" + (total != 1 ? "es" : ""));
+        }
+    }
+
     @FXML
     private void onCreate() {
         log.info("Abriendo formulario de nuevo proveedor");
         abrirFormulario(null);
+    }
+
+    @FXML
+    public void onNuevo() {
+        onCreate();
+    }
+
+    @FXML
+    public void onRefresh() {
+        log.info("Refrescando lista de proveedores");
+        cargarProveedores();
+    }
+
+    @FXML
+    public void onBuscar() {
+        String termino = txtBuscar != null ? txtBuscar.getText() : "";
+        filtrarProveedores(termino);
+    }
+
+    @FXML
+    public void onVer() {
+        Proveedor seleccionado = tableProveedores.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAdvertencia("Selección requerida", "Por favor, selecciona un proveedor para ver.");
+            return;
+        }
+        abrirFormulario(seleccionado);
+    }
+
+    @FXML
+    public void onEditar() {
+        onEdit();
+    }
+
+    @FXML
+    public void onDarBaja() {
+        onDelete();
+    }
+
+    private void filtrarProveedores(String termino) {
+        try {
+            List<Proveedor> lista = proveedorService.findAll();
+            if (termino != null && !termino.isEmpty()) {
+                lista = lista.stream()
+                    .filter(p -> p.getNombre().toLowerCase().contains(termino.toLowerCase()) ||
+                                p.getCodigo().toLowerCase().contains(termino.toLowerCase()) ||
+                                (p.getCif() != null && p.getCif().toLowerCase().contains(termino.toLowerCase())))
+                    .toList();
+            }
+            proveedores = FXCollections.observableArrayList(lista);
+            tableProveedores.setItems(proveedores);
+            actualizarContador();
+            log.info("Proveedores filtrados: {}", proveedores.size());
+        } catch (Exception e) {
+            log.error("Error filtrando proveedores", e);
+        }
     }
 
     @FXML
@@ -150,12 +215,6 @@ public class ProveedorController {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
-    }
-
-    @FXML
-    private void onRefresh() {
-        log.info("Refrescando lista de proveedores");
-        cargarProveedores();
     }
 }
 

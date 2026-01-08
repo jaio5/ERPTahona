@@ -134,6 +134,31 @@ public abstract class BaseController<T> {
         mostrarInfo("Datos actualizados");
     }
 
+    @FXML
+    protected void onBuscar() {
+        // El filtrado se hace automáticamente con el listener del txtBuscar
+        // Este método está aquí para el botón de buscar en el FXML
+        String termino = txtBuscar != null ? txtBuscar.getText() : "";
+        filtrar(termino);
+    }
+
+    @FXML
+    protected void onVer() {
+        T seleccionado = table.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAdvertencia("Selecciona un elemento para ver");
+            return;
+        }
+        // Por defecto, abrir el formulario en modo lectura
+        abrirFormulario(seleccionado);
+    }
+
+    @FXML
+    protected void onDarBaja() {
+        // Alias para onEliminar
+        onEliminar();
+    }
+
     /**
      * Eliminar item de BD
      * Implementar en cada controlador

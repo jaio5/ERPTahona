@@ -2,8 +2,7 @@ package alicanteweb.erp.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
@@ -15,8 +14,7 @@ import java.util.List;
 /**
  * Asiento contable
  */
-@Getter
-@Setter
+@Data
 @Entity
 @Table(name = "asientos_contables")
 public class AsientoContable {

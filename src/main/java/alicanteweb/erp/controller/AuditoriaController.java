@@ -44,7 +44,7 @@ public class AuditoriaController {
         colEntidad.setCellValueFactory(new PropertyValueFactory<>("entidadTipo"));
         colResultado.setCellValueFactory(new PropertyValueFactory<>("resultado"));
 
-        tableAuditoria.setStyle("-fx-background-color: #2b2b2b;");
+        tableAuditoria.setStyle("-fx-background-color: white; -fx-text-fill: black;");
 
         cargarAuditorias();
     }

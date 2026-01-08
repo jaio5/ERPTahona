@@ -2,7 +2,8 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Usuario;
 import alicanteweb.erp.repository.UsuarioRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +15,9 @@ import java.util.Optional;
  * Servicio de gestión de usuarios
  */
 @Service
-@Slf4j
 public class UsuarioService {
 
+    private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
     private static final int MAX_INTENTOS_FALLIDOS = 5;
     private static final int TOKEN_LENGTH = 32;
 

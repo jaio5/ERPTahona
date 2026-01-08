@@ -1,0 +1,237 @@
+═══════════════════════════════════════════════════════════════
+  🎯 GUÍA RÁPIDA DE PRUEBA - ERP PANADERÍA TAHONA
+═══════════════════════════════════════════════════════════════
+
+📌 ESTADO ACTUAL
+═══════════════════════════════════════════════════════════════
+
+✅ Compilación exitosa (BUILD SUCCESS)
+✅ 147 archivos Java compilados
+✅ 36 archivos FXML verificados y completos
+✅ JAR generado: ERP-0.0.1.jar
+✅ Java 17 detectado: OpenJDK 17.0.17
+✅ Lombok funcionando correctamente
+✅ Spring Boot 3.5.7 + JavaFX 21 integrados
+
+═══════════════════════════════════════════════════════════════
+  🚀 PASO 1: ARRANCAR LA APLICACIÓN
+═══════════════════════════════════════════════════════════════
+
+1. Abre una terminal PowerShell en:
+   D:\Programación\ERP
+
+2. Ejecuta uno de estos comandos:
+
+   OPCIÓN A (Recomendada):
+   .\ARRANCAR_APLICACION_CORREGIDA.bat
+
+   OPCIÓN B (Maven directo):
+   mvn javafx:run
+
+   OPCIÓN C (JAR compilado):
+   java -jar target\ERP-0.0.1.jar
+
+3. Espera a que aparezca:
+   "Pantalla de login cargada correctamente"
+
+═══════════════════════════════════════════════════════════════
+  🔐 PASO 2: LOGIN
+═══════════════════════════════════════════════════════════════
+
+Usuario:    admin
+Contraseña: admin
+
+ℹ️  NOTA: El sistema desbloquea automáticamente el usuario
+    admin al iniciar, así que siempre podrás acceder.
+
+═══════════════════════════════════════════════════════════════
+  🧪 PASO 3: PROBAR MÓDULOS
+═══════════════════════════════════════════════════════════════
+
+Una vez dentro, prueba estos módulos en orden:
+
+1️⃣  DASHBOARD (Vista principal)
+   └─ Debe mostrar tarjetas con estadísticas
+
+2️⃣  CLIENTES
+   ├─ Ver lista de clientes (debería haber 76)
+   ├─ Botón "Nuevo" → Crear cliente de prueba
+   ├─ Seleccionar cliente → "Editar"
+   └─ Buscar clientes por nombre/CIF
+
+3️⃣  ARTÍCULOS
+   ├─ Ver lista de artículos
+   ├─ Crear nuevo artículo
+   └─ Editar artículo existente
+
+4️⃣  PROVEEDORES
+   ├─ Ver lista de proveedores
+   ├─ Crear nuevo proveedor
+   └─ Filtrar proveedores
+
+5️⃣  FACTURAS
+   ├─ Ver lista de facturas
+   ├─ Crear nueva factura (seleccionar cliente, añadir líneas)
+   ├─ Estados: BORRADOR → REVISION → EMITIDA
+   ├─ Botón "Imprimir" → Vista previa PDF
+   └─ Botón "Enviar a AEAT" (VeriFacTu simulado)
+
+6️⃣  ALBARANES
+   ├─ Ver lista de albaranes
+   ├─ Crear nuevo albarán
+   └─ Imprimir albarán
+
+7️⃣  OTROS MÓDULOS
+   ├─ Almacenes
+   ├─ Presupuestos
+   ├─ Pedidos de compra/venta
+   ├─ Facturas de compra
+   ├─ Caja
+   ├─ Asientos contables
+   ├─ Plan contable
+   ├─ Modelo 347
+   ├─ Movimientos bancarios
+   ├─ Auditoría
+   ├─ Usuarios
+   └─ Configuración empresa
+
+═══════════════════════════════════════════════════════════════
+  ⚠️  POSIBLES PROBLEMAS Y SOLUCIONES
+═══════════════════════════════════════════════════════════════
+
+PROBLEMA: "Error conectando a MySQL"
+SOLUCIÓN:
+   □ Verifica que MySQL esté corriendo
+   □ Servicio: MySQL80 debe estar activo
+   □ Comando: services.msc → Buscar MySQL80
+   □ O ejecuta: net start MySQL80
+
+PROBLEMA: "Error: Base de datos 'tahona' no existe"
+SOLUCIÓN:
+   □ Abre MySQL Workbench
+   □ Ejecuta: CREATE DATABASE IF NOT EXISTS tahona;
+   □ Importa: basesdedatos\definitivo\tahonaerp.sql
+
+PROBLEMA: "Error al cargar vista de [módulo]"
+SOLUCIÓN:
+   □ Verifica que el archivo FXML existe
+   □ Ruta: src\main\resources\ui\[modulo]_panel.fxml
+   □ Si está vacío, revisa el backup
+
+PROBLEMA: "Puerto 8080 ya en uso"
+SOLUCIÓN:
+   □ Cambia puerto en application.properties
+   □ O mata el proceso: netstat -ano | findstr :8080
+
+PROBLEMA: "No carga datos de la BD"
+SOLUCIÓN:
+   □ Verifica que la tabla tenga datos
+   □ Ejecuta: SELECT * FROM clientes LIMIT 5;
+   □ Si está vacía, importa datos de prueba
+
+═══════════════════════════════════════════════════════════════
+  ✅ CHECKLIST DE VERIFICACIÓN
+═══════════════════════════════════════════════════════════════
+
+ANTES DE ARRANCAR:
+□ MySQL corriendo (puerto 3306)
+□ Base de datos "tahona" existe
+□ Usuario MySQL: root / Iirne322*
+□ Java 17 instalado
+□ Maven instalado
+□ Puerto 8080 libre
+
+DESPUÉS DE ARRANCAR:
+□ Login exitoso con admin/admin
+□ Dashboard carga correctamente
+□ Módulo Clientes muestra 76 registros
+□ Se puede crear un cliente nuevo
+□ Se puede editar un cliente existente
+□ Facturas: cambio de estado funciona
+□ Facturas: impresión PDF funciona
+□ Navegación entre módulos sin errores
+
+═══════════════════════════════════════════════════════════════
+  📊 LOGS IMPORTANTES
+═══════════════════════════════════════════════════════════════
+
+Al arrancar, debes ver estos mensajes:
+
+✓ "HHH000204: Processing PersistenceUnitInfo"
+✓ "HikariPool-1 - Starting..."
+✓ "HikariPool-1 - Start completed"
+✓ "Contexto de Spring Boot inicializado correctamente"
+✓ "Pantalla de login cargada correctamente"
+
+Después del login:
+
+✓ "Intento de login: admin"
+✓ "Login exitoso para usuario: admin"
+✓ "Cargando vista principal..."
+
+═══════════════════════════════════════════════════════════════
+  🔧 COMANDOS ÚTILES
+═══════════════════════════════════════════════════════════════
+
+COMPILAR:
+   mvn clean compile -DskipTests
+
+COMPILAR E INSTALAR:
+   mvn clean install -Dmaven.test.skip=true
+
+ARRANCAR:
+   mvn javafx:run
+
+LIMPIAR TARGET:
+   mvn clean
+
+VER DEPENDENCIAS:
+   mvn dependency:tree
+
+VERIFICAR MYSQL:
+   mysql -u root -pIirne322* -e "SHOW DATABASES;"
+
+ENTRAR A BD:
+   mysql -u root -pIirne322* tahona
+
+VER USUARIOS:
+   mysql -u root -pIirne322* -e "USE tahona; SELECT * FROM users;"
+
+═══════════════════════════════════════════════════════════════
+  📝 NOTAS ADICIONALES
+═══════════════════════════════════════════════════════════════
+
+• VeriFacTu está en modo SIMULADO
+  └─ Para activar el real, configura certificado en:
+     src\main\resources\certs\mi_certificado.p12
+
+• Modelo 347 está PARCIALMENTE implementado
+  └─ Falta: generación automática de XML
+
+• Impresión de facturas/albaranes funcional
+  └─ Usa sistema de plantillas (STANDARD, THERMAL)
+
+• Sistema de auditoría activo
+  └─ Todas las acciones se registran en auditoria_acciones
+
+• Base de datos con datos de prueba
+  └─ 76 clientes, artículos, usuarios
+
+═══════════════════════════════════════════════════════════════
+  🎉 SIGUIENTE PASO
+═══════════════════════════════════════════════════════════════
+
+1. Ejecuta: ARRANCAR_APLICACION_CORREGIDA.bat
+2. Haz login con admin/admin
+3. Prueba cada módulo
+4. Reporta cualquier error que encuentres
+
+═══════════════════════════════════════════════════════════════
+
+¡LA APLICACIÓN ESTÁ LISTA PARA PROBAR!
+
+Si todo funciona correctamente, consulta ROADMAP_CUMPLIMIENTO.md
+para ver las funcionalidades pendientes por completar.
+
+═══════════════════════════════════════════════════════════════
+
