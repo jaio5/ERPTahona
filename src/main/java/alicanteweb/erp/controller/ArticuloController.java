@@ -19,16 +19,15 @@ public class ArticuloController {
 
     @FXML private TableView<Articulo> tableArticulos;
     @FXML private TableColumn<Articulo, String> colCodigo;
-    @FXML private TableColumn<Articulo, String> colDescripcion;
-    @FXML private TableColumn<Articulo, String> colFamilia;
-    @FXML private TableColumn<Articulo, BigDecimal> colPVP;
-    @FXML private TableColumn<Articulo, BigDecimal> colCoste;
+    @FXML private TableColumn<Articulo, String> colNombre;
+    @FXML private TableColumn<Articulo, BigDecimal> colPrecio;
     @FXML private TableColumn<Articulo, BigDecimal> colIVA;
-    @FXML private TableColumn<Articulo, String> colUnidad;
+    @FXML private TableColumn<Articulo, Integer> colStock;
     @FXML private TableColumn<Articulo, Boolean> colActivo;
 
     @FXML private TextField txtBuscar;
-    @FXML private ComboBox<String> cmbFamilia;
+    @FXML private ComboBox<String> cmbCategoria;
+    @FXML private ComboBox<String> cmbActivo;
     @FXML private Label lblTotal;
     @FXML private Label lblEstado;
 
@@ -40,15 +39,21 @@ public class ArticuloController {
     public void initialize() {
         log.info("Inicializando ArticuloController");
 
-        // Configurar columnas
+        // Configurar columnas - el nombre en Articulo es "descripcion"
         if (colCodigo != null) colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
-        if (colDescripcion != null) colDescripcion.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
-        if (colFamilia != null) colFamilia.setCellValueFactory(new PropertyValueFactory<>("familia"));
-        if (colPVP != null) colPVP.setCellValueFactory(new PropertyValueFactory<>("pvp"));
-        if (colCoste != null) colCoste.setCellValueFactory(new PropertyValueFactory<>("coste"));
+        if (colNombre != null) colNombre.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
+        if (colPrecio != null) colPrecio.setCellValueFactory(new PropertyValueFactory<>("pvp"));
         if (colIVA != null) colIVA.setCellValueFactory(new PropertyValueFactory<>("iva"));
-        if (colUnidad != null) colUnidad.setCellValueFactory(new PropertyValueFactory<>("unidad"));
+        if (colStock != null) {
+            // Stock no existe en la entidad, usar coste temporalmente
+            colStock.setCellValueFactory(new PropertyValueFactory<>("coste"));
+        }
         if (colActivo != null) colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
+
+        // Aplicar estilo a la tabla - fondo blanco, texto negro
+        if (tableArticulos != null) {
+            tableArticulos.setStyle("-fx-background-color: white; -fx-text-fill: black;");
+        }
 
         cargarDatos();
     }

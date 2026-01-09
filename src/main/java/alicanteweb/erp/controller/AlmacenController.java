@@ -4,9 +4,8 @@ import alicanteweb.erp.entities.Almacen;
 import alicanteweb.erp.service.AlmacenService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
@@ -22,13 +21,17 @@ public class AlmacenController {
     private static final Logger log = LoggerFactory.getLogger(AlmacenController.class);
 
     @FXML private TableView<Almacen> tableAlmacenes;
-    @FXML private TableColumn<Almacen, Long> colId;
     @FXML private TableColumn<Almacen, String> colCodigo;
     @FXML private TableColumn<Almacen, String> colNombre;
+    @FXML private TableColumn<Almacen, String> colDireccion;
+    @FXML private TableColumn<Almacen, String> colPoblacion;
+    @FXML private TableColumn<Almacen, String> colProvincia;
+    @FXML private TableColumn<Almacen, Boolean> colActivo;
+
     @FXML private TextField txtBuscar;
+    @FXML private Label lblTotal;
 
     private final AlmacenService almacenService;
-    private final ObservableList<Almacen> almacenesList = FXCollections.observableArrayList();
 
     public AlmacenController(AlmacenService almacenService) {
         this.almacenService = almacenService;
@@ -39,34 +42,64 @@ public class AlmacenController {
         log.info("Inicializando AlmacenController");
         configurarColumnas();
         cargarDatos();
+
         if (txtBuscar != null) {
             txtBuscar.textProperty().addListener((obs, oldV, newV) -> filtrarAlmacenes(newV));
+        }
+
+        // Aplicar estilo a la tabla
+        if (tableAlmacenes != null) {
+            tableAlmacenes.setStyle("-fx-background-color: white; -fx-text-fill: black;");
         }
     }
 
     private void configurarColumnas() {
-        if (colId != null) {
-            colId.setCellValueFactory(cell -> new SimpleObjectProperty<>(cell.getValue() == null ? null : cell.getValue().getId()));
-        }
         if (colCodigo != null) {
-            colCodigo.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getCodigo()).orElse("")));
+            colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
         }
         if (colNombre != null) {
-            colNombre.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getNombre()).orElse("")));
+            colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         }
-        if (tableAlmacenes != null) {
-            tableAlmacenes.setItems(almacenesList);
+        if (colDireccion != null) {
+            // La entidad actual no tiene dirección, mostrar "-"
+            colDireccion.setCellValueFactory(cellData -> new SimpleStringProperty("-"));
+        }
+        if (colPoblacion != null) {
+            // La entidad actual no tiene población, mostrar "-"
+            colPoblacion.setCellValueFactory(cellData -> new SimpleStringProperty("-"));
+        }
+        if (colProvincia != null) {
+            // La entidad actual no tiene provincia, mostrar "-"
+            colProvincia.setCellValueFactory(cellData -> new SimpleStringProperty("-"));
+        }
+        if (colActivo != null) {
+            colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
+            // Formatear con emojis
+            colActivo.setCellFactory(column -> new TableCell<Almacen, Boolean>() {
+                @Override
+                protected void updateItem(Boolean item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        setText(item ? "✅ Activo" : "❌ Inactivo");
+                        setStyle(item ? "-fx-text-fill: green;" : "-fx-text-fill: red;");
+                    }
+                }
+            });
         }
     }
 
     private void cargarDatos() {
         try {
-            almacenesList.clear();
-            almacenesList.addAll(almacenService.findAll());
-            log.info("Almacenes cargados: {}", almacenesList.size());
-            javafx.application.Platform.runLater(() -> {
-                if (tableAlmacenes != null) tableAlmacenes.refresh();
-            });
+            var almacenes = almacenService.findAll();
+            if (tableAlmacenes != null) {
+                tableAlmacenes.setItems(FXCollections.observableArrayList(almacenes));
+            }
+            if (lblTotal != null) {
+                lblTotal.setText(almacenes.size() + " almacenes");
+            }
+            log.info("Almacenes cargados: {}", almacenes.size());
         } catch (Exception e) {
             log.error("Error cargando almacenes", e);
             mostrarError("Error al cargar almacenes: " + e.getMessage());
@@ -74,49 +107,68 @@ public class AlmacenController {
     }
 
     private void filtrarAlmacenes(String busqueda) {
-        if (busqueda == null || busqueda.isEmpty()) {
-            cargarDatos();
-            return;
+        try {
+            var almacenes = almacenService.findAll();
+
+            if (busqueda != null && !busqueda.isEmpty()) {
+                String search = busqueda.toLowerCase();
+                almacenes = almacenes.stream()
+                    .filter(a -> (a.getCodigo() != null && a.getCodigo().toLowerCase().contains(search)) ||
+                                (a.getNombre() != null && a.getNombre().toLowerCase().contains(search)))
+                    .toList();
+            }
+
+            if (tableAlmacenes != null) {
+                tableAlmacenes.setItems(FXCollections.observableArrayList(almacenes));
+            }
+            if (lblTotal != null) {
+                lblTotal.setText(almacenes.size() + " almacenes");
+            }
+        } catch (Exception e) {
+            log.error("Error filtrando almacenes", e);
         }
-        String search = busqueda.toLowerCase();
-        ObservableList<Almacen> filtered = FXCollections.observableArrayList(
-            almacenesList.stream()
-                .filter(a -> (a.getCodigo() != null && a.getCodigo().toLowerCase().contains(search)) ||
-                             (a.getNombre() != null && a.getNombre().toLowerCase().contains(search)))
-                .toList()
-        );
-        tableAlmacenes.setItems(filtered);
+    }
+
+    @FXML
+    public void onBuscar() {
+        String busqueda = txtBuscar != null ? txtBuscar.getText() : "";
+        filtrarAlmacenes(busqueda);
     }
 
     @FXML
     public void onNuevo() {
-        mostrarAlerta("Crear nuevo almacen en desarrollo");
+        log.info("Crear nuevo almacén");
+        mostrarAlerta("Función en desarrollo: Crear nuevo almacén");
     }
 
     @FXML
     public void onEditar() {
         Almacen almacen = tableAlmacenes.getSelectionModel().getSelectedItem();
         if (almacen == null) {
-            mostrarAlerta("Seleccione un almacen para editar");
+            mostrarAlerta("Selecciona un almacén para editar");
             return;
         }
-        mostrarAlerta("Edición de almacen en desarrollo");
+        log.info("Editar almacén: {}", almacen.getCodigo());
+        mostrarAlerta("Función en desarrollo: Editar almacén");
     }
 
     @FXML
     public void onEliminar() {
         Almacen almacen = tableAlmacenes.getSelectionModel().getSelectedItem();
         if (almacen == null) {
-            mostrarAlerta("Seleccione un almacen para eliminar");
+            mostrarAlerta("Selecciona un almacén para eliminar");
             return;
         }
-        if (mostrarConfirmacion("¿Desea eliminar este almacen?")) {
+
+        if (mostrarConfirmacion("¿Deseas eliminar este almacén?\n\n" +
+                                "Código: " + almacen.getCodigo() + "\n" +
+                                "Nombre: " + almacen.getNombre())) {
             try {
                 almacenService.deleteById(almacen.getId());
                 cargarDatos();
-                mostrarExito("Almacen eliminado correctamente");
+                mostrarExito("Almacén eliminado correctamente");
             } catch (Exception e) {
-                log.error("Error eliminando almacen", e);
+                log.error("Error eliminando almacén", e);
                 mostrarError("Error al eliminar: " + e.getMessage());
             }
         }
@@ -124,6 +176,7 @@ public class AlmacenController {
 
     @FXML
     public void onRefresh() {
+        log.info("Refrescando almacenes");
         cargarDatos();
     }
 

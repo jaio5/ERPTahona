@@ -1,44 +1,45 @@
 package alicanteweb.erp.controller;
 
-import alicanteweb.erp.entities.Caja;
-import alicanteweb.erp.service.CajaService;
+import alicanteweb.erp.entities.MovimientoCaja;
+import alicanteweb.erp.service.MovimientoCajaService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
+/**
+ * Controlador para la gestión de Movimientos de Caja
+ */
 @Controller
 public class CajaController {
     private static final Logger log = LoggerFactory.getLogger(CajaController.class);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    @FXML private TableView<Caja> tableCaja;
-    @FXML private TableColumn<Caja, Long> colId;
-    @FXML private TableColumn<Caja, String> colCodigo;
-    @FXML private TableColumn<Caja, String> colNombre;
-    @FXML private TableColumn<Caja, BigDecimal> colSaldo;
+    @FXML private TableView<MovimientoCaja> tableMovimientos;
+    @FXML private TableColumn<MovimientoCaja, LocalDate> colFecha;
+    @FXML private TableColumn<MovimientoCaja, String> colConcepto;
+    @FXML private TableColumn<MovimientoCaja, String> colTipo;
+    @FXML private TableColumn<MovimientoCaja, BigDecimal> colImporte;
+    @FXML private TableColumn<MovimientoCaja, String> colSaldo;
+
     @FXML private TextField txtBuscar;
-    @FXML private TextField txtCodigo;
-    @FXML private TextField txtNombre;
-    @FXML private TextArea txtObservaciones;
-    @FXML private Button btnGuardar;
-    @FXML private Button btnCancelar;
-    @FXML private VBox formularioPanel;
+    @FXML private DatePicker dpFechaDesde;
+    @FXML private DatePicker dpFechaHasta;
+    @FXML private Label lblSaldo;
 
-    private final CajaService cajaService;
-    private final ObservableList<Caja> cajaList = FXCollections.observableArrayList();
-    private Caja cajaActual = null;
+    private final MovimientoCajaService movimientoCajaService;
 
-    public CajaController(CajaService cajaService) {
-        this.cajaService = cajaService;
+    public CajaController(MovimientoCajaService movimientoCajaService) {
+        this.movimientoCajaService = movimientoCajaService;
     }
 
     @FXML
@@ -46,148 +47,195 @@ public class CajaController {
         log.info("Inicializando CajaController");
         configurarColumnas();
         cargarDatos();
+
         if (txtBuscar != null) {
-            txtBuscar.textProperty().addListener((obs, oldV, newV) -> filtrarCaja(newV));
+            txtBuscar.textProperty().addListener((obs, oldV, newV) -> filtrarMovimientos(newV));
         }
+
+        // Aplicar estilo a la tabla
+        if (tableMovimientos != null) {
+            tableMovimientos.setStyle("-fx-background-color: white; -fx-text-fill: black;");
+        }
+
+        // Actualizar saldo
+        actualizarSaldo();
     }
 
     private void configurarColumnas() {
-        if (colId != null) {
-            colId.setCellValueFactory(cell -> new SimpleObjectProperty<>(cell.getValue() == null ? null : cell.getValue().getId()));
+        if (colFecha != null) {
+            colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
         }
-        if (colCodigo != null) {
-            colCodigo.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getCodigo()).orElse("")));
+        if (colConcepto != null) {
+            colConcepto.setCellValueFactory(new PropertyValueFactory<>("concepto"));
         }
-        if (colNombre != null) {
-            colNombre.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getNombre()).orElse("")));
+        if (colTipo != null) {
+            colTipo.setCellValueFactory(cellData -> {
+                MovimientoCaja movimiento = cellData.getValue();
+                String tipo = movimiento.getTipo();
+                String tipoFormateado = tipo.equals("INGRESO") ? "✅ " + tipo : "❌ " + tipo;
+                return new SimpleStringProperty(tipoFormateado);
+            });
+        }
+        if (colImporte != null) {
+            colImporte.setCellValueFactory(new PropertyValueFactory<>("importe"));
+            // Formatear importe con color según tipo
+            colImporte.setCellFactory(column -> new TableCell<MovimientoCaja, BigDecimal>() {
+                @Override
+                protected void updateItem(BigDecimal item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                        setStyle("");
+                    } else {
+                        MovimientoCaja movimiento = getTableView().getItems().get(getIndex());
+                        setText(String.format("%.2f €", item));
+                        if (movimiento.getTipo().equals("INGRESO")) {
+                            setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+                        } else {
+                            setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                        }
+                    }
+                }
+            });
         }
         if (colSaldo != null) {
-            colSaldo.setCellValueFactory(cell -> new SimpleObjectProperty<>(cell.getValue() == null ? BigDecimal.ZERO : cell.getValue().getSaldoActual()));
-        }
-        if (tableCaja != null) {
-            tableCaja.setItems(cajaList);
+            // Columna calculada de saldo acumulado
+            colSaldo.setCellValueFactory(cellData -> {
+                // Por ahora mostrar "-" hasta implementar cálculo acumulado
+                return new SimpleStringProperty("-");
+            });
         }
     }
 
     private void cargarDatos() {
         try {
-            cajaList.clear();
-            cajaList.addAll(cajaService.obtenerTodas());
-            log.info("Cajas cargadas: {}", cajaList.size());
-            javafx.application.Platform.runLater(() -> {
-                if (tableCaja != null) tableCaja.refresh();
-            });
+            var movimientos = movimientoCajaService.findAll();
+            if (tableMovimientos != null) {
+                tableMovimientos.setItems(FXCollections.observableArrayList(movimientos));
+            }
+            log.info("Movimientos de caja cargados: {}", movimientos.size());
+            actualizarSaldo();
         } catch (Exception e) {
-            log.error("Error cargando cajas", e);
-            mostrarError("Error al cargar cajas: " + e.getMessage());
+            log.error("Error cargando movimientos de caja", e);
+            mostrarError("Error al cargar movimientos: " + e.getMessage());
         }
     }
 
-    private void filtrarCaja(String busqueda) {
-        if (busqueda == null || busqueda.isEmpty()) {
-            cargarDatos();
-            return;
+    private void actualizarSaldo() {
+        try {
+            BigDecimal saldo = movimientoCajaService.calcularSaldoActual();
+            if (lblSaldo != null) {
+                lblSaldo.setText(String.format("Saldo: %.2f €", saldo));
+                // Color según el saldo
+                if (saldo.compareTo(BigDecimal.ZERO) >= 0) {
+                    lblSaldo.setStyle("-fx-text-fill: #0d6efd; -fx-font-size: 16; -fx-font-weight: 600;");
+                } else {
+                    lblSaldo.setStyle("-fx-text-fill: red; -fx-font-size: 16; -fx-font-weight: 600;");
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error calculando saldo", e);
         }
-        String search = busqueda.toLowerCase();
-        ObservableList<Caja> filtered = FXCollections.observableArrayList(
-            cajaList.stream()
-                .filter(c -> (c.getCodigo() != null && c.getCodigo().toLowerCase().contains(search)) ||
-                             (c.getNombre() != null && c.getNombre().toLowerCase().contains(search)))
-                .toList()
-        );
-        tableCaja.setItems(filtered);
+    }
+
+    private void filtrarMovimientos(String busqueda) {
+        try {
+            var movimientos = movimientoCajaService.findAll();
+
+            if (busqueda != null && !busqueda.isEmpty()) {
+                String search = busqueda.toLowerCase();
+                movimientos = movimientos.stream()
+                    .filter(m -> (m.getConcepto() != null && m.getConcepto().toLowerCase().contains(search)) ||
+                                (m.getTipo() != null && m.getTipo().toLowerCase().contains(search)))
+                    .toList();
+            }
+
+            if (tableMovimientos != null) {
+                tableMovimientos.setItems(FXCollections.observableArrayList(movimientos));
+            }
+        } catch (Exception e) {
+            log.error("Error filtrando movimientos", e);
+        }
+    }
+
+    @FXML
+    public void onBuscar() {
+        try {
+            var movimientos = movimientoCajaService.findAll();
+
+            // Filtrar por fechas si están seleccionadas
+            if (dpFechaDesde != null && dpFechaDesde.getValue() != null &&
+                dpFechaHasta != null && dpFechaHasta.getValue() != null) {
+                movimientos = movimientoCajaService.findByFechaBetween(
+                    dpFechaDesde.getValue(),
+                    dpFechaHasta.getValue()
+                );
+            }
+
+            // Aplicar filtro de texto
+            String busqueda = txtBuscar != null ? txtBuscar.getText() : "";
+            if (!busqueda.isEmpty()) {
+                String search = busqueda.toLowerCase();
+                movimientos = movimientos.stream()
+                    .filter(m -> (m.getConcepto() != null && m.getConcepto().toLowerCase().contains(search)) ||
+                                (m.getTipo() != null && m.getTipo().toLowerCase().contains(search)))
+                    .toList();
+            }
+
+            if (tableMovimientos != null) {
+                tableMovimientos.setItems(FXCollections.observableArrayList(movimientos));
+            }
+        } catch (Exception e) {
+            log.error("Error buscando movimientos", e);
+            mostrarError("Error en la búsqueda: " + e.getMessage());
+        }
     }
 
     @FXML
     public void onNuevo() {
-        cajaActual = new Caja();
-        limpiarFormulario();
-        mostrarFormulario(true);
+        log.info("Crear nuevo movimiento de caja");
+        mostrarAlerta("Función en desarrollo: Crear nuevo movimiento");
     }
 
     @FXML
-    public void onEditar() {
-        Caja caja = tableCaja.getSelectionModel().getSelectedItem();
-        if (caja == null) {
-            mostrarAlerta("Seleccione una caja para editar");
+    public void onVer() {
+        MovimientoCaja movimiento = tableMovimientos.getSelectionModel().getSelectedItem();
+        if (movimiento == null) {
+            mostrarAlerta("Selecciona un movimiento primero");
             return;
         }
-        cajaActual = caja;
-        if (txtCodigo != null) txtCodigo.setText(caja.getCodigo());
-        if (txtNombre != null) txtNombre.setText(caja.getNombre());
-        if (txtObservaciones != null) txtObservaciones.setText(Optional.ofNullable(caja.getObservaciones()).orElse(""));
-        mostrarFormulario(true);
+        log.info("Ver movimiento: {}", movimiento.getConcepto());
+        mostrarAlerta("Función en desarrollo: Ver detalle del movimiento");
     }
 
     @FXML
     public void onEliminar() {
-        Caja caja = tableCaja.getSelectionModel().getSelectedItem();
-        if (caja == null) {
-            mostrarAlerta("Seleccione una caja para eliminar");
+        MovimientoCaja movimiento = tableMovimientos.getSelectionModel().getSelectedItem();
+        if (movimiento == null) {
+            mostrarAlerta("Selecciona un movimiento para eliminar");
             return;
         }
-        if (mostrarConfirmacion("¿Desea eliminar esta caja?")) {
+
+        if (mostrarConfirmacion("¿Deseas eliminar este movimiento?\n\n" +
+                                movimiento.getConcepto() + "\n" +
+                                movimiento.getImporte() + " €")) {
             try {
-                cajaService.eliminar(caja.getId());
+                movimientoCajaService.deleteById(movimiento.getId());
                 cargarDatos();
-                mostrarExito("Caja eliminada correctamente");
+                mostrarExito("Movimiento eliminado correctamente");
             } catch (Exception e) {
-                log.error("Error eliminando caja", e);
+                log.error("Error eliminando movimiento", e);
                 mostrarError("Error al eliminar: " + e.getMessage());
             }
         }
     }
 
     @FXML
-    public void onGuardar() {
-        if (txtCodigo == null || txtCodigo.getText().isEmpty() ||
-            txtNombre == null || txtNombre.getText().isEmpty()) {
-            mostrarAlerta("Complete los campos obligatorios");
-            return;
-        }
-        try {
-            cajaActual.setCodigo(txtCodigo.getText());
-            cajaActual.setNombre(txtNombre.getText());
-            cajaActual.setObservaciones(txtObservaciones != null ? txtObservaciones.getText() : "");
-            if (cajaActual.getSaldoInicial() == null) {
-                cajaActual.setSaldoInicial(BigDecimal.ZERO);
-            }
-            if (cajaActual.getSaldoActual() == null) {
-                cajaActual.setSaldoActual(cajaActual.getSaldoInicial());
-            }
-            cajaService.guardar(cajaActual);
-            cargarDatos();
-            mostrarFormulario(false);
-            mostrarExito("Caja guardada correctamente");
-        } catch (Exception e) {
-            log.error("Error guardando caja", e);
-            mostrarError("Error al guardar: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    public void onCancelar() {
-        mostrarFormulario(false);
-        limpiarFormulario();
-    }
-
-    @FXML
     public void onRefresh() {
+        log.info("Refrescando movimientos de caja");
         cargarDatos();
     }
 
-    private void mostrarFormulario(boolean mostrar) {
-        if (formularioPanel != null) formularioPanel.setVisible(mostrar);
-        if (btnGuardar != null) btnGuardar.setDisable(!mostrar);
-        if (btnCancelar != null) btnCancelar.setDisable(!mostrar);
-    }
-
-    private void limpiarFormulario() {
-        if (txtCodigo != null) txtCodigo.clear();
-        if (txtNombre != null) txtNombre.clear();
-        if (txtObservaciones != null) txtObservaciones.clear();
-        cajaActual = null;
-    }
 
     private void mostrarAlerta(String msg) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
