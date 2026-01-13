@@ -2,6 +2,7 @@ package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.service.FacturaService;
+import alicanteweb.erp.service.ImpresionService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -20,6 +21,7 @@ public class FacturaController extends BaseController<Factura> {
 
     private final FacturaService facturaService;
     private final ApplicationContext applicationContext;
+    private final ImpresionService impresionService;
 
     @FXML private TableView<Factura> tableFacturas;
     @FXML private TableColumn<Factura, String> colNumero;
@@ -36,9 +38,11 @@ public class FacturaController extends BaseController<Factura> {
     @FXML private DatePicker dpFechaHasta;
     @FXML private Label lblTotal;
 
-    public FacturaController(FacturaService facturaService, ApplicationContext applicationContext) {
+    public FacturaController(FacturaService facturaService, ApplicationContext applicationContext,
+                            ImpresionService impresionService) {
         this.facturaService = facturaService;
         this.applicationContext = applicationContext;
+        this.impresionService = impresionService;
     }
 
     @FXML

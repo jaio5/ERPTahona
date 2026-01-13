@@ -216,12 +216,6 @@ public class AlbaranController {
         alert.showAndWait();
     }
 
-    private void mostrarExito(String msg) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Éxito");
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
 
     private boolean mostrarConfirmacion(String msg) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
