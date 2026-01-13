@@ -1,78 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.PresupuestoController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
-    <!-- Cabecera -->
-    <HBox alignment="CENTER_LEFT" spacing="16" style="-fx-padding: 0 0 10 0;">
-        <Label text="💼 Presupuestos" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="PRESUPUESTOS" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="🔄" onAction="#onRefresh"
-                style="-fx-font-size: 18px; -fx-background-color: #6c757d; -fx-text-fill: white; -fx-background-radius: 8; -fx-min-width: 45px; -fx-min-height: 45px; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
-        <Button text="+ Nuevo Presupuesto" onAction="#onNuevo"
-                style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #28a745; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 12 24; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
+        <Button text="Refrescar" onAction="#onRefresh" styleClass="button"/>
+        <Button text="+ Nuevo Presupuesto" onAction="#onNuevo" styleClass="button-success"/>
     </HBox>
 
-    <!-- Barra de búsqueda y filtros -->
-    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 10 0;">
-        <TextField fx:id="txtBuscar" promptText="🔍 Buscar por número o cliente..." HBox.hgrow="ALWAYS"
-                   style="-fx-font-size: 14px; -fx-background-color: white; -fx-border-color: #dee2e6; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10 15; -fx-text-fill: #495057;"/>
-        <ComboBox fx:id="cmbEstado" promptText="Estado" prefWidth="160"
-                  style="-fx-font-size: 14px; -fx-background-color: white; -fx-border-color: #dee2e6; -fx-border-radius: 8; -fx-background-radius: 8; -fx-text-fill: #495057;"/>
-        <Button text="Buscar" onAction="#onBuscar"
-                style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #007bff; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 24; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <TextField fx:id="txtBuscar" promptText="Buscar presupuesto..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
+        <ComboBox fx:id="cmbEstado" promptText="Estado" minWidth="100" maxWidth="140"/>
+        <DatePicker fx:id="dpFechaDesde" promptText="Desde"/>
+        <DatePicker fx:id="dpFechaHasta" promptText="Hasta"/>
+        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
     </HBox>
 
-    <!-- Tabla de presupuestos -->
-    <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-padding: 15;">
-        <TableView fx:id="tablePresupuestos" VBox.vgrow="ALWAYS"
-                   style="-fx-background-color: white; -fx-text-fill: #212529; -fx-font-size: 13px;">
-            <columns>
-                <TableColumn fx:id="colNumero" text="Número" prefWidth="140"
-                            style="-fx-alignment: CENTER-LEFT; -fx-font-weight: bold;"/>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="110"
-                            style="-fx-alignment: CENTER;"/>
-                <TableColumn fx:id="colCliente" text="Cliente" prefWidth="280"
-                            style="-fx-alignment: CENTER-LEFT;"/>
-                <TableColumn fx:id="colBaseImponible" text="Base Imponible" prefWidth="130"
-                            style="-fx-alignment: CENTER-RIGHT;"/>
-                <TableColumn fx:id="colTotal" text="Total (IVA incl.)" prefWidth="140"
-                            style="-fx-alignment: CENTER-RIGHT; -fx-font-weight: bold;"/>
-                <TableColumn fx:id="colEstado" text="Estado" prefWidth="140"
-                            style="-fx-alignment: CENTER;"/>
-            </columns>
-            <placeholder>
-                <Label text="📋 No hay presupuestos registrados"
-                       style="-fx-font-size: 16px; -fx-text-fill: #6c757d; -fx-padding: 40;"/>
-            </placeholder>
-        </TableView>
-    </VBox>
+    <TableView fx:id="tablePresupuestos" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
+        <columns>
+            <TableColumn fx:id="colNumero" text="Número" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colFecha" text="Fecha" minWidth="80" maxWidth="100"/>
+            <TableColumn fx:id="colCliente" text="Cliente" minWidth="150"/>
+            <TableColumn fx:id="colTotal" text="Total" minWidth="80" maxWidth="100"/>
+            <TableColumn fx:id="colValidez" text="Validez" minWidth="80" maxWidth="100"/>
+            <TableColumn fx:id="colEstado" text="Estado" minWidth="80" maxWidth="100"/>
+        </columns>
+    </TableView>
 
-    <!-- Botones de acción y estado -->
-    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 10 0 0 0;">
-        <Button text="👁️ Ver Detalles" onAction="#onVer"
-                style="-fx-font-size: 13px; -fx-background-color: #6c757d; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
-        <Button text="✏️ Editar" onAction="#onEditar"
-                style="-fx-font-size: 13px; -fx-background-color: #007bff; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
-        <Button text="✅ Aceptar" onAction="#onAceptar"
-                style="-fx-font-size: 13px; -fx-background-color: #28a745; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
-        <Button text="❌ Rechazar" onAction="#onRechazar"
-                style="-fx-font-size: 13px; -fx-background-color: #dc3545; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Button text="Ver" onAction="#onVer" styleClass="button"/>
+        <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
+        <Button text="Eliminar" onAction="#onEliminar" styleClass="button-danger"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblEstado" text="0 presupuestos"
-               style="-fx-font-size: 14px; -fx-text-fill: #6c757d; -fx-font-weight: bold;"/>
+        <Label fx:id="lblTotal" text="0 presupuestos" style="-fx-text-fill: #6c757d;"/>
     </HBox>
 
 </VBox>

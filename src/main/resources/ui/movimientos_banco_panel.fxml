@@ -5,36 +5,36 @@
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.MovimientoBancoController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
     <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="Movimientos Bancarios" styleClass="title"/>
+        <Label text="🏦 Movimientos Bancarios" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
         <Button text="+ Nuevo Movimiento" onAction="#onNuevo" styleClass="button-success"/>
     </HBox>
 
-    <HBox spacing="12">
+    <HBox spacing="12" alignment="CENTER_LEFT">
         <TextField fx:id="txtBuscar" promptText="🔍 Buscar..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
-        <ComboBox fx:id="cmbCuenta" promptText="Cuenta" prefWidth="200"/>
-        <DatePicker fx:id="dpFechaDesde" promptText="Desde" prefWidth="130"/>
-        <DatePicker fx:id="dpFechaHasta" promptText="Hasta" prefWidth="130"/>
+        <ComboBox fx:id="cmbCuenta" promptText="Cuenta" minWidth="120" maxWidth="180"/>
+        <DatePicker fx:id="dpFechaDesde" promptText="Desde" minWidth="110" maxWidth="140"/>
+        <DatePicker fx:id="dpFechaHasta" promptText="Hasta" minWidth="110" maxWidth="140"/>
         <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
     </HBox>
 
-    <VBox VBox.vgrow="ALWAYS">
-        <TableView fx:id="tableMovimientos" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
-                <TableColumn fx:id="colCuenta" text="Cuenta" prefWidth="150"/>
-                <TableColumn fx:id="colConcepto" text="Concepto" prefWidth="250"/>
-                <TableColumn fx:id="colImporte" text="Importe" prefWidth="120"/>
-                <TableColumn fx:id="colSaldo" text="Saldo" prefWidth="120"/>
-            </columns>
-        </TableView>
-    </VBox>
+    <TableView fx:id="tableMovimientos" VBox.vgrow="ALWAYS"
+               style="-fx-background-color: white;" >
+        <columns>
+            <TableColumn fx:id="colFecha" text="Fecha" minWidth="80" maxWidth="100"/>
+            <TableColumn fx:id="colCuenta" text="Cuenta" minWidth="100" maxWidth="150"/>
+            <TableColumn fx:id="colConcepto" text="Concepto" minWidth="150"/>
+            <TableColumn fx:id="colImporte" text="Importe" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colSaldo" text="Saldo" minWidth="80" maxWidth="120"/>
+        </columns>
+    </TableView>
 
-    <HBox spacing="12">
+    <HBox spacing="12" alignment="CENTER_LEFT">
         <Button text="👁️ Ver" onAction="#onVer" styleClass="button"/>
         <Button text="🔄 Conciliar" onAction="#onConciliar" styleClass="button-primary"/>
         <Region HBox.hgrow="ALWAYS"/>

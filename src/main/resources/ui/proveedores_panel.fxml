@@ -5,7 +5,8 @@
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.ProveedorController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
     <HBox alignment="CENTER_LEFT" spacing="16">
         <Label text="PROVEEDORES" styleClass="title"/>
@@ -14,26 +15,24 @@
         <Button text="+ Nuevo Proveedor" onAction="#onNuevo" styleClass="button-success"/>
     </HBox>
 
-    <HBox spacing="12">
+    <HBox spacing="12" alignment="CENTER_LEFT">
         <TextField fx:id="txtBuscar" promptText="Buscar proveedor..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
         <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
     </HBox>
 
-    <VBox VBox.vgrow="ALWAYS">
-        <TableView fx:id="tableProveedores" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
-            <columns>
-                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
-                <TableColumn fx:id="colCodigo" text="Codigo" prefWidth="100"/>
-                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="250"/>
-                <TableColumn fx:id="colCIF" text="CIF/NIF" prefWidth="120"/>
-                <TableColumn fx:id="colTelefono" text="Telefono" prefWidth="120"/>
-                <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
-                <TableColumn fx:id="colPoblacion" text="Poblacion" prefWidth="150"/>
-            </columns>
-        </TableView>
-    </VBox>
+    <TableView fx:id="tableProveedores" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" minWidth="40" maxWidth="60"/>
+            <TableColumn fx:id="colCodigo" text="Código" minWidth="70" maxWidth="100"/>
+            <TableColumn fx:id="colNombre" text="Nombre" minWidth="150"/>
+            <TableColumn fx:id="colCIF" text="CIF/NIF" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colTelefono" text="Teléfono" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colEmail" text="Email" minWidth="120"/>
+            <TableColumn fx:id="colPoblacion" text="Población" minWidth="100"/>
+        </columns>
+    </TableView>
 
-    <HBox spacing="12">
+    <HBox spacing="12" alignment="CENTER_LEFT">
         <Button text="Ver" onAction="#onVer" styleClass="button"/>
         <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
         <Button text="Dar de Baja" onAction="#onDarBaja" styleClass="button-danger"/>

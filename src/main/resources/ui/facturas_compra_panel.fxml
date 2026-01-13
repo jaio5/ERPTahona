@@ -1,79 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.FacturaCompraController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
-    <!-- Cabecera -->
-    <HBox alignment="CENTER_LEFT" spacing="16" style="-fx-padding: 0 0 10 0;">
-        <Label text="🧾 Facturas de Compra" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="🧾 Facturas de Compra" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="🔄" onAction="#onRefresh"
-                style="-fx-font-size: 18px; -fx-background-color: #6c757d; -fx-text-fill: white; -fx-background-radius: 8; -fx-min-width: 45px; -fx-min-height: 45px; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
-        <Button text="+ Nueva Factura" onAction="#onNuevo"
-                style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #28a745; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 12 24; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
+        <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
+        <Button text="+ Nueva Factura" onAction="#onNuevo" styleClass="button-success"/>
     </HBox>
 
-    <!-- Barra de búsqueda y filtros -->
-    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 10 0;">
-        <TextField fx:id="txtBuscar" promptText="🔍 Buscar por número o proveedor..." HBox.hgrow="ALWAYS"
-                   style="-fx-font-size: 14px; -fx-background-color: white; -fx-border-color: #dee2e6; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10 15; -fx-text-fill: #495057;"/>
-        <ComboBox fx:id="cmbEstado" promptText="Estado" prefWidth="150"
-                  style="-fx-font-size: 14px; -fx-background-color: white; -fx-border-color: #dee2e6; -fx-border-radius: 8; -fx-background-radius: 8; -fx-text-fill: #495057;"/>
-        <DatePicker fx:id="dpFechaDesde" promptText="Desde" prefWidth="140"
-                    style="-fx-font-size: 14px; -fx-background-color: white; -fx-border-color: #dee2e6; -fx-border-radius: 8; -fx-background-radius: 8;"/>
-        <DatePicker fx:id="dpFechaHasta" promptText="Hasta" prefWidth="140"
-                    style="-fx-font-size: 14px; -fx-background-color: white; -fx-border-color: #dee2e6; -fx-border-radius: 8; -fx-background-radius: 8;"/>
-        <Button text="Buscar" onAction="#onBuscar"
-                style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #007bff; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 24; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
+    <HBox spacing="12" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+        <TextField fx:id="txtBuscar" promptText="🔍 Buscar por número o proveedor..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
+        <ComboBox fx:id="cmbEstado" promptText="Estado" minWidth="100" maxWidth="140"/>
+        <DatePicker fx:id="dpFechaDesde" promptText="Desde" minWidth="110" maxWidth="140"/>
+        <DatePicker fx:id="dpFechaHasta" promptText="Hasta" minWidth="110" maxWidth="140"/>
+        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
     </HBox>
 
-    <!-- Tabla de facturas -->
-    <VBox VBox.vgrow="ALWAYS" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2); -fx-padding: 15;">
-        <TableView fx:id="tableFacturas" VBox.vgrow="ALWAYS"
-                   style="-fx-background-color: white; -fx-text-fill: #212529; -fx-font-size: 13px;">
-            <columns>
-                <TableColumn fx:id="colNumero" text="Número" prefWidth="140"
-                            style="-fx-alignment: CENTER-LEFT; -fx-font-weight: bold;"/>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="110"
-                            style="-fx-alignment: CENTER;"/>
-                <TableColumn fx:id="colProveedor" text="Proveedor" prefWidth="280"
-                            style="-fx-alignment: CENTER-LEFT;"/>
-                <TableColumn fx:id="colBase" text="Base Imponible" prefWidth="130"
-                            style="-fx-alignment: CENTER-RIGHT;"/>
-                <TableColumn fx:id="colTotal" text="Total (IVA incl.)" prefWidth="140"
-                            style="-fx-alignment: CENTER-RIGHT; -fx-font-weight: bold;"/>
-                <TableColumn fx:id="colEstado" text="Estado" prefWidth="140"
-                            style="-fx-alignment: CENTER;"/>
-            </columns>
-            <placeholder>
-                <Label text="🧾 No hay facturas de compra registradas"
-                       style="-fx-font-size: 16px; -fx-text-fill: #6c757d; -fx-padding: 40;"/>
-            </placeholder>
-        </TableView>
-    </VBox>
+    <TableView fx:id="tableFacturas" VBox.vgrow="ALWAYS"
+               style="-fx-background-color: white;" >
+        <columns>
+            <TableColumn fx:id="colNumero" text="Número" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colFecha" text="Fecha" minWidth="80" maxWidth="100"/>
+            <TableColumn fx:id="colProveedor" text="Proveedor" minWidth="150"/>
+            <TableColumn fx:id="colBase" text="Base" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colTotal" text="Total" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colEstado" text="Estado" minWidth="80" maxWidth="120"/>
+        </columns>
+        <placeholder>
+            <Label text="🧾 No hay facturas de compra registradas" style="-fx-text-fill: #6c757d;"/>
+        </placeholder>
+    </TableView>
 
-    <!-- Botones de acción -->
-    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 10 0 0 0;">
-        <Button text="👁️ Ver Detalles" onAction="#onVer"
-                style="-fx-font-size: 13px; -fx-background-color: #6c757d; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
-        <Button text="✏️ Editar" onAction="#onEditar"
-                style="-fx-font-size: 13px; -fx-background-color: #007bff; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
-        <Button text="💰 Contabilizar" onAction="#onContabilizar"
-                style="-fx-font-size: 13px; -fx-background-color: #28a745; -fx-text-fill: white; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;"
-                onMouseEntered="#handleButtonHover" onMouseExited="#handleButtonExit"/>
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Button text="👁️ Ver" onAction="#onVer" styleClass="button"/>
+        <Button text="✏️ Editar" onAction="#onEditar" styleClass="button-primary"/>
+        <Button text="💰 Contabilizar" onAction="#onContabilizar" styleClass="button-success"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblTotal" text="0 facturas"
-               style="-fx-font-size: 14px; -fx-text-fill: #6c757d; -fx-font-weight: bold;"/>
+        <Label fx:id="lblTotal" text="0 facturas" style="-fx-text-fill: #6c757d;"/>
     </HBox>
 
 </VBox>

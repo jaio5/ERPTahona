@@ -18,6 +18,7 @@ public class ProveedorController extends BaseController<Proveedor> {
     private final ProveedorService proveedorService;
 
     @FXML private TableView<Proveedor> tableProveedores;
+    @FXML private TableColumn<Proveedor, Long> colId;
     @FXML private TableColumn<Proveedor, String> colCodigo;
     @FXML private TableColumn<Proveedor, String> colNombre;
     @FXML private TableColumn<Proveedor, String> colCIF;
@@ -42,6 +43,7 @@ public class ProveedorController extends BaseController<Proveedor> {
         this.lblEstado = lblTotal;
 
         // Configurar columnas
+        if (colId != null) colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         if (colCodigo != null) colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
         if (colNombre != null) colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         if (colCIF != null) colCIF.setCellValueFactory(new PropertyValueFactory<>("cif"));

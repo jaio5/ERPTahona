@@ -5,39 +5,38 @@
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.ClienteController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
     <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="👥 Clientes" styleClass="title"/>
+        <Label text="CLIENTES" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
+        <Button text="Refrescar" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 14;"/>
         <Button text="+ Nuevo Cliente" onAction="#onNuevo" styleClass="button-success"/>
     </HBox>
 
-    <HBox spacing="12">
-        <TextField fx:id="txtBuscar" promptText="🔍 Buscar cliente..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
-        <ComboBox fx:id="cmbActivo" promptText="Estado" prefWidth="130"/>
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <TextField fx:id="txtBuscar" promptText="Buscar cliente..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
+        <ComboBox fx:id="cmbActivo" promptText="Estado" minWidth="100" maxWidth="140"/>
         <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
     </HBox>
 
-    <VBox VBox.vgrow="ALWAYS">
-        <TableView fx:id="tableClientes" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colCodigo" text="Código" prefWidth="80"/>
-                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="250"/>
-                <TableColumn fx:id="colCIF" text="CIF/NIF" prefWidth="120"/>
-                <TableColumn fx:id="colDireccion" text="Dirección" prefWidth="200"/>
-                <TableColumn fx:id="colPoblacion" text="Población" prefWidth="150"/>
-                <TableColumn fx:id="colProvincia" text="Provincia" prefWidth="120"/>
-                <TableColumn fx:id="colActivo" text="Estado" prefWidth="80"/>
-            </columns>
-        </TableView>
-    </VBox>
+    <TableView fx:id="tableClientes" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
+        <columns>
+            <TableColumn fx:id="colCodigo" text="Código" minWidth="70" maxWidth="100"/>
+            <TableColumn fx:id="colNombre" text="Nombre" minWidth="150"/>
+            <TableColumn fx:id="colCIF" text="CIF/NIF" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colDireccion" text="Dirección" minWidth="150"/>
+            <TableColumn fx:id="colPoblacion" text="Población" minWidth="100"/>
+            <TableColumn fx:id="colProvincia" text="Provincia" minWidth="100"/>
+            <TableColumn fx:id="colActivo" text="Activo" minWidth="60" maxWidth="80"/>
+        </columns>
+    </TableView>
 
-    <HBox spacing="12">
-        <Button text="👁️ Ver" onAction="#onVer" styleClass="button"/>
-        <Button text="✏️ Editar" onAction="#onEditar" styleClass="button-primary"/>
-        <Button text="🗑️ Dar de Baja" onAction="#onDarBaja" styleClass="button-danger"/>
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Button text="Ver" onAction="#onVer" styleClass="button"/>
+        <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
+        <Button text="Dar de Baja" onAction="#onDarBaja" styleClass="button-danger"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblTotal" text="0 clientes" style="-fx-text-fill: #6c757d;"/>
     </HBox>

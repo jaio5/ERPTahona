@@ -5,18 +5,18 @@
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.EmpresaConfigController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
     <HBox alignment="CENTER_LEFT" spacing="16">
         <Label text="Configuración de Empresa" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="💾 Guardar" onAction="#onGuardar" styleClass="button-success"/>
+        <Button text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
     </HBox>
 
     <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
         <VBox spacing="20">
 
-            <!-- DATOS GENERALES -->
             <VBox styleClass="card" spacing="12">
                 <Label text="Datos Generales" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
 
@@ -63,7 +63,6 @@
                 </HBox>
             </VBox>
 
-            <!-- DATOS FISCALES -->
             <VBox styleClass="card" spacing="12">
                 <Label text="Datos Fiscales" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
 
@@ -79,7 +78,6 @@
                 </HBox>
             </VBox>
 
-            <!-- DATOS BANCARIOS -->
             <VBox styleClass="card" spacing="12">
                 <Label text="Datos Bancarios" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
 

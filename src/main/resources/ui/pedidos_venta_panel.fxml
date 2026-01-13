@@ -5,34 +5,34 @@
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.PedidoVentaController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
     <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="Pedidos de Venta" styleClass="title"/>
+        <Label text="📋 Pedidos de Venta" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
         <Button text="+ Nuevo Pedido" onAction="#onNuevo" styleClass="button-success"/>
     </HBox>
 
-    <HBox spacing="12">
+    <HBox spacing="12" HBox.hgrow="ALWAYS">
         <TextField fx:id="txtBuscar" promptText="🔍 Buscar pedido..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
-        <ComboBox fx:id="cmbEstado" promptText="Estado" prefWidth="130"/>
+        <ComboBox fx:id="cmbEstado" promptText="Estado" minWidth="100" maxWidth="140"/>
         <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
     </HBox>
 
-    <VBox VBox.vgrow="ALWAYS">
-        <TableView fx:id="tablePedidos" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colNumero" text="Número" prefWidth="120"/>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
-                <TableColumn fx:id="colCliente" text="Cliente" prefWidth="250"/>
-                <TableColumn fx:id="colTotal" text="Total" prefWidth="120"/>
-                <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
-            </columns>
-        </TableView>
-    </VBox>
+    <TableView fx:id="tablePedidos" VBox.vgrow="ALWAYS"
+               style="-fx-background-color: white;" >
+        <columns>
+            <TableColumn fx:id="colNumero" text="Número" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colFecha" text="Fecha" minWidth="80" maxWidth="100"/>
+            <TableColumn fx:id="colCliente" text="Cliente" minWidth="150"/>
+            <TableColumn fx:id="colTotal" text="Total" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colEstado" text="Estado" minWidth="70" maxWidth="100"/>
+        </columns>
+    </TableView>
 
-    <HBox spacing="12">
+    <HBox spacing="12" alignment="CENTER_LEFT">
         <Button text="✏️ Editar" onAction="#onEditar" styleClass="button-primary"/>
         <Button text="📦 Servir" onAction="#onServir" styleClass="button-success"/>
         <Region HBox.hgrow="ALWAYS"/>

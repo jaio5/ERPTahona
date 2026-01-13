@@ -5,43 +5,43 @@
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.FacturaController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
     <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="📝 Facturas" styleClass="title"/>
+        <Label text="FACTURAS DE VENTA" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
+        <Button text="Refrescar" onAction="#onRefresh" styleClass="button"/>
         <Button text="+ Nueva Factura" onAction="#onNuevo" styleClass="button-success"/>
+        <Button text="Rectificativa" onAction="#onCrearRectificativa" styleClass="button-primary"/>
     </HBox>
 
-    <HBox spacing="12">
-        <TextField fx:id="txtBuscar" promptText="🔍 Buscar factura..." HBox.hgrow="ALWAYS"
-                   style="-fx-min-height: 40px;"/>
-        <ComboBox fx:id="cmbEstado" promptText="Estado" prefWidth="130"/>
-        <DatePicker fx:id="dpFechaDesde" promptText="Desde" prefWidth="130"/>
-        <DatePicker fx:id="dpFechaHasta" promptText="Hasta" prefWidth="130"/>
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <TextField fx:id="txtBuscar" promptText="Buscar factura..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
+        <ComboBox fx:id="cmbEstado" promptText="Estado" minWidth="100" maxWidth="140"/>
+        <DatePicker fx:id="dpFechaDesde" promptText="Desde"/>
+        <DatePicker fx:id="dpFechaHasta" promptText="Hasta"/>
         <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
     </HBox>
 
-    <VBox VBox.vgrow="ALWAYS">
-        <TableView fx:id="tableFacturas" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colNumero" text="Número" prefWidth="120"/>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100"/>
-                <TableColumn fx:id="colCliente" text="Cliente" prefWidth="250"/>
-                <TableColumn fx:id="colBase" text="Base" prefWidth="100"/>
-                <TableColumn fx:id="colIVA" text="IVA" prefWidth="80"/>
-                <TableColumn fx:id="colTotal" text="Total" prefWidth="120"/>
-                <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
-            </columns>
-        </TableView>
-    </VBox>
+    <TableView fx:id="tableFacturas" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
+        <columns>
+            <TableColumn fx:id="colNumero" text="Número" minWidth="80" maxWidth="120"/>
+            <TableColumn fx:id="colFecha" text="Fecha" minWidth="80" maxWidth="100"/>
+            <TableColumn fx:id="colCliente" text="Cliente" minWidth="150"/>
+            <TableColumn fx:id="colBase" text="Base" minWidth="80" maxWidth="100"/>
+            <TableColumn fx:id="colIVA" text="IVA" minWidth="60" maxWidth="80"/>
+            <TableColumn fx:id="colTotal" text="Total" minWidth="80" maxWidth="100"/>
+            <TableColumn fx:id="colEstado" text="Estado" minWidth="80" maxWidth="100"/>
+        </columns>
+    </TableView>
 
-    <HBox spacing="12">
-        <Button text="👁️ Ver" onAction="#onVer" styleClass="button"/>
-        <Button text="✏️ Editar" onAction="#onEditar" styleClass="button-primary"/>
-        <Button text="🖨️ Imprimir" onAction="#onImprimir" styleClass="button"/>
-        <Button text="✅ Enviar AEAT" onAction="#onEnviarAeat" styleClass="button-success"/>
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Button text="Ver" onAction="#onVer" styleClass="button"/>
+        <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
+        <Button text="Imprimir" onAction="#onImprimir" styleClass="button"/>
+        <Button text="Anular" onAction="#onAnular" styleClass="button-danger"/>
+        <Button text="Enviar AEAT" onAction="#onEnviarAeat" styleClass="button"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblTotal" text="0 facturas" style="-fx-text-fill: #6c757d;"/>
     </HBox>

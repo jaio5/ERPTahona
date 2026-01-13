@@ -5,32 +5,32 @@
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.PlanContableController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
     <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="Plan Contable" styleClass="title"/>
+        <Label text="📒 Plan Contable" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
         <Button text="+ Nueva Cuenta" onAction="#onNuevo" styleClass="button-success"/>
     </HBox>
 
-    <HBox spacing="12">
+    <HBox spacing="12" HBox.hgrow="ALWAYS">
         <TextField fx:id="txtBuscar" promptText="🔍 Buscar cuenta..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
         <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
     </HBox>
 
-    <VBox VBox.vgrow="ALWAYS">
-        <TableView fx:id="tableCuentas" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colCodigo" text="Código" prefWidth="100"/>
-                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="300"/>
-                <TableColumn fx:id="colTipo" text="Tipo" prefWidth="150"/>
-                <TableColumn fx:id="colSaldo" text="Saldo" prefWidth="120"/>
-            </columns>
-        </TableView>
-    </VBox>
+    <TableView fx:id="tableCuentas" VBox.vgrow="ALWAYS"
+               style="-fx-background-color: white;" >
+        <columns>
+            <TableColumn fx:id="colCodigo" text="Código" minWidth="70" maxWidth="100"/>
+            <TableColumn fx:id="colNombre" text="Nombre" minWidth="200"/>
+            <TableColumn fx:id="colTipo" text="Tipo" minWidth="100" maxWidth="150"/>
+            <TableColumn fx:id="colSaldo" text="Saldo" minWidth="80" maxWidth="120"/>
+        </columns>
+    </TableView>
 
-    <HBox spacing="12">
+    <HBox spacing="12" alignment="CENTER_LEFT">
         <Button text="✏️ Editar" onAction="#onEditar" styleClass="button-primary"/>
         <Button text="🗑️ Eliminar" onAction="#onEliminar" styleClass="button-danger"/>
         <Region HBox.hgrow="ALWAYS"/>

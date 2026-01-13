@@ -10,7 +10,7 @@
 
     <top>
         <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
-            <Label text="🏭" style="-fx-font-size: 24;"/>
+            <Label text="Proveedor" style="-fx-font-size: 24;"/>
             <Label fx:id="lblTitulo" text="Nuevo Proveedor" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label text="* Campos obligatorios" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
@@ -21,7 +21,6 @@
         <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
             <VBox spacing="15" style="-fx-padding: 20;">
 
-                <!-- Datos Principales -->
                 <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
                     <Label text="Datos Principales" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
                     <Separator/>
@@ -34,7 +33,7 @@
                         </columnConstraints>
 
                         <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                            <Label text="Código" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <Label text="Codigo" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextField fx:id="txtCodigo" promptText="Auto" editable="false" style="-fx-padding: 10; -fx-background-color: #f1f5f9;"/>
                         </VBox>
 
@@ -60,7 +59,6 @@
                     </GridPane>
                 </VBox>
 
-                <!-- Dirección -->
                 <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
                     <Label text="Direccion" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
                     <Separator/>
@@ -93,7 +91,6 @@
                     </GridPane>
                 </VBox>
 
-                <!-- Datos Comerciales -->
                 <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
                     <Label text="Datos Comerciales" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
                     <Separator/>

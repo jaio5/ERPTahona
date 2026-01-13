@@ -10,10 +10,10 @@
 
     <top>
         <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
-            <Label text="📄" style="-fx-font-size: 24;"/>
+            <Label text="Factura" style="-fx-font-size: 24;"/>
             <VBox spacing="2">
                 <Label fx:id="lblTitulo" text="Nueva Factura" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                <Label fx:id="lblNumeroFactura" text="Numero: Pendiente" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
+                <Label fx:id="lblNumeroFactura" text="Número: Pendiente" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
             <VBox alignment="CENTER_RIGHT" spacing="2">
@@ -27,7 +27,6 @@
         <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
             <VBox spacing="15" style="-fx-padding: 20;">
 
-                <!-- Datos Principales -->
                 <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
                     <Label text="Datos de la Factura" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
                     <Separator/>
@@ -45,7 +44,7 @@
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <Label text="Fecha Emision *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <Label text="Fecha Emisión *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <DatePicker fx:id="dpFechaEmision" maxWidth="Infinity"/>
                         </VBox>
 
@@ -66,34 +65,30 @@
                     </GridPane>
                 </VBox>
 
-                <!-- Lineas de Factura -->
                 <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
                     <HBox alignment="CENTER_LEFT" spacing="15">
-                        <Label text="Lineas de Factura" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                        <Label text="Líneas de Factura" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="+ Agregar Articulo" onAction="#onAgregarLinea" styleClass="button-success"/>
+                        <Button text="+ Agregar Artículo" onAction="#onAgregarLinea" styleClass="button-success"/>
                     </HBox>
                     <Separator/>
 
-                    <!-- Tabla de Lineas -->
                     <TableView fx:id="tableLineas" VBox.vgrow="ALWAYS" style="-fx-background-color: white;" prefHeight="200">
                         <columns>
-                            <TableColumn fx:id="colArticulo" text="Articulo" prefWidth="200"/>
-                            <TableColumn fx:id="colDescripcion" text="Descripcion" prefWidth="250"/>
-                            <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="100"/>
-                            <TableColumn fx:id="colPrecio" text="Precio" prefWidth="100"/>
-                            <TableColumn fx:id="colIVA" text="IVA %" prefWidth="80"/>
-                            <TableColumn fx:id="colSubtotal" text="Subtotal" prefWidth="100"/>
+                            <TableColumn fx:id="colArticulo" text="Artículo" minWidth="120"/>
+                            <TableColumn fx:id="colDescripcion" text="Descripción" minWidth="150"/>
+                            <TableColumn fx:id="colCantidad" text="Cantidad" minWidth="70" maxWidth="100"/>
+                            <TableColumn fx:id="colPrecio" text="Precio" minWidth="70" maxWidth="100"/>
+                            <TableColumn fx:id="colIVA" text="IVA %" minWidth="60" maxWidth="80"/>
+                            <TableColumn fx:id="colSubtotal" text="Subtotal" minWidth="80" maxWidth="100"/>
                         </columns>
                     </TableView>
 
-                    <!-- Boton Eliminar Linea -->
                     <HBox spacing="10">
-                        <Button text="Eliminar Linea" onAction="#onEliminarLinea" styleClass="button-danger"/>
+                        <Button text="Eliminar Línea" onAction="#onEliminarLinea" styleClass="button-danger"/>
                     </HBox>
                 </VBox>
 
-                <!-- Totales -->
                 <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
                     <Label text="Totales" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
                     <Separator/>
