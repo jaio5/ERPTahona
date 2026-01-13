@@ -378,6 +378,25 @@ public class UsuarioService {
 
         log.info("Usuario desactivado: {}", usuario.getUsername());
     }
+
+    /**
+     * Generar token de recuperación de contraseña
+     */
+    @Transactional
+    public Usuario generarTokenRecuperacion(String username) {
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        // Generar token aleatorio
+        String token = java.util.UUID.randomUUID().toString();
+        usuario.setTokenRecuperacion(token);
+        usuario.setFechaExpiracionToken(LocalDateTime.now().plusHours(24));
+
+        usuarioRepository.save(usuario);
+
+        log.info("Token de recuperación generado para: {}", username);
+        return usuario;
+    }
 }
 
 

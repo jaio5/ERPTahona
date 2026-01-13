@@ -8,47 +8,71 @@
       spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
 
     <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="VeriFacTur" styleClass="title"/>
+        <Label text="VeriFacTur AEAT" style="-fx-font-size: 24; -fx-font-weight: bold;"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblEstado" text="● Deshabilitado" style="-fx-text-fill: #6c757d;"/>
+        <Label fx:id="lblEstado" text="Deshabilitado"/>
+        <Button text="Actualizar" onAction="#onRefresh" styleClass="button"/>
     </HBox>
 
     <VBox styleClass="card" spacing="16">
-        <Label text="Configuración" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
+        <Label text="Configuracion" style="-fx-font-weight: 600;"/>
 
         <HBox spacing="12" alignment="CENTER_LEFT">
             <Label text="Estado:" prefWidth="150"/>
-            <CheckBox fx:id="chkHabilitado" text="Habilitado"/>
+            <CheckBox fx:id="chkHabilitado" text="Habilitado" onAction="#onCambiarEstado"/>
         </HBox>
 
         <HBox spacing="12" alignment="CENTER_LEFT">
             <Label text="Certificado:" prefWidth="150"/>
-            <TextField fx:id="txtCertificado" HBox.hgrow="ALWAYS" promptText="Ruta del certificado"/>
-            <Button text="..." onAction="#onSeleccionarCertificado" styleClass="button"/>
+            <TextField fx:id="txtCertificado" HBox.hgrow="ALWAYS"/>
+            <Button text="Buscar" onAction="#onSeleccionarCertificado" styleClass="button"/>
         </HBox>
 
         <HBox spacing="12" alignment="CENTER_LEFT">
             <Label text="Contraseña:" prefWidth="150"/>
-            <PasswordField fx:id="txtPassword" prefWidth="200"/>
+            <PasswordField fx:id="txtPassword" prefWidth="300"/>
+        </HBox>
+
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="NIF:" prefWidth="150"/>
+            <TextField fx:id="txtNif" prefWidth="200"/>
         </HBox>
 
         <HBox spacing="12">
-            <Button text="💾 Guardar" onAction="#onGuardar" styleClass="button-success"/>
-            <Button text="🧪 Probar Conexión" onAction="#onProbar" styleClass="button-primary"/>
+            <Button text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
+            <Button text="Probar" onAction="#onProbar" styleClass="button-primary"/>
         </HBox>
     </VBox>
 
-    <VBox VBox.vgrow="ALWAYS">
-        <Label text="Registro de Envíos" style="-fx-font-weight: 600; -fx-font-size: 15;"/>
-        <TableView fx:id="tableEnvios" VBox.vgrow="ALWAYS">
+    <HBox spacing="12">
+        <Button text="Enviar Facturas" onAction="#onEnviar" styleClass="button-primary"/>
+        <Button text="Verificar" onAction="#onVerificar" styleClass="button"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblInfo" text="0 pendientes"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS" spacing="12">
+        <Label text="Registro de Envios" style="-fx-font-weight: 600;"/>
+        <TableView fx:id="tableEnvios" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
             <columns>
-                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120"/>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="140"/>
                 <TableColumn fx:id="colFactura" text="Factura" prefWidth="120"/>
+                <TableColumn fx:id="colCliente" text="Cliente" prefWidth="200"/>
+                <TableColumn fx:id="colImporte" text="Importe" prefWidth="100"/>
                 <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
-                <TableColumn fx:id="colMensaje" text="Mensaje" prefWidth="300"/>
+                <TableColumn fx:id="colReferencia" text="Referencia" prefWidth="150"/>
+                <TableColumn fx:id="colMensaje" text="Mensaje" prefWidth="250"/>
             </columns>
         </TableView>
     </VBox>
+
+    <HBox spacing="12">
+        <Button text="Ver Detalles" onAction="#onVerDetalles" styleClass="button"/>
+        <Button text="Reenviar" onAction="#onReenviar" styleClass="button"/>
+        <Button text="Exportar" onAction="#onExportar" styleClass="button"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblTotal" text="0 registros"/>
+    </HBox>
 
 </VBox>
 

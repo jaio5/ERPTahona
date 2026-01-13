@@ -25,12 +25,21 @@ public class Cliente {
     private String codigo;
 
     @Size(max = 255)
-    @Column(name = "nombre")
+    @NotNull
+    @Column(name = "nombre", nullable = false)
     private String nombre;
 
     @Size(max = 50)
     @Column(name = "cif", length = 50)
     private String cif;
+
+    @Size(max = 20)
+    @Column(name = "telefono", length = 20)
+    private String telefono;
+
+    @Size(max = 100)
+    @Column(name = "email", length = 100)
+    private String email;
 
     @Size(max = 255)
     @Column(name = "direccion")
@@ -52,8 +61,18 @@ public class Cliente {
     @Column(name = "notas")
     private String notas;
 
-    @Column(name = "activo")
+    @Column(name = "activo", nullable = false)
     private Boolean activo = true;
+
+    /**
+     * PrePersist para asegurar valores por defecto
+     */
+    @PrePersist
+    protected void onCreate() {
+        if (activo == null) {
+            activo = true;
+        }
+    }
 
     @OneToMany(mappedBy = "cliente")
     private Set<DireccionenvioNew> direccionesenvioNews = new LinkedHashSet<>();

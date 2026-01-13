@@ -1,20 +1,20 @@
 package alicanteweb.erp.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import org.hibernate.annotations.ColumnDefault;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
- * Asiento contable
+ * Entidad que representa un asiento contable
  */
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "asientos_contables")
 public class AsientoContable {
@@ -23,22 +23,20 @@ public class AsientoContable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @Column(name = "numero", nullable = false)
-    private Integer numero;
+    @Column(name = "numero", length = 50, unique = true, nullable = false)
+    private String numero;
 
-    @NotNull
     @Column(name = "fecha", nullable = false)
     private LocalDate fecha;
 
-    @Column(name = "concepto", length = 500)
+    @Column(name = "concepto", nullable = false, length = 255)
     private String concepto;
 
-    @Column(name = "descripcion", length = 1000)
+    @Column(name = "descripcion", columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(name = "tipo", length = 20)
-    private String tipo; // APERTURA, OPERACION, AJUSTE, REGULARIZACION, CIERRE
+    @Column(name = "tipo", length = 50, nullable = false)
+    private String tipo; // APERTURA, CIERRE, TRASPASO, REGULARIZACION, OPERACION
 
     @Column(name = "asiento_apertura")
     private Boolean asientoApertura = false;
@@ -46,54 +44,85 @@ public class AsientoContable {
     @Column(name = "asiento_cierre")
     private Boolean asientoCierre = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "factura_id")
-    private Factura factura;
+    @Column(name = "debe", precision = 12, scale = 2, nullable = false)
+    private BigDecimal debe = BigDecimal.ZERO;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "factura_compra_id")
-    private FacturaCompra facturaCompra;
-
-    @OneToMany(mappedBy = "asiento", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AsientoContableLinea> lineas = new ArrayList<>();
+    @Column(name = "haber", precision = 12, scale = 2, nullable = false)
+    private BigDecimal haber = BigDecimal.ZERO;
 
     @Column(name = "descuadre", precision = 12, scale = 2)
-    @ColumnDefault("0.00")
-    private BigDecimal descuadre;
+    private BigDecimal descuadre = BigDecimal.ZERO;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
 
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
-    @Column(name = "usuario_creacion")
-    private String usuarioCreacion;
+    @Column(name = "observaciones", columnDefinition = "TEXT")
+    private String observaciones;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "factura_id")
+    private Factura factura;
+
+    @Column(name = "factura_compra_id")
+    private Long facturaCompraId;
+
+    @OneToMany(mappedBy = "asiento", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<LineaAsiento> lineas = new LinkedHashSet<>();
 
     @PrePersist
     protected void onCreate() {
         fechaCreacion = LocalDateTime.now();
-        if (descuadre == null) descuadre = BigDecimal.ZERO;
+        if (debe == null) debe = BigDecimal.ZERO;
+        if (haber == null) haber = BigDecimal.ZERO;
+        if (asientoApertura == null) asientoApertura = false;
+        if (asientoCierre == null) asientoCierre = false;
     }
 
     /**
-     * Calcula el descuadre del asiento (debe - haber)
+     * Calcular totales del asiento
      */
-    public void calcularDescuadre() {
-        BigDecimal totalDebe = lineas.stream()
-            .map(l -> l.getDebe() != null ? l.getDebe() : BigDecimal.ZERO)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    public void calcularTotales() {
+        debe = BigDecimal.ZERO;
+        haber = BigDecimal.ZERO;
 
-        BigDecimal totalHaber = lineas.stream()
-            .map(l -> l.getHaber() != null ? l.getHaber() : BigDecimal.ZERO)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        descuadre = totalDebe.subtract(totalHaber);
+        for (LineaAsiento linea : lineas) {
+            if (linea.getDebe() != null) {
+                debe = debe.add(linea.getDebe());
+            }
+            if (linea.getHaber() != null) {
+                haber = haber.add(linea.getHaber());
+            }
+        }
     }
 
     /**
-     * Verifica si el asiento está cuadrado
+     * Verificar si el asiento está cuadrado
      */
     public boolean estaCuadrado() {
-        calcularDescuadre();
-        return descuadre.compareTo(BigDecimal.ZERO) == 0;
+        calcularTotales();
+        return debe.compareTo(haber) == 0;
+    }
+
+    /**
+     * Calcular el descuadre del asiento
+     */
+    public void calcularDescuadre() {
+        calcularTotales();
+        descuadre = debe.subtract(haber).abs();
+    }
+
+    /**
+     * Obtener el descuadre actual
+     */
+    public BigDecimal getDescuadre() {
+        if (descuadre == null) {
+            calcularDescuadre();
+        }
+        return descuadre;
     }
 }
 

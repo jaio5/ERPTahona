@@ -44,5 +44,15 @@ public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
            "LOWER(p.nombre) LIKE LOWER(CONCAT('%', :criterio, '%')) OR " +
            "LOWER(p.cif) LIKE LOWER(CONCAT('%', :criterio, '%'))")
     List<Proveedor> buscarPorCriterio(String criterio);
+
+    /**
+     * Busca proveedores por nombre (case insensitive)
+     */
+    List<Proveedor> findByNombreContainingIgnoreCase(String nombre);
+
+    /**
+     * Busca proveedores activos
+     */
+    List<Proveedor> findByActivoTrue();
 }
 

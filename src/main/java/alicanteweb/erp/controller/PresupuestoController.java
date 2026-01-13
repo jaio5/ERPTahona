@@ -5,6 +5,7 @@ import alicanteweb.erp.service.PresupuestoService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
 import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
 import org.springframework.stereotype.Controller;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
@@ -55,17 +57,81 @@ public class PresupuestoController {
 
         // Aplicar estilo a la tabla
         if (tablePresupuestos != null) {
-            tablePresupuestos.setStyle("-fx-background-color: white; -fx-text-fill: black;");
+            tablePresupuestos.setStyle("-fx-background-color: white; -fx-text-fill: #212529;");
+
+            // Estilo de filas
+            tablePresupuestos.setRowFactory(tv -> {
+                TableRow<Presupuesto> row = new TableRow<>();
+                row.setOnMouseEntered(event -> {
+                    if (!row.isEmpty()) {
+                        row.setStyle("-fx-background-color: #e9ecef; -fx-cursor: hand;");
+                    }
+                });
+                row.setOnMouseExited(event -> {
+                    row.setStyle("");
+                });
+                return row;
+            });
+        }
+    }
+
+    /**
+     * Maneja el efecto hover de los botones
+     */
+    @FXML
+    public void handleButtonHover(MouseEvent event) {
+        if (event.getSource() instanceof Button button) {
+            String currentStyle = button.getStyle();
+            if (currentStyle.contains("#28a745")) { // Verde
+                button.setStyle(currentStyle + "-fx-background-color: #218838;");
+            } else if (currentStyle.contains("#007bff")) { // Azul
+                button.setStyle(currentStyle + "-fx-background-color: #0056b3;");
+            } else if (currentStyle.contains("#dc3545")) { // Rojo
+                button.setStyle(currentStyle + "-fx-background-color: #c82333;");
+            } else if (currentStyle.contains("#6c757d")) { // Gris
+                button.setStyle(currentStyle + "-fx-background-color: #5a6268;");
+            }
+        }
+    }
+
+    /**
+     * Restaura el estilo original del botón
+     */
+    @FXML
+    public void handleButtonExit(MouseEvent event) {
+        if (event.getSource() instanceof Button button) {
+            String currentStyle = button.getStyle();
+            if (currentStyle.contains("#218838")) {
+                button.setStyle(currentStyle.replace("#218838", "#28a745"));
+            } else if (currentStyle.contains("#0056b3")) {
+                button.setStyle(currentStyle.replace("#0056b3", "#007bff"));
+            } else if (currentStyle.contains("#c82333")) {
+                button.setStyle(currentStyle.replace("#c82333", "#dc3545"));
+            } else if (currentStyle.contains("#5a6268")) {
+                button.setStyle(currentStyle.replace("#5a6268", "#6c757d"));
+            }
         }
     }
 
     private void configurarColumnas() {
         if (colNumero != null) {
             colNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
+            colNumero.setCellFactory(column -> new TableCell<Presupuesto, String>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                        setStyle("");
+                    } else {
+                        setText(item);
+                        setStyle("-fx-font-weight: bold; -fx-text-fill: #007bff;");
+                    }
+                }
+            });
         }
         if (colFecha != null) {
             colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-            // Formatear fecha
             colFecha.setCellFactory(column -> new TableCell<Presupuesto, LocalDate>() {
                 @Override
                 protected void updateItem(LocalDate item, boolean empty) {
@@ -74,6 +140,7 @@ public class PresupuestoController {
                         setText(null);
                     } else {
                         setText(item.format(DATE_FORMATTER));
+                        setStyle("-fx-text-fill: #495057;");
                     }
                 }
             });
@@ -87,13 +154,25 @@ public class PresupuestoController {
                 }
                 return new SimpleStringProperty(nombreCliente);
             });
+            colCliente.setCellFactory(column -> new TableCell<Presupuesto, String>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        setText(item);
+                        setStyle("-fx-text-fill: #212529;");
+                    }
+                }
+            });
         }
         if (colBaseImponible != null) {
-            // Calcular base imponible (total sin IVA)
             colBaseImponible.setCellValueFactory(cellData -> {
                 Presupuesto presupuesto = cellData.getValue();
-                // Por ahora mostrar el total (falta calcular base sin IVA)
-                BigDecimal base = presupuesto.getTotal() != null ? presupuesto.getTotal() : BigDecimal.ZERO;
+                BigDecimal base = presupuesto.getTotal() != null ?
+                    presupuesto.getTotal().divide(new BigDecimal("1.21"), 2, RoundingMode.HALF_UP) :
+                    BigDecimal.ZERO;
                 return new javafx.beans.property.SimpleObjectProperty<>(base);
             });
             colBaseImponible.setCellFactory(column -> new TableCell<Presupuesto, BigDecimal>() {
@@ -104,6 +183,7 @@ public class PresupuestoController {
                         setText(null);
                     } else {
                         setText(String.format("%.2f €", item));
+                        setStyle("-fx-alignment: CENTER-RIGHT; -fx-text-fill: #495057;");
                     }
                 }
             });
@@ -118,13 +198,13 @@ public class PresupuestoController {
                         setText(null);
                     } else {
                         setText(String.format("%.2f €", item));
+                        setStyle("-fx-alignment: CENTER-RIGHT; -fx-font-weight: bold; -fx-text-fill: #28a745;");
                     }
                 }
             });
         }
         if (colEstado != null) {
             colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
-            // Formatear con emojis y colores
             colEstado.setCellFactory(column -> new TableCell<Presupuesto, String>() {
                 @Override
                 protected void updateItem(String item, boolean empty) {
@@ -144,13 +224,13 @@ public class PresupuestoController {
                         setText(emoji + " " + item);
 
                         String color = switch (item) {
-                            case "ACEPTADO" -> "-fx-text-fill: green;";
-                            case "RECHAZADO" -> "-fx-text-fill: red;";
-                            case "CONVERTIDO" -> "-fx-text-fill: blue;";
-                            case "ENVIADO" -> "-fx-text-fill: orange;";
-                            default -> "-fx-text-fill: gray;";
+                            case "ACEPTADO" -> "-fx-text-fill: #28a745;";
+                            case "RECHAZADO" -> "-fx-text-fill: #dc3545;";
+                            case "CONVERTIDO" -> "-fx-text-fill: #007bff;";
+                            case "ENVIADO" -> "-fx-text-fill: #fd7e14;";
+                            default -> "-fx-text-fill: #6c757d;";
                         };
-                        setStyle(color + " -fx-font-weight: bold;");
+                        setStyle(color + " -fx-font-weight: bold; -fx-alignment: CENTER;");
                     }
                 }
             });

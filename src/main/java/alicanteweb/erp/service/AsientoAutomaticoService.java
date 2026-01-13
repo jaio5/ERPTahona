@@ -2,15 +2,15 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.repository.AsientoContableRepository;
-import alicanteweb.erp.repository.PlanContableRepository;
+import alicanteweb.erp.repository.PlanCuentasRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Servicio para generación automática de asientos contables
@@ -21,12 +21,12 @@ import java.util.List;
 public class AsientoAutomaticoService {
 
     private final AsientoContableRepository asientoRepository;
-    private final PlanContableRepository planContableRepository;
+    private final PlanCuentasRepository planCuentasRepository;
 
     public AsientoAutomaticoService(AsientoContableRepository asientoRepository,
-                                   PlanContableRepository planContableRepository) {
+                                   PlanCuentasRepository planCuentasRepository) {
         this.asientoRepository = asientoRepository;
-        this.planContableRepository = planContableRepository;
+        this.planCuentasRepository = planCuentasRepository;
     }
 
     /**
@@ -45,33 +45,33 @@ public class AsientoAutomaticoService {
         asiento.setAsientoApertura(false);
         asiento.setAsientoCierre(false);
 
-        List<AsientoContableLinea> lineas = new ArrayList<>();
+        Set<LineaAsiento> lineas = new HashSet<>();
 
         // DEBE: 430 Clientes
-        AsientoContableLinea lineaCliente = new AsientoContableLinea();
-        PlanContable cuentaClientes = buscarCuenta("430");
-        lineaCliente.setCuentaContable(cuentaClientes);
-        lineaCliente.setDescripcion("Cliente: " + factura.getCliente().getNombre());
+        LineaAsiento lineaCliente = new LineaAsiento();
+        PlanCuentas cuentaClientes = buscarCuenta("430");
+        lineaCliente.setCuenta(cuentaClientes);
+        lineaCliente.setConcepto("Cliente: " + factura.getCliente().getNombre());
         lineaCliente.setDebe(factura.getTotal());
         lineaCliente.setHaber(BigDecimal.ZERO);
         lineaCliente.setAsiento(asiento);
         lineas.add(lineaCliente);
 
         // HABER: 700 Ventas (base)
-        AsientoContableLinea lineaVentas = new AsientoContableLinea();
-        PlanContable cuentaVentas = buscarCuenta("700");
-        lineaVentas.setCuentaContable(cuentaVentas);
-        lineaVentas.setDescripcion("Venta según factura " + factura.getNumero());
+        LineaAsiento lineaVentas = new LineaAsiento();
+        PlanCuentas cuentaVentas = buscarCuenta("700");
+        lineaVentas.setCuenta(cuentaVentas);
+        lineaVentas.setConcepto("Venta según factura " + factura.getNumero());
         lineaVentas.setDebe(BigDecimal.ZERO);
         lineaVentas.setHaber(factura.getBaseImponible());
         lineaVentas.setAsiento(asiento);
         lineas.add(lineaVentas);
 
         // HABER: 477 IVA repercutido
-        AsientoContableLinea lineaIva = new AsientoContableLinea();
-        PlanContable cuentaIvaRepercutido = buscarCuenta("477");
-        lineaIva.setCuentaContable(cuentaIvaRepercutido);
-        lineaIva.setDescripcion("IVA repercutido factura " + factura.getNumero());
+        LineaAsiento lineaIva = new LineaAsiento();
+        PlanCuentas cuentaIvaRepercutido = buscarCuenta("477");
+        lineaIva.setCuenta(cuentaIvaRepercutido);
+        lineaIva.setConcepto("IVA repercutido factura " + factura.getNumero());
         lineaIva.setDebe(BigDecimal.ZERO);
         lineaIva.setHaber(factura.getTotalIva());
         lineaIva.setAsiento(asiento);
@@ -101,23 +101,23 @@ public class AsientoAutomaticoService {
         asiento.setAsientoApertura(false);
         asiento.setAsientoCierre(false);
 
-        List<AsientoContableLinea> lineas = new ArrayList<>();
+        Set<LineaAsiento> lineas = new HashSet<>();
 
         // DEBE: 572 Banco
-        AsientoContableLinea lineaBanco = new AsientoContableLinea();
-        PlanContable cuentaBanco = buscarCuenta("572");
-        lineaBanco.setCuentaContable(cuentaBanco);
-        lineaBanco.setDescripcion("Cobro de " + factura.getCliente().getNombre());
+        LineaAsiento lineaBanco = new LineaAsiento();
+        PlanCuentas cuentaBanco = buscarCuenta("572");
+        lineaBanco.setCuenta(cuentaBanco);
+        lineaBanco.setConcepto("Cobro de " + factura.getCliente().getNombre());
         lineaBanco.setDebe(factura.getTotal());
         lineaBanco.setHaber(BigDecimal.ZERO);
         lineaBanco.setAsiento(asiento);
         lineas.add(lineaBanco);
 
         // HABER: 430 Clientes
-        AsientoContableLinea lineaCliente = new AsientoContableLinea();
-        PlanContable cuentaClientes = buscarCuenta("430");
-        lineaCliente.setCuentaContable(cuentaClientes);
-        lineaCliente.setDescripcion("Cobro factura " + factura.getNumero());
+        LineaAsiento lineaCliente = new LineaAsiento();
+        PlanCuentas cuentaClientes = buscarCuenta("430");
+        lineaCliente.setCuenta(cuentaClientes);
+        lineaCliente.setConcepto("Cobro factura " + factura.getNumero());
         lineaCliente.setDebe(BigDecimal.ZERO);
         lineaCliente.setHaber(factura.getTotal());
         lineaCliente.setAsiento(asiento);
@@ -147,33 +147,33 @@ public class AsientoAutomaticoService {
         asiento.setAsientoApertura(false);
         asiento.setAsientoCierre(false);
 
-        List<AsientoContableLinea> lineas = new ArrayList<>();
+        Set<LineaAsiento> lineas = new HashSet<>();
 
         // DEBE: 600 Compras
-        AsientoContableLinea lineaCompras = new AsientoContableLinea();
-        PlanContable cuentaCompras = buscarCuenta("600");
-        lineaCompras.setCuentaContable(cuentaCompras);
-        lineaCompras.setDescripcion("Compra a " + facturaCompra.getProveedor().getNombre());
+        LineaAsiento lineaCompras = new LineaAsiento();
+        PlanCuentas cuentaCompras = buscarCuenta("600");
+        lineaCompras.setCuenta(cuentaCompras);
+        lineaCompras.setConcepto("Compra a " + facturaCompra.getProveedor().getNombre());
         lineaCompras.setDebe(facturaCompra.getBaseImponible());
         lineaCompras.setHaber(BigDecimal.ZERO);
         lineaCompras.setAsiento(asiento);
         lineas.add(lineaCompras);
 
         // DEBE: 472 IVA soportado
-        AsientoContableLinea lineaIva = new AsientoContableLinea();
-        PlanContable cuentaIvaSoportado = buscarCuenta("472");
-        lineaIva.setCuentaContable(cuentaIvaSoportado);
-        lineaIva.setDescripcion("IVA soportado factura " + facturaCompra.getNumeroFactura());
+        LineaAsiento lineaIva = new LineaAsiento();
+        PlanCuentas cuentaIvaSoportado = buscarCuenta("472");
+        lineaIva.setCuenta(cuentaIvaSoportado);
+        lineaIva.setConcepto("IVA soportado factura " + facturaCompra.getNumeroFactura());
         lineaIva.setDebe(facturaCompra.getCuotaIva());
         lineaIva.setHaber(BigDecimal.ZERO);
         lineaIva.setAsiento(asiento);
         lineas.add(lineaIva);
 
         // HABER: 400 Proveedores
-        AsientoContableLinea lineaProveedor = new AsientoContableLinea();
-        PlanContable cuentaProveedores = buscarCuenta("400");
-        lineaProveedor.setCuentaContable(cuentaProveedores);
-        lineaProveedor.setDescripcion("Proveedor: " + facturaCompra.getProveedor().getNombre());
+        LineaAsiento lineaProveedor = new LineaAsiento();
+        PlanCuentas cuentaProveedores = buscarCuenta("400");
+        lineaProveedor.setCuenta(cuentaProveedores);
+        lineaProveedor.setConcepto("Proveedor: " + facturaCompra.getProveedor().getNombre());
         lineaProveedor.setDebe(BigDecimal.ZERO);
         lineaProveedor.setHaber(facturaCompra.getTotalFactura());
         lineaProveedor.setAsiento(asiento);
@@ -202,23 +202,23 @@ public class AsientoAutomaticoService {
         asiento.setAsientoApertura(false);
         asiento.setAsientoCierre(false);
 
-        List<AsientoContableLinea> lineas = new ArrayList<>();
+        Set<LineaAsiento> lineas = new HashSet<>();
 
         // DEBE: 400 Proveedores
-        AsientoContableLinea lineaProveedor = new AsientoContableLinea();
-        PlanContable cuentaProveedores = buscarCuenta("400");
-        lineaProveedor.setCuentaContable(cuentaProveedores);
-        lineaProveedor.setDescripcion("Pago a " + facturaCompra.getProveedor().getNombre());
+        LineaAsiento lineaProveedor = new LineaAsiento();
+        PlanCuentas cuentaProveedores = buscarCuenta("400");
+        lineaProveedor.setCuenta(cuentaProveedores);
+        lineaProveedor.setConcepto("Pago a " + facturaCompra.getProveedor().getNombre());
         lineaProveedor.setDebe(facturaCompra.getTotalFactura());
         lineaProveedor.setHaber(BigDecimal.ZERO);
         lineaProveedor.setAsiento(asiento);
         lineas.add(lineaProveedor);
 
         // HABER: 572 Banco
-        AsientoContableLinea lineaBanco = new AsientoContableLinea();
-        PlanContable cuentaBanco = buscarCuenta("572");
-        lineaBanco.setCuentaContable(cuentaBanco);
-        lineaBanco.setDescripcion("Pago factura " + facturaCompra.getNumeroFactura());
+        LineaAsiento lineaBanco = new LineaAsiento();
+        PlanCuentas cuentaBanco = buscarCuenta("572");
+        lineaBanco.setCuenta(cuentaBanco);
+        lineaBanco.setConcepto("Pago factura " + facturaCompra.getNumeroFactura());
         lineaBanco.setDebe(BigDecimal.ZERO);
         lineaBanco.setHaber(facturaCompra.getTotalFactura());
         lineaBanco.setAsiento(asiento);
@@ -245,25 +245,25 @@ public class AsientoAutomaticoService {
         asiento.setAsientoApertura(false);
         asiento.setAsientoCierre(false);
 
-        List<AsientoContableLinea> lineas = new ArrayList<>();
+        Set<LineaAsiento> lineas = new HashSet<>();
 
-        PlanContable cuentaCaja = buscarCuenta("570");
+        PlanCuentas cuentaCaja = buscarCuenta("570");
 
         if ("INGRESO".equals(movimiento.getTipo())) {
             // DEBE: 570 Caja
-            AsientoContableLinea lineaCaja = new AsientoContableLinea();
-            lineaCaja.setCuentaContable(cuentaCaja);
-            lineaCaja.setDescripcion(movimiento.getConcepto());
+            LineaAsiento lineaCaja = new LineaAsiento();
+            lineaCaja.setCuenta(cuentaCaja);
+            lineaCaja.setConcepto(movimiento.getConcepto());
             lineaCaja.setDebe(movimiento.getImporte());
             lineaCaja.setHaber(BigDecimal.ZERO);
             lineaCaja.setAsiento(asiento);
             lineas.add(lineaCaja);
 
             // HABER: Cuenta correspondiente (por defecto 700)
-            AsientoContableLinea lineaContraparte = new AsientoContableLinea();
-            PlanContable cuentaContraparte = buscarCuenta("700");
-            lineaContraparte.setCuentaContable(cuentaContraparte);
-            lineaContraparte.setDescripcion(movimiento.getConcepto());
+            LineaAsiento lineaContraparte = new LineaAsiento();
+            PlanCuentas cuentaContraparte = buscarCuenta("700");
+            lineaContraparte.setCuenta(cuentaContraparte);
+            lineaContraparte.setConcepto(movimiento.getConcepto());
             lineaContraparte.setDebe(BigDecimal.ZERO);
             lineaContraparte.setHaber(movimiento.getImporte());
             lineaContraparte.setAsiento(asiento);
@@ -271,19 +271,19 @@ public class AsientoAutomaticoService {
 
         } else {
             // DEBE: Cuenta correspondiente (por defecto 600)
-            AsientoContableLinea lineaContraparte = new AsientoContableLinea();
-            PlanContable cuentaContraparte = buscarCuenta("600");
-            lineaContraparte.setCuentaContable(cuentaContraparte);
-            lineaContraparte.setDescripcion(movimiento.getConcepto());
+            LineaAsiento lineaContraparte = new LineaAsiento();
+            PlanCuentas cuentaContraparte = buscarCuenta("600");
+            lineaContraparte.setCuenta(cuentaContraparte);
+            lineaContraparte.setConcepto(movimiento.getConcepto());
             lineaContraparte.setDebe(movimiento.getImporte());
             lineaContraparte.setHaber(BigDecimal.ZERO);
             lineaContraparte.setAsiento(asiento);
             lineas.add(lineaContraparte);
 
             // HABER: 570 Caja
-            AsientoContableLinea lineaCaja = new AsientoContableLinea();
-            lineaCaja.setCuentaContable(cuentaCaja);
-            lineaCaja.setDescripcion(movimiento.getConcepto());
+            LineaAsiento lineaCaja = new LineaAsiento();
+            lineaCaja.setCuenta(cuentaCaja);
+            lineaCaja.setConcepto(movimiento.getConcepto());
             lineaCaja.setDebe(BigDecimal.ZERO);
             lineaCaja.setHaber(movimiento.getImporte());
             lineaCaja.setAsiento(asiento);
@@ -301,8 +301,8 @@ public class AsientoAutomaticoService {
     /**
      * Busca una cuenta del plan contable por código
      */
-    private PlanContable buscarCuenta(String codigo) {
-        return planContableRepository.findByCodigo(codigo)
+    private PlanCuentas buscarCuenta(String codigo) {
+        return planCuentasRepository.findByCodigo(codigo)
                 .orElseThrow(() -> new RuntimeException("No se encontró la cuenta contable: " + codigo + ". ¿Has cargado el Plan Contable?"));
     }
 
@@ -311,11 +311,11 @@ public class AsientoAutomaticoService {
      */
     public boolean validarAsientoCuadrado(AsientoContable asiento) {
         BigDecimal totalDebe = asiento.getLineas().stream()
-                .map(AsientoContableLinea::getDebe)
+                .map(LineaAsiento::getDebe)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalHaber = asiento.getLineas().stream()
-                .map(AsientoContableLinea::getHaber)
+                .map(LineaAsiento::getHaber)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return totalDebe.compareTo(totalHaber) == 0;

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.AuditoriaController"
+            stylesheets="@/styles/modern-theme.css"
+            style="-fx-background-color: #f8fafc;">
+
+    <!-- Header -->
+    <top>
+        <VBox style="-fx-background-color: white; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
+            <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 20;">
+                <Label text="📋" style="-fx-font-size: 28;"/>
+                <VBox spacing="2">
+                    <Label text="Auditoría del Sistema" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                    <Label fx:id="lblTotal" text="0 registros de auditoría" style="-fx-text-fill: #64748b; -fx-font-size: 13;"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="🔄 Actualizar" onAction="#onRefresh"
+                        style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                <Button text="📤 Exportar" onAction="#onExportar"
+                        style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 10 24; -fx-background-radius: 8; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            </HBox>
+
+            <!-- Barra de búsqueda y filtros avanzados -->
+            <VBox spacing="12" style="-fx-padding: 0 20 20 20;">
+                <!-- Primera línea: Búsqueda -->
+                <HBox spacing="12">
+                    <TextField fx:id="txtBuscar" promptText="🔍 Buscar en descripción, usuario, entidad..."
+                              HBox.hgrow="ALWAYS"
+                              style="-fx-padding: 12; -fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;"/>
+                    <Button text="Buscar" onAction="#onBuscar"
+                            style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 12 24; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                </HBox>
+
+                <!-- Segunda línea: Filtros -->
+                <HBox spacing="12">
+                    <ComboBox fx:id="cmbUsuario" promptText="👤 Todos los usuarios"
+                             style="-fx-min-width: 180; -fx-padding: 8;" HBox.hgrow="SOMETIMES"/>
+                    <ComboBox fx:id="cmbAccion" promptText="⚡ Todas las acciones"
+                             style="-fx-min-width: 180; -fx-padding: 8;" HBox.hgrow="SOMETIMES"/>
+                    <ComboBox fx:id="cmbModulo" promptText="📦 Todos los módulos"
+                             style="-fx-min-width: 180; -fx-padding: 8;" HBox.hgrow="SOMETIMES"/>
+                    <DatePicker fx:id="dpFechaDesde" promptText="📅 Desde"
+                               style="-fx-min-width: 140; -fx-padding: 8;"/>
+                    <DatePicker fx:id="dpFechaHasta" promptText="📅 Hasta"
+                               style="-fx-min-width: 140; -fx-padding: 8;"/>
+                    <Button text="🗑️" onAction="#onLimpiarFiltros"
+                            style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 8; -fx-cursor: hand;"
+                            tooltip="Limpiar filtros"/>
+                </HBox>
+
+                <!-- Tercera línea: Estadísticas rápidas -->
+                <HBox spacing="20" style="-fx-padding: 10 0 0 0;">
+                    <Label fx:id="lblEstadisticas" text="📊 Estadísticas: Cargando..."
+                           style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </top>
+
+    <!-- Tabla de auditoría -->
+    <center>
+        <VBox style="-fx-padding: 20;">
+            <TableView fx:id="tableAuditoria" VBox.vgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12;">
+                <columns>
+                    <TableColumn fx:id="colFecha" text="📅 Fecha y Hora" prefWidth="160"
+                                style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colUsuario" text="👤 Usuario" prefWidth="130"
+                                style="-fx-alignment: CENTER-LEFT;"/>
+                    <TableColumn fx:id="colAccion" text="⚡ Acción" prefWidth="140"
+                                style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colModulo" text="📦 Módulo" prefWidth="140"
+                                style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colEntidad" text="🎯 Entidad" prefWidth="120"
+                                style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colDescripcion" text="📝 Descripción" prefWidth="280"
+                                style="-fx-alignment: CENTER-LEFT;"/>
+                    <TableColumn fx:id="colResultado" text="✅ Estado" prefWidth="110"
+                                style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colAcciones" text="🔧 Acciones" prefWidth="100"
+                                style="-fx-alignment: CENTER;"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+
+    <!-- Footer con botones de acción -->
+    <bottom>
+        <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 20; -fx-background-color: white; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
+            <Button text="👁️ Ver Detalles" onAction="#onVerDetalles"
+                    style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Button text="📊 Estadísticas" onAction="#onEstadisticas"
+                    style="-fx-background-color: #8b5cf6; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Button text="🔍 Filtro Rápido" onAction="#onFiltroRapido"
+                    style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblSeleccion" text="Ningún registro seleccionado"
+                   style="-fx-text-fill: #94a3b8; -fx-font-size: 13;"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
+

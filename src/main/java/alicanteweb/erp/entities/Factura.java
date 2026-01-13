@@ -283,6 +283,29 @@ public class Factura {
 
     @Column(name = "verifactu_fecha_registro")
     private LocalDateTime verifactuFechaRegistro;
+
+    // ============================================
+    // Métodos de conveniencia para tests
+    // ============================================
+
+    /**
+     * Alias de getTotalIva para compatibilidad con tests
+     */
+    public BigDecimal getIva() {
+        return this.totalIva;
+    }
+
+    /**
+     * Alias de setTotalIva para compatibilidad con tests
+     */
+    public void setIva(BigDecimal iva) {
+        this.totalIva = iva;
+    }
+
+    /**
+     * Alias de getFacturaLineas() para compatibilidad con ReportesPDFService
+     */
+    public Set<FacturaLinea> getLineas() {
+        return this.facturaLineas;
+    }
 }
-
-

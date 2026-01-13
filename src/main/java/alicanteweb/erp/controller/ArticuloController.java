@@ -6,14 +6,17 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
-@Slf4j
 @Component
-public class ArticuloController {
+public class ArticuloController extends BaseController<Articulo> {
+    private static final Logger log = LoggerFactory.getLogger(ArticuloController.class);
 
     private final ArticuloService articuloService;
 
@@ -29,7 +32,6 @@ public class ArticuloController {
     @FXML private ComboBox<String> cmbCategoria;
     @FXML private ComboBox<String> cmbActivo;
     @FXML private Label lblTotal;
-    @FXML private Label lblEstado;
 
     public ArticuloController(ArticuloService articuloService) {
         this.articuloService = articuloService;
@@ -37,148 +39,226 @@ public class ArticuloController {
 
     @FXML
     public void initialize() {
-        log.info("Inicializando ArticuloController");
+        log.info("✅ Inicializando ArticuloController");
 
-        // Configurar columnas - el nombre en Articulo es "descripcion"
+        // Asignar la tabla del FXML a la tabla base
+        this.table = tableArticulos;
+        this.lblEstado = lblTotal;
+
+        // Configurar columnas
         if (colCodigo != null) colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
-        if (colNombre != null) colNombre.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
+        if (colNombre != null) colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         if (colPrecio != null) colPrecio.setCellValueFactory(new PropertyValueFactory<>("pvp"));
         if (colIVA != null) colIVA.setCellValueFactory(new PropertyValueFactory<>("iva"));
-        if (colStock != null) {
-            // Stock no existe en la entidad, usar coste temporalmente
-            colStock.setCellValueFactory(new PropertyValueFactory<>("coste"));
-        }
+        if (colStock != null) colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
         if (colActivo != null) colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
 
-        // Aplicar estilo a la tabla - fondo blanco, texto negro
+        // Aplicar estilo a la tabla
         if (tableArticulos != null) {
             tableArticulos.setStyle("-fx-background-color: white; -fx-text-fill: black;");
         }
 
-        cargarDatos();
+        // Inicializar ComboBox de Categoría
+        if (cmbCategoria != null) {
+            cmbCategoria.getItems().clear();
+            cmbCategoria.getItems().addAll(
+                "Todas",
+                "Materia Prima",
+                "Producto Terminado",
+                "Envases",
+                "Material Auxiliar",
+                "Mercadería",
+                "Otros"
+            );
+            cmbCategoria.setValue("Todas");
+
+            // Listener para filtrar cuando cambia la selección
+            cmbCategoria.setOnAction(e -> aplicarFiltros());
+        }
+
+        // Inicializar ComboBox de Estado
+        if (cmbActivo != null) {
+            cmbActivo.getItems().clear();
+            cmbActivo.getItems().addAll(
+                "Todos",
+                "Activos",
+                "Inactivos"
+            );
+            cmbActivo.setValue("Todos");
+
+            // Listener para filtrar cuando cambia la selección
+            cmbActivo.setOnAction(e -> aplicarFiltros());
+        }
+
+        // Inicializar controlador base
+        initController();
     }
 
-    private void cargarDatos() {
+    @Override
+    protected void cargarDatos() {
         try {
-            var articulos = articuloService.findAll();
-            if (tableArticulos != null) {
-                tableArticulos.setItems(FXCollections.observableArrayList(articulos));
-            }
-            if (lblTotal != null) {
-                lblTotal.setText(articulos.size() + " artículos encontrados");
-            }
-            log.info("Cargados {} artículos", articulos.size());
+            List<Articulo> articulos = articuloService.findAll();
+            actualizarTabla(articulos);
+            log.info("✅ Cargados {} artículos", articulos.size());
         } catch (Exception e) {
-            log.error("Error cargando artículos", e);
+            log.error("❌ Error cargando artículos", e);
             mostrarError("Error al cargar artículos: " + e.getMessage());
         }
     }
 
-    @FXML
-    public void onRefresh() {
-        log.info("Refrescando lista de artículos");
-        cargarDatos();
+    @Override
+    protected String getNombreModulo() {
+        return "Artículo";
+    }
+
+    @Override
+    protected String getRutaFormulario() {
+        return "/ui/articulo_form.fxml";
+    }
+
+    @Override
+    protected boolean coincideConBusqueda(Articulo item, String termino) {
+        if (item == null || termino == null) return false;
+
+        String t = termino.toLowerCase();
+        return (item.getCodigo() != null && item.getCodigo().toLowerCase().contains(t)) ||
+               (item.getNombre() != null && item.getNombre().toLowerCase().contains(t)) ||
+               (item.getDescripcion() != null && item.getDescripcion().toLowerCase().contains(t)) ||
+               (item.getCodigoBarras() != null && item.getCodigoBarras().toLowerCase().contains(t)) ||
+               (item.getFamilia() != null && item.getFamilia().toLowerCase().contains(t));
+    }
+
+    @Override
+    protected void eliminarItem(Articulo item) {
+        if (item != null && item.getId() != null) {
+            // Dar de baja en lugar de eliminar
+            item.setActivo(false);
+            articuloService.save(item);
+            log.info("✅ Artículo dado de baja: {}", item.getCodigo());
+        }
     }
 
     @FXML
     public void onBuscar() {
-        log.info("Buscar artículos");
-        String busqueda = txtBuscar != null ? txtBuscar.getText() : "";
-        filtrarArticulos(busqueda);
+        aplicarFiltros();
     }
 
-    @FXML
-    public void onVer() {
-        Articulo selected = tableArticulos.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            log.info("Ver artículo: {}", selected.getCodigo());
-            mostrarInfo("Función en desarrollo");
-        } else {
-            mostrarAdvertencia("Selecciona un artículo primero");
+    /**
+     * Aplicar todos los filtros: búsqueda de texto, categoría y estado
+     */
+    private void aplicarFiltros() {
+        if (datosCompletos == null) {
+            return;
         }
+
+        String terminoBusqueda = txtBuscar != null ? txtBuscar.getText() : "";
+        String categoriaSeleccionada = cmbCategoria != null ? cmbCategoria.getValue() : "Todas";
+        String estadoSeleccionado = cmbActivo != null ? cmbActivo.getValue() : "Todos";
+
+        List<Articulo> filtrados = datosCompletos.stream()
+            .filter(articulo -> {
+                // Filtro por texto de búsqueda
+                boolean coincideTexto = terminoBusqueda.isEmpty() || coincideConBusqueda(articulo, terminoBusqueda);
+
+                // Filtro por categoría
+                boolean coincideCategoria = categoriaSeleccionada == null ||
+                                           categoriaSeleccionada.equals("Todas") ||
+                                           (articulo.getCategoria() != null &&
+                                            articulo.getCategoria().equals(categoriaSeleccionada));
+
+                // Filtro por estado
+                boolean coincideEstado = true;
+                if (estadoSeleccionado != null) {
+                    if (estadoSeleccionado.equals("Activos")) {
+                        coincideEstado = articulo.getActivo() != null && articulo.getActivo();
+                    } else if (estadoSeleccionado.equals("Inactivos")) {
+                        coincideEstado = articulo.getActivo() == null || !articulo.getActivo();
+                    }
+                    // Si es "Todos", coincideEstado ya es true
+                }
+
+                return coincideTexto && coincideCategoria && coincideEstado;
+            })
+            .collect(Collectors.toList());
+
+        table.setItems(FXCollections.observableArrayList(filtrados));
+
+        if (lblEstado != null) {
+            lblEstado.setText(String.format("Mostrando: %d de %d artículos",
+                filtrados.size(), datosCompletos.size()));
+        }
+
+        log.debug("Filtros aplicados: {} artículos de {} totales", filtrados.size(), datosCompletos.size());
     }
 
     @FXML
     public void onDarBaja() {
-        Articulo selected = tableArticulos.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            log.info("Dar de baja artículo: {}", selected.getCodigo());
-            mostrarInfo("Función en desarrollo");
-        } else {
-            mostrarAdvertencia("Selecciona un artículo primero");
+        Articulo seleccionado = tableArticulos.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAdvertencia("Selecciona un artículo para dar de baja");
+            return;
         }
-    }
 
-    private void filtrarArticulos(String termino) {
-        try {
-            var articulos = articuloService.findAll();
-            if (termino != null && !termino.isEmpty()) {
-                articulos = articulos.stream()
-                    .filter(a -> a.getCodigo().toLowerCase().contains(termino.toLowerCase()) ||
-                                a.getDescripcion().toLowerCase().contains(termino.toLowerCase()))
-                    .toList();
+        String mensaje = seleccionado.getActivo() != null && seleccionado.getActivo()
+            ? "¿Estás seguro de que deseas dar de baja este artículo?"
+            : "¿Deseas reactivar este artículo?";
+
+        if (mostrarConfirmacion(mensaje)) {
+            try {
+                // Cambiar el estado activo/inactivo
+                boolean nuevoEstado = !(seleccionado.getActivo() != null && seleccionado.getActivo());
+                seleccionado.setActivo(nuevoEstado);
+                articuloService.save(seleccionado);
+
+                cargarDatos(); // Recargar datos
+
+                String textoResultado = nuevoEstado ? "Artículo reactivado" : "Artículo dado de baja";
+                mostrarExito(textoResultado + " correctamente");
+
+                log.info("✅ Artículo {} de baja: {}", nuevoEstado ? "reactivado" : "dado", seleccionado.getCodigo());
+            } catch (Exception e) {
+                log.error("❌ Error al cambiar estado del artículo", e);
+                mostrarError("Error al cambiar estado: " + e.getMessage());
             }
-            if (tableArticulos != null) {
-                tableArticulos.setItems(FXCollections.observableArrayList(articulos));
-            }
-            if (lblTotal != null) {
-                lblTotal.setText(articulos.size() + " artículos encontrados");
-            }
-        } catch (Exception e) {
-            log.error("Error filtrando artículos", e);
         }
     }
 
     @FXML
-    public void onNuevo() {
-        log.info("Crear nuevo artículo");
-        mostrarInfo("Función en desarrollo");
-    }
-
-    @FXML
-    public void onEditar() {
-        Articulo selected = tableArticulos.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            log.info("Editar artículo: {}", selected.getCodigo());
-            mostrarInfo("Función en desarrollo");
-        } else {
-            mostrarAdvertencia("Selecciona un artículo primero");
+    public void onVer() {
+        Articulo seleccionado = tableArticulos.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAdvertencia("Selecciona un artículo para ver");
+            return;
         }
-    }
 
-    @FXML
-    public void onEliminar() {
-        Articulo selected = tableArticulos.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            log.info("Eliminar artículo: {}", selected.getCodigo());
-            mostrarInfo("Función en desarrollo");
-        } else {
-            mostrarAdvertencia("Selecciona un artículo primero");
+        // Construir información del artículo
+        StringBuilder info = new StringBuilder();
+        info.append("Código: ").append(seleccionado.getCodigo()).append("\n");
+        info.append("Nombre: ").append(seleccionado.getNombre()).append("\n");
+        if (seleccionado.getDescripcion() != null) {
+            info.append("Descripción: ").append(seleccionado.getDescripcion()).append("\n");
         }
-    }
+        if (seleccionado.getCodigoBarras() != null) {
+            info.append("Código de Barras: ").append(seleccionado.getCodigoBarras()).append("\n");
+        }
+        if (seleccionado.getCoste() != null) {
+            info.append("Coste: ").append(seleccionado.getCoste()).append("€\n");
+        }
+        if (seleccionado.getPvp() != null) {
+            info.append("PVP: ").append(seleccionado.getPvp()).append("€\n");
+        }
+        if (seleccionado.getIva() != null) {
+            info.append("IVA: ").append(seleccionado.getIva()).append("%\n");
+        }
+        if (seleccionado.getStock() != null) {
+            info.append("Stock: ").append(seleccionado.getStock()).append("\n");
+        }
+        info.append("Estado: ").append(seleccionado.getActivo() != null && seleccionado.getActivo() ? "Activo" : "Inactivo").append("\n");
 
-
-    private void mostrarError(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    private void mostrarAdvertencia(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Advertencia");
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    private void mostrarInfo(String mensaje) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Información");
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
+        alert.setTitle("Detalle del Artículo");
+        alert.setHeaderText(seleccionado.getNombre());
+        alert.setContentText(info.toString());
         alert.showAndWait();
     }
 }

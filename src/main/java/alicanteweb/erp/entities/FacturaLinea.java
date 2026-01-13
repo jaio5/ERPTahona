@@ -27,13 +27,52 @@ public class FacturaLinea {
     @JoinColumn(name = "articulo_id")
     private Articulo articulo;
 
+    @Column(name = "descripcion", length = 500)
+    private String descripcion;
+
     @Column(name = "cantidad", precision = 10, scale = 2)
     private BigDecimal cantidad;
+
+    @Column(name = "precio_unitario", precision = 10, scale = 4)
+    private BigDecimal precioUnitario;
 
     @Column(name = "precio", precision = 10, scale = 2)
     private BigDecimal precio;
 
+    @Column(name = "descuento", precision = 5, scale = 2)
+    private BigDecimal descuento;
+
     @Column(name = "iva", precision = 5, scale = 2)
     private BigDecimal iva;
 
+    @Column(name = "total", precision = 12, scale = 2)
+    private BigDecimal total;
+
+    /**
+     * Obtener precio unitario (alias para precio si no existe precioUnitario)
+     */
+    public BigDecimal getPrecioUnitario() {
+        return precioUnitario != null ? precioUnitario : precio;
+    }
+
+    /**
+     * Calcular total de la línea
+     */
+    public BigDecimal getTotal() {
+        if (total != null) return total;
+
+        if (cantidad == null || getPrecioUnitario() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal subtotal = cantidad.multiply(getPrecioUnitario());
+
+        if (descuento != null && descuento.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal importeDescuento = subtotal.multiply(descuento)
+                    .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
+            subtotal = subtotal.subtract(importeDescuento);
+        }
+
+        return subtotal;
+    }
 }

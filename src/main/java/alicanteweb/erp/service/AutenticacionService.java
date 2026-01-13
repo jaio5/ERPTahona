@@ -184,6 +184,17 @@ public class AutenticacionService {
     public void setUsuarioActual(Usuario usuario) {
         this.usuarioActual = usuario;
     }
+
+    // ============================================
+    // Métodos alias para compatibilidad con tests
+    // ============================================
+
+    /**
+     * Autenticar usuario (alias de login)
+     */
+    public Usuario autenticar(String username, String password) {
+        return login(username, password);
+    }
 }
 
 

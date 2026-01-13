@@ -26,6 +26,10 @@ public class ArticuloService {
         return repository.findById(id);
     }
 
+    public Optional<Articulo> findByCodigo(String codigo) {
+        return repository.findByCodigo(codigo);
+    }
+
     public List<Articulo> searchByDescripcion(String texto) {
         return repository.findByDescripcionContainingIgnoreCase(texto);
     }

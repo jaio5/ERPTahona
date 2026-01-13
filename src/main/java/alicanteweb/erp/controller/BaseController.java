@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller;
 
+import alicanteweb.erp.ErpLauncher;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,8 +9,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -20,6 +25,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 public abstract class BaseController<T> {
+    private static final Logger log = LoggerFactory.getLogger(BaseController.class);
 
     @FXML
     protected TextField txtBuscar;
@@ -170,32 +176,93 @@ public abstract class BaseController<T> {
      */
     protected void abrirFormulario(T item) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                getClass().getResource(getRutaFormulario())
-            );
+            log.info("📋 Abriendo formulario: {}", getRutaFormulario());
+
+            // Obtener el contexto de Spring
+            ApplicationContext springContext = ErpLauncher.getSpringContext();
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(getRutaFormulario()));
+            loader.setControllerFactory(springContext::getBean);
+
             Parent parent = loader.load();
+            Object controller = loader.getController();
 
-            // Obtener controlador del formulario
-            Object controllerObj = loader.getController();
+            log.info("✅ Formulario cargado. Controlador: {}", controller.getClass().getSimpleName());
 
-            // Si es un BaseFormController, configurarlo
-            if (controllerObj instanceof BaseFormController) {
-                @SuppressWarnings("unchecked")
-                BaseFormController<T> controller = (BaseFormController<T>) controllerObj;
-                if (item != null) {
-                    controller.setItem(item);
+            // Intentar configurar el item usando reflexión
+            if (item != null) {
+                try {
+                    // Buscar método setCliente, setArticulo, setItem, etc.
+                    Method setMethod = findSetMethod(controller, item);
+                    if (setMethod != null) {
+                        setMethod.invoke(controller, item);
+                        log.info("✅ Item configurado en el formulario");
+                    }
+                } catch (Exception e) {
+                    log.warn("⚠️ No se pudo configurar el item: {}", e.getMessage());
                 }
-                controller.setCallback(this::cargarDatos);
+            } else {
+                // Modo crear - intentar llamar setCliente(null) o similar
+                try {
+                    Method setMethod = findSetMethod(controller, null);
+                    if (setMethod != null) {
+                        setMethod.invoke(controller, (Object) null);
+                        log.info("✅ Modo crear configurado");
+                    }
+                } catch (Exception e) {
+                    log.debug("Método set no encontrado o no necesario");
+                }
             }
 
+            // Crear y mostrar stage
             Stage stage = new Stage();
             stage.setTitle(item == null ? "Nuevo " + getNombreModulo() : "Editar " + getNombreModulo());
             stage.setScene(new Scene(parent));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
+
+            // Recargar datos después de cerrar el formulario
+            cargarDatos();
+            log.info("✅ Formulario cerrado, datos recargados");
+
         } catch (IOException e) {
+            log.error("❌ Error abriendo formulario", e);
             mostrarError("Error abriendo formulario: " + e.getMessage());
         }
+    }
+
+    /**
+     * Buscar método set apropiado usando reflexión
+     */
+    private Method findSetMethod(Object controller, T item) {
+        Class<?> controllerClass = controller.getClass();
+
+        // Intentar nombres comunes de métodos
+        String[] methodNames = {
+            "setItem",
+            "set" + getNombreModulo(),
+            "setCliente",
+            "setArticulo",
+            "setProveedor",
+            "setFactura",
+            "setAlbaran"
+        };
+
+        for (String methodName : methodNames) {
+            try {
+                // Buscar método con un parámetro
+                Method[] methods = controllerClass.getMethods();
+                for (Method method : methods) {
+                    if (method.getName().equals(methodName) && method.getParameterCount() == 1) {
+                        return method;
+                    }
+                }
+            } catch (Exception e) {
+                // Continuar buscando
+            }
+        }
+
+        return null;
     }
 
     // === MÉTODOS DE NOTIFICACIÓN ===

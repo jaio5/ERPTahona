@@ -139,7 +139,9 @@ public class AsientoContableService {
 
         return asientos.stream()
             .map(AsientoContable::getNumero)
-            .max(Integer::compareTo)
+            .filter(numero -> numero != null && numero.matches("\\d+"))
+            .mapToInt(Integer::parseInt)
+            .max()
             .orElse(0) + 1;
     }
 

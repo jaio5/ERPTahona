@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -39,7 +40,24 @@ public class Pedido {
     @Column(name = "estado", length = 50)
     private String estado;
 
-    @OneToMany(mappedBy = "pedido")
+    @Column(name = "total", precision = 12, scale = 2)
+    private BigDecimal total;
+
+    @Column(name = "observaciones", length = 500)
+    private String observaciones;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PedidoLinea> pedidoLineas = new LinkedHashSet<>();
+
+    /**
+     * Alias para getPedidoLineas()
+     */
+    public Set<PedidoLinea> getLineas() {
+        return pedidoLineas;
+    }
+
+    public void setLineas(Set<PedidoLinea> lineas) {
+        this.pedidoLineas = lineas;
+    }
 
 }

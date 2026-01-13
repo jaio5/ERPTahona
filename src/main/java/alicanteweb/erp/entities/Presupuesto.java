@@ -87,5 +87,23 @@ public class Presupuesto {
     protected void onUpdate() {
         fechaModificacion = LocalDateTime.now();
     }
+
+    // ============================================
+    // Métodos de conveniencia para tests
+    // ============================================
+
+    /**
+     * Alias de getFechaValidez para compatibilidad con tests
+     */
+    public LocalDate getValidoHasta() {
+        return this.fechaValidez;
+    }
+
+    /**
+     * Alias de setFechaValidez para compatibilidad con tests
+     */
+    public void setValidoHasta(LocalDate validoHasta) {
+        this.fechaValidez = validoHasta;
+    }
 }
 

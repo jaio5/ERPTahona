@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -67,6 +68,7 @@ import java.nio.file.Path;
  * @see javafx.application.Application
  */
 @SpringBootApplication(scanBasePackages = "alicanteweb.erp")
+@EnableScheduling
 public class ErpLauncher extends Application {
     private static final Logger log = LoggerFactory.getLogger(ErpLauncher.class);
     private static ConfigurableApplicationContext springContext;

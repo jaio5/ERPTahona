@@ -245,6 +245,49 @@ public class RolService {
     public long contarActivos() {
         return rolRepository.countByActivoTrue();
     }
+
+    // ==========================================
+    // Métodos alias para tests
+    // ==========================================
+
+    public Rol save(Rol rol) {
+        if (rol.getId() == null) {
+            return crearRol(rol);
+        }
+        return actualizarRol(rol);
+    }
+
+    public Optional<Rol> findById(Long id) {
+        return buscarPorId(id);
+    }
+
+    public List<Rol> findAll() {
+        return listarTodos();
+    }
+
+    public Optional<Rol> findByNombre(String nombre) {
+        return buscarPorNombre(nombre);
+    }
+
+    public List<Rol> findActivos() {
+        return listarActivos();
+    }
+
+    public Rol update(Rol rol) {
+        return actualizarRol(rol);
+    }
+
+    public void desactivar(Long id) {
+        eliminarRol(id);
+    }
+
+    public void activar(Long id) {
+        activarRol(id);
+    }
+
+    public void deleteById(Long id) {
+        eliminarRol(id);
+    }
 }
 
 

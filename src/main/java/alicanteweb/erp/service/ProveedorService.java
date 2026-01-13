@@ -75,6 +75,13 @@ public class ProveedorService {
     }
 
     /**
+     * Elimina un proveedor por ID (alias de delete)
+     */
+    public void deleteById(Long id) {
+        delete(id);
+    }
+
+    /**
      * Activa un proveedor
      */
     public void activar(Long id) {

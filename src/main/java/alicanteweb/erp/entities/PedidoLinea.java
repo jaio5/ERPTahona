@@ -27,10 +27,19 @@ public class PedidoLinea {
     @JoinColumn(name = "articulo_id")
     private Articulo articulo;
 
+    @Column(name = "descripcion", length = 255)
+    private String descripcion;
+
     @Column(name = "cantidad", precision = 10, scale = 2)
     private BigDecimal cantidad;
 
     @Column(name = "precio", precision = 10, scale = 2)
     private BigDecimal precio;
+
+    @Column(name = "descuento", precision = 5, scale = 2)
+    private BigDecimal descuento = BigDecimal.ZERO;
+
+    @Column(name = "iva", precision = 5, scale = 2)
+    private BigDecimal iva = BigDecimal.ZERO;
 
 }

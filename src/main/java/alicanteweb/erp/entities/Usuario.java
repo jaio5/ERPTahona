@@ -68,6 +68,23 @@ public class Usuario {
     @Column(name = "ultimo_acceso")
     private LocalDateTime ultimoAcceso;
 
+    // Campos para recuperación de contraseña
+    @Size(max = 255)
+    @Column(name = "token_recuperacion", length = 255)
+    private String tokenRecuperacion;
+
+    @Column(name = "fecha_expiracion_token")
+    private LocalDateTime fechaExpiracionToken;
+
+    @ColumnDefault("false")
+    @Column(name = "requiere_cambio_password")
+    private Boolean requiereCambioPassword;
+
+    // Relación con Rol (para sistema avanzado de permisos)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rol_id")
+    private Rol rol;
+
     // Para compatibilidad con código existente
     @Transient
     public Boolean getActivo() {

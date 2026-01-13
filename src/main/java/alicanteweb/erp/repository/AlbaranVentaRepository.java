@@ -17,5 +17,12 @@ public interface AlbaranVentaRepository extends JpaRepository<AlbaranVenta, Long
     List<AlbaranVenta> findAllWithRelations();
 
     List<AlbaranVenta> findByCliente_Id(Long clienteId);
+
+    /**
+     * Alias para findByCliente_Id
+     */
+    default List<AlbaranVenta> findByClienteId(Long clienteId) {
+        return findByCliente_Id(clienteId);
+    }
 }
 

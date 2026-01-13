@@ -1,17 +1,17 @@
 package alicanteweb.erp.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
- * Caja física de la empresa
+ * Entidad que representa una caja diaria
  */
 @Getter
 @Setter
@@ -23,50 +23,63 @@ public class Caja {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @Size(max = 100)
-    @Column(name = "codigo", nullable = false, unique = true, length = 100)
-    private String codigo;
+    @Column(name = "fecha_apertura", nullable = false)
+    private LocalDateTime fechaApertura;
 
-    @NotNull
-    @Size(max = 255)
-    @Column(name = "nombre", nullable = false)
-    private String nombre;
+    @Column(name = "fecha_cierre")
+    private LocalDateTime fechaCierre;
 
-    @Column(name = "saldo_inicial", precision = 12, scale = 2)
-    @ColumnDefault("0.00")
+    @Column(name = "saldo_inicial", precision = 12, scale = 2, nullable = false)
     private BigDecimal saldoInicial;
 
-    @Column(name = "saldo_actual", precision = 12, scale = 2)
-    @ColumnDefault("0.00")
-    private BigDecimal saldoActual;
+    @Column(name = "saldo_final", precision = 12, scale = 2)
+    private BigDecimal saldoFinal;
 
-    @Column(name = "activa")
-    @ColumnDefault("TRUE")
-    private Boolean activa;
+    @Column(name = "saldo_teorico", precision = 12, scale = 2)
+    private BigDecimal saldoTeorico;
 
-    @Lob
-    @Column(name = "observaciones")
+    @Column(name = "diferencia", precision = 12, scale = 2)
+    private BigDecimal diferencia;
+
+    @Column(name = "estado", length = 20)
+    private String estado; // ABIERTA, CERRADA, ARQUEADA
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_apertura_id")
+    private Usuario usuarioApertura;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_cierre_id")
+    private Usuario usuarioCierre;
+
+    @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
 
-    @Column(name = "fecha_creacion")
-    private LocalDateTime fechaCreacion;
+    @OneToMany(mappedBy = "caja", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CajaMovimiento> movimientos = new LinkedHashSet<>();
 
-    @Column(name = "fecha_modificacion")
-    private LocalDateTime fechaModificacion;
-
-    @PrePersist
-    protected void onCreate() {
-        fechaCreacion = LocalDateTime.now();
-        fechaModificacion = LocalDateTime.now();
-        if (activa == null) activa = true;
-        if (saldoInicial == null) saldoInicial = BigDecimal.ZERO;
-        if (saldoActual == null) saldoActual = saldoInicial;
+    /**
+     * Calcular saldo teórico (inicial + movimientos)
+     */
+    public BigDecimal calcularSaldoTeorico() {
+        BigDecimal saldo = saldoInicial != null ? saldoInicial : BigDecimal.ZERO;
+        for (CajaMovimiento mov : movimientos) {
+            if ("INGRESO".equals(mov.getTipo())) {
+                saldo = saldo.add(mov.getImporte());
+            } else if ("GASTO".equals(mov.getTipo())) {
+                saldo = saldo.subtract(mov.getImporte());
+            }
+        }
+        return saldo;
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        fechaModificacion = LocalDateTime.now();
+    /**
+     * Calcular diferencia (final - teórico)
+     */
+    public BigDecimal calcularDiferencia() {
+        if (saldoFinal == null) return BigDecimal.ZERO;
+        BigDecimal teorico = calcularSaldoTeorico();
+        return saldoFinal.subtract(teorico);
     }
 }
 

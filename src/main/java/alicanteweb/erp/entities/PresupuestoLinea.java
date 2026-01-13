@@ -68,5 +68,12 @@ public class PresupuestoLinea {
 
         importe = subtotal;
     }
+
+    /**
+     * Alias para compatibilidad - getTotal() retorna importe
+     */
+    public BigDecimal getTotal() {
+        return importe;
+    }
 }
 

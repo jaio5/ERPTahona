@@ -23,6 +23,9 @@ public class AlbaranVentaLinea {
     @JoinColumn(name = "articulo_id")
     private Articulo articulo;
 
+    @Column(name = "descripcion", length = 500)
+    private String descripcion;
+
     @Column(name = "cantidad", precision = 10, scale = 2)
     private BigDecimal cantidad;
 

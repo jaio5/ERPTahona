@@ -1,43 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="alicanteweb.erp.controller.UsuarioController"
-      stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;">
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.UsuarioController"
+            stylesheets="@/styles/modern-theme.css"
+            style="-fx-background-color: #f8fafc;">
 
-    <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="Usuarios" styleClass="title"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button text="🔄" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
-        <Button text="+ Nuevo Usuario" onAction="#onNuevo" styleClass="button-success"/>
-    </HBox>
+    <!-- Header -->
+    <top>
+        <VBox style="-fx-background-color: white; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
+            <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-padding: 20;">
+                <Label text="👤" style="-fx-font-size: 28;"/>
+                <VBox spacing="2">
+                    <Label text="Gestión de Usuarios" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                    <Label fx:id="lblTotal" text="0 usuarios registrados" style="-fx-text-fill: #64748b; -fx-font-size: 13;"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="🔄 Actualizar" onAction="#onRefresh"
+                        style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                <Button text="+ Nuevo Usuario" onAction="#onNuevo"
+                        style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 10 24; -fx-background-radius: 8; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            </HBox>
 
-    <HBox spacing="12">
-        <TextField fx:id="txtBuscar" promptText="🔍 Buscar usuario..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
-        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
-    </HBox>
+            <!-- Barra de búsqueda y filtros -->
+            <HBox spacing="12" style="-fx-padding: 0 20 20 20;">
+                <TextField fx:id="txtBuscar" promptText="🔍 Buscar por usuario, nombre o email..."
+                          HBox.hgrow="ALWAYS"
+                          style="-fx-padding: 12; -fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;"/>
+                <ComboBox fx:id="cmbFiltroRol" promptText="Todos los roles"
+                         style="-fx-min-width: 150; -fx-padding: 8;"/>
+                <ComboBox fx:id="cmbFiltroEstado" promptText="Todos los estados"
+                         style="-fx-min-width: 150; -fx-padding: 8;"/>
+            </HBox>
+        </VBox>
+    </top>
 
-    <VBox VBox.vgrow="ALWAYS">
-        <TableView fx:id="tableUsuarios" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colUsername" text="Usuario" prefWidth="150"/>
-                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="200"/>
-                <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
-                <TableColumn fx:id="colRole" text="Rol" prefWidth="120"/>
-                <TableColumn fx:id="colActivo" text="Estado" prefWidth="100"/>
-            </columns>
-        </TableView>
-    </VBox>
+    <!-- Tabla de usuarios -->
+    <center>
+        <VBox style="-fx-padding: 20;">
+            <TableView fx:id="tableUsuarios" VBox.vgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12;">
+                <columns>
+                    <TableColumn fx:id="colUsername" text="Usuario" prefWidth="150"
+                                style="-fx-alignment: CENTER-LEFT;"/>
+                    <TableColumn fx:id="colNombre" text="Nombre Completo" prefWidth="220"
+                                style="-fx-alignment: CENTER-LEFT;"/>
+                    <TableColumn fx:id="colEmail" text="Email" prefWidth="220"
+                                style="-fx-alignment: CENTER-LEFT;"/>
+                    <TableColumn fx:id="colRole" text="Rol" prefWidth="130"
+                                style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colActivo" text="Estado" prefWidth="110"
+                                style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colUltimoAcceso" text="Último Acceso" prefWidth="150"
+                                style="-fx-alignment: CENTER;"/>
+                    <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="130"
+                                style="-fx-alignment: CENTER;"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
 
-    <HBox spacing="12">
-        <Button text="✏️ Editar" onAction="#onEditar" styleClass="button-primary"/>
-        <Button text="🔒 Cambiar Contraseña" onAction="#onCambiarPassword" styleClass="button"/>
-        <Button text="🗑️ Eliminar" onAction="#onEliminar" styleClass="button-danger"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblTotal" text="0 usuarios" style="-fx-text-fill: #6c757d;"/>
-    </HBox>
+    <!-- Footer con botones de acción -->
+    <bottom>
+        <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 20; -fx-background-color: white; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
+            <Button text="✏️ Editar" onAction="#onEditar"
+                    style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Button text="🔒 Cambiar Contraseña" onAction="#onCambiarPassword"
+                    style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Button text="🔓 Desbloquear" onAction="#onDesbloquear"
+                    style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Button text="🚫 Desactivar" onAction="#onDesactivar"
+                    style="-fx-background-color: #64748b; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Button text="🗑️ Eliminar" onAction="#onEliminar"
+                    style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblSeleccion" text="Ningún usuario seleccionado"
+                   style="-fx-text-fill: #94a3b8; -fx-font-size: 13;"/>
+        </HBox>
+    </bottom>
 
-</VBox>
+</BorderPane>
 

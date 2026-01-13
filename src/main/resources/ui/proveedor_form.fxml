@@ -10,8 +10,8 @@
 
     <top>
         <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
-            <Label text="PROVEEDOR" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-            <Label fx:id="lblTitulo" text="Nuevo Proveedor" style="-fx-font-size: 14; -fx-text-fill: #64748b;"/>
+            <Label text="🏭" style="-fx-font-size: 24;"/>
+            <Label fx:id="lblTitulo" text="Nuevo Proveedor" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label text="* Campos obligatorios" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
         </HBox>
@@ -21,15 +21,16 @@
         <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
             <VBox spacing="15" style="-fx-padding: 20;">
 
+                <!-- Datos Principales -->
                 <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
                     <Label text="Datos Principales" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
                     <Separator/>
 
                     <GridPane hgap="15" vgap="15">
                         <columnConstraints>
-                            <ColumnConstraints percentWidth="33.33"/>
-                            <ColumnConstraints percentWidth="33.33"/>
-                            <ColumnConstraints percentWidth="33.33"/>
+                            <ColumnConstraints percentWidth="25"/>
+                            <ColumnConstraints percentWidth="50"/>
+                            <ColumnConstraints percentWidth="25"/>
                         </columnConstraints>
 
                         <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
@@ -38,7 +39,7 @@
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.columnSpan="2">
-                            <Label text="Nombre / Razón Social *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <Label text="Nombre / Razon Social *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextField fx:id="txtNombre" promptText="Nombre del proveedor" style="-fx-padding: 10;"/>
                         </VBox>
 
@@ -48,8 +49,8 @@
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                            <Label text="Teléfono" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtTelefono" promptText="600 123 456" style="-fx-padding: 10;"/>
+                            <Label text="Telefono" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <TextField fx:id="txtTelefono" promptText="965 123 456" style="-fx-padding: 10;"/>
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="1">
@@ -59,8 +60,9 @@
                     </GridPane>
                 </VBox>
 
+                <!-- Dirección -->
                 <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                    <Label text="Dirección" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                    <Label text="Direccion" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
                     <Separator/>
 
                     <GridPane hgap="15" vgap="15">
@@ -70,17 +72,17 @@
                         </columnConstraints>
 
                         <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                            <Label text="Dirección" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtDireccion" promptText="Dirección completa" style="-fx-padding: 10;"/>
+                            <Label text="Direccion" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <TextField fx:id="txtDireccion" promptText="Calle, numero, piso..." style="-fx-padding: 10;"/>
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <Label text="Código Postal" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <Label text="Codigo Postal" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextField fx:id="txtCodigoPostal" promptText="03001" style="-fx-padding: 10;"/>
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                            <Label text="Población" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <Label text="Poblacion" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextField fx:id="txtPoblacion" promptText="Alicante" style="-fx-padding: 10;"/>
                         </VBox>
 
@@ -91,14 +93,16 @@
                     </GridPane>
                 </VBox>
 
+                <!-- Datos Comerciales -->
                 <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
                     <Label text="Datos Comerciales" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
                     <Separator/>
 
                     <GridPane hgap="15" vgap="15">
                         <columnConstraints>
-                            <ColumnConstraints percentWidth="50"/>
-                            <ColumnConstraints percentWidth="50"/>
+                            <ColumnConstraints percentWidth="33.33"/>
+                            <ColumnConstraints percentWidth="33.33"/>
+                            <ColumnConstraints percentWidth="33.33"/>
                         </columnConstraints>
 
                         <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
@@ -107,17 +111,25 @@
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <Label text="Días de Pago" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtDiasPago" text="30" style="-fx-padding: 10;"/>
+                            <Label text="Dias de Credito" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <TextField fx:id="txtDiasCredito" text="0" promptText="30" style="-fx-padding: 10;"/>
                         </VBox>
 
-                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2">
+                        <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                            <Label text="Descuento (%)" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <TextField fx:id="txtDescuento" text="0.00" promptText="0.00" style="-fx-padding: 10;"/>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="3">
                             <Label text="Notas" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextArea fx:id="txtNotas" promptText="Observaciones..." prefRowCount="3" wrapText="true" style="-fx-padding: 10;"/>
+                            <TextArea fx:id="txtNotas" promptText="Observaciones sobre el proveedor..."
+                                      prefRowCount="3" wrapText="true" style="-fx-padding: 10;"/>
                         </VBox>
                     </GridPane>
 
-                    <CheckBox fx:id="chkActivo" text="Proveedor activo" selected="true" style="-fx-font-size: 13;"/>
+                    <HBox spacing="20">
+                        <CheckBox fx:id="chkActivo" text="Proveedor activo" selected="true" style="-fx-font-size: 13;"/>
+                    </HBox>
                 </VBox>
 
             </VBox>
@@ -126,8 +138,10 @@
 
     <bottom>
         <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
-            <Button text="Cancelar" onAction="#onCancelar" style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13;"/>
-            <Button text="✓ Guardar Proveedor" onAction="#onGuardar" styleClass="button-success" style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
+            <Button text="Cancelar" onAction="#onCancelar"
+                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13; -fx-cursor: hand;"/>
+            <Button text="Guardar Proveedor" onAction="#onGuardar" styleClass="button-success"
+                    style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
         </HBox>
     </bottom>
 
