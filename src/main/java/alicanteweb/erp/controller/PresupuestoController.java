@@ -348,7 +348,33 @@ public class PresupuestoController {
             return;
         }
         log.info("Editar presupuesto: {}", presupuesto.getNumero());
-        mostrarAlerta("Función en desarrollo: Editar presupuesto");
+        mostrarAlerta("Funcion en desarrollo: Editar presupuesto");
+    }
+
+    @FXML
+    public void onEliminar() {
+        Presupuesto presupuesto = tablePresupuestos.getSelectionModel().getSelectedItem();
+        if (presupuesto == null) {
+            mostrarAlerta("Selecciona un presupuesto para eliminar");
+            return;
+        }
+
+        if (!presupuesto.getEstado().equals("BORRADOR")) {
+            mostrarAlerta("Solo se pueden eliminar presupuestos en estado BORRADOR");
+            return;
+        }
+
+        if (mostrarConfirmacion("¿Deseas eliminar este presupuesto?\n\n" +
+                                presupuesto.getNumero())) {
+            try {
+                presupuestoService.eliminar(presupuesto.getId());
+                cargarDatos();
+                mostrarExito("Presupuesto eliminado correctamente");
+            } catch (Exception e) {
+                log.error("Error eliminando presupuesto", e);
+                mostrarError("Error al eliminar: " + e.getMessage());
+            }
+        }
     }
 
     @FXML

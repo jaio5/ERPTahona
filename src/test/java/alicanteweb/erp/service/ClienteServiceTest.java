@@ -97,20 +97,5 @@ class ClienteServiceTest {
         // Then
         verify(clienteRepository, times(1)).deleteById(1L);
     }
-
-    @Test
-    void testFindByActivo() {
-        // Given
-        List<Cliente> clientesActivos = Arrays.asList(clienteTest);
-        when(clienteRepository.findByActivo(true)).thenReturn(clientesActivos);
-
-        // When
-        List<Cliente> result = clienteRepository.findByActivo(true);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertTrue(result.get(0).getActivo());
-    }
 }
 

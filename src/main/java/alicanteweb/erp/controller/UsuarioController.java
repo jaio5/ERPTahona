@@ -36,6 +36,8 @@ public class UsuarioController {
     @FXML private TableColumn<Usuario, String> colActivo;
     @FXML private TableColumn<Usuario, String> colUltimoAcceso;
     @FXML private TableColumn<Usuario, Void> colAcciones;
+    @FXML private TableColumn<Usuario, Long> colId;
+    @FXML private TableColumn<Usuario, String> colRol;
 
     @FXML private TextField txtBuscar;
     @FXML private ComboBox<String> cmbFiltroRol;
@@ -59,6 +61,13 @@ public class UsuarioController {
         configurarColumnas();
         configurarFiltros();
         configurarListeners();
+        // Inicialización de colId y colRol si existen en el FXML
+        if (colId != null) {
+            colId.setCellValueFactory(cellData -> new javafx.beans.property.SimpleLongProperty(cellData.getValue().getId()).asObject());
+        }
+        if (colRol != null) {
+            colRol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getRole()));
+        }
         cargarDatos();
     }
 
@@ -268,6 +277,14 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Método para buscar usuarios
+     */
+    @FXML
+    public void onBuscar() {
+        aplicarFiltros();
+    }
+
     @FXML
     public void onEditar() {
         Usuario usuario = tableUsuarios.getSelectionModel().getSelectedItem();
@@ -401,6 +418,50 @@ public class UsuarioController {
     public void onRefresh() {
         log.info("🔄 Refrescando lista de usuarios");
         cargarDatos();
+    }
+
+    /**
+     * Ver detalle de usuario seleccionado
+     */
+    @FXML
+    public void onVer() {
+        Usuario usuario = tableUsuarios.getSelectionModel().getSelectedItem();
+        if (usuario == null) {
+            mostrarAlerta("Por favor, seleccione un usuario para ver");
+            return;
+        }
+        mostrarDetalleUsuario(usuario);
+    }
+
+    /**
+     * Bloquear usuario seleccionado
+     */
+    @FXML
+    public void onBloquear() {
+        Usuario usuario = tableUsuarios.getSelectionModel().getSelectedItem();
+        if (usuario == null) {
+            mostrarAlerta("Por favor, seleccione un usuario para bloquear");
+            return;
+        }
+
+        if (Boolean.TRUE.equals(usuario.getBloqueado())) {
+            mostrarAlerta("El usuario ya esta bloqueado");
+            return;
+        }
+
+        if (mostrarConfirmacion("¿Bloquear usuario " + usuario.getUsername() + "?")) {
+            try {
+                usuario.setBloqueado(true);
+                usuario.setFechaBloqueo(LocalDateTime.now());
+                usuarioService.actualizarUsuario(usuario);
+                cargarDatos();
+                mostrarExito("Usuario bloqueado correctamente");
+                log.info("Usuario bloqueado: {}", usuario.getUsername());
+            } catch (Exception e) {
+                log.error("Error bloqueando usuario", e);
+                mostrarError("Error al bloquear usuario: " + e.getMessage());
+            }
+        }
     }
 
     private void mostrarDetalleUsuario(Usuario usuario) {

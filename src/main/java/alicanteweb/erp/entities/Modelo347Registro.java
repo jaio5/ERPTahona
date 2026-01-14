@@ -57,6 +57,9 @@ public class Modelo347Registro {
     @Column(name = "importe_total", precision = 13, scale = 2)
     private BigDecimal importeTotal = BigDecimal.ZERO;
 
+    @Column(name = "importe_anual", precision = 13, scale = 2)
+    private BigDecimal importeAnual = BigDecimal.ZERO;
+
     // Importes en metálico (>6.000€ debe declararse)
     @Column(name = "importe_metalico_t1", precision = 13, scale = 2)
     private BigDecimal importeMetalicoT1 = BigDecimal.ZERO;

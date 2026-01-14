@@ -94,6 +94,12 @@ public class PlanContableController {
     }
 
     @FXML
+    public void onBuscar() {
+        String busqueda = txtBuscar != null ? txtBuscar.getText() : "";
+        filtrarCuentas(busqueda);
+    }
+
+    @FXML
     public void onNuevo() {
         mostrarAlerta("Función de crear nueva cuenta en desarrollo");
     }

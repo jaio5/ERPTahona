@@ -266,6 +266,34 @@ public class Modelo347Service {
         return errores;
     }
 
+    /**
+     * Obtiene los registros del Modelo 347 para un ejercicio
+     */
+    public List<alicanteweb.erp.entities.Modelo347Registro> obtenerRegistrosEjercicio(int ejercicio) {
+        log.info("Obteniendo registros Modelo 347 para ejercicio {}", ejercicio);
+
+        // Generar el modelo para obtener los datos
+        Modelo347Result resultado = generarModelo347(ejercicio);
+
+        // Convertir a entidades Modelo347Registro
+        List<alicanteweb.erp.entities.Modelo347Registro> registros = new ArrayList<>();
+
+        for (OperacionTercero operacion : resultado.operaciones()) {
+            alicanteweb.erp.entities.Modelo347Registro registro = new alicanteweb.erp.entities.Modelo347Registro();
+            registro.setEjercicio(ejercicio);
+            registro.setNifDeclarado(operacion.nif());
+            registro.setNombreDeclarado(operacion.nombre());
+            registro.setTipoOperacion("B"); // B = Entregas de bienes y servicios
+            registro.setEsCliente("CLIENTE".equals(operacion.tipo()));
+            registro.setEsProveedor("PROVEEDOR".equals(operacion.tipo()));
+            registro.setImporteTotal(operacion.totalDeclarar());
+            registros.add(registro);
+        }
+
+        log.info("Encontrados {} registros para ejercicio {}", registros.size(), ejercicio);
+        return registros;
+    }
+
     // ==========================================
     // UTILIDADES
     // ==========================================

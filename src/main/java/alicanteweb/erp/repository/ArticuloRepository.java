@@ -12,4 +12,5 @@ public interface ArticuloRepository extends JpaRepository<Articulo, Long> {
     Optional<Articulo> findByCodigo(String codigo);
     boolean existsByCodigo(String codigo);
     List<Articulo> findByDescripcionContainingIgnoreCase(String text);
+    List<Articulo> findByActivo(Boolean activo);
 }

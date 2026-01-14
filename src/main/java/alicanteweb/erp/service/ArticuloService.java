@@ -43,4 +43,24 @@ public class ArticuloService {
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
+
+    @Transactional
+    public void darDeBaja(Long id) {
+        Articulo articulo = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Articulo no encontrado con id: " + id));
+        articulo.setActivo(false);
+        repository.save(articulo);
+    }
+
+    @Transactional
+    public void activar(Long id) {
+        Articulo articulo = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Articulo no encontrado con id: " + id));
+        articulo.setActivo(true);
+        repository.save(articulo);
+    }
+
+    public List<Articulo> findByActivo(boolean activo) {
+        return repository.findByActivo(activo);
+    }
 }

@@ -27,6 +27,9 @@ class RolServiceTest {
     @Mock
     private RolRepository rolRepository;
 
+    @Mock
+    private AuditoriaService auditoriaService;
+
     @InjectMocks
     private RolService rolService;
 
@@ -173,11 +176,9 @@ class RolServiceTest {
     @Test
     void testVerificarPermisos() {
         // Act
-        boolean tienePermiso = rolService.tienePermiso(rolPrueba, "CREAR_USUARIO");
+        boolean tienePermiso = rolService.tienePermiso(1L, "USUARIOS", "CREAR");
 
         // Assert
-        // Depende de la implementación
         assertNotNull(tienePermiso);
     }
 }
-

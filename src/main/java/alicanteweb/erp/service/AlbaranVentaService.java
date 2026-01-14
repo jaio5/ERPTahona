@@ -5,6 +5,7 @@ import alicanteweb.erp.repository.AlbaranVentaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,5 +48,16 @@ public class AlbaranVentaService {
     public void deleteById(Long id) {
         repository.deleteById(id);
     }
-}
 
+    /**
+     * Genera un numero de albaran automatico basado en el año y secuencia
+     */
+    public String generarNumeroAlbaran() {
+        int year = LocalDate.now().getYear();
+        String prefijo = "ALB-" + year + "-";
+
+        // Buscar el ultimo albaran del año actual
+        long count = repository.count() + 1;
+        return prefijo + String.format("%06d", count);
+    }
+}

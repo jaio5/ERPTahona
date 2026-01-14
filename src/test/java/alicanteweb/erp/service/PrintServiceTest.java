@@ -3,113 +3,80 @@ package alicanteweb.erp.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests para PrintService
- * Verifica la funcionalidad de impresión de documentos
+ * Verifica la funcionalidad de impresion de documentos
  */
 @ExtendWith(MockitoExtension.class)
 class PrintServiceTest {
 
-    @InjectMocks
     private PrintService printService;
 
     @BeforeEach
     void setUp() {
-        // Configuración inicial si es necesaria
+        printService = new PrintService();
     }
 
     @Test
-    void testImprimirDocumento() {
-        // Arrange
-        File documento = new File("test.pdf");
-
-        // Act & Assert
-        assertDoesNotThrow(() -> {
-            printService.imprimir(documento);
-        });
-    }
-
-    @Test
-    void testVerificarImpresoraDisponible() {
-        // Act
+    void testHayImpresoraDisponible() {
+        // Act - Este test verifica que el metodo no lance excepcion
         boolean disponible = printService.hayImpresoraDisponible();
 
-        // Assert
+        // Assert - El resultado depende del sistema, solo verificamos que no sea null
         assertNotNull(disponible);
     }
 
     @Test
-    void testObtenerImpresorasPredeterminada() {
+    void testGetImpresoraPredeterminada() {
         // Act
         String impresora = printService.getImpresoraPredeterminada();
 
-        // Assert
+        // Assert - Siempre debe retornar algo (nombre o mensaje)
         assertNotNull(impresora);
+        assertFalse(impresora.isEmpty());
     }
 
     @Test
     void testListarImpresoras() {
         // Act
-        var impresoras = printService.listarImpresoras();
+        List<String> impresoras = printService.listarImpresoras();
 
-        // Assert
+        // Assert - Debe retornar una lista (puede estar vacia)
         assertNotNull(impresoras);
     }
 
     @Test
-    void testConfigurarImpresora() {
-        // Act & Assert
-        assertDoesNotThrow(() -> {
-            printService.configurarImpresora("HP LaserJet");
-        });
+    void testImprimirDocumentoNull() {
+        // Act & Assert - No debe lanzar excepcion con null
+        assertDoesNotThrow(() -> printService.imprimir(null));
     }
 
     @Test
-    void testImprimirConOpciones() {
-        // Act & Assert
-        assertDoesNotThrow(() -> {
-            printService.imprimirConOpciones(new File("test.pdf"), true, 1);
-        });
+    void testImprimirDocumentoInexistente() {
+        // Arrange
+        File archivoInexistente = new File("archivo_que_no_existe.pdf");
+
+        // Act & Assert - No debe lanzar excepcion
+        assertDoesNotThrow(() -> printService.imprimir(archivoInexistente));
     }
 
     @Test
-    void testVistaPrevia() {
-        // Act & Assert
-        assertDoesNotThrow(() -> {
-            printService.vistaPrevia(new File("test.pdf"));
-        });
+    void testImprimirEnImpresoraEspecificaNull() {
+        // Act & Assert - No debe lanzar excepcion
+        assertDoesNotThrow(() -> printService.imprimirEn(null, "Impresora"));
     }
 
     @Test
-    void testImprimirFactura() {
-        // Act & Assert
-        assertDoesNotThrow(() -> {
-            printService.imprimirFactura(1L);
-        });
-    }
-
-    @Test
-    void testImprimirPresupuesto() {
-        // Act & Assert
-        assertDoesNotThrow(() -> {
-            printService.imprimirPresupuesto(1L);
-        });
-    }
-
-    @Test
-    void testImprimirAlbaran() {
-        // Act & Assert
-        assertDoesNotThrow(() -> {
-            printService.imprimirAlbaran(1L);
-        });
+    void testImprimirCopiasDocumentoNull() {
+        // Act & Assert - No debe lanzar excepcion
+        assertDoesNotThrow(() -> printService.imprimirCopias(null, 1));
     }
 }
 

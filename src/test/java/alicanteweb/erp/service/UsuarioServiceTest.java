@@ -47,7 +47,7 @@ class UsuarioServiceTest {
         Usuario usuario = new Usuario();
         usuario.setUsername("test_usuario_" + System.currentTimeMillis());
         usuario.setEmail("test" + System.currentTimeMillis() + "@test.com");
-        usuario.setNombreCompleto("Usuario Test");
+        usuario.setNombre("Usuario Test");
         usuario.setRol(rolTest);
 
         // When
@@ -68,7 +68,7 @@ class UsuarioServiceTest {
         Usuario usuario = new Usuario();
         usuario.setUsername("test_login_" + System.currentTimeMillis());
         usuario.setEmail("testlogin" + System.currentTimeMillis() + "@test.com");
-        usuario.setNombreCompleto("Test Login");
+        usuario.setNombre("Test Login");
         usuario.setRol(rolTest);
 
         String password = "password123";
@@ -89,7 +89,7 @@ class UsuarioServiceTest {
         Usuario usuario = new Usuario();
         usuario.setUsername("test_bloqueo_" + System.currentTimeMillis());
         usuario.setEmail("testbloqueo" + System.currentTimeMillis() + "@test.com");
-        usuario.setNombreCompleto("Test Bloqueo");
+        usuario.setNombre("Test Bloqueo");
         usuario.setRol(rolTest);
 
         Usuario creado = usuarioService.crearUsuario(usuario, "password123");
@@ -112,7 +112,7 @@ class UsuarioServiceTest {
         Usuario usuario = new Usuario();
         usuario.setUsername(username);
         usuario.setEmail("testbuscar" + System.currentTimeMillis() + "@test.com");
-        usuario.setNombreCompleto("Test Buscar");
+        usuario.setNombre("Test Buscar");
         usuario.setRol(rolTest);
 
         usuarioService.crearUsuario(usuario, "password123");
@@ -128,25 +128,22 @@ class UsuarioServiceTest {
     @Test
     void testGenerarTokenRecuperacion() {
         // Given
+        String username = "test_token_" + System.currentTimeMillis();
         Usuario usuario = new Usuario();
-        usuario.setUsername("test_token_" + System.currentTimeMillis());
-        String email = "testtoken" + System.currentTimeMillis() + "@test.com";
-        usuario.setEmail(email);
-        usuario.setNombreCompleto("Test Token");
+        usuario.setUsername(username);
+        usuario.setEmail("testtoken" + System.currentTimeMillis() + "@test.com");
+        usuario.setNombre("Test Token");
         usuario.setRol(rolTest);
 
         usuarioService.crearUsuario(usuario, "password123");
 
         // When
-        String token = usuarioService.generarTokenRecuperacion(email);
+        Usuario conToken = usuarioService.generarTokenRecuperacion(username);
 
         // Then
-        assertNotNull(token);
-        assertFalse(token.isEmpty());
-
-        // Verificar que el token se guardó
-        Usuario conToken = usuarioRepository.findByEmail(email).orElseThrow();
-        assertEquals(token, conToken.getTokenRecuperacion());
+        assertNotNull(conToken);
+        assertNotNull(conToken.getTokenRecuperacion());
+        assertFalse(conToken.getTokenRecuperacion().isEmpty());
         assertNotNull(conToken.getFechaExpiracionToken());
     }
 
@@ -156,7 +153,7 @@ class UsuarioServiceTest {
         Usuario usuario = new Usuario();
         usuario.setUsername("test_cambio_" + System.currentTimeMillis());
         usuario.setEmail("testcambio" + System.currentTimeMillis() + "@test.com");
-        usuario.setNombreCompleto("Test Cambio");
+        usuario.setNombre("Test Cambio");
         usuario.setRol(rolTest);
 
         String oldPassword = "password123";
@@ -179,7 +176,7 @@ class UsuarioServiceTest {
         Usuario usuario = new Usuario();
         usuario.setUsername("test_eliminar_" + System.currentTimeMillis());
         usuario.setEmail("testeliminar" + System.currentTimeMillis() + "@test.com");
-        usuario.setNombreCompleto("Test Eliminar");
+        usuario.setNombre("Test Eliminar");
         usuario.setRol(rolTest);
 
         Usuario creado = usuarioService.crearUsuario(usuario, "password123");

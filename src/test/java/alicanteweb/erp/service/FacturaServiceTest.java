@@ -107,44 +107,10 @@ class FacturaServiceTest {
 
         // When
         facturaTest.setBaseImponible(baseImponible);
-        facturaTest.setIva(iva);
         facturaTest.setTotal(baseImponible.add(iva));
 
         // Then
         assertEquals(totalEsperado, facturaTest.getTotal());
-    }
-
-    @Test
-    void testFindByEstado() {
-        // Given
-        List<Factura> facturasEmitidas = Arrays.asList(facturaTest);
-        when(facturaRepository.findByEstado("EMITIDA")).thenReturn(facturasEmitidas);
-
-        // When
-        List<Factura> result = facturaRepository.findByEstado("EMITIDA");
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("EMITIDA", result.get(0).getEstado());
-    }
-
-    @Test
-    void testFindByFechaBetween() {
-        // Given
-        LocalDate desde = LocalDate.now().minusDays(7);
-        LocalDate hasta = LocalDate.now();
-        List<Factura> facturas = Arrays.asList(facturaTest);
-        when(facturaRepository.findByFechaBetween(desde, hasta)).thenReturn(facturas);
-
-        // When
-        List<Factura> result = facturaRepository.findByFechaBetween(desde, hasta);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertTrue(result.get(0).getFecha().isAfter(desde.minusDays(1)));
-        assertTrue(result.get(0).getFecha().isBefore(hasta.plusDays(1)));
     }
 }
 

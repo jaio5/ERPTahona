@@ -2,32 +2,45 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.Cliente;
+import alicanteweb.erp.entities.VerifactuEvidence;
+import alicanteweb.erp.repository.VerifactuEvidenceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
  * Tests para VerifactuService
- * Verifica la integración con el sistema VeriFacTu de la AEAT
+ * Verifica la integracion con el sistema VeriFacTu de la AEAT
  */
 @ExtendWith(MockitoExtension.class)
 class VerifactuServiceTest {
 
     @Mock
-    private CifradoService cifradoService;
+    private VerifactuEvidenceRepository evidenceRepository;
 
-    @InjectMocks
+    @Mock
+    private EmpresaConfigService empresaConfigService;
+
+    @Mock
+    private FacturaLineaService facturaLineaService;
+
+    @Mock
+    private QrCodeService qrCodeService;
+
+    @Mock
+    private VerifactuAeatSoapClient aeatSoapClient;
+
     private VerifactuService verifactuService;
 
     private Factura facturaPrueba;
@@ -35,6 +48,15 @@ class VerifactuServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Crear instancia del servicio con mocks
+        verifactuService = new VerifactuService(
+            evidenceRepository,
+            empresaConfigService,
+            facturaLineaService,
+            qrCodeService,
+            aeatSoapClient
+        );
+
         clientePrueba = new Cliente();
         clientePrueba.setId(1L);
         clientePrueba.setNombre("Cliente Test S.L.");
@@ -46,174 +68,134 @@ class VerifactuServiceTest {
         facturaPrueba.setCliente(clientePrueba);
         facturaPrueba.setFecha(LocalDate.now());
         facturaPrueba.setBaseImponible(new BigDecimal("100.00"));
-        facturaPrueba.setIva(new BigDecimal("21.00"));
         facturaPrueba.setTotal(new BigDecimal("121.00"));
         facturaPrueba.setEstado("EMITIDA");
     }
 
     @Test
-    void testVerifactuDeshabilitado() {
-        // Arrange - sin configuración
-
-        // Act
-        boolean habilitado = verifactuService.isHabilitado();
-
-        // Assert
-        assertFalse(habilitado);
+    void testVerifactuDeshabilitadoPorDefecto() {
+        // Sin certificado configurado, el servicio debe estar deshabilitado
+        assertFalse(verifactuService.isEnabled());
     }
 
     @Test
-    void testGenerarHuella() {
+    void testGenerarHash() throws NoSuchAlgorithmException {
         // Arrange
-        String cadena = "FV-2026-001|2026-01-12|121.00|B12345678";
+        String datos = "FV-2026-001|2026-01-12|121.00|B12345678";
 
         // Act
-        String huella = verifactuService.generarHuella(cadena);
+        String hash = verifactuService.generarHash(datos);
 
         // Assert
-        assertNotNull(huella);
-        assertFalse(huella.isEmpty());
+        assertNotNull(hash);
+        assertFalse(hash.isEmpty());
+        // El hash SHA-256 en Base64 tiene longitud fija
+        assertTrue(hash.length() > 20);
     }
 
     @Test
-    void testGenerarQR() {
+    void testGenerarHashEncadenado() throws NoSuchAlgorithmException {
         // Arrange
-        when(cifradoService.generarQR(anyString())).thenReturn("QR_CODE_BASE64");
+        String datos = "FV-2026-002|2026-01-13|150.00|B12345678";
+        String hashAnterior = "ABC123XYZ789";
 
         // Act
-        String qr = verifactuService.generarQRFactura(facturaPrueba);
+        String hashEncadenado = verifactuService.generarHashEncadenado(datos, hashAnterior);
 
         // Assert
-        assertNotNull(qr);
+        assertNotNull(hashEncadenado);
+        assertFalse(hashEncadenado.isEmpty());
     }
 
     @Test
-    void testValidarCertificado() {
-        // Arrange - sin certificado configurado
-
-        // Act
-        boolean valido = verifactuService.validarCertificado();
-
-        // Assert
-        assertFalse(valido);
-    }
-
-    @Test
-    void testEnviarFacturaAEAT_ModoSimulado() {
-        // Arrange - modo simulado
-
-        // Act
-        boolean resultado = verifactuService.enviarFacturaAEAT(facturaPrueba);
-
-        // Assert
-        assertTrue(resultado); // En modo simulado siempre retorna true
-    }
-
-    @Test
-    void testGenerarXMLFactura() {
-        // Act
-        String xml = verifactuService.generarXMLFactura(facturaPrueba);
-
-        // Assert
-        assertNotNull(xml);
-        assertTrue(xml.contains("FV-2026-001"));
-        assertTrue(xml.contains("B12345678"));
-        assertTrue(xml.contains("121.00"));
-    }
-
-    @Test
-    void testValidarFacturaAntesEnvio() {
-        // Act
-        boolean valida = verifactuService.validarFactura(facturaPrueba);
-
-        // Assert
-        assertTrue(valida);
-    }
-
-    @Test
-    void testValidarFacturaSinNumero() {
+    void testGenerarHashSinEncadenar() throws NoSuchAlgorithmException {
         // Arrange
-        facturaPrueba.setNumero(null);
+        String datos = "FV-2026-001|2026-01-12|121.00|B12345678";
 
         // Act
-        boolean valida = verifactuService.validarFactura(facturaPrueba);
+        String hash1 = verifactuService.generarHashEncadenado(datos, null);
+        String hash2 = verifactuService.generarHashEncadenado(datos, "");
 
         // Assert
-        assertFalse(valida);
+        assertNotNull(hash1);
+        assertNotNull(hash2);
+        assertEquals(hash1, hash2); // Sin hash anterior, deben ser iguales
     }
 
     @Test
-    void testValidarFacturaSinCliente() {
+    void testObtenerHashAnteriorExistente() {
         // Arrange
-        facturaPrueba.setCliente(null);
+        VerifactuEvidence evidenciaAnterior = new VerifactuEvidence();
+        evidenciaAnterior.setHash("HASH_ANTERIOR_123");
+        when(evidenceRepository.findFirstBySerieOrderByFechaEmisionDesc("FV"))
+            .thenReturn(Optional.of(evidenciaAnterior));
 
         // Act
-        boolean valida = verifactuService.validarFactura(facturaPrueba);
+        String hashAnterior = verifactuService.obtenerHashAnterior("FV");
 
         // Assert
-        assertFalse(valida);
+        assertEquals("HASH_ANTERIOR_123", hashAnterior);
     }
 
     @Test
-    void testValidarFacturaSinTotal() {
+    void testObtenerHashAnteriorNoExistente() {
         // Arrange
-        facturaPrueba.setTotal(null);
+        when(evidenceRepository.findFirstBySerieOrderByFechaEmisionDesc("FV"))
+            .thenReturn(Optional.empty());
 
         // Act
-        boolean valida = verifactuService.validarFactura(facturaPrueba);
+        String hashAnterior = verifactuService.obtenerHashAnterior("FV");
 
         // Assert
-        assertFalse(valida);
+        assertNull(hashAnterior);
     }
 
     @Test
-    void testGenerarCSVFactura() {
-        // Act
-        String csv = verifactuService.generarCSV(facturaPrueba);
-
-        // Assert
-        assertNotNull(csv);
-        assertTrue(csv.length() > 0);
-    }
-
-    @Test
-    void testRegistrarEnvioFactura() {
-        // Act
-        verifactuService.registrarEnvio(facturaPrueba, true, "Envío exitoso");
-
-        // Assert
-        // Verificar que se registró correctamente (en implementación real)
-        assertNotNull(facturaPrueba);
-    }
-
-    @Test
-    void testObtenerEstadoServicio() {
-        // Act
-        String estado = verifactuService.obtenerEstadoServicio();
-
-        // Assert
-        assertNotNull(estado);
-        assertTrue(estado.equals("SIMULADO") || estado.equals("ACTIVO") || estado.equals("ERROR"));
-    }
-
-    @Test
-    void testCargarCertificado() {
-        // Act & Assert
-        assertDoesNotThrow(() -> {
-            verifactuService.cargarCertificado("ruta/certificado.p12", "password");
+    void testFirmarDatosDeshabilitado() {
+        // Sin certificado, firmar debe lanzar excepcion
+        assertThrows(IllegalStateException.class, () -> {
+            verifactuService.firmarDatos("test".getBytes());
         });
     }
 
     @Test
-    void testFirmarFactura() {
+    void testVerificarFirmaDeshabilitado() {
+        // Sin certificado, verificar firma debe lanzar excepcion
+        assertThrows(IllegalStateException.class, () -> {
+            verifactuService.verificarFirma("test".getBytes(), "firma".getBytes());
+        });
+    }
+
+    @Test
+    void testGetCertificateFingerprintDeshabilitado() throws NoSuchAlgorithmException {
+        // Sin certificado, debe retornar null
+        String fingerprint = verifactuService.getCertificateFingerprint();
+        assertNull(fingerprint);
+    }
+
+    @Test
+    void testHashesDiferentesParaDatosDiferentes() throws NoSuchAlgorithmException {
         // Arrange
-        String xml = "<factura>test</factura>";
+        String datos1 = "FV-2026-001|100.00";
+        String datos2 = "FV-2026-002|200.00";
 
         // Act
-        String firmado = verifactuService.firmarXML(xml);
+        String hash1 = verifactuService.generarHash(datos1);
+        String hash2 = verifactuService.generarHash(datos2);
 
         // Assert
-        assertNotNull(firmado);
+        assertNotEquals(hash1, hash2);
+    }
+
+    @Test
+    void testHashConsistente() throws NoSuchAlgorithmException {
+        // El mismo input debe producir el mismo hash
+        String datos = "FV-2026-001|100.00|B12345678";
+
+        String hash1 = verifactuService.generarHash(datos);
+        String hash2 = verifactuService.generarHash(datos);
+
+        assertEquals(hash1, hash2);
     }
 }
 

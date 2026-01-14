@@ -205,7 +205,18 @@ public class CajaController {
             return;
         }
         log.info("Ver movimiento: {}", movimiento.getConcepto());
-        mostrarAlerta("Función en desarrollo: Ver detalle del movimiento");
+        mostrarAlerta("Funcion en desarrollo: Ver detalle del movimiento");
+    }
+
+    @FXML
+    public void onEditar() {
+        MovimientoCaja movimiento = tableMovimientos.getSelectionModel().getSelectedItem();
+        if (movimiento == null) {
+            mostrarAlerta("Selecciona un movimiento para editar");
+            return;
+        }
+        log.info("Editar movimiento: {}", movimiento.getConcepto());
+        mostrarAlerta("Funcion en desarrollo: Editar movimiento");
     }
 
     @FXML
