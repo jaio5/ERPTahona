@@ -25,6 +25,8 @@
             <TableColumn fx:id="colId" text="ID" minWidth="40" maxWidth="60"/>
             <TableColumn fx:id="colCodigo" text="Código" minWidth="70" maxWidth="100"/>
             <TableColumn fx:id="colNombre" text="Nombre" minWidth="200"/>
+            <TableColumn fx:id="colCapacidad" text="Capacidad" minWidth="100" maxWidth="120"/>
+            <TableColumn fx:id="colDisponible" text="Disponible" minWidth="100" maxWidth="120"/>
             <TableColumn fx:id="colActivo" text="Activo" minWidth="60" maxWidth="80"/>
         </columns>
     </TableView>

@@ -74,6 +74,9 @@ public class Articulo {
     @Column(name = "activo")
     private Boolean activo = true;
 
+    @Column(name = "punto_pedido", precision = 10, scale = 2)
+    private BigDecimal puntoPedido;
+
     @OneToMany(mappedBy = "articulo")
     private Set<AlbaranVentaLinea> albaranVentaLineas = new LinkedHashSet<>();
 
@@ -83,61 +86,5 @@ public class Articulo {
     @OneToMany(mappedBy = "articulo")
     private Set<PedidoLinea> pedidoLineas = new LinkedHashSet<>();
 
-    // Getters y Setters explícitos
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getCodigo() { return codigo; }
-    public void setCodigo(String codigo) { this.codigo = codigo; }
-
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-
-    public String getCodigoBarras() { return codigoBarras; }
-    public void setCodigoBarras(String codigoBarras) { this.codigoBarras = codigoBarras; }
-
-    public String getCategoria() { return categoria; }
-    public void setCategoria(String categoria) { this.categoria = categoria; }
-
-    public String getFamilia() { return familia; }
-    public void setFamilia(String familia) { this.familia = familia; }
-
-    public String getUnidad() { return unidad; }
-    public void setUnidad(String unidad) { this.unidad = unidad; }
-
-    public BigDecimal getIva() { return iva; }
-    public void setIva(BigDecimal iva) { this.iva = iva; }
-
-    public BigDecimal getPvp() { return pvp; }
-    public void setPvp(BigDecimal pvp) { this.pvp = pvp; }
-
-    public BigDecimal getCoste() { return coste; }
-    public void setCoste(BigDecimal coste) { this.coste = coste; }
-
-    public BigDecimal getStock() { return stock; }
-    public void setStock(BigDecimal stock) { this.stock = stock; }
-
-    public BigDecimal getStockMinimo() { return stockMinimo; }
-    public void setStockMinimo(BigDecimal stockMinimo) { this.stockMinimo = stockMinimo; }
-
-    public BigDecimal getStockMaximo() { return stockMaximo; }
-    public void setStockMaximo(BigDecimal stockMaximo) { this.stockMaximo = stockMaximo; }
-
-    public Boolean getControlStock() { return controlStock; }
-    public void setControlStock(Boolean controlStock) { this.controlStock = controlStock; }
-
-    public Boolean getActivo() { return activo; }
-    public void setActivo(Boolean activo) { this.activo = activo; }
-
-    public Set<AlbaranVentaLinea> getAlbaranVentaLineas() { return albaranVentaLineas; }
-    public void setAlbaranVentaLineas(Set<AlbaranVentaLinea> albaranVentaLineas) { this.albaranVentaLineas = albaranVentaLineas; }
-
-    public Set<FacturaLinea> getFacturaLineas() { return facturaLineas; }
-    public void setFacturaLineas(Set<FacturaLinea> facturaLineas) { this.facturaLineas = facturaLineas; }
-
-    public Set<PedidoLinea> getPedidoLineas() { return pedidoLineas; }
-    public void setPedidoLineas(Set<PedidoLinea> pedidoLineas) { this.pedidoLineas = pedidoLineas; }
+    // Lombok @Data genera getters/setters automáticamente
 }

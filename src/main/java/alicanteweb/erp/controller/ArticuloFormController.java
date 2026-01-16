@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -295,8 +294,7 @@ public class ArticuloFormController {
         txtStockMinimo.setText(articulo.getStockMinimo() != null ? articulo.getStockMinimo().toString() : "0");
         txtStockMaximo.setText(articulo.getStockMaximo() != null ? articulo.getStockMaximo().toString() : "0");
         txtStockActual.setText(articulo.getStock() != null ? articulo.getStock().toString() : "0");
-        // txtPuntoPedido.setText(articulo.getPuntoPedido() != null ? articulo.getPuntoPedido().toString() : "0");
-        // Campo puntoPedido no existe en la entidad Articulo
+        txtPuntoPedido.setText(articulo.getPuntoPedido() != null ? articulo.getPuntoPedido().toString() : "0");
 
         chkControlStock.setSelected(articulo.getControlStock() != null && articulo.getControlStock());
         chkActivo.setSelected(articulo.getActivo() != null ? articulo.getActivo() : true);
@@ -376,8 +374,7 @@ public class ArticuloFormController {
             articuloActual.setStockMinimo(new BigDecimal(txtStockMinimo.getText()));
             articuloActual.setStockMaximo(new BigDecimal(txtStockMaximo.getText()));
             articuloActual.setStock(new BigDecimal(txtStockActual.getText()));
-            // articuloActual.setPuntoPedido(new BigDecimal(txtPuntoPedido.getText()));
-            // Campo puntoPedido no existe en la entidad Articulo
+            articuloActual.setPuntoPedido(new BigDecimal(txtPuntoPedido.getText()));
             articuloActual.setControlStock(chkControlStock.isSelected());
 
             // Estado
@@ -511,4 +508,3 @@ public class ArticuloFormController {
         });
     }
 }
-

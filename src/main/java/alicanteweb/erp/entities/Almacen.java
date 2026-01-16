@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @Entity
 @Table(name = "almacenes")
@@ -26,36 +28,21 @@ public class Almacen {
     @Column(name = "activo")
     private Boolean activo = true;
 
-    // Getters y Setters explícitos
-    public Long getId() {
-        return id;
-    }
+    // Nuevos campos persistentes añadidos
+    @Column(name = "descripcion", length = 1000)
+    private String descripcion;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Column(name = "capacidad", precision = 10, scale = 2)
+    private BigDecimal capacidad;
 
-    public String getCodigo() {
-        return codigo;
-    }
+    @Column(name = "disponible", precision = 10, scale = 2)
+    private BigDecimal disponible;
 
-    public void setCodigo(String codigo) {
-        this.codigo = codigo;
-    }
+    @Column(name = "localidad", length = 255)
+    private String localidad;
 
-    public String getNombre() {
-        return nombre;
-    }
+    @Column(name = "responsable", length = 255)
+    private String responsable;
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public Boolean getActivo() {
-        return activo;
-    }
-
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
-    }
+    // Lombok @Data generará getters/setters
 }

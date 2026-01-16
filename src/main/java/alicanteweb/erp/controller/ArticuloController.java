@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,7 +26,7 @@ public class ArticuloController extends BaseController<Articulo> {
     @FXML private TableColumn<Articulo, String> colNombre;
     @FXML private TableColumn<Articulo, BigDecimal> colPrecio;
     @FXML private TableColumn<Articulo, BigDecimal> colIVA;
-    @FXML private TableColumn<Articulo, Integer> colStock;
+    @FXML private TableColumn<Articulo, BigDecimal> colStock;
     @FXML private TableColumn<Articulo, Boolean> colActivo;
 
     @FXML private TextField txtBuscar;
@@ -46,11 +47,39 @@ public class ArticuloController extends BaseController<Articulo> {
         this.lblEstado = lblTotal;
 
         // Configurar columnas
+        DecimalFormat df = new DecimalFormat("#,##0.00");
         if (colCodigo != null) colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
         if (colNombre != null) colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        if (colPrecio != null) colPrecio.setCellValueFactory(new PropertyValueFactory<>("pvp"));
-        if (colIVA != null) colIVA.setCellValueFactory(new PropertyValueFactory<>("iva"));
-        if (colStock != null) colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
+        if (colPrecio != null) {
+            colPrecio.setCellValueFactory(new PropertyValueFactory<>("pvp"));
+            colPrecio.setCellFactory(c -> new TableCell<Articulo, BigDecimal>() {
+                @Override
+                protected void updateItem(BigDecimal item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : df.format(item));
+                }
+            });
+        }
+        if (colIVA != null) {
+            colIVA.setCellValueFactory(new PropertyValueFactory<>("iva"));
+            colIVA.setCellFactory(c -> new TableCell<Articulo, BigDecimal>() {
+                @Override
+                protected void updateItem(BigDecimal item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : df.format(item));
+                }
+            });
+        }
+        if (colStock != null) {
+            colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
+            colStock.setCellFactory(c -> new TableCell<Articulo, BigDecimal>() {
+                @Override
+                protected void updateItem(BigDecimal item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : df.format(item));
+                }
+            });
+        }
         if (colActivo != null) colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
 
         // Aplicar estilo a la tabla

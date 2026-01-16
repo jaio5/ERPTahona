@@ -47,30 +47,6 @@ public class AlbaranVenta {
     @OneToMany(mappedBy = "albaran", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AlbaranVentaLinea> albaranVentaLineas = new LinkedHashSet<>();
 
-    // Getters y Setters explícitos
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getNumero() { return numero; }
-    public void setNumero(String numero) { this.numero = numero; }
-
-    public LocalDate getFecha() { return fecha; }
-    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
-
-    public Cliente getCliente() { return cliente; }
-    public void setCliente(Cliente cliente) { this.cliente = cliente; }
-
-    public Almacen getAlmacen() { return almacen; }
-    public void setAlmacen(Almacen almacen) { this.almacen = almacen; }
-
-    public String getObservaciones() { return observaciones; }
-    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
-
-    public BigDecimal getTotal() { return total; }
-    public void setTotal(BigDecimal total) { this.total = total; }
-
-    public Set<AlbaranVentaLinea> getAlbaranVentaLineas() { return albaranVentaLineas; }
-    public void setAlbaranVentaLineas(Set<AlbaranVentaLinea> albaranVentaLineas) { this.albaranVentaLineas = albaranVentaLineas; }
 
     /**
      * Alias para compatibilidad - getLineas() retorna albaranVentaLineas

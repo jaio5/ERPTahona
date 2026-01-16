@@ -25,11 +25,12 @@ public class AsientoContableController {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @FXML private TableView<AsientoContable> tableAsientos;
-    @FXML private TableColumn<AsientoContable, Integer> colNumero;
+    @FXML private TableColumn<AsientoContable, String> colNumero; // numero es String en la entidad
     @FXML private TableColumn<AsientoContable, LocalDate> colFecha;
     @FXML private TableColumn<AsientoContable, String> colConcepto;
     @FXML private TableColumn<AsientoContable, String> colDebe;
     @FXML private TableColumn<AsientoContable, String> colHaber;
+    @FXML private TableColumn<AsientoContable, String> colDescuadre; // añadido
 
     @FXML private TextField txtBuscar;
     @FXML private DatePicker dpFechaDesde;
@@ -65,7 +66,7 @@ public class AsientoContableController {
         if (colFecha != null) {
             colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
             // Formatear fecha
-            colFecha.setCellFactory(column -> new TableCell<AsientoContable, LocalDate>() {
+            colFecha.setCellFactory(column -> new TableCell<>() {
                 @Override
                 protected void updateItem(LocalDate item, boolean empty) {
                     super.updateItem(item, empty);
@@ -94,6 +95,17 @@ public class AsientoContableController {
                 return new SimpleStringProperty(String.format("%.2f €", totalHaber));
             });
         }
+        if (colDescuadre != null) {
+            colDescuadre.setCellValueFactory(cellData -> {
+                AsientoContable asiento = cellData.getValue();
+                BigDecimal desc = asiento.getDescuadre();
+                if (desc == null) {
+                    asiento.calcularDescuadre();
+                    desc = asiento.getDescuadre();
+                }
+                return new SimpleStringProperty(String.format("%.2f €", desc != null ? desc : BigDecimal.ZERO));
+            });
+        }
     }
 
     private void cargarDatos() {
@@ -120,7 +132,7 @@ public class AsientoContableController {
                 String search = busqueda.toLowerCase();
                 asientos = asientos.stream()
                     .filter(a -> (a.getConcepto() != null && a.getConcepto().toLowerCase().contains(search)) ||
-                                (a.getNumero() != null && a.getNumero().toString().contains(search)))
+                                (a.getNumero() != null && a.getNumero().contains(search)))
                     .toList();
             }
 
@@ -155,7 +167,7 @@ public class AsientoContableController {
                 String search = busqueda.toLowerCase();
                 asientos = asientos.stream()
                     .filter(a -> (a.getConcepto() != null && a.getConcepto().toLowerCase().contains(search)) ||
-                                (a.getNumero() != null && a.getNumero().toString().contains(search)))
+                                (a.getNumero() != null && a.getNumero().contains(search)))
                     .toList();
             }
 
@@ -194,7 +206,7 @@ public class AsientoContableController {
         boolean cuadrado = asientoContableService.validarAsiento(asiento);
 
         String info = String.format(
-            "Asiento Nº: %d\n" +
+            "Asiento Nº: %s\n" +
             "Fecha: %s\n" +
             "Concepto: %s\n\n" +
             "Total Debe: %.2f €\n" +
@@ -293,4 +305,3 @@ public class AsientoContableController {
         return result.isPresent() && result.get() == ButtonType.OK;
     }
 }
-

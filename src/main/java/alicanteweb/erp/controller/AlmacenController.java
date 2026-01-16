@@ -7,11 +7,13 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.paint.Color;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
+import java.text.DecimalFormat;
 
 /**
  * Controlador para la gestión de Almacenes
@@ -21,11 +23,11 @@ public class AlmacenController {
     private static final Logger log = LoggerFactory.getLogger(AlmacenController.class);
 
     @FXML private TableView<Almacen> tableAlmacenes;
+    @FXML private TableColumn<Almacen, Long> colId;
     @FXML private TableColumn<Almacen, String> colCodigo;
     @FXML private TableColumn<Almacen, String> colNombre;
-    @FXML private TableColumn<Almacen, String> colDireccion;
-    @FXML private TableColumn<Almacen, String> colPoblacion;
-    @FXML private TableColumn<Almacen, String> colProvincia;
+    @FXML private TableColumn<Almacen, String> colCapacidad;
+    @FXML private TableColumn<Almacen, String> colDisponible;
     @FXML private TableColumn<Almacen, Boolean> colActivo;
 
     @FXML private TextField txtBuscar;
@@ -54,36 +56,49 @@ public class AlmacenController {
     }
 
     private void configurarColumnas() {
+        DecimalFormat df = new DecimalFormat("#,##0.00");
+
+        if (colId != null) {
+            colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        }
         if (colCodigo != null) {
             colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
         }
         if (colNombre != null) {
             colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         }
-        if (colDireccion != null) {
-            // La entidad actual no tiene dirección, mostrar "-"
-            colDireccion.setCellValueFactory(cellData -> new SimpleStringProperty("-"));
+        if (colCapacidad != null) {
+            colCapacidad.setCellValueFactory(cellData -> {
+                var a = cellData.getValue();
+                if (a.getCapacidad() != null) {
+                    return new SimpleStringProperty(df.format(a.getCapacidad()));
+                }
+                return new SimpleStringProperty("");
+            });
         }
-        if (colPoblacion != null) {
-            // La entidad actual no tiene población, mostrar "-"
-            colPoblacion.setCellValueFactory(cellData -> new SimpleStringProperty("-"));
-        }
-        if (colProvincia != null) {
-            // La entidad actual no tiene provincia, mostrar "-"
-            colProvincia.setCellValueFactory(cellData -> new SimpleStringProperty("-"));
+        if (colDisponible != null) {
+            colDisponible.setCellValueFactory(cellData -> {
+                var a = cellData.getValue();
+                if (a.getDisponible() != null) {
+                    return new SimpleStringProperty(df.format(a.getDisponible()));
+                }
+                return new SimpleStringProperty("");
+            });
         }
         if (colActivo != null) {
             colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
             // Formatear con emojis
-            colActivo.setCellFactory(column -> new TableCell<Almacen, Boolean>() {
+            colActivo.setCellFactory(column -> new TableCell<>() {
                 @Override
                 protected void updateItem(Boolean item, boolean empty) {
                     super.updateItem(item, empty);
                     if (empty || item == null) {
                         setText(null);
+                        setTextFill(null);
                     } else {
                         setText(item ? "✅ Activo" : "❌ Inactivo");
-                        setStyle(item ? "-fx-text-fill: green;" : "-fx-text-fill: red;");
+                        // Usar setTextFill en lugar de setStyle para evitar sobreescritura de CSS
+                        setTextFill(item ? Color.web("#2e7d32") : Color.web("#c62828"));
                     }
                 }
             });
@@ -166,7 +181,7 @@ public class AlmacenController {
             try {
                 almacenService.deleteById(almacen.getId());
                 cargarDatos();
-                mostrarExito("Almacén eliminado correctamente");
+                mostrarExito();
             } catch (Exception e) {
                 log.error("Error eliminando almacén", e);
                 mostrarError("Error al eliminar: " + e.getMessage());
@@ -187,10 +202,10 @@ public class AlmacenController {
         alert.showAndWait();
     }
 
-    private void mostrarExito(String msg) {
+    private void mostrarExito() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Éxito");
-        alert.setContentText(msg);
+        alert.setContentText("Almacén eliminado correctamente");
         alert.showAndWait();
     }
 
@@ -209,4 +224,3 @@ public class AlmacenController {
         return result.isPresent() && result.get() == ButtonType.OK;
     }
 }
-
