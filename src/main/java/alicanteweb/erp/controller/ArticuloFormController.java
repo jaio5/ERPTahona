@@ -2,6 +2,7 @@ package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.service.ArticuloService;
+import alicanteweb.erp.ui.Dialogs;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -11,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 /**
  * Controlador para el formulario de creación/edición de artículos
@@ -254,7 +254,7 @@ public class ArticuloFormController {
         Platform.runLater(() -> {
             if (modoEdicion) {
                 lblTitulo.setText("Editar Artículo");
-                cargarDatosArticulo(articulo);
+                if (articulo != null) cargarDatosArticulo(articulo);
             } else {
                 lblTitulo.setText("Nuevo Artículo");
                 limpiarFormulario();
@@ -399,15 +399,8 @@ public class ArticuloFormController {
     @FXML
     public void onCancelar() {
         if (formularioModificado()) {
-            Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-            confirmacion.setTitle("Confirmar");
-            confirmacion.setHeaderText("¿Descartar cambios?");
-            confirmacion.setContentText("Hay cambios sin guardar. ¿Desea salir sin guardar?");
-
-            Optional<ButtonType> resultado = confirmacion.showAndWait();
-            if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
-                cerrarVentana();
-            }
+            boolean ok = Dialogs.showConfirm("Hay cambios sin guardar. ¿Desea salir sin guardar?");
+            if (ok) cerrarVentana();
         } else {
             cerrarVentana();
         }
@@ -460,8 +453,9 @@ public class ArticuloFormController {
             errores.append("• Los valores de stock no son válidos\n");
         }
 
-        if (errores.length() > 0) {
-            mostrarAlerta("Por favor, corrija los siguientes errores:\n\n" + errores.toString());
+        String erroresStr = errores.toString();
+        if (!erroresStr.isEmpty()) {
+            Dialogs.showWarn("Por favor, corrija los siguientes errores:\n\n" + erroresStr);
             return false;
         }
 
@@ -479,32 +473,14 @@ public class ArticuloFormController {
     }
 
     private void mostrarAlerta(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Atención");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
+        Dialogs.showWarn(msg);
     }
 
     private void mostrarExito(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Éxito");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
+        Dialogs.showInfo(msg);
     }
 
     private void mostrarError(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
+        Dialogs.showError(msg);
     }
 }

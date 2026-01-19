@@ -9,9 +9,9 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import alicanteweb.erp.ui.Dialogs;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * Controlador para el formulario de creación/edición de clientes
@@ -287,7 +287,7 @@ public class ClienteFormController {
                 guardado.getCodigo(),
                 guardado.getNombre());
 
-            mostrarExito(modoEdicion ?
+            Dialogs.showInfo(modoEdicion ?
                 "Cliente actualizado correctamente" :
                 "Cliente creado correctamente");
 
@@ -304,17 +304,17 @@ public class ClienteFormController {
             } else {
                 mensaje += "Datos duplicados o inválidos";
             }
-            mostrarError(mensaje);
+            Dialogs.showError(mensaje);
         } catch (jakarta.validation.ConstraintViolationException e) {
             log.error("❌ Error de validación de constraints", e);
             StringBuilder errores = new StringBuilder("Errores de validación:\n");
             e.getConstraintViolations().forEach(cv ->
                 errores.append("• ").append(cv.getMessage()).append("\n")
             );
-            mostrarError(errores.toString());
+            Dialogs.showError(errores.toString());
         } catch (Exception e) {
             log.error("❌ Error inesperado guardando cliente", e);
-            mostrarError("Error al guardar el cliente:\n" +
+            Dialogs.showError("Error al guardar el cliente:\n" +
                 e.getClass().getSimpleName() + ": " +
                 (e.getMessage() != null ? e.getMessage() : "Error desconocido") +
                 "\n\nRevise los logs para más detalles.");
@@ -324,15 +324,8 @@ public class ClienteFormController {
     @FXML
     public void onCancelar() {
         if (formularioModificado()) {
-            Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-            confirmacion.setTitle("Confirmar");
-            confirmacion.setHeaderText("¿Descartar cambios?");
-            confirmacion.setContentText("Hay cambios sin guardar. ¿Desea salir sin guardar?");
-
-            Optional<ButtonType> resultado = confirmacion.showAndWait();
-            if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
-                cerrarVentana();
-            }
+            boolean ok = Dialogs.showConfirm("Hay cambios sin guardar. ¿Desea salir sin guardar?");
+            if (ok) cerrarVentana();
         } else {
             cerrarVentana();
         }
@@ -361,7 +354,7 @@ public class ClienteFormController {
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo panel direcciones", e);
-            mostrarError("Error al abrir direcciones: " + e.getMessage());
+            Dialogs.showError("Error al abrir direcciones: " + e.getMessage());
         }
     }
 
@@ -401,8 +394,8 @@ public class ClienteFormController {
             }
         }
 
-        if (errores.length() > 0) {
-            mostrarAlerta("Por favor, corrija los siguientes errores:\n\n" + errores.toString());
+        if (!errores.isEmpty()) {
+            Dialogs.showWarn("Por favor, corrija los siguientes errores:\n\n" + errores);
             return false;
         }
 
@@ -431,34 +424,4 @@ public class ClienteFormController {
         }
     }
 
-    private void mostrarAlerta(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Atención");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
-    }
-
-    private void mostrarExito(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Éxito");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
-    }
-
-    private void mostrarError(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
-    }
 }
-

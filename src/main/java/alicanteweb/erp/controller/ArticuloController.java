@@ -52,7 +52,7 @@ public class ArticuloController extends BaseController<Articulo> {
         if (colNombre != null) colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         if (colPrecio != null) {
             colPrecio.setCellValueFactory(new PropertyValueFactory<>("pvp"));
-            colPrecio.setCellFactory(c -> new TableCell<Articulo, BigDecimal>() {
+            colPrecio.setCellFactory(c -> new TableCell<>() {
                 @Override
                 protected void updateItem(BigDecimal item, boolean empty) {
                     super.updateItem(item, empty);
@@ -62,7 +62,7 @@ public class ArticuloController extends BaseController<Articulo> {
         }
         if (colIVA != null) {
             colIVA.setCellValueFactory(new PropertyValueFactory<>("iva"));
-            colIVA.setCellFactory(c -> new TableCell<Articulo, BigDecimal>() {
+            colIVA.setCellFactory(c -> new TableCell<>() {
                 @Override
                 protected void updateItem(BigDecimal item, boolean empty) {
                     super.updateItem(item, empty);
@@ -72,7 +72,7 @@ public class ArticuloController extends BaseController<Articulo> {
         }
         if (colStock != null) {
             colStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
-            colStock.setCellFactory(c -> new TableCell<Articulo, BigDecimal>() {
+            colStock.setCellFactory(c -> new TableCell<>() {
                 @Override
                 protected void updateItem(BigDecimal item, boolean empty) {
                     super.updateItem(item, empty);
@@ -284,11 +284,7 @@ public class ArticuloController extends BaseController<Articulo> {
         }
         info.append("Estado: ").append(seleccionado.getActivo() != null && seleccionado.getActivo() ? "Activo" : "Inactivo").append("\n");
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Detalle del Artículo");
-        alert.setHeaderText(seleccionado.getNombre());
-        alert.setContentText(info.toString());
-        alert.showAndWait();
+        mostrarInfo(info.toString());
     }
 }
 

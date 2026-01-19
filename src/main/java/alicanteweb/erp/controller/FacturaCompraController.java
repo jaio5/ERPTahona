@@ -7,15 +7,21 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.MouseEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Modality;
+import alicanteweb.erp.ErpLauncher;
+import org.springframework.context.ApplicationContext;
+import javafx.stage.Stage;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
+import alicanteweb.erp.ui.Dialogs;
 
 /**
  * Controlador para la gestión de Facturas de Compra
@@ -71,44 +77,6 @@ public class FacturaCompraController {
                 row.setOnMouseExited(event -> row.setStyle(""));
                 return row;
             });
-        }
-    }
-
-    /**
-     * Maneja el efecto hover de los botones
-     */
-    @FXML
-    public void handleButtonHover(MouseEvent event) {
-        if (event.getSource() instanceof Button button) {
-            String currentStyle = button.getStyle();
-            if (currentStyle.contains("#28a745")) {
-                button.setStyle(currentStyle.replace("#28a745", "#218838"));
-            } else if (currentStyle.contains("#007bff")) {
-                button.setStyle(currentStyle.replace("#007bff", "#0056b3"));
-            } else if (currentStyle.contains("#dc3545")) {
-                button.setStyle(currentStyle.replace("#dc3545", "#c82333"));
-            } else if (currentStyle.contains("#6c757d")) {
-                button.setStyle(currentStyle.replace("#6c757d", "#5a6268"));
-            }
-        }
-    }
-
-    /**
-     * Restaura el estilo original del botón
-     */
-    @FXML
-    public void handleButtonExit(MouseEvent event) {
-        if (event.getSource() instanceof Button button) {
-            String currentStyle = button.getStyle();
-            if (currentStyle.contains("#218838")) {
-                button.setStyle(currentStyle.replace("#218838", "#28a745"));
-            } else if (currentStyle.contains("#0056b3")) {
-                button.setStyle(currentStyle.replace("#0056b3", "#007bff"));
-            } else if (currentStyle.contains("#c82333")) {
-                button.setStyle(currentStyle.replace("#c82333", "#dc3545"));
-            } else if (currentStyle.contains("#5a6268")) {
-                button.setStyle(currentStyle.replace("#5a6268", "#6c757d"));
-            }
         }
     }
 
@@ -258,7 +226,7 @@ public class FacturaCompraController {
             log.info("Facturas de compra cargadas: {}", facturas.size());
         } catch (Exception e) {
             log.error("Error cargando facturas de compra", e);
-            mostrarError("Error al cargar facturas de compra: " + e.getMessage());
+            Dialogs.showError("Error al cargar facturas de compra: " + e.getMessage());
         }
     }
 
@@ -319,26 +287,53 @@ public class FacturaCompraController {
     @FXML
     public void onNuevo() {
         log.info("Crear nueva factura de compra");
-        mostrarAlerta("Función en desarrollo: Crear nueva factura de compra");
+        try {
+            ApplicationContext spring = ErpLauncher.getSpringContext();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/factura_compra_form.fxml"));
+            loader.setControllerFactory(spring::getBean);
+            Parent parent = loader.load();
+
+            Object controller = loader.getController();
+            // Intentar configurar modo creación (setFactura null)
+            try {
+                var m = controller.getClass().getMethod("setFactura", alicanteweb.erp.entities.FacturaCompra.class);
+                m.invoke(controller, (Object) null);
+            } catch (NoSuchMethodException ignored) {
+                // no pasa nada si no existe
+            }
+
+            Stage stage = new Stage();
+            stage.setTitle("Nueva Factura de Compra");
+            stage.setScene(new Scene(parent));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+
+            // Recargar datos
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario factura de compra", e);
+            Dialogs.showError("Error abriendo formulario: " + e.getMessage());
+        }
     }
 
     @FXML
     public void onVer() {
         FacturaCompra factura = tableFacturas.getSelectionModel().getSelectedItem();
         if (factura == null) {
-            mostrarAlerta("Selecciona una factura primero");
+            Dialogs.showWarn("Selecciona una factura primero");
             return;
         }
         log.info("Ver factura: {}", factura.getNumero());
 
-        String info = String.format(
-            "Factura: %s\n" +
-            "Fecha: %s\n" +
-            "Proveedor: %s\n" +
-            "Base Imponible: %.2f €\n" +
-            "IVA: %.2f €\n" +
-            "Total: %.2f €\n" +
-            "Estado: %s",
+        String info = String.format("""
+            Factura: %s
+            Fecha: %s
+            Proveedor: %s
+            Base Imponible: %.2f €
+            IVA: %.2f €
+            Total: %.2f €
+            Estado: %s
+            """,
             factura.getNumero(),
             factura.getFecha() != null ? factura.getFecha().format(DATE_FORMATTER) : "-",
             factura.getProveedor() != null ? factura.getProveedor().getNombre() : "-",
@@ -348,92 +343,80 @@ public class FacturaCompraController {
             factura.getEstado()
         );
 
-        mostrarInfo(info);
+        Dialogs.showInfo(info);
     }
 
     @FXML
     public void onEditar() {
         FacturaCompra factura = tableFacturas.getSelectionModel().getSelectedItem();
         if (factura == null) {
-            mostrarAlerta("Selecciona una factura para editar");
+            Dialogs.showWarn("Selecciona una factura para editar");
             return;
         }
         log.info("Editar factura: {}", factura.getNumero());
-        mostrarAlerta("Función en desarrollo: Editar factura");
+        try {
+            ApplicationContext spring = ErpLauncher.getSpringContext();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/ui/factura_compra_form.fxml"));
+            loader.setControllerFactory(spring::getBean);
+            Parent parent = loader.load();
+
+            Object controller = loader.getController();
+            // Intentar pasar la factura al formulario
+            try {
+                var m = controller.getClass().getMethod("setFactura", alicanteweb.erp.entities.FacturaCompra.class);
+                m.invoke(controller, factura);
+            } catch (NoSuchMethodException ignored) {
+                try {
+                    var m2 = controller.getClass().getMethod("setFacturaCompra", alicanteweb.erp.entities.FacturaCompra.class);
+                    m2.invoke(controller, factura);
+                } catch (NoSuchMethodException ex) {
+                    log.debug("El controlador del formulario no expone setFactura/setFacturaCompra");
+                }
+            }
+
+            Stage stage = new Stage();
+            stage.setTitle("Editar Factura de Compra");
+            stage.setScene(new Scene(parent));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario factura de compra", e);
+            Dialogs.showError("Error abriendo formulario: " + e.getMessage());
+        }
     }
 
     @FXML
     public void onContabilizar() {
         FacturaCompra factura = tableFacturas.getSelectionModel().getSelectedItem();
         if (factura == null) {
-            mostrarAlerta("Selecciona una factura para contabilizar");
+            Dialogs.showWarn("Selecciona una factura para contabilizar");
             return;
         }
 
         if (factura.getEstado().equals("CONTABILIZADA")) {
-            mostrarAlerta("Esta factura ya está contabilizada");
+            Dialogs.showWarn("Esta factura ya está contabilizada");
             return;
         }
 
-        if (mostrarConfirmacion("¿Deseas contabilizar esta factura?\n\n" +
+        if (Dialogs.showConfirm("¿Deseas contabilizar esta factura?\n\n" +
                                 factura.getNumero() + " - " + factura.getProveedor().getNombre())) {
             try {
                 factura.setEstado("CONTABILIZADA");
                 facturaCompraService.guardar(factura);
                 cargarDatos();
-                mostrarExito("Factura contabilizada correctamente");
-            } catch (Exception e) {
+                Dialogs.showInfo("Factura contabilizada correctamente");
+             } catch (Exception e) {
                 log.error("Error contabilizando factura", e);
-                mostrarError("Error al contabilizar: " + e.getMessage());
-            }
-        }
-    }
+                Dialogs.showError("Error al contabilizar: " + e.getMessage());
+             }
+         }
+     }
 
     @FXML
     public void onRefresh() {
         log.info("Refrescando facturas de compra");
         cargarDatos();
     }
-
-    private void mostrarAlerta(String msg) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Atención");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-
-    private void mostrarExito(String msg) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Éxito");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-
-    private void mostrarError(String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-
-    private void mostrarInfo(String msg) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Información de Factura de Compra");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-
-    private boolean mostrarConfirmacion(String msg) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmación");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        Optional<ButtonType> result = alert.showAndWait();
-        return result.isPresent() && result.get() == ButtonType.OK;
-    }
 }
-

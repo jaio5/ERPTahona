@@ -5,7 +5,6 @@ import alicanteweb.erp.service.ClienteService;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.PropertyValueFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,14 +21,10 @@ public class ClienteController extends BaseController<Cliente> {
     @FXML
     private javafx.scene.control.TableView<Cliente> tableClientes;
     @FXML
-    private javafx.scene.control.TextField txtBuscar;
-    @FXML
     private javafx.scene.control.ComboBox<String> cmbActivo;
     @FXML
     private javafx.scene.control.Label lblTotal;
 
-    @FXML
-    private TableColumn<Cliente, Long> colId;
     @FXML
     private TableColumn<Cliente, String> colCodigo;
     @FXML
@@ -45,8 +40,12 @@ public class ClienteController extends BaseController<Cliente> {
     @FXML
     private TableColumn<Cliente, Boolean> colActivo;
 
-    @Autowired
-    private ClienteService clienteService;
+    private final ClienteService clienteService;
+
+    // Inyección por constructor
+    public ClienteController(ClienteService clienteService) {
+        this.clienteService = clienteService;
+    }
 
     @FXML
     public void initialize() {
@@ -113,4 +112,3 @@ public class ClienteController extends BaseController<Cliente> {
         clienteService.deleteById(cliente.getId());
     }
 }
-

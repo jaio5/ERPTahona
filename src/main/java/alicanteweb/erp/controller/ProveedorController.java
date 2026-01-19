@@ -25,9 +25,8 @@ public class ProveedorController extends BaseController<Proveedor> {
     @FXML private TableColumn<Proveedor, String> colTelefono;
     @FXML private TableColumn<Proveedor, String> colEmail;
     @FXML private TableColumn<Proveedor, String> colPoblacion;
-    @FXML private TableColumn<Proveedor, Boolean> colActivo;
 
-    @FXML private TextField txtBuscar;
+    // txtBuscar ya está declarado en BaseController; no volver a declarar aquí
     @FXML private Label lblTotal;
 
     public ProveedorController(ProveedorService proveedorService) {
@@ -50,7 +49,6 @@ public class ProveedorController extends BaseController<Proveedor> {
         if (colTelefono != null) colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         if (colEmail != null) colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         if (colPoblacion != null) colPoblacion.setCellValueFactory(new PropertyValueFactory<>("poblacion"));
-        if (colActivo != null) colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
 
         // Aplicar estilo a la tabla
         if (tableProveedores != null) {
@@ -112,4 +110,3 @@ public class ProveedorController extends BaseController<Proveedor> {
         filtrar(termino);
     }
 }
-

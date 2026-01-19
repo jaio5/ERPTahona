@@ -2,6 +2,7 @@ package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.service.*;
+import alicanteweb.erp.ui.Dialogs;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -326,33 +327,10 @@ public class AlbaranFormController {
         stage.close();
     }
 
-    private void mostrarError(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    private void mostrarAdvertencia(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Atencion");
-        alert.setHeaderText(mensaje);
-        alert.showAndWait();
-    }
-
-    private void mostrarExito(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Exito");
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    private void mostrarInfo(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Informacion");
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
+    private void mostrarError(String mensaje) { Dialogs.showError(mensaje); }
+    private void mostrarAdvertencia(String mensaje) { Dialogs.showWarn(mensaje); }
+    private void mostrarExito(String mensaje) { Dialogs.showInfo(mensaje); }
+    private void mostrarInfo(String mensaje) { Dialogs.showInfo(mensaje); }
 
     /**
      * Clase temporal para las lineas de albaran en la tabla

@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Set;
 
 /**
  * Servicio para realizar backups automáticos de la base de datos
@@ -86,48 +89,61 @@ public class BackupService {
         String nombreArchivo = String.format("backup_%s_%s.sql", DB_NAME, timestamp);
         String rutaCompleta = backupPath.resolve(nombreArchivo).toString();
 
-        // Comando mysqldump
-        List<String> comando = new ArrayList<>();
+        // Crear fichero temporal con credenciales para no pasarlas en la línea de comandos
+        Path tempCredFile = null;
+        try {
+            tempCredFile = createDefaultsFile(backupPath, dbUsername, dbPassword);
 
-        // Detectar sistema operativo
-        String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
-            comando.add("cmd.exe");
-            comando.add("/c");
-            comando.add("mysqldump");
-        } else {
-            comando.add("mysqldump");
-        }
+            // Comando mysqldump
+            List<String> comando = new ArrayList<>();
 
-        comando.add("-u" + dbUsername);
-        comando.add("-p" + dbPassword);
-        comando.add("--single-transaction");
-        comando.add("--routines");
-        comando.add("--triggers");
-        comando.add("--add-drop-table");
-        comando.add(DB_NAME);
-        comando.add("--result-file=" + rutaCompleta);
-
-        log.debug("Ejecutando comando: mysqldump -u{} -p*** {}", dbUsername, DB_NAME);
-
-        // Ejecutar comando
-        ProcessBuilder pb = new ProcessBuilder(comando);
-        pb.redirectErrorStream(true);
-
-        Process process = pb.start();
-        int exitCode = process.waitFor();
-
-        if (exitCode == 0) {
-            File backupFile = new File(rutaCompleta);
-            if (backupFile.exists() && backupFile.length() > 0) {
-                long sizeMB = backupFile.length() / (1024 * 1024);
-                log.info("✅ Backup creado exitosamente: {} ({} MB)", nombreArchivo, sizeMB);
-                return rutaCompleta;
-            } else {
-                throw new IOException("El archivo de backup está vacío o no se creó");
+            // Detectar sistema operativo
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                comando.add("cmd.exe");
+                comando.add("/c");
             }
-        } else {
-            throw new IOException("Error en mysqldump. Código de salida: " + exitCode);
+
+            // --defaults-extra-file must be provided before other options
+            comando.add("mysqldump");
+            comando.add("--defaults-extra-file=" + tempCredFile.toString());
+
+            comando.add("--single-transaction");
+            comando.add("--routines");
+            comando.add("--triggers");
+            comando.add("--add-drop-table");
+            comando.add(DB_NAME);
+            comando.add("--result-file=" + rutaCompleta);
+
+            log.debug("Ejecutando comando mysqldump para DB {} usando defaults-file {}", DB_NAME, tempCredFile);
+
+            // Ejecutar comando
+            ProcessBuilder pb = new ProcessBuilder(comando);
+            pb.redirectErrorStream(true);
+
+            Process process = pb.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) {
+                File backupFile = new File(rutaCompleta);
+                if (backupFile.exists() && backupFile.length() > 0) {
+                    long sizeMB = backupFile.length() / (1024 * 1024);
+                    log.info("✅ Backup creado exitosamente: {} ({} MB)", nombreArchivo, sizeMB);
+                    return rutaCompleta;
+                } else {
+                    throw new IOException("El archivo de backup está vacío o no se creó");
+                }
+            } else {
+                throw new IOException("Error en mysqldump. Código de salida: " + exitCode);
+            }
+        } finally {
+            // Borrar fichero temporal de credenciales
+            if (tempCredFile != null) {
+                try {
+                    Files.deleteIfExists(tempCredFile);
+                } catch (Exception ignored) {
+                }
+            }
         }
     }
 
@@ -137,35 +153,40 @@ public class BackupService {
     public void restaurarBackup(String rutaArchivo) throws IOException, InterruptedException {
         log.info("🔄 Restaurando backup desde: {}", rutaArchivo);
 
+        String restoringUser = System.getProperty("user.name");
+        log.info("🔄 Restaurando backup desde: {} (usuario={}, hora={})", rutaArchivo, restoringUser, LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+
         File backupFile = new File(rutaArchivo);
         if (!backupFile.exists()) {
             throw new IOException("Archivo de backup no encontrado: " + rutaArchivo);
         }
 
-        // Comando mysql (no utilizar redirección '<' en argumentos de ProcessBuilder)
-        List<String> comando = new ArrayList<>();
+        // Usar fichero temporal con credenciales y --defaults-extra-file
+        Path tempCredFile = null;
+        try {
+            tempCredFile = createDefaultsFile(backupFile.toPath().getParent(), dbUsername, dbPassword);
 
-        String os = System.getProperty("os.name").toLowerCase();
-        // Ejecutar directamente 'mysql' (debe estar en PATH)
-        comando.add("mysql");
+            List<String> comando = new ArrayList<>();
+            comando.add("mysql");
+            comando.add("--defaults-extra-file=" + tempCredFile.toString());
+            comando.add(DB_NAME);
 
-        comando.add("-u" + dbUsername);
-        comando.add("-p" + dbPassword);
-        comando.add(DB_NAME);
+            ProcessBuilder pb = new ProcessBuilder(comando);
+            pb.redirectErrorStream(true);
+            pb.redirectInput(backupFile);
 
-        ProcessBuilder pb = new ProcessBuilder(comando);
-        pb.redirectErrorStream(true);
+            Process process = pb.start();
+            int exitCode = process.waitFor();
 
-        // Redirigir el archivo de backup como entrada del proceso
-        pb.redirectInput(backupFile);
-
-        Process process = pb.start();
-        int exitCode = process.waitFor();
-
-        if (exitCode == 0) {
-            log.info("✅ Backup restaurado exitosamente");
-        } else {
-            throw new IOException("Error restaurando backup. Código de salida: " + exitCode);
+            if (exitCode == 0) {
+                log.info("✅ Backup restaurado exitosamente");
+            } else {
+                throw new IOException("Error restaurando backup. Código de salida: " + exitCode);
+            }
+        } finally {
+            if (tempCredFile != null) {
+                try { Files.deleteIfExists(tempCredFile); } catch (Exception ignored) {}
+            }
         }
     }
 
@@ -212,15 +233,15 @@ public class BackupService {
     /**
      * Elimina backups más antiguos que el período de retención
      */
-    public int limpiarBackupsAntiguos() {
+    public void limpiarBackupsAntiguos() {
         log.info("🧹 Limpiando backups antiguos (> {} días)...", retentionDays);
 
-        int eliminados = 0;
         LocalDateTime fechaLimite = LocalDateTime.now().minusDays(retentionDays);
 
         try {
             List<BackupInfo> backups = listarBackups();
 
+            int eliminados = 0;
             for (BackupInfo backup : backups) {
                 if (backup.fecha().isBefore(fechaLimite)) {
                     File file = new File(backup.rutaCompleta());
@@ -240,8 +261,6 @@ public class BackupService {
         } catch (IOException e) {
             log.error("Error limpiando backups antiguos", e);
         }
-
-        return eliminados;
     }
 
     /**
@@ -255,10 +274,8 @@ public class BackupService {
             if (os.contains("win")) {
                 comando.add("cmd.exe");
                 comando.add("/c");
-                comando.add("mysqldump");
-            } else {
-                comando.add("mysqldump");
             }
+            comando.add("mysqldump");
             comando.add("--version");
 
             ProcessBuilder pb = new ProcessBuilder(comando);
@@ -322,5 +339,29 @@ public class BackupService {
             return fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         }
     }
-}
 
+    /**
+     * Crea un archivo temporal con formato MySQL defaults-extra-file para pasar credenciales
+     * Contenido:
+     * [client]
+     * user=usuario
+     * password=pass
+     */
+    private Path createDefaultsFile(Path dir, String user, String pass) throws IOException {
+        if (dir == null) dir = Paths.get(System.getProperty("java.io.tmpdir"));
+        Path tempFile = Files.createTempFile(dir, "mycnf", ".cnf");
+        String content = "[client]\n" + "user=" + user + "\n" + "password=" + pass + "\n";
+        Files.writeString(tempFile, content, java.nio.charset.StandardCharsets.UTF_8);
+
+        // Intentar establecer permisos 600 en sistemas POSIX
+        try {
+            Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rw-------");
+            Files.setPosixFilePermissions(tempFile, perms);
+        } catch (UnsupportedOperationException | IOException ignored) {
+            // Windows o FS que no soporta POSIX: continuar pero advertir
+            log.warn("No se pudieron establecer permisos POSIX en {}. Asegúrate de proteger el fichero.", tempFile);
+        }
+
+        return tempFile;
+    }
+}

@@ -1,6 +1,9 @@
 package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Cliente;
+import alicanteweb.erp.entities.AlbaranVenta;
+import alicanteweb.erp.entities.AlbaranVentaFactura;
+import alicanteweb.erp.entities.AlbaranVentaFacturaId;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.entities.Articulo;
@@ -8,6 +11,8 @@ import alicanteweb.erp.service.ClienteService;
 import alicanteweb.erp.service.FacturaService;
 import alicanteweb.erp.service.FacturaLineaService;
 import alicanteweb.erp.service.ArticuloService;
+import alicanteweb.erp.service.AlbaranVentaService;
+import alicanteweb.erp.service.AlbaranVentaFacturaService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -24,10 +29,12 @@ import org.springframework.stereotype.Controller;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Controlador para el formulario de creación/edición de facturas
@@ -63,23 +70,40 @@ public class FacturaFormController {
     @FXML private Label lblIVA;
     @FXML private Label lblTotalFactura;
 
+    // Albaranes relacionados (UI)
+    @FXML private TextField txtBuscarAlbaran;
+    @FXML private TableView<AlbaranVenta> tableAlbaranesDisponibles;
+    @FXML private TableColumn<AlbaranVenta, String> colAlbNumero;
+    @FXML private TableColumn<AlbaranVenta, LocalDate> colAlbFecha;
+    @FXML private TableColumn<AlbaranVenta, BigDecimal> colAlbTotal;
+
+    @FXML private TableView<AlbaranVenta> tableAlbaranesVinculados;
+    @FXML private TableColumn<AlbaranVenta, String> colVincNumero;
+    @FXML private TableColumn<AlbaranVenta, LocalDate> colVincFecha;
+
     private final FacturaService facturaService;
     private final ClienteService clienteService;
     private final ArticuloService articuloService;
     private final FacturaLineaService facturaLineaService;
+    private final AlbaranVentaService albaranVentaService;
+    private final AlbaranVentaFacturaService albaranVentaFacturaService;
 
     private Factura facturaActual;
     private boolean modoEdicion = false;
-    private ObservableList<LineaFacturaTemp> lineasTemp = FXCollections.observableArrayList();
+    private final ObservableList<LineaFacturaTemp> lineasTemp = FXCollections.observableArrayList();
 
     public FacturaFormController(FacturaService facturaService,
                                  ClienteService clienteService,
                                  ArticuloService articuloService,
-                                 FacturaLineaService facturaLineaService) {
+                                 FacturaLineaService facturaLineaService,
+                                 AlbaranVentaService albaranVentaService,
+                                 AlbaranVentaFacturaService albaranVentaFacturaService) {
         this.facturaService = facturaService;
         this.clienteService = clienteService;
         this.articuloService = articuloService;
         this.facturaLineaService = facturaLineaService;
+        this.albaranVentaService = albaranVentaService;
+        this.albaranVentaFacturaService = albaranVentaFacturaService;
     }
 
     @FXML
@@ -90,6 +114,50 @@ public class FacturaFormController {
         configurarFormasPago();
         configurarTablaLineas();
         configurarFechas();
+        // Configurar columnas de albaranes
+        try {
+            if (colAlbNumero != null) colAlbNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
+            if (colAlbFecha != null) {
+                colAlbFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+                colAlbFecha.setCellFactory(col -> new TableCell<>() {
+                    private final java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    @Override
+                    protected void updateItem(LocalDate item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(empty || item == null ? null : item.format(fmt));
+                    }
+                });
+            }
+            if (colAlbTotal != null) {
+                colAlbTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
+                colAlbTotal.setCellFactory(col -> new TableCell<>() {
+                    @Override
+                    protected void updateItem(BigDecimal item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(empty || item == null ? null : String.format("%.2f", item));
+                        setStyle("-fx-alignment: CENTER-RIGHT;");
+                    }
+                });
+            }
+
+            if (colVincNumero != null) colVincNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
+            if (colVincFecha != null) {
+                colVincFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+                colVincFecha.setCellFactory(col -> new TableCell<>() {
+                    private final java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    @Override
+                    protected void updateItem(LocalDate item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText(empty || item == null ? null : item.format(fmt));
+                    }
+                });
+            }
+            // Inicializar tablas vacías para evitar NPEs en la UI
+            if (tableAlbaranesDisponibles != null && tableAlbaranesDisponibles.getItems() == null) tableAlbaranesDisponibles.setItems(FXCollections.observableArrayList());
+            if (tableAlbaranesVinculados != null && tableAlbaranesVinculados.getItems() == null) tableAlbaranesVinculados.setItems(FXCollections.observableArrayList());
+        } catch (Exception e) {
+            log.debug("No se pudieron configurar columnas de albaranes: {}", e.getMessage());
+        }
     }
 
     private void configurarClientes() {
@@ -102,7 +170,7 @@ public class FacturaFormController {
             cbCliente.setItems(FXCollections.observableArrayList(clientes));
 
             // Configurar cómo se muestra el cliente
-            cbCliente.setCellFactory(param -> new ListCell<Cliente>() {
+            cbCliente.setCellFactory(param -> new ListCell<>() {
                 @Override
                 protected void updateItem(Cliente item, boolean empty) {
                     super.updateItem(item, empty);
@@ -114,7 +182,7 @@ public class FacturaFormController {
                 }
             });
 
-            cbCliente.setButtonCell(new ListCell<Cliente>() {
+            cbCliente.setButtonCell(new ListCell<>() {
                 @Override
                 protected void updateItem(Cliente item, boolean empty) {
                     super.updateItem(item, empty);
@@ -158,9 +226,7 @@ public class FacturaFormController {
         tableLineas.setItems(lineasTemp);
 
         // Listener para recalcular totales
-        lineasTemp.addListener((javafx.collections.ListChangeListener.Change<? extends LineaFacturaTemp> c) -> {
-            calcularTotales();
-        });
+        lineasTemp.addListener((javafx.collections.ListChangeListener<LineaFacturaTemp>) c -> calcularTotales());
     }
 
     private void configurarFechas() {
@@ -173,7 +239,7 @@ public class FacturaFormController {
         this.modoEdicion = (factura != null && factura.getId() != null);
 
         Platform.runLater(() -> {
-            if (modoEdicion) {
+            if (modoEdicion && factura != null) {
                 lblTitulo.setText("Editar Factura");
                 cargarDatosFactura(factura);
             } else {
@@ -204,7 +270,89 @@ public class FacturaFormController {
         // Por ahora, en modo crear empezamos sin líneas
 
         calcularTotales();
+        // Cargar albaranes relacionados y disponibles
+        cargarAlbaranesDisponibles("");
+        cargarAlbaranesVinculados();
     }
+
+    // ---------------- Albaranes relacionados ----------------
+    private void cargarAlbaranesDisponibles(String filtro) {
+        try {
+            List<AlbaranVenta> albs = albaranVentaService.findAll();
+            if (filtro != null && !filtro.isBlank()) {
+                String low = filtro.toLowerCase();
+                albs = albs.stream().filter(a -> a.getNumero() != null && a.getNumero().toLowerCase().contains(low)).toList();
+            }
+            if (tableAlbaranesDisponibles != null) tableAlbaranesDisponibles.setItems(FXCollections.observableArrayList(albs));
+        } catch (Exception e) {
+            log.error("Error cargando albaranes disponibles", e);
+        }
+    }
+
+    private void cargarAlbaranesVinculados() {
+        try {
+            if (facturaActual == null || facturaActual.getId() == null) {
+                if (tableAlbaranesVinculados != null) tableAlbaranesVinculados.setItems(FXCollections.observableArrayList());
+                return;
+            }
+
+            List<AlbaranVentaFactura> enlaces = albaranVentaFacturaService.findAll();
+            List<AlbaranVenta> vinculados = enlaces.stream()
+                .filter(e -> e.getId() != null && e.getId().getFacturasId() != null && e.getId().getFacturasId().equals(facturaActual.getId()))
+                .map(e -> albaranVentaService.findById(e.getId().getAlbaranesventasId()).orElse(null))
+                .filter(Objects::nonNull)
+                .toList();
+
+            if (tableAlbaranesVinculados != null) tableAlbaranesVinculados.setItems(FXCollections.observableArrayList(vinculados));
+        } catch (Exception e) {
+            log.error("Error cargando albaranes vinculados", e);
+        }
+    }
+
+    @FXML
+    public void onBuscarAlbaran() {
+        String term = txtBuscarAlbaran != null ? txtBuscarAlbaran.getText() : "";
+        cargarAlbaranesDisponibles(term);
+    }
+
+    @FXML
+    public void onVincularAlbaran() {
+        if (facturaActual == null || facturaActual.getId() == null) { mostrarAdvertencia("Guarda la factura antes de vincular albaranes"); return; }
+        AlbaranVenta sel = tableAlbaranesDisponibles != null ? tableAlbaranesDisponibles.getSelectionModel().getSelectedItem() : null;
+        if (sel == null) { mostrarAdvertencia("Selecciona un albarán para vincular"); return; }
+        try {
+            AlbaranVentaFacturaId id = new AlbaranVentaFacturaId();
+            id.setAlbaranesventasId(sel.getId());
+            id.setFacturasId(facturaActual.getId());
+            AlbaranVentaFactura avf = new AlbaranVentaFactura();
+            avf.setId(id);
+            avf.setFacturas(facturaActual);
+            albaranVentaFacturaService.save(avf);
+            cargarAlbaranesVinculados();
+            mostrarExito("Albarán vinculado");
+        } catch (Exception e) {
+            log.error("Error vinculando albaran", e);
+            mostrarError("Error al vincular albarán: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onDesvincularAlbaran() {
+        AlbaranVenta sel = tableAlbaranesVinculados != null ? tableAlbaranesVinculados.getSelectionModel().getSelectedItem() : null;
+        if (sel == null) { mostrarAdvertencia("Selecciona un albarán vinculado para desvincular"); return; }
+        try {
+            AlbaranVentaFacturaId id = new AlbaranVentaFacturaId();
+            id.setAlbaranesventasId(sel.getId());
+            id.setFacturasId(facturaActual.getId());
+            albaranVentaFacturaService.deleteById(id);
+            cargarAlbaranesVinculados();
+            mostrarExito("Albarán desvinculado");
+        } catch (Exception e) {
+            log.error("Error desvinculando albaran", e);
+            mostrarError("Error al desvincular albarán: " + e.getMessage());
+        }
+    }
+    // ---------------- end albaranes ----------------
 
     private void limpiarFormulario() {
         cbCliente.setValue(null);
@@ -248,7 +396,7 @@ public class FacturaFormController {
                 .toList();
             cbArticulo.setItems(FXCollections.observableArrayList(articulos));
 
-            cbArticulo.setCellFactory(param -> new ListCell<Articulo>() {
+            cbArticulo.setCellFactory(param -> new ListCell<>() {
                 @Override
                 protected void updateItem(Articulo item, boolean empty) {
                     super.updateItem(item, empty);
@@ -263,7 +411,7 @@ public class FacturaFormController {
                 }
             });
 
-            cbArticulo.setButtonCell(new ListCell<Articulo>() {
+            cbArticulo.setButtonCell(new ListCell<>() {
                 @Override
                 protected void updateItem(Articulo item, boolean empty) {
                     super.updateItem(item, empty);
@@ -444,9 +592,7 @@ public class FacturaFormController {
                 log.info("💾 Guardando {} líneas de factura...", lineasTemp.size());
 
                 // Primero eliminar las líneas existentes si estamos editando
-                if (modoEdicion && guardada.getId() != null) {
-                    // TODO: Eliminar líneas anteriores si las hubiera
-                }
+                // Si estamos en modo edición, podría eliminarse la lógica de limpieza de líneas anteriores aquí (pendiente)
 
                 // Guardar las nuevas líneas
                 for (LineaFacturaTemp lineaTemp : lineasTemp) {
@@ -490,12 +636,12 @@ public class FacturaFormController {
     private String generarNumeroFactura() {
         // Generar número de factura basado en el año y un contador
         LocalDate hoy = LocalDate.now();
-        int año = hoy.getYear();
+        int anio = hoy.getYear();
 
         // Obtener el último número de factura del año actual
         List<Factura> facturas = facturaService.findAll();
         long numeroMaximo = facturas.stream()
-            .filter(f -> f.getNumero() != null && f.getNumero().startsWith("F-" + año))
+            .filter(f -> f.getNumero() != null && f.getNumero().startsWith("F-" + anio))
             .map(f -> {
                 try {
                     String[] partes = f.getNumero().split("-");
@@ -511,7 +657,7 @@ public class FacturaFormController {
             .orElse(0L);
 
         long siguienteNumero = numeroMaximo + 1;
-        return String.format("F-%d-%04d", año, siguienteNumero);
+        return String.format("F-%d-%04d", anio, siguienteNumero);
     }
 
     @FXML
@@ -546,8 +692,9 @@ public class FacturaFormController {
             errores.append("Debe agregar al menos una linea a la factura\n");
         }
 
-        if (errores.length() > 0) {
-            mostrarAlerta("Por favor, corrija los siguientes errores:\n\n" + errores.toString());
+        String erroresStr = errores.toString();
+        if (!erroresStr.isEmpty()) {
+            mostrarAlerta("Por favor, corrija los siguientes errores:\n\n" + erroresStr);
             return false;
         }
 
@@ -601,6 +748,8 @@ public class FacturaFormController {
     }
 
     // Clase interna para las líneas temporales
+    @Getter
+    @Setter
     public static class LineaFacturaTemp {
         private Long articuloId;  // ID del artículo para facilitar el guardado
         private String articulo;
@@ -615,34 +764,5 @@ public class FacturaFormController {
                 this.subtotal = precio.multiply(new BigDecimal(cantidad));
             }
         }
-
-        // Getters y setters
-        public Long getArticuloId() { return articuloId; }
-        public void setArticuloId(Long articuloId) { this.articuloId = articuloId; }
-
-        public String getArticulo() { return articulo; }
-        public void setArticulo(String articulo) { this.articulo = articulo; }
-
-        public String getDescripcion() { return descripcion; }
-        public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-
-        public Integer getCantidad() { return cantidad; }
-        public void setCantidad(Integer cantidad) {
-            this.cantidad = cantidad;
-            calcularSubtotal();
-        }
-
-        public BigDecimal getPrecio() { return precio; }
-        public void setPrecio(BigDecimal precio) {
-            this.precio = precio;
-            calcularSubtotal();
-        }
-
-        public BigDecimal getIva() { return iva; }
-        public void setIva(BigDecimal iva) { this.iva = iva; }
-
-        public BigDecimal getSubtotal() { return subtotal; }
-        public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
     }
 }
-

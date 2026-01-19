@@ -11,7 +11,8 @@
     <HBox alignment="CENTER_LEFT" spacing="16">
         <Label text="Configuración de Empresa" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
+        <Button fx:id="btnCancelar" text="Cancelar" onAction="#onCancelar" styleClass="button-secondary"/>
+        <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
     </HBox>
 
     <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
@@ -26,8 +27,12 @@
                         <TextField fx:id="txtNombre"/>
                     </VBox>
                     <VBox spacing="8" HBox.hgrow="ALWAYS">
+                        <Label text="Código" styleClass="form-label"/>
+                        <TextField fx:id="txtCodigo"/>
+                    </VBox>
+                    <VBox spacing="8" HBox.hgrow="ALWAYS">
                         <Label text="CIF" styleClass="form-label"/>
-                        <TextField fx:id="txtCIF"/>
+                        <TextField fx:id="txtCif"/>
                     </VBox>
                 </HBox>
 
@@ -96,6 +101,11 @@
                         <TextField fx:id="txtSwift"/>
                     </VBox>
                 </HBox>
+            </VBox>
+
+            <VBox styleClass="card" spacing="12">
+                <Label text="Notas" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
+                <TextArea fx:id="txtNotas" prefRowCount="4"/>
             </VBox>
 
         </VBox>

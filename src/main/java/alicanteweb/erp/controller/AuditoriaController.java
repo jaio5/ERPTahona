@@ -13,6 +13,7 @@ import javafx.beans.property.SimpleStringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import alicanteweb.erp.ui.Dialogs;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -517,26 +518,13 @@ public class AuditoriaController {
 
     @FXML
     public void onExportar() {
-        mostrarAlerta("Funcionalidad de exportación en desarrollo\n\n" +
+        Dialogs.showWarn("Funcionalidad de exportación en desarrollo\n\n" +
                 "Próximamente podrá exportar los registros de auditoría a:\n" +
                 "• Excel (.xlsx)\n" +
                 "• CSV (.csv)\n" +
                 "• PDF (.pdf)");
     }
 
-    private void mostrarAlerta(String msg) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Atención");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-
-    private void mostrarError(String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-}
+    private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
+    private void mostrarError(String msg) { Dialogs.showError(msg); }
+ }

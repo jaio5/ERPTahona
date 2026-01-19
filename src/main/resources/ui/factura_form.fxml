@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -118,9 +117,36 @@
                     </GridPane>
                 </VBox>
 
-            </VBox>
-        </ScrollPane>
-    </center>
+                <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
+                    <Label text="Albaranes relacionados" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                    <Separator/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <TextField fx:id="txtBuscarAlbaran" promptText="Buscar albarán por número..." HBox.hgrow="ALWAYS"/>
+                        <Button text="Buscar" onAction="#onBuscarAlbaran" styleClass="button"/>
+                    </HBox>
+                    <Label text="Albaranes disponibles" style="-fx-font-weight: bold;"/>
+                    <TableView fx:id="tableAlbaranesDisponibles" prefHeight="140">
+                        <columns>
+                            <TableColumn fx:id="colAlbNumero" text="Número"/>
+                            <TableColumn fx:id="colAlbFecha" text="Fecha"/>
+                            <TableColumn fx:id="colAlbTotal" text="Total"/>
+                        </columns>
+                    </TableView>
+                    <HBox spacing="10">
+                        <Button text="Vincular →" onAction="#onVincularAlbaran" styleClass="button-primary"/>
+                        <Button text="← Desvincular" onAction="#onDesvincularAlbaran" styleClass="button-danger"/>
+                    </HBox>
+                    <Label text="Albaranes vinculados" style="-fx-font-weight: bold;"/>
+                    <TableView fx:id="tableAlbaranesVinculados" prefHeight="120">
+                        <columns>
+                            <TableColumn fx:id="colVincNumero" text="Número"/>
+                            <TableColumn fx:id="colVincFecha" text="Fecha"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+             </VBox>
+         </ScrollPane>
+     </center>
 
     <bottom>
         <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">

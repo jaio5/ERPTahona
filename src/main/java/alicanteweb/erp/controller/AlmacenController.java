@@ -11,8 +11,8 @@ import javafx.scene.paint.Color;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import alicanteweb.erp.ui.Dialogs;
 
-import java.util.Optional;
 import java.text.DecimalFormat;
 
 /**
@@ -195,32 +195,11 @@ public class AlmacenController {
         cargarDatos();
     }
 
-    private void mostrarAlerta(String msg) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Atención");
-        alert.setHeaderText(msg);
-        alert.showAndWait();
-    }
+    private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
 
-    private void mostrarExito() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Éxito");
-        alert.setContentText("Almacén eliminado correctamente");
-        alert.showAndWait();
-    }
+    private void mostrarExito() { Dialogs.showInfo("Almacén eliminado correctamente"); }
 
-    private void mostrarError(String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
+    private void mostrarError(String msg) { Dialogs.showError(msg); }
 
-    private boolean mostrarConfirmacion(String msg) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmación");
-        alert.setHeaderText(msg);
-        Optional<ButtonType> result = alert.showAndWait();
-        return result.isPresent() && result.get() == ButtonType.OK;
-    }
+    private boolean mostrarConfirmacion(String msg) { return Dialogs.showConfirm(msg); }
 }

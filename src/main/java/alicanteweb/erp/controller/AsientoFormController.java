@@ -3,6 +3,7 @@ package alicanteweb.erp.controller;
 import alicanteweb.erp.entities.AsientoContable;
 import alicanteweb.erp.entities.LineaAsiento;
 import alicanteweb.erp.service.AsientoContableService;
+import alicanteweb.erp.ui.Dialogs;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -349,24 +350,7 @@ public class AsientoFormController {
         }
     }
 
-    private void mostrarError(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    private void mostrarExito(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Exito");
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    private void mostrarAlerta(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Atención");
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-}
+    private void mostrarError(String mensaje) { Dialogs.showError(mensaje); }
+    private void mostrarExito(String mensaje) { Dialogs.showInfo(mensaje); }
+    private void mostrarAlerta(String mensaje) { Dialogs.showWarn(mensaje); }
+ }

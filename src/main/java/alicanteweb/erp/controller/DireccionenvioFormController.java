@@ -3,6 +3,7 @@ package alicanteweb.erp.controller;
 import alicanteweb.erp.entities.Cliente;
 import alicanteweb.erp.entities.DireccionenvioNew;
 import alicanteweb.erp.service.DireccionenvioNewService;
+import alicanteweb.erp.ui.Dialogs;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -77,7 +78,7 @@ public class DireccionenvioFormController {
             service.save(direccion);
             mostrarExito("Guardado");
             cerrar();
-        } catch (Exception e) { log.error("Error guardando dirección", e); mostrarError(e.getMessage()); }
+        } catch (Exception e) { log.error("Error guardando dirección", e); Dialogs.showError(e.getMessage()); }
     }
 
     @FXML
@@ -90,6 +91,6 @@ public class DireccionenvioFormController {
 
     private void cerrar() { if (txtNombre != null && txtNombre.getScene() != null) { Stage s = (Stage) txtNombre.getScene().getWindow(); s.close(); } }
 
-    private void mostrarError(String msg) { Alert a = new Alert(Alert.AlertType.ERROR); a.setTitle("Error"); a.setContentText(msg); a.showAndWait(); }
-    private void mostrarExito(String msg) { Alert a = new Alert(Alert.AlertType.INFORMATION); a.setTitle("Éxito"); a.setContentText(msg); a.showAndWait(); }
+    private void mostrarError(String msg) { Dialogs.showError(msg); }
+    private void mostrarExito(String msg) { Dialogs.showInfo(msg); }
 }

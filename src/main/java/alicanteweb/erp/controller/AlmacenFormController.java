@@ -2,6 +2,7 @@ package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Almacen;
 import alicanteweb.erp.service.AlmacenService;
+import alicanteweb.erp.ui.Dialogs;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import org.slf4j.Logger;
@@ -135,24 +136,7 @@ public class AlmacenFormController {
         return true;
     }
 
-    private void mostrarAlerta() {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Atención");
-        alert.setHeaderText("Código y nombre son obligatorios");
-        alert.showAndWait();
-    }
-
-    private void mostrarExito() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Éxito");
-        alert.setContentText("Almacén guardado correctamente");
-        alert.showAndWait();
-    }
-
-    private void mostrarError(String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
+    private void mostrarAlerta() { Dialogs.showWarn("Código y nombre son obligatorios"); }
+    private void mostrarExito() { Dialogs.showInfo("Almacén guardado correctamente"); }
+    private void mostrarError(String msg) { Dialogs.showError(msg); }
 }

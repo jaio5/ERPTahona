@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.FacturaCompraFormController"
       styleClass="main-container" spacing="15">
-    <stylesheets><String fx:value="@/styles/unified-styles.css"/></stylesheets>
 
     <Label text="📥 FACTURA DE COMPRA" styleClass="title-panel"/>
 
@@ -45,6 +43,12 @@
                     <Label text="TOTAL:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
                     <TextField fx:id="txtTotal" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-min-height: 35;"/>
                 </GridPane>
+            </TitledPane>
+
+            <TitledPane text="📝 Observaciones" collapsible="false">
+                <VBox spacing="10" style="-fx-padding: 15;">
+                    <TextArea fx:id="txtObservaciones" prefRowCount="3" wrapText="true" promptText="Notas internas sobre la factura..."/>
+                </VBox>
             </TitledPane>
         </VBox>
     </ScrollPane>

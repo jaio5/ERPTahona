@@ -2,8 +2,10 @@ package alicanteweb.erp.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import jakarta.annotation.PostConstruct;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -30,12 +32,48 @@ public class CifradoService {
     private String aesKeyString;
 
     private final BCryptPasswordEncoder passwordEncoder;
+    private final Environment environment;
 
     private static final int GCM_TAG_LENGTH = 128; // bits
     private static final int GCM_IV_LENGTH = 12; // bytes (96 bits recommended)
 
-    public CifradoService(BCryptPasswordEncoder passwordEncoder) {
+    public CifradoService(BCryptPasswordEncoder passwordEncoder, Environment environment) {
         this.passwordEncoder = passwordEncoder;
+        this.environment = environment;
+    }
+
+    @PostConstruct
+    private void validateAesKeyInProduction() {
+        // Si estamos en producción, exigir que la clave AES sea Base64 y represente 16/24/32 bytes
+        try {
+            String[] profiles = environment.getActiveProfiles();
+            boolean prod = false;
+            for (String p : profiles) {
+                if (p != null && (p.equalsIgnoreCase("prod") || p.equalsIgnoreCase("production"))) { prod = true; break; }
+            }
+
+            if (prod) {
+                if (aesKeyString == null || aesKeyString.isBlank() || aesKeyString.equals("DEFAULT_KEY_32_CHARACTERS_MIN!!")) {
+                    throw new IllegalStateException("Clave AES no configurada para producción: establece 'cifrado.aes.key' con una clave Base64 segura");
+                }
+                try {
+                    byte[] decoded = java.util.Base64.getDecoder().decode(aesKeyString);
+                    if (!(decoded.length == 16 || decoded.length == 24 || decoded.length == 32)) {
+                        throw new IllegalStateException("La clave AES en 'cifrado.aes.key' debe ser Base64 que represente 16/24/32 bytes (preferible 32 para AES-256)");
+                    }
+                } catch (IllegalArgumentException iae) {
+                    throw new IllegalStateException("La clave AES en 'cifrado.aes.key' no es Base64 válida. En producción debe ser Base64 (use CifradoService.generarKeyAES())", iae);
+                }
+            } else {
+                if (aesKeyString == null || aesKeyString.isBlank() || aesKeyString.equals("DEFAULT_KEY_32_CHARACTERS_MIN!!")) {
+                    log.warn("⚠️ Clave AES no configurada (entorno no productivo). Para producción, configure 'cifrado.aes.key' con una clave Base64 segura.");
+                }
+            }
+        } catch (RuntimeException e) {
+            // No encapsular; preferimos fallar rápido en caso de mala configuración en prod
+            log.error("Fallo en validación de clave AES en @PostConstruct", e);
+            throw e;
+        }
     }
 
     /**
@@ -178,19 +216,19 @@ public class CifradoService {
                 log.warn("   Genera una con: CifradoService.generarKeyAES()");
             }
 
-            byte[] keyBytes = null;
+            byte[] keyBytes;
             // Intentar interpretar la clave como Base64
             try {
                 keyBytes = Base64.getDecoder().decode(aesKeyString);
                 if (keyBytes.length != 16 && keyBytes.length != 24 && keyBytes.length != 32) {
                     // No tiene longitud válida para AES -> fallback
-                    keyBytes = null;
+                    keyBytes = new byte[0];
                 }
             } catch (IllegalArgumentException ignored) {
-                keyBytes = null;
+                keyBytes = new byte[0];
             }
 
-            if (keyBytes == null) {
+            if (keyBytes.length == 0) {
                 // Fallback: derivar 32 bytes con SHA-256
                 MessageDigest md = MessageDigest.getInstance("SHA-256");
                 keyBytes = md.digest(aesKeyString.getBytes(StandardCharsets.UTF_8));
@@ -221,5 +259,12 @@ public class CifradoService {
         random.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
-}
 
+    /**
+     * Setter para pruebas: permite inyectar una clave AES (Base64 o legible) en tests.
+     * No recomendado para uso en producción.
+     */
+    public void setSecretKey(String key) {
+        this.aesKeyString = key;
+    }
+}

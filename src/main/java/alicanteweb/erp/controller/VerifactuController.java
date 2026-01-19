@@ -13,12 +13,12 @@ import javafx.stage.FileChooser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import alicanteweb.erp.ui.Dialogs;
 
 import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Controlador para gestión de VeriFacTur (AEAT)
@@ -362,43 +362,8 @@ public class VerifactuController {
     }
 
     // Métodos auxiliares
-    private void mostrarAlerta(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Atención");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
-    }
-
-    private void mostrarExito(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Éxito");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
-    }
-
-    private void mostrarError(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
-    }
-
-    private boolean mostrarConfirmacion(String msg) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmación");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        Optional<ButtonType> result = alert.showAndWait();
-        return result.isPresent() && result.get() == ButtonType.OK;
-    }
-}
-
+    private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
+    private void mostrarExito(String msg) { Dialogs.showInfo(msg); }
+    private void mostrarError(String msg) { Dialogs.showError(msg); }
+    private boolean mostrarConfirmacion(String msg) { return Dialogs.showConfirm(msg); }
+ }

@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
+import alicanteweb.erp.ui.Dialogs;
 
 /**
  * Controlador base para todos los módulos de la aplicación
@@ -267,40 +267,9 @@ public abstract class BaseController<T> {
 
     // === MÉTODOS DE NOTIFICACIÓN ===
 
-    protected void mostrarError(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    protected void mostrarAdvertencia(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Aviso");
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    protected void mostrarExito(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Éxito");
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    protected void mostrarInfo(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Información");
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
-
-    protected boolean mostrarConfirmacion(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmación");
-        alert.setContentText(mensaje);
-        Optional<ButtonType> result = alert.showAndWait();
-        return result.isPresent() && result.get() == ButtonType.OK;
-    }
+    protected void mostrarError(String mensaje) { Dialogs.showError(mensaje); }
+    protected void mostrarAdvertencia(String mensaje) { Dialogs.showWarn(mensaje); }
+    protected void mostrarExito(String mensaje) { Dialogs.showInfo(mensaje); }
+    protected void mostrarInfo(String mensaje) { Dialogs.showInfo(mensaje); }
+    protected boolean mostrarConfirmacion(String mensaje) { return Dialogs.showConfirm(mensaje); }
 }
-

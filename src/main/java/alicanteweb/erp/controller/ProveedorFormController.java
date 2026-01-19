@@ -9,9 +9,9 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import alicanteweb.erp.ui.Dialogs;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * Controlador para el formulario de creación/edición de proveedores
@@ -140,7 +140,7 @@ public class ProveedorFormController {
         Platform.runLater(() -> {
             if (modoEdicion) {
                 lblTitulo.setText("Editar Proveedor");
-                cargarDatosProveedor(proveedor);
+                if (proveedor != null) cargarDatosProveedor(proveedor);
             } else {
                 lblTitulo.setText("Nuevo Proveedor");
                 limpiarFormulario();
@@ -246,15 +246,8 @@ public class ProveedorFormController {
     @FXML
     public void onCancelar() {
         if (formularioModificado()) {
-            Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-            confirmacion.setTitle("Confirmar");
-            confirmacion.setHeaderText("Descartar cambios?");
-            confirmacion.setContentText("Hay cambios sin guardar. Desea salir sin guardar?");
-
-            Optional<ButtonType> resultado = confirmacion.showAndWait();
-            if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
-                cerrarVentana();
-            }
+            boolean ok = Dialogs.showConfirm("Hay cambios sin guardar. ¿Desea salir sin guardar?");
+            if (ok) cerrarVentana();
         } else {
             cerrarVentana();
         }
@@ -290,8 +283,9 @@ public class ProveedorFormController {
             errores.append("El codigo postal debe tener 5 digitos\n");
         }
 
-        if (errores.length() > 0) {
-            mostrarAlerta("Por favor, corrija los siguientes errores:\n\n" + errores.toString());
+        String erroresStr = errores.toString();
+        if (!erroresStr.isEmpty()) {
+            mostrarAlerta("Por favor, corrija los siguientes errores:\n\n" + erroresStr);
             return false;
         }
 
@@ -309,34 +303,7 @@ public class ProveedorFormController {
         stage.close();
     }
 
-    private void mostrarAlerta(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Atencion");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
-    }
-
-    private void mostrarExito(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Exito");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
-    }
-
-    private void mostrarError(String msg) {
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText(null);
-            alert.setContentText(msg);
-            alert.showAndWait();
-        });
-    }
+    private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
+    private void mostrarExito(String msg) { Dialogs.showInfo(msg); }
+    private void mostrarError(String msg) { Dialogs.showError(msg); }
 }
-

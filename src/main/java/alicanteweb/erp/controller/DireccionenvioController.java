@@ -2,6 +2,7 @@ package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.DireccionenvioNew;
 import alicanteweb.erp.service.DireccionenvioNewService;
+import alicanteweb.erp.ui.Dialogs;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -158,14 +159,9 @@ public class DireccionenvioController {
             stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             stage.showAndWait();
             cargarDatos();
-        } catch (Exception e) { log.error("Error abriendo formulario direcciones", e); mostrarError("Error: " + e.getMessage()); }
+        } catch (Exception e) { log.error("Error abriendo formulario direcciones", e); Dialogs.showError("Error: " + e.getMessage()); }
     }
 
-    private boolean mostrarConfirmacion(String msg) {
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION);
-        a.setTitle("Confirmación"); a.setHeaderText(null); a.setContentText(msg);
-        var res = a.showAndWait(); return res.isPresent() && res.get() == ButtonType.OK;
-    }
-
-    private void mostrarError(String msg) { Alert a = new Alert(Alert.AlertType.ERROR); a.setTitle("Error"); a.setHeaderText(null); a.setContentText(msg); a.showAndWait(); }
+    private boolean mostrarConfirmacion(String msg) { return Dialogs.showConfirm(msg); }
+    private void mostrarError(String msg) { Dialogs.showError(msg); }
 }

@@ -1,6 +1,7 @@
 package alicanteweb.erp.controller;
 
 import alicanteweb.erp.service.BackupService;
+import alicanteweb.erp.ui.Dialogs;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -235,6 +236,6 @@ public class BackupController {
     // ----------------------------------
     // UI helpers
     // ----------------------------------
-    private void mostrarAlerta(String msg) { Alert alert = new Alert(Alert.AlertType.INFORMATION); alert.setTitle("Atención"); alert.setHeaderText(null); alert.setContentText(msg); alert.showAndWait(); }
-    private void mostrarError(String msg) { Alert alert = new Alert(Alert.AlertType.ERROR); alert.setTitle("Error"); alert.setHeaderText(null); alert.setContentText(msg); alert.showAndWait(); }
+    private void mostrarAlerta(String msg) { Dialogs.showInfo(msg); }
+    private void mostrarError(String msg) { Dialogs.showError(msg); }
 }

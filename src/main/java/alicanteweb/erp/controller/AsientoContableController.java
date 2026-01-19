@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
+import alicanteweb.erp.ui.Dialogs;
 
 /**
  * Controlador para la gestión de Asientos Contables
@@ -290,44 +290,9 @@ public class AsientoContableController {
         cargarDatos();
     }
 
-    private void mostrarAlerta(String msg) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Atención");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-
-    private void mostrarError(String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-
-    private void mostrarExito(String msg) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Éxito");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-
-    private void mostrarInfo(String msg) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Información del Asiento");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
-    }
-
-    private boolean mostrarConfirmacion(String msg) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmación");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        Optional<ButtonType> result = alert.showAndWait();
-        return result.isPresent() && result.get() == ButtonType.OK;
-    }
+    private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
+    private void mostrarError(String msg) { Dialogs.showError(msg); }
+    private void mostrarExito(String msg) { Dialogs.showInfo(msg); }
+    private void mostrarInfo(String msg) { Dialogs.showInfo(msg); }
+    private boolean mostrarConfirmacion(String msg) { return Dialogs.showConfirm(msg); }
 }
