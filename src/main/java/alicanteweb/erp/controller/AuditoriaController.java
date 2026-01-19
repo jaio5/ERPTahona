@@ -126,8 +126,10 @@ public class AuditoriaController {
                 btnVer.setTooltip(new Tooltip("Ver detalles completos"));
 
                 btnVer.setOnAction(e -> {
-                    AuditoriaAccion auditoria = getTableView().getItems().get(getIndex());
-                    mostrarDetalleCompleto(auditoria);
+                    AuditoriaAccion auditoria = getTableRow() != null ? getTableRow().getItem() : null;
+                    if (auditoria != null) {
+                        mostrarDetalleCompleto(auditoria);
+                    }
                 });
             }
 

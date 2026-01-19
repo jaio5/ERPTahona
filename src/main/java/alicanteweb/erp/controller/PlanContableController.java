@@ -25,6 +25,7 @@ public class PlanContableController {
     @FXML private TableColumn<PlanContable, String> colTipo;
     @FXML private TableColumn<PlanContable, Integer> colNivel;
     @FXML private TextField txtBuscar;
+    @FXML private javafx.scene.control.Label lblTotal;
 
     private final PlanContableService planContableService;
     private final ObservableList<PlanContable> cuentasList = FXCollections.observableArrayList();
@@ -72,6 +73,7 @@ public class PlanContableController {
             javafx.application.Platform.runLater(() -> {
                 if (tableCuentas != null) tableCuentas.refresh();
             });
+            actualizarTotal();
         } catch (Exception e) {
             log.error("Error cargando plan contable", e);
             mostrarError("Error al cargar plan contable: " + e.getMessage());
@@ -91,6 +93,7 @@ public class PlanContableController {
                 .toList()
         );
         tableCuentas.setItems(filtered);
+        actualizarTotalFiltrado(filtered.size());
     }
 
     @FXML
@@ -101,7 +104,7 @@ public class PlanContableController {
 
     @FXML
     public void onNuevo() {
-        mostrarAlerta("Función de crear nueva cuenta en desarrollo");
+        abrirFormulario(null);
     }
 
     @FXML
@@ -111,7 +114,37 @@ public class PlanContableController {
             mostrarAlerta("Seleccione una cuenta para editar");
             return;
         }
-        mostrarAlerta("Edición de cuenta en desarrollo");
+        abrirFormulario(cuenta);
+    }
+
+    private void abrirFormulario(PlanContable cuenta) {
+        try {
+            // Obtener contexto de Spring
+            var springContext = alicanteweb.erp.ErpLauncher.getSpringContext();
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/ui/plan_contable_form.fxml"));
+            loader.setControllerFactory(springContext::getBean);
+            javafx.scene.Parent parent = loader.load();
+            Object controller = loader.getController();
+
+            // Intentar llamar setPlanContable si existe
+            try {
+                java.lang.reflect.Method m = controller.getClass().getMethod("setPlanContable", PlanContable.class);
+                m.invoke(controller, cuenta);
+            } catch (NoSuchMethodException ignored) {
+                // no-op
+            }
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle(cuenta == null ? "Nueva Cuenta Contable" : "Editar Cuenta Contable");
+            stage.setScene(new javafx.scene.Scene(parent));
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario plan contable", e);
+            mostrarError("Error abriendo formulario: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -166,5 +199,16 @@ public class PlanContableController {
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
     }
-}
 
+    private void actualizarTotal() {
+        if (lblTotal != null) {
+            lblTotal.setText("Total de cuentas: " + cuentasList.size());
+        }
+    }
+
+    private void actualizarTotalFiltrado(int total) {
+        if (lblTotal != null) {
+            lblTotal.setText("Total de cuentas: " + total);
+        }
+    }
+}

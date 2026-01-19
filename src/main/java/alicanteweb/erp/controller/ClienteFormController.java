@@ -33,6 +33,7 @@ public class ClienteFormController {
     @FXML private TextField txtCodigoPostal;
     @FXML private TextField txtPoblacion;
     @FXML private ComboBox<String> cbProvincia;
+    @FXML private javafx.scene.control.Button btnDirecciones;
 
     // Datos comerciales
     @FXML private ComboBox<String> cbFormaPago;
@@ -61,6 +62,11 @@ public class ClienteFormController {
 
         // Configurar validaciones
         configurarValidaciones();
+
+        // Enlazar botón Direcciones si existe
+        if (btnDirecciones != null) {
+            btnDirecciones.setOnAction(e -> onAbrirDirecciones());
+        }
     }
 
     private void configurarProvincias() {
@@ -329,6 +335,33 @@ public class ClienteFormController {
             }
         } else {
             cerrarVentana();
+        }
+    }
+
+    @FXML
+    public void onAbrirDirecciones() {
+        try {
+            var spring = alicanteweb.erp.ErpLauncher.getSpringContext();
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/ui/direccionesenvio_panel.fxml"));
+            loader.setControllerFactory(spring::getBean);
+            javafx.scene.Parent parent = loader.load();
+            Object ctrl = loader.getController();
+            // Si se puede pasar clienteId filtrado, invocarlo
+            try {
+                if (clienteActual != null && clienteActual.getId() != null) {
+                    var m = ctrl.getClass().getMethod("cargarPorCliente", Long.class);
+                    m.invoke(ctrl, clienteActual.getId());
+                }
+            } catch (NoSuchMethodException ignored) {}
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Direcciones de envío");
+            stage.setScene(new javafx.scene.Scene(parent));
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo panel direcciones", e);
+            mostrarError("Error al abrir direcciones: " + e.getMessage());
         }
     }
 

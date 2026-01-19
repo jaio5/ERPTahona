@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -74,7 +76,7 @@ public class QrCodeService {
 
     /**
      * Genera un QR para VeriFactu con la URL de verificación de AEAT
-     * @param hash Hash de la factura
+     * @param hash Hash de la factura (Base64 o similar)
      * @param nif NIF del emisor
      * @param numeroFactura Número de factura
      * @param fechaExpedicion Fecha de expedición (formato dd-MM-yyyy)
@@ -83,15 +85,38 @@ public class QrCodeService {
      */
     public String generarQRVeriFactu(String hash, String nif, String numeroFactura,
                                      String fechaExpedicion, String importeTotal) {
-        // URL de verificación de AEAT
-        // Formato: https://www2.agenciatributaria.gob.es/wlpl/AVAC-FACT/verificar?hash=...&nif=...&numero=...&fecha=...&importe=...
-        String url = String.format(
-                "https://www2.agenciatributaria.gob.es/wlpl/AVAC-FACT/verificar?hash=%s&nif=%s&numero=%s&fecha=%s&importe=%s",
-                hash, nif, numeroFactura, fechaExpedicion, importeTotal
-        );
+        try {
+            // Asegurar que el hash es seguro para la URL: preferimos Base64 URL-safe sin padding
+            String hashUrlSafe;
+            if (hash == null) {
+                hashUrlSafe = "";
+            } else {
+                // Si parece un Base64 estándar, intentar convertir a URL-safe
+                try {
+                    byte[] decoded = Base64.getDecoder().decode(hash);
+                    hashUrlSafe = Base64.getUrlEncoder().withoutPadding().encodeToString(decoded);
+                } catch (IllegalArgumentException e) {
+                    // No es Base64: hacer URLEncode del valor tal cual
+                    hashUrlSafe = URLEncoder.encode(hash, StandardCharsets.UTF_8);
+                }
+            }
 
-        log.info("Generando QR VeriFactu para factura: {}", numeroFactura);
-        return generarQR(url);
+            // URL de verificación de AEAT
+            String url = String.format(
+                    "https://www2.agenciatributaria.gob.es/wlpl/AVAC-FACT/verificar?hash=%s&nif=%s&numero=%s&fecha=%s&importe=%s",
+                    URLEncoder.encode(hashUrlSafe, StandardCharsets.UTF_8),
+                    URLEncoder.encode(nif != null ? nif : "", StandardCharsets.UTF_8),
+                    URLEncoder.encode(numeroFactura != null ? numeroFactura : "", StandardCharsets.UTF_8),
+                    URLEncoder.encode(fechaExpedicion != null ? fechaExpedicion : "", StandardCharsets.UTF_8),
+                    URLEncoder.encode(importeTotal != null ? importeTotal : "", StandardCharsets.UTF_8)
+            );
+
+            log.info("Generando QR VeriFactu para factura: {} -> URL length {}", numeroFactura, url.length());
+            return generarQR(url);
+        } catch (Exception e) {
+            log.error("Error preparando QR VeriFactu", e);
+            throw new RuntimeException("Error preparando QR VeriFactu", e);
+        }
     }
 
     /**
@@ -188,5 +213,4 @@ public class QrCodeService {
         return generarQR(url);
     }
 }
-
 

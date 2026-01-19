@@ -185,10 +185,36 @@ public class AsientoContableController {
 
     @FXML
     public void onNuevo() {
-        log.info("Crear nuevo asiento contable");
-        mostrarAlerta("Función en desarrollo: Crear nuevo asiento contable\n\n" +
-                     "El siguiente número de asiento sería: " +
-                     asientoContableService.obtenerSiguienteNumero());
+        try {
+            log.info("Abrir formulario nuevo asiento contable");
+            // Crear asiento con número preasignado
+            var siguiente = asientoContableService.obtenerSiguienteNumero();
+            alicanteweb.erp.entities.AsientoContable nuevo = new alicanteweb.erp.entities.AsientoContable();
+            nuevo.setNumero(String.valueOf(siguiente));
+
+            // Cargar FXML del formulario usando Spring context
+            var springContext = alicanteweb.erp.ErpLauncher.getSpringContext();
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/ui/asiento_form.fxml"));
+            loader.setControllerFactory(springContext::getBean);
+            javafx.scene.Parent parent = loader.load();
+            Object controller = loader.getController();
+
+            try {
+                java.lang.reflect.Method m = controller.getClass().getMethod("setAsientoContable", alicanteweb.erp.entities.AsientoContable.class);
+                m.invoke(controller, nuevo);
+            } catch (NoSuchMethodException ignored) { }
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Nuevo Asiento Contable");
+            stage.setScene(new javafx.scene.Scene(parent));
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario de asiento", e);
+            mostrarError("Error abriendo formulario: " + e.getMessage());
+        }
     }
 
     @FXML

@@ -1,5 +1,6 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.util.HashUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -10,10 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
 import java.io.FileInputStream;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.Certificate;
-import java.util.Base64;
 
 @Service
 public class VerifactuAEATService {
@@ -37,13 +36,11 @@ public class VerifactuAEATService {
     private boolean aeatEnabled;
 
     /**
-     * Genera el hash SHA-256 de los datos de la factura
+     * Genera el hash SHA-256 de los datos de la factura (Base64 URL-safe sin padding)
      */
     public String generarHash(String datosFactura) throws Exception {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(datosFactura.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hash);
+            return HashUtils.sha256Base64UrlSafe(datosFactura);
         } catch (Exception e) {
             log.error("Error generando hash", e);
             throw new Exception("Error generando hash: " + e.getMessage(), e);
@@ -77,7 +74,7 @@ public class VerifactuAEATService {
     }
 
     /**
-     * Obtiene la huella digital del certificado
+     * Obtiene la huella digital del certificado (Base64 URL-safe)
      */
     public String getCertFingerprint() throws Exception {
         try {
@@ -89,9 +86,8 @@ public class VerifactuAEATService {
             String alias = ks.aliases().nextElement();
             Certificate cert = ks.getCertificate(alias);
 
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(cert.getEncoded());
-            return Base64.getEncoder().encodeToString(digest);
+            // Usar HashUtils para fingerprint (URL-safe)
+            return HashUtils.sha256Base64UrlSafe(cert.getEncoded());
         } catch (Exception e) {
             log.error("Error obteniendo fingerprint del certificado", e);
             throw new Exception("Error obteniendo fingerprint: " + e.getMessage(), e);

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.BackupController"
+      stylesheets="@/styles/simple-theme.css"
+      spacing="16" style="-fx-background-color: #f8f9fa; -fx-padding: 24;" VBox.vgrow="ALWAYS">
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Label text="📦 Backups" styleClass="title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Crear Backup" onAction="#onCrearBackup" styleClass="button-primary"/>
+        <Button text="Restaurar" onAction="#onRestaurarBackup" styleClass="button"/>
+        <Button text="Eliminar" onAction="#onEliminarBackup" styleClass="button-danger"/>
+        <Button text="Refrescar" onAction="#onRefresh" styleClass="button"/>
+    </HBox>
+
+    <TableView fx:id="tableBackups" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colNombre" text="Nombre" minWidth="240" />
+            <TableColumn fx:id="colTamano" text="Tamaño (MB)" minWidth="120" />
+            <TableColumn fx:id="colFecha" text="Fecha" minWidth="180" />
+            <TableColumn fx:id="colAcciones" text="Acciones" minWidth="120" />
+        </columns>
+    </TableView>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Label fx:id="lblInfo" text=""/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Ver detalle" onAction="#onVerDetalle" styleClass="button"/>
+    </HBox>
+
+</VBox>
+

@@ -142,26 +142,22 @@ public class BackupService {
             throw new IOException("Archivo de backup no encontrado: " + rutaArchivo);
         }
 
-        // Comando mysql
+        // Comando mysql (no utilizar redirección '<' en argumentos de ProcessBuilder)
         List<String> comando = new ArrayList<>();
 
         String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
-            comando.add("cmd.exe");
-            comando.add("/c");
-            comando.add("mysql");
-        } else {
-            comando.add("mysql");
-        }
+        // Ejecutar directamente 'mysql' (debe estar en PATH)
+        comando.add("mysql");
 
         comando.add("-u" + dbUsername);
         comando.add("-p" + dbPassword);
         comando.add(DB_NAME);
-        comando.add("<");
-        comando.add(rutaArchivo);
 
         ProcessBuilder pb = new ProcessBuilder(comando);
         pb.redirectErrorStream(true);
+
+        // Redirigir el archivo de backup como entrada del proceso
+        pb.redirectInput(backupFile);
 
         Process process = pb.start();
         int exitCode = process.waitFor();
@@ -281,6 +277,30 @@ public class BackupService {
 
         } catch (Exception e) {
             log.warn("⚠️ No se pudo verificar mysqldump: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Elimina un backup por ruta completa
+     */
+    public boolean deleteBackup(String rutaCompleta) {
+        try {
+            File file = new File(rutaCompleta);
+            if (file.exists()) {
+                boolean deleted = file.delete();
+                if (deleted) {
+                    log.info("Backup eliminado: {}", rutaCompleta);
+                } else {
+                    log.warn("No se pudo eliminar backup: {}", rutaCompleta);
+                }
+                return deleted;
+            } else {
+                log.warn("Archivo de backup no existe: {}", rutaCompleta);
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("Error eliminando backup {}", rutaCompleta, e);
             return false;
         }
     }

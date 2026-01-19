@@ -1,16 +1,11 @@
 package alicanteweb.erp.controller.ui;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
-import javafx.scene.input.MouseEvent;
-import javafx.animation.ScaleTransition;
-import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +16,6 @@ public class MainPanelController {
     private final ApplicationContext springContext;
 
     @FXML private StackPane contentArea;
-    @FXML private javafx.scene.control.Label lblUsuarioHeader;
     @FXML private javafx.scene.control.Label lblUsuario;
     @FXML private javafx.scene.control.Label lblEstado;
     @FXML private javafx.scene.control.Label lblFecha;
@@ -152,6 +146,12 @@ public class MainPanelController {
     public void onAuditoria() {
         log.info(">>> BOTÓN AUDITORÍA PRESIONADO <<<");
         cargarVistaModulo("/ui/auditoria_panel.fxml");
+    }
+
+    @FXML
+    public void onBackups() {
+        log.info(">>> BOTÓN BACKUPS PRESIONADO <<<");
+        cargarVistaModulo("/ui/backup_panel.fxml");
     }
 
     @FXML

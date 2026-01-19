@@ -34,6 +34,7 @@
                             <ColumnConstraints percentWidth="50"/>
                         </columnConstraints>
 
+                        <!-- FILA 0: Número, Fecha, Concepto -->
                         <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
                             <Label text="Número Asiento" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextField fx:id="txtNumero" promptText="Auto" editable="false"
@@ -46,10 +47,18 @@
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                            <Label text="Descripción *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtDescripcion" promptText="Descripción del asiento"
+                            <Label text="Concepto" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <TextField fx:id="txtConcepto" promptText="Concepto del asiento"
                                        style="-fx-padding: 10;"/>
                         </VBox>
+
+                        <!-- FILA 1: Descripción (ocupa las 3 columnas) -->
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="3">
+                            <Label text="Descripción" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <TextArea fx:id="txtDescripcion" promptText="Descripción del asiento" prefRowCount="3"
+                                      style="-fx-padding: 10; -fx-background-color: #fff; -fx-border-radius: 6;"/>
+                        </VBox>
+
                     </GridPane>
                 </VBox>
 

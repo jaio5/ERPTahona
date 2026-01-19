@@ -8,15 +8,18 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
  * Servicio de cifrado para cumplimiento RGPD
- * - AES-256 para datos personales
+ * - AES-256-GCM para datos personales (autenticado)
  * - BCrypt para contraseñas
  */
 @Service
@@ -28,14 +31,15 @@ public class CifradoService {
 
     private final BCryptPasswordEncoder passwordEncoder;
 
+    private static final int GCM_TAG_LENGTH = 128; // bits
+    private static final int GCM_IV_LENGTH = 12; // bytes (96 bits recommended)
+
     public CifradoService(BCryptPasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
     /**
-     * Cifra un texto usando AES-256
-     * @param texto Texto a cifrar
-     * @return Texto cifrado en Base64
+     * Cifra un texto usando AES-256-GCM. Devuelve Base64( IV || ciphertext )
      */
     public String cifrarAES256(String texto) {
         if (texto == null || texto.isEmpty()) {
@@ -44,20 +48,32 @@ public class CifradoService {
 
         try {
             SecretKey key = getSecretKey();
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            byte[] encrypted = cipher.doFinal(texto.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(encrypted);
+
+            byte[] iv = new byte[GCM_IV_LENGTH];
+            SecureRandom rnd = new SecureRandom();
+            rnd.nextBytes(iv);
+
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+            cipher.init(Cipher.ENCRYPT_MODE, key, spec);
+
+            byte[] ciphertext = cipher.doFinal(texto.getBytes(StandardCharsets.UTF_8));
+
+            // Prefijar IV al ciphertext para poder desencriptar luego: [IV||CIPHERTEXT]
+            ByteBuffer bb = ByteBuffer.allocate(iv.length + ciphertext.length);
+            bb.put(iv);
+            bb.put(ciphertext);
+            byte[] ivAndCipher = bb.array();
+
+            return Base64.getEncoder().encodeToString(ivAndCipher);
         } catch (Exception e) {
-            log.error("Error cifrando con AES-256", e);
-            throw new RuntimeException("Error en cifrado AES-256", e);
+            log.error("Error cifrando con AES-256-GCM", e);
+            throw new RuntimeException("Error en cifrado AES-256-GCM", e);
         }
     }
 
     /**
-     * Descifra un texto cifrado con AES-256
-     * @param textoCifrado Texto cifrado en Base64
-     * @return Texto original
+     * Descifra un texto cifrado con AES-256-GCM (recibe Base64(IV||ciphertext))
      */
     public String descifrarAES256(String textoCifrado) {
         if (textoCifrado == null || textoCifrado.isEmpty()) {
@@ -66,14 +82,26 @@ public class CifradoService {
 
         try {
             SecretKey key = getSecretKey();
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.DECRYPT_MODE, key);
-            byte[] decoded = Base64.getDecoder().decode(textoCifrado);
-            byte[] decrypted = cipher.doFinal(decoded);
+
+            byte[] ivAndCipher = Base64.getDecoder().decode(textoCifrado);
+            if (ivAndCipher.length < GCM_IV_LENGTH) {
+                throw new IllegalArgumentException("Texto cifrado inválido");
+            }
+
+            byte[] iv = new byte[GCM_IV_LENGTH];
+            System.arraycopy(ivAndCipher, 0, iv, 0, GCM_IV_LENGTH);
+            byte[] ciphertext = new byte[ivAndCipher.length - GCM_IV_LENGTH];
+            System.arraycopy(ivAndCipher, GCM_IV_LENGTH, ciphertext, 0, ciphertext.length);
+
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+            cipher.init(Cipher.DECRYPT_MODE, key, spec);
+
+            byte[] decrypted = cipher.doFinal(ciphertext);
             return new String(decrypted, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            log.error("Error descifrando con AES-256", e);
-            throw new RuntimeException("Error en descifrado AES-256", e);
+            log.error("Error descifrando con AES-256-GCM", e);
+            throw new RuntimeException("Error en descifrado AES-256-GCM", e);
         }
     }
 
@@ -100,11 +128,10 @@ public class CifradoService {
             return false;
         }
 
-        log.info("🔍 Verificando password - Input: '{}', Hash en BD: '{}'", password, hash.substring(0, Math.min(20, hash.length())));
-
-        // PRIORIDAD 1: Comparación directa (texto plano)
+        // PRIORIDAD 1: Comparación directa (texto plano) - permitimos temporalmente para compatibilidad,
+        // pero no se debe usar en nuevas implementaciones.
         if (password.equals(hash)) {
-            log.warn("✅ MATCH DIRECTO - Contraseña en texto plano");
+            log.warn("MATCH DIRECTO - Contraseña en texto plano (compatibilidad)");
             return true;
         }
 
@@ -112,13 +139,13 @@ public class CifradoService {
         try {
             boolean bcryptMatch = passwordEncoder.matches(password, hash);
             if (bcryptMatch) {
-                log.info("✅ MATCH BCRYPT");
+                log.info("MATCH BCRYPT");
             } else {
-                log.warn("❌ NO MATCH - Ni texto plano ni BCrypt coinciden");
+                log.warn("NO MATCH - Ni texto plano ni BCrypt coinciden");
             }
             return bcryptMatch;
         } catch (Exception e) {
-            log.error("❌ Error verificando BCrypt: {}", e.getMessage());
+            log.error("Error verificando BCrypt: {}", e.getMessage());
             return false;
         }
     }
@@ -139,25 +166,44 @@ public class CifradoService {
     }
 
     /**
-     * Obtiene la clave secreta desde la configuración
+     * Obtiene la clave secreta desde la configuración.
+     * Se acepta que `aesKeyString` esté en Base64 (recomendado). Si no, se deriva
+     * una clave de 256 bits aplicando SHA-256 sobre el string (menos ideal pero
+     * útil para compatibilidad con valores legibles).
      */
     private SecretKey getSecretKey() {
         try {
-            // Si la clave es la default, generamos una y avisamos
-            if (aesKeyString.equals("DEFAULT_KEY_32_CHARACTERS_MIN!!")) {
-                log.warn("âš ï¸ Usando clave AES por defecto. CONFIGURA una clave segura en application.properties");
+            if (aesKeyString == null || aesKeyString.isBlank() || aesKeyString.equals("DEFAULT_KEY_32_CHARACTERS_MIN!!")) {
+                log.warn("⚠️ Usando clave AES por defecto o no configurada. CONFIGURA una clave segura (Base64) en application.properties");
                 log.warn("   Genera una con: CifradoService.generarKeyAES()");
             }
 
-            // Asegurar que la clave tenga al menos 32 caracteres para AES-256
-            String key = aesKeyString;
-            if (key.length() < 32) {
-                key = String.format("%-32s", key).replace(' ', '0');
-            } else if (key.length() > 32) {
-                key = key.substring(0, 32);
+            byte[] keyBytes = null;
+            // Intentar interpretar la clave como Base64
+            try {
+                keyBytes = Base64.getDecoder().decode(aesKeyString);
+                if (keyBytes.length != 16 && keyBytes.length != 24 && keyBytes.length != 32) {
+                    // No tiene longitud válida para AES -> fallback
+                    keyBytes = null;
+                }
+            } catch (IllegalArgumentException ignored) {
+                keyBytes = null;
             }
 
-            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+            if (keyBytes == null) {
+                // Fallback: derivar 32 bytes con SHA-256
+                MessageDigest md = MessageDigest.getInstance("SHA-256");
+                keyBytes = md.digest(aesKeyString.getBytes(StandardCharsets.UTF_8));
+            }
+
+            // Asegurar longitud 32 bytes para AES-256
+            if (keyBytes.length != 32) {
+                // Si es 16 o 24, no cambiamos; pero preferimos 32
+                byte[] tmp = new byte[32];
+                System.arraycopy(keyBytes, 0, tmp, 0, Math.min(keyBytes.length, 32));
+                keyBytes = tmp;
+            }
+
             return new SecretKeySpec(keyBytes, "AES");
         } catch (Exception e) {
             throw new RuntimeException("Error obteniendo clave AES", e);
@@ -166,8 +212,8 @@ public class CifradoService {
 
     /**
      * Genera un token aleatorio seguro (para recuperación de contraseña, etc.)
-     * @param length Longitud del token
-     * @return Token aleatorio
+     * @param length Longitud en bytes antes de codificar en Base64 URL-safe
+     * @return Token aleatorio (Base64 URL-safe)
      */
     public String generarTokenSeguro(int length) {
         SecureRandom random = new SecureRandom();
@@ -176,5 +222,4 @@ public class CifradoService {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }
-
 

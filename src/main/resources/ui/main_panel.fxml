@@ -30,6 +30,7 @@
                 <Button text="🏢 Proveedores" onAction="#onProveedores" styleClass="menu-button"/>
                 <Button text="📝 Facturas" onAction="#onFacturas" styleClass="menu-button"/>
                 <Button text="📋 Albaranes" onAction="#onAlbaranes" styleClass="menu-button"/>
+                <Button text="💾 Backups" onAction="#onBackups" styleClass="menu-button"/>
 
                 <MenuButton text="💼 Más" styleClass="menu-button">
                     <items>

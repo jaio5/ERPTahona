@@ -5,6 +5,7 @@ import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.repository.VerifactuEvidenceRepository;
+import alicanteweb.erp.util.HashUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -122,18 +123,17 @@ public class VerifactuService {
     }
 
     /**
-     * Genera el hash SHA-256 de los datos proporcionados
+     * Genera el hash SHA-256 de los datos proporcionados (Base64 URL-safe sin padding)
      */
-    public String generarHash(String datos) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hash = digest.digest(datos.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(hash);
+    public String generarHash(String datos) throws Exception {
+        // Usar formato URL-safe para persistir y usar en QR
+        return HashUtils.sha256Base64UrlSafe(datos);
     }
 
     /**
      * Genera el hash de una factura con encadenamiento (incluye hash anterior)
      */
-    public String generarHashEncadenado(String datosFactura, String hashAnterior) throws NoSuchAlgorithmException {
+    public String generarHashEncadenado(String datosFactura, String hashAnterior) throws Exception {
         String datosCompletos = datosFactura;
         if (hashAnterior != null && !hashAnterior.isEmpty()) {
             datosCompletos += "|" + hashAnterior;
@@ -172,15 +172,15 @@ public class VerifactuService {
     /**
      * Obtiene la huella digital (fingerprint) del certificado
      */
-    public String getCertificateFingerprint() throws NoSuchAlgorithmException {
+    public String getCertificateFingerprint() throws Exception {
         if (!enabled || certificate == null) {
             return null;
         }
 
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(certificate.getEncoded());
-            return Base64.getEncoder().encodeToString(digest);
+            // Usar HashUtils para fingerprint en Base64 URL-safe
+            byte[] certBytes = certificate.getEncoded();
+            return HashUtils.sha256Base64UrlSafe(certBytes);
         } catch (Exception e) {
             log.error("Error obteniendo fingerprint del certificado", e);
             throw new NoSuchAlgorithmException("Error obteniendo fingerprint", e);
