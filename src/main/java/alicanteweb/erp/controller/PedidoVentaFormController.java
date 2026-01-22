@@ -32,16 +32,23 @@ public class PedidoVentaFormController {
     @FXML private Label lblNumero;
     @FXML private Label lblTotal;
 
+    @FXML private Label lblBaseImponible;
+    @FXML private Label lblIVA;
+    @FXML private Label txtTotal;
+
     @FXML private TextField txtNumero;
     @FXML private DatePicker dpFecha;
     @FXML private ComboBox<Cliente> cbCliente;
     @FXML private ComboBox<String> cbEstado;
     @FXML private TextArea txtObservaciones;
+    @FXML private Button btnGuardarPedido;
 
     @FXML private TableView<LineaPedidoTemp> tableLineas;
     @FXML private TableColumn<LineaPedidoTemp, String> colArticulo;
+    @FXML private TableColumn<LineaPedidoTemp, String> colDescripcion;
     @FXML private TableColumn<LineaPedidoTemp, Integer> colCantidad;
     @FXML private TableColumn<LineaPedidoTemp, BigDecimal> colPrecio;
+    @FXML private TableColumn<LineaPedidoTemp, BigDecimal> colDescuento;
     @FXML private TableColumn<LineaPedidoTemp, BigDecimal> colImporte;
 
     private final PedidoService pedidoService;
@@ -50,7 +57,7 @@ public class PedidoVentaFormController {
 
     private Pedido pedidoActual;
     private boolean modoEdicion = false;
-    private ObservableList<LineaPedidoTemp> lineasTemp = FXCollections.observableArrayList();
+    private final ObservableList<LineaPedidoTemp> lineasTemp = FXCollections.observableArrayList();
 
     public PedidoVentaFormController(PedidoService pedidoService,
                                      ClienteService clienteService,
@@ -68,6 +75,20 @@ public class PedidoVentaFormController {
         configurarEstados();
         configurarTablaLineas();
         configurarFechas();
+
+        // Bind botón Guardar: habilitar solo si cliente seleccionado, fecha existe y hay al menos una línea
+        try {
+            if (btnGuardarPedido != null) {
+                btnGuardarPedido.disableProperty().bind(
+                    javafx.beans.binding.Bindings.createBooleanBinding(() ->
+                        cbCliente.getValue() == null || dpFecha.getValue() == null || lineasTemp.isEmpty(),
+                        cbCliente.valueProperty(), dpFecha.valueProperty(), lineasTemp
+                    )
+                );
+            }
+        } catch (Exception e) {
+            log.debug("No se pudo bindear btnGuardarPedido: {}", e.getMessage());
+        }
     }
 
     private void configurarClientes() {
@@ -79,7 +100,7 @@ public class PedidoVentaFormController {
 
             cbCliente.setItems(FXCollections.observableArrayList(clientes));
 
-            cbCliente.setCellFactory(param -> new ListCell<Cliente>() {
+            cbCliente.setCellFactory(param -> new ListCell<>() {
                 @Override
                 protected void updateItem(Cliente item, boolean empty) {
                     super.updateItem(item, empty);
@@ -87,7 +108,7 @@ public class PedidoVentaFormController {
                 }
             });
 
-            cbCliente.setButtonCell(new ListCell<Cliente>() {
+            cbCliente.setButtonCell(new ListCell<>() {
                 @Override
                 protected void updateItem(Cliente item, boolean empty) {
                     super.updateItem(item, empty);
@@ -111,15 +132,15 @@ public class PedidoVentaFormController {
 
     private void configurarTablaLineas() {
         if (colArticulo != null) colArticulo.setCellValueFactory(new PropertyValueFactory<>("articulo"));
+        if (colDescripcion != null) colDescripcion.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
         if (colCantidad != null) colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
         if (colPrecio != null) colPrecio.setCellValueFactory(new PropertyValueFactory<>("precio"));
+        if (colDescuento != null) colDescuento.setCellValueFactory(new PropertyValueFactory<>("descuento"));
         if (colImporte != null) colImporte.setCellValueFactory(new PropertyValueFactory<>("importe"));
 
         if (tableLineas != null) {
             tableLineas.setItems(lineasTemp);
-            lineasTemp.addListener((javafx.collections.ListChangeListener.Change<? extends LineaPedidoTemp> c) -> {
-                calcularTotales();
-            });
+            lineasTemp.addListener((javafx.collections.ListChangeListener.Change<? extends LineaPedidoTemp> c) -> calcularTotales());
         }
     }
 
@@ -195,7 +216,7 @@ public class PedidoVentaFormController {
                 .toList();
             cbArticulo.setItems(FXCollections.observableArrayList(articulos));
 
-            cbArticulo.setCellFactory(param -> new ListCell<Articulo>() {
+            cbArticulo.setCellFactory(param -> new ListCell<>() {
                 @Override
                 protected void updateItem(Articulo item, boolean empty) {
                     super.updateItem(item, empty);
@@ -203,7 +224,7 @@ public class PedidoVentaFormController {
                 }
             });
 
-            cbArticulo.setButtonCell(new ListCell<Articulo>() {
+            cbArticulo.setButtonCell(new ListCell<>() {
                 @Override
                 protected void updateItem(Articulo item, boolean empty) {
                     super.updateItem(item, empty);
@@ -254,7 +275,7 @@ public class PedidoVentaFormController {
         });
 
         Optional<LineaPedidoTemp> result = dialog.showAndWait();
-        result.ifPresent(linea -> lineasTemp.add(linea));
+        result.ifPresent(lineasTemp::add);
     }
 
     @FXML
@@ -273,6 +294,12 @@ public class PedidoVentaFormController {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         lblTotal.setText("Total: " + total.setScale(2, RoundingMode.HALF_UP) + " EUR");
+        // actualizar labels de resumen si existen
+        try {
+            if (lblBaseImponible != null) lblBaseImponible.setText(total.setScale(2, RoundingMode.HALF_UP) + " €");
+            if (lblIVA != null) lblIVA.setText("0.00 €");
+            if (txtTotal != null) txtTotal.setText(total.setScale(2, RoundingMode.HALF_UP) + " €");
+        } catch (Exception ignored) {}
     }
 
     @FXML
@@ -294,6 +321,26 @@ public class PedidoVentaFormController {
                 .map(LineaPedidoTemp::getImporte)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             pedidoActual.setTotal(total);
+
+            // Convertir lineas temporales a entidades PedidoLinea
+            pedidoActual.getLineas().clear();
+            for (LineaPedidoTemp lt : lineasTemp) {
+                PedidoLinea linea = new PedidoLinea();
+                // intentar obtener articulo por nombre (mejor usar id en una mejora futura)
+                if (lt.getArticulo() != null) {
+                    Articulo a = articuloService.findAll().stream()
+                        .filter(x -> x.getNombre().equals(lt.getArticulo()))
+                        .findFirst().orElse(null);
+                    linea.setArticulo(a);
+                }
+                linea.setDescripcion(null);
+                linea.setCantidad(new BigDecimal(lt.getCantidad()));
+                linea.setPrecio(lt.getPrecio());
+                linea.setDescuento(BigDecimal.ZERO);
+                linea.setIva(new BigDecimal("21"));
+                linea.setPedido(pedidoActual);
+                pedidoActual.getLineas().add(linea);
+            }
 
             pedidoService.save(pedidoActual);
             mostrarExito("Pedido guardado correctamente");
@@ -350,23 +397,31 @@ public class PedidoVentaFormController {
 
     public static class LineaPedidoTemp {
         private String articulo;
+        private String descripcion;
         private int cantidad;
         private BigDecimal precio;
+        private BigDecimal descuento;
         private BigDecimal importe;
 
         public LineaPedidoTemp(String articulo, int cantidad, BigDecimal precio, BigDecimal importe) {
             this.articulo = articulo;
+            this.descripcion = "";
             this.cantidad = cantidad;
             this.precio = precio;
+            this.descuento = BigDecimal.ZERO;
             this.importe = importe;
         }
 
         public String getArticulo() { return articulo; }
         public void setArticulo(String articulo) { this.articulo = articulo; }
+        public String getDescripcion() { return descripcion; }
+        public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
         public int getCantidad() { return cantidad; }
         public void setCantidad(int cantidad) { this.cantidad = cantidad; }
         public BigDecimal getPrecio() { return precio; }
         public void setPrecio(BigDecimal precio) { this.precio = precio; }
+        public BigDecimal getDescuento() { return descuento; }
+        public void setDescuento(BigDecimal descuento) { this.descuento = descuento; }
         public BigDecimal getImporte() { return importe; }
         public void setImporte(BigDecimal importe) { this.importe = importe; }
     }

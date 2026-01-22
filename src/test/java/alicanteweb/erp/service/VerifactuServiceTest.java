@@ -79,7 +79,7 @@ class VerifactuServiceTest {
     }
 
     @Test
-    void testGenerarHash() throws NoSuchAlgorithmException {
+    void testGenerarHash() throws Exception {
         // Arrange
         String datos = "FV-2026-001|2026-01-12|121.00|B12345678";
 
@@ -94,7 +94,7 @@ class VerifactuServiceTest {
     }
 
     @Test
-    void testGenerarHashEncadenado() throws NoSuchAlgorithmException {
+    void testGenerarHashEncadenado() throws Exception {
         // Arrange
         String datos = "FV-2026-002|2026-01-13|150.00|B12345678";
         String hashAnterior = "ABC123XYZ789";
@@ -108,7 +108,7 @@ class VerifactuServiceTest {
     }
 
     @Test
-    void testGenerarHashSinEncadenar() throws NoSuchAlgorithmException {
+    void testGenerarHashSinEncadenar() throws Exception {
         // Arrange
         String datos = "FV-2026-001|2026-01-12|121.00|B12345678";
 
@@ -167,14 +167,14 @@ class VerifactuServiceTest {
     }
 
     @Test
-    void testGetCertificateFingerprintDeshabilitado() throws NoSuchAlgorithmException {
+    void testGetCertificateFingerprintDeshabilitado() throws Exception {
         // Sin certificado, debe retornar null
         String fingerprint = verifactuService.getCertificateFingerprint();
         assertNull(fingerprint);
     }
 
     @Test
-    void testHashesDiferentesParaDatosDiferentes() throws NoSuchAlgorithmException {
+    void testHashesDiferentesParaDatosDiferentes() throws Exception {
         // Arrange
         String datos1 = "FV-2026-001|100.00";
         String datos2 = "FV-2026-002|200.00";
@@ -188,7 +188,7 @@ class VerifactuServiceTest {
     }
 
     @Test
-    void testHashConsistente() throws NoSuchAlgorithmException {
+    void testHashConsistente() throws Exception {
         // El mismo input debe producir el mismo hash
         String datos = "FV-2026-001|100.00|B12345678";
 

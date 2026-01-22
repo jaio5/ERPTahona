@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.AlbaranFormController"
       styleClass="main-container" spacing="15">
-
-    <stylesheets>
-        <String fx:value="@/styles/unified-styles.css"/>
-    </stylesheets>
 
     <Label text="📦 FORMULARIO DE ALBARÁN" styleClass="title-panel"/>
 
@@ -78,8 +73,8 @@
     <!-- BOTONES -->
     <HBox spacing="15" style="-fx-alignment: center-right; -fx-padding: 15;">
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="💾 Guardar" styleClass="button-primary" onAction="#onGuardar" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
-        <Button text="🧾 Convertir a Factura" styleClass="button-success" onAction="#onConvertirFactura" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
-        <Button text="❌ Cancelar" styleClass="button-neutral" onAction="#onCancelar" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
+        <Button fx:id="btnGuardarAlbaran" text="💾 Guardar" styleClass="button-primary" onAction="#onGuardar" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
+        <Button fx:id="btnConvertirFactura" text="🧾 Convertir a Factura" styleClass="button-success" onAction="#onConvertirFactura" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
+        <Button fx:id="btnCancelarAlbaran" text="❌ Cancelar" styleClass="button-neutral" onAction="#onCancelar" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
     </HBox>
 </VBox>

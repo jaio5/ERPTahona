@@ -198,11 +198,9 @@ public class AsientoContableController {
             loader.setControllerFactory(springContext::getBean);
             javafx.scene.Parent parent = loader.load();
             Object controller = loader.getController();
-
-            try {
-                java.lang.reflect.Method m = controller.getClass().getMethod("setAsientoContable", alicanteweb.erp.entities.AsientoContable.class);
-                m.invoke(controller, nuevo);
-            } catch (NoSuchMethodException ignored) { }
+            if (controller instanceof AsientoFormController) {
+                ((AsientoFormController) controller).setAsientoContable(nuevo);
+            }
 
             javafx.stage.Stage stage = new javafx.stage.Stage();
             stage.setTitle("Nuevo Asiento Contable");
@@ -231,14 +229,17 @@ public class AsientoContableController {
         BigDecimal totalHaber = asientoContableService.calcularTotalHaber(asiento);
         boolean cuadrado = asientoContableService.validarAsiento(asiento);
 
-        String info = String.format(
-            "Asiento Nº: %s\n" +
-            "Fecha: %s\n" +
-            "Concepto: %s\n\n" +
-            "Total Debe: %.2f €\n" +
-            "Total Haber: %.2f €\n" +
-            "Descuadre: %.2f €\n\n" +
-            "Estado: %s",
+        String template = """
+            Asiento Nº: %s
+            Fecha: %s
+            Concepto: %s
+            Total Debe: %.2f €
+            Total Haber: %.2f €
+            Descuadre: %.2f €
+            Estado: %s
+            """;
+
+        String info = String.format(template,
             asiento.getNumero(),
             asiento.getFecha().format(DATE_FORMATTER),
             asiento.getConcepto(),
@@ -276,7 +277,7 @@ public class AsientoContableController {
             try {
                 asientoContableService.deleteById(asiento.getId());
                 cargarDatos();
-                mostrarExito("Asiento eliminado correctamente");
+                mostrarExito();
             } catch (Exception e) {
                 log.error("Error eliminando asiento", e);
                 mostrarError("Error al eliminar: " + e.getMessage());
@@ -292,7 +293,7 @@ public class AsientoContableController {
 
     private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
     private void mostrarError(String msg) { Dialogs.showError(msg); }
-    private void mostrarExito(String msg) { Dialogs.showInfo(msg); }
+    private void mostrarExito() { Dialogs.showInfo("Asiento eliminado correctamente"); }
     private void mostrarInfo(String msg) { Dialogs.showInfo(msg); }
     private boolean mostrarConfirmacion(String msg) { return Dialogs.showConfirm(msg); }
 }

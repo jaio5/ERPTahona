@@ -40,6 +40,33 @@ public class ClienteService {
 
     @Transactional
     public Cliente save(Cliente cliente) {
+        if (cliente == null) throw new IllegalArgumentException("Cliente nulo");
+
+        String codigo = cliente.getCodigo();
+        if (codigo == null || codigo.trim().isEmpty()) {
+            throw new IllegalArgumentException("El código del cliente es obligatorio");
+        }
+
+        // Comprobar duplicados por código
+        var optCodigo = repository.findByCodigo(codigo.trim());
+        if (optCodigo.isPresent()) {
+            var existente = optCodigo.get();
+            if (cliente.getId() == null || !existente.getId().equals(cliente.getId())) {
+                throw new IllegalArgumentException("Ya existe un cliente con el código: " + codigo);
+            }
+        }
+
+        // Comprobar duplicados por CIF (si presente)
+        if (cliente.getCif() != null && !cliente.getCif().trim().isEmpty()) {
+            var optCif = repository.findByCif(cliente.getCif().trim());
+            if (optCif.isPresent()) {
+                var existente = optCif.get();
+                if (cliente.getId() == null || !existente.getId().equals(cliente.getId())) {
+                    throw new IllegalArgumentException("Ya existe un cliente con el CIF: " + cliente.getCif());
+                }
+            }
+        }
+
         return repository.save(cliente);
     }
 

@@ -29,6 +29,7 @@ public class FacturaCompraFormController {
     @FXML private TextField txtNumFacturaProveedor; // campo del FXML
     @FXML private TextField txtTotal;
     @FXML private TextArea txtObservaciones;
+    @FXML private Button btnGuardarFactura;
 
     // Líneas
     @FXML private TableView<FacturaCompraLinea> tableLineas;
@@ -65,6 +66,20 @@ public class FacturaCompraFormController {
         cargarProveedores();
         configurarTablaLineas();
         configurarCalculoAutomatico();
+
+        // Bind del botón guardar: habilitar solo si hay proveedor seleccionado y al menos una línea
+        try {
+            if (btnGuardarFactura != null) {
+                btnGuardarFactura.disableProperty().bind(
+                    javafx.beans.binding.Bindings.createBooleanBinding(() ->
+                        cbProveedor == null || cbProveedor.getValue() == null || lineas.isEmpty(),
+                        cbProveedor == null ? null : cbProveedor.valueProperty(), lineas
+                    )
+                );
+            }
+        } catch (Exception e) {
+            log.debug("No se pudo bindear btnGuardarFactura: {}", e.getMessage());
+        }
     }
 
     private void cargarProveedores() {

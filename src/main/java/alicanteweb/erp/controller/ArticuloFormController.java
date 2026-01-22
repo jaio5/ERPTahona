@@ -49,6 +49,10 @@ public class ArticuloFormController {
 
     // Estado
     @FXML private CheckBox chkActivo;
+    @FXML private Label lblErrCodigo;
+    @FXML private Label lblErrNombre;
+    @FXML private Label lblErrPrecioVenta;
+    @FXML private Button btnGuardarArticulo;
 
     private final ArticuloService articuloService;
     private Articulo articuloActual;
@@ -69,6 +73,18 @@ public class ArticuloFormController {
         configurarIVA();
         configurarValidaciones();
         configurarCalculoAutomatico();
+        setupInlineValidation();
+        // Bind del botón guardar a la validez del formulario
+        try {
+            if (btnGuardarArticulo != null) {
+                btnGuardarArticulo.disableProperty().bind(
+                    javafx.beans.binding.Bindings.createBooleanBinding(() -> !isFormValid(),
+                        txtCodigo.textProperty(), txtNombre.textProperty(), txtPrecioVenta.textProperty())
+                );
+            }
+        } catch (Exception e) {
+            log.debug("No se pudo bindear btnGuardarArticulo: {}", e.getMessage());
+        }
     }
 
     private void configurarCategorias() {
@@ -390,6 +406,9 @@ public class ArticuloFormController {
 
             cerrarVentana();
 
+        } catch (IllegalArgumentException e) {
+            log.warn("Validación al guardar artículo: {}", e.getMessage());
+            mostrarError("No se pudo guardar: " + e.getMessage());
         } catch (Exception e) {
             log.error("❌ Error guardando artículo", e);
             mostrarError("Error al guardar el artículo: " + e.getMessage());
@@ -406,16 +425,79 @@ public class ArticuloFormController {
         }
     }
 
+    private void setupInlineValidation() {
+        if (txtCodigo != null && lblErrCodigo != null) {
+            txtCodigo.textProperty().addListener((obs, oldV, newV) -> {
+                if (newV == null || newV.trim().isEmpty()) {
+                    lblErrCodigo.setText("El código es obligatorio");
+                    txtCodigo.setStyle("-fx-border-color: #e55353;");
+                } else {
+                    lblErrCodigo.setText("");
+                    txtCodigo.setStyle("");
+                }
+            });
+        }
+
+        if (txtNombre != null && lblErrNombre != null) {
+            txtNombre.textProperty().addListener((obs, oldV, newV) -> {
+                if (newV == null || newV.trim().isEmpty()) {
+                    lblErrNombre.setText("El nombre es obligatorio");
+                    txtNombre.setStyle("-fx-border-color: #e55353;");
+                } else {
+                    lblErrNombre.setText("");
+                    txtNombre.setStyle("");
+                }
+            });
+        }
+
+        if (txtPrecioVenta != null && lblErrPrecioVenta != null) {
+            txtPrecioVenta.textProperty().addListener((obs, oldV, newV) -> {
+                try {
+                    if (newV == null || newV.trim().isEmpty()) {
+                        lblErrPrecioVenta.setText("El precio de venta es obligatorio");
+                        txtPrecioVenta.setStyle("-fx-border-color: #e55353;");
+                    } else {
+                        double v = Double.parseDouble(newV);
+                        if (v < 0) {
+                            lblErrPrecioVenta.setText("El precio no puede ser negativo");
+                            txtPrecioVenta.setStyle("-fx-border-color: #e55353;");
+                        } else {
+                            lblErrPrecioVenta.setText("");
+                            txtPrecioVenta.setStyle("");
+                        }
+                    }
+                } catch (Exception e) {
+                    lblErrPrecioVenta.setText("Precio inválido");
+                    txtPrecioVenta.setStyle("-fx-border-color: #e55353;");
+                }
+            });
+        }
+    }
+
+    private boolean isFormValid() {
+        boolean codigoOk = txtCodigo != null && txtCodigo.getText() != null && !txtCodigo.getText().trim().isEmpty();
+        boolean nombreOk = txtNombre != null && txtNombre.getText() != null && !txtNombre.getText().trim().isEmpty();
+        boolean precioOk;
+        if (txtPrecioVenta != null && txtPrecioVenta.getText() != null && !txtPrecioVenta.getText().trim().isEmpty()) {
+            try { precioOk = Double.parseDouble(txtPrecioVenta.getText()) >= 0; } catch (Exception e) { precioOk = false; }
+        } else {
+            precioOk = false;
+        }
+        return codigoOk && nombreOk && precioOk;
+    }
+
     private boolean validarFormulario() {
         StringBuilder errores = new StringBuilder();
 
         // Validar campos obligatorios
         if (txtCodigo.getText().trim().isEmpty()) {
             errores.append("• El código es obligatorio\n");
+            if (lblErrCodigo != null) lblErrCodigo.setText("El código es obligatorio");
         }
 
         if (txtNombre.getText().trim().isEmpty()) {
             errores.append("• El nombre es obligatorio\n");
+            if (lblErrNombre != null) lblErrNombre.setText("El nombre es obligatorio");
         }
 
         // Validar precios
@@ -472,9 +554,6 @@ public class ArticuloFormController {
         stage.close();
     }
 
-    private void mostrarAlerta(String msg) {
-        Dialogs.showWarn(msg);
-    }
 
     private void mostrarExito(String msg) {
         Dialogs.showInfo(msg);

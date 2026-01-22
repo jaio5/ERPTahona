@@ -27,6 +27,10 @@ public class ClienteFormController {
     @FXML private TextField txtCIF;
     @FXML private TextField txtTelefono;
     @FXML private TextField txtEmail;
+    @FXML private javafx.scene.control.Button btnGuardar;
+    @FXML private Label lblErrNombre;
+    @FXML private Label lblErrCIF;
+    @FXML private Label lblErrEmail;
 
     // Dirección
     @FXML private TextField txtDireccion;
@@ -62,6 +66,21 @@ public class ClienteFormController {
 
         // Configurar validaciones
         configurarValidaciones();
+
+        // Habilitar/deshabilitar botón Guardar según campos obligatorios
+        try {
+            // bindear a validez del formulario (deshabilitado si NO válido)
+            if (btnGuardar != null) {
+                // validar en tiempo real
+                setupInlineValidation();
+                btnGuardar.disableProperty().bind(
+                    javafx.beans.binding.Bindings.createBooleanBinding(() -> !isFormValid(),
+                        txtNombre.textProperty(), txtCIF.textProperty(), txtEmail.textProperty())
+                );
+            }
+        } catch (Exception e) {
+            log.debug("No se pudo bindear btnGuardar: {}", e.getMessage());
+        }
 
         // Enlazar botón Direcciones si existe
         if (btnDirecciones != null) {
@@ -154,6 +173,8 @@ public class ClienteFormController {
                 lblTitulo.setText("Nuevo Cliente");
                 limpiarFormulario();
                 generarCodigoAutomatico();
+                // Focus en Nombre para nueva creación
+                Platform.runLater(() -> { if (txtNombre != null) txtNombre.requestFocus(); });
             }
         });
     }
@@ -294,17 +315,29 @@ public class ClienteFormController {
             // Cerrar el diálogo
             cerrarVentana();
 
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            log.error("❌ Error de integridad de datos", e);
-            String mensaje = "Error: ";
-            if (e.getMessage().contains("codigo")) {
-                mensaje += "Ya existe un cliente con ese código";
-            } else if (e.getMessage().contains("cif")) {
-                mensaje += "Ya existe un cliente con ese CIF";
-            } else {
-                mensaje += "Datos duplicados o inválidos";
+        } catch (IllegalArgumentException e) {
+            log.warn("Validación al guardar cliente: {}", e.getMessage());
+            Dialogs.showError("No se pudo guardar: " + e.getMessage());
+            // Enfocar el campo correspondiente para corrección rápida
+            String msg = e.getMessage().toLowerCase();
+            if (msg.contains("codigo") && txtCodigo != null) {
+                txtCodigo.requestFocus();
+            } else if (msg.contains("cif") && txtCIF != null) {
+                txtCIF.requestFocus();
+            } else if (txtNombre != null) {
+                txtNombre.requestFocus();
             }
-            Dialogs.showError(mensaje);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+             log.error("❌ Error de integridad de datos", e);
+             String mensaje = "Error: ";
+             if (e.getMessage().contains("codigo")) {
+                 mensaje += "Ya existe un cliente con ese código";
+             } else if (e.getMessage().contains("cif")) {
+                 mensaje += "Ya existe un cliente con ese CIF";
+             } else {
+                 mensaje += "Datos duplicados o inválidos";
+             }
+             Dialogs.showError(mensaje);
         } catch (jakarta.validation.ConstraintViolationException e) {
             log.error("❌ Error de validación de constraints", e);
             StringBuilder errores = new StringBuilder("Errores de validación:\n");
@@ -358,16 +391,84 @@ public class ClienteFormController {
         }
     }
 
+    private void setupInlineValidation() {
+        // Nombre obligatorio
+        if (txtNombre != null && lblErrNombre != null) {
+            txtNombre.textProperty().addListener((obs, oldV, newV) -> {
+                if (newV == null || newV.trim().isEmpty()) {
+                    lblErrNombre.setText("El nombre es obligatorio");
+                    txtNombre.setStyle("-fx-border-color: #e55353; -fx-border-radius: 4;");
+                } else {
+                    lblErrNombre.setText("");
+                    txtNombre.setStyle("");
+                }
+            });
+        }
+
+        // CIF obligatorio y formato
+        if (txtCIF != null && lblErrCIF != null) {
+            txtCIF.textProperty().addListener((obs, oldV, newV) -> {
+                if (newV == null || newV.trim().isEmpty()) {
+                    lblErrCIF.setText("El CIF/NIF es obligatorio");
+                    txtCIF.setStyle("-fx-border-color: #e55353; -fx-border-radius: 4;");
+                } else if (!isValidCif(newV.trim())) {
+                    lblErrCIF.setText("Formato de CIF/NIF inválido");
+                    txtCIF.setStyle("-fx-border-color: #e55353; -fx-border-radius: 4;");
+                } else {
+                    lblErrCIF.setText("");
+                    txtCIF.setStyle("");
+                }
+            });
+        }
+
+        // Email opcional pero si se rellena debe ser válido
+        if (txtEmail != null && lblErrEmail != null) {
+            txtEmail.textProperty().addListener((obs, oldV, newV) -> {
+                if (newV == null || newV.trim().isEmpty()) {
+                    lblErrEmail.setText("");
+                    txtEmail.setStyle("");
+                } else if (!isValidEmail(newV.trim())) {
+                    lblErrEmail.setText("Formato de email inválido");
+                    txtEmail.setStyle("-fx-border-color: #e55353; -fx-border-radius: 4;");
+                } else {
+                    lblErrEmail.setText("");
+                    txtEmail.setStyle("");
+                }
+            });
+        }
+    }
+
+    private boolean isValidCif(String cif) {
+        return cif.matches("[A-Z]?\\d{7,8}[A-Z0-9]");
+    }
+
+    private boolean isValidEmail(String email) {
+        return email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+    }
+
+    private boolean isValidName(String name) {
+        return name != null && !name.trim().isEmpty();
+    }
+
+    private boolean isFormValid() {
+        boolean nameOk = isValidName(txtNombre != null ? txtNombre.getText() : null);
+        boolean cifOk = txtCIF != null && isValidCif(txtCIF.getText() != null ? txtCIF.getText().trim() : "");
+        boolean emailOk = txtEmail == null || txtEmail.getText() == null || txtEmail.getText().trim().isEmpty() || isValidEmail(txtEmail.getText().trim());
+        return nameOk && cifOk && emailOk;
+    }
+
     private boolean validarFormulario() {
         StringBuilder errores = new StringBuilder();
 
         // Validar campos obligatorios con verificación de null
         if (txtNombre == null || txtNombre.getText() == null || txtNombre.getText().trim().isEmpty()) {
             errores.append("• El nombre es obligatorio\n");
+            if (lblErrNombre != null) lblErrNombre.setText("El nombre es obligatorio");
         }
 
         if (txtCIF == null || txtCIF.getText() == null || txtCIF.getText().trim().isEmpty()) {
             errores.append("• El CIF/NIF es obligatorio\n");
+            if (lblErrCIF != null) lblErrCIF.setText("El CIF/NIF es obligatorio");
         }
 
         // Validar formato CIF/NIF (básico) solo si existe
@@ -375,6 +476,7 @@ public class ClienteFormController {
             String cif = txtCIF.getText().trim();
             if (!cif.isEmpty() && !cif.matches("[A-Z]?\\d{7,8}[A-Z0-9]")) {
                 errores.append("• El formato del CIF/NIF no es válido\n");
+                if (lblErrCIF != null) lblErrCIF.setText("Formato de CIF/NIF inválido");
             }
         }
 
@@ -383,6 +485,7 @@ public class ClienteFormController {
             String email = txtEmail.getText().trim();
             if (!email.isEmpty() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 errores.append("• El formato del email no es válido\n");
+                if (lblErrEmail != null) lblErrEmail.setText("Formato de email inválido");
             }
         }
 

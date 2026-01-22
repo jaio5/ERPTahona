@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -51,7 +50,12 @@
                             <ComboBox fx:id="cbCliente" promptText="Seleccionar cliente..." maxWidth="Infinity"/>
                         </VBox>
 
-                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="3">
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                            <Label text="Estado" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                            <ComboBox fx:id="cbEstado" promptText="PENDIENTE" maxWidth="Infinity"/>
+                        </VBox>
+
+                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="3">
                             <Label text="Observaciones" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextArea fx:id="txtObservaciones" promptText="Notas adicionales..." prefRowCount="2"/>
                         </VBox>
@@ -111,7 +115,7 @@
     <bottom>
         <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
             <Button text="Cancelar" onAction="#onCancelar" style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13;"/>
-            <Button text="✓ Guardar Pedido" onAction="#onGuardar" styleClass="button-success" style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
+            <Button fx:id="btnGuardarPedido" text="✓ Guardar Pedido" onAction="#onGuardar" styleClass="button-success" style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
         </HBox>
     </bottom>
 

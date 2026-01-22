@@ -16,13 +16,15 @@ public class UsuarioFormController extends BaseFormController<Usuario> {
 
     private final UsuarioService usuarioService;
 
-    @FXML private TextField usernameField;
-    @FXML private PasswordField passwordField;
-    @FXML private PasswordField confirmPasswordField;
-    @FXML private TextField nombreField;
-    @FXML private TextField emailField;
-    @FXML private ComboBox<String> roleComboBox;
-    @FXML private CheckBox enabledCheckBox;
+    @FXML private TextField txtUsername;
+    @FXML private Label lblTitulo;
+    @FXML private PasswordField txtPassword;
+    @FXML private PasswordField txtConfirmPassword;
+    @FXML private TextField txtNombre;
+    @FXML private TextField txtEmail;
+    @FXML private ComboBox<String> cbRole;
+    @FXML private CheckBox chkEnabled;
+    @FXML private CheckBox chkBloqueado;
 
     public UsuarioFormController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
@@ -33,59 +35,94 @@ public class UsuarioFormController extends BaseFormController<Usuario> {
         log.info("Inicializando UsuarioFormController");
         
         // Configurar roles
-        if (roleComboBox != null) {
-            roleComboBox.getItems().addAll("ADMIN", "USUARIO", "GESTOR", "VENDEDOR");
-            roleComboBox.setValue("USUARIO");
+        if (cbRole != null) {
+            cbRole.getItems().addAll("ADMIN", "USUARIO", "GESTOR", "VENDEDOR");
+            cbRole.setValue("USUARIO");
         }
 
         // Por defecto habilitado
-        if (enabledCheckBox != null) {
-            enabledCheckBox.setSelected(true);
+        if (chkEnabled != null) {
+            chkEnabled.setSelected(true);
+        }
+
+        // Validaciones en tiempo real
+        if (txtUsername != null) {
+            txtUsername.textProperty().addListener((obs, oldV, newV) -> {
+                if (newV != null && !newV.matches("[A-Za-z0-9_]{0,30}")) {
+                    txtUsername.setText(oldV);
+                }
+            });
+        }
+
+        if (txtEmail != null) {
+            txtEmail.focusedProperty().addListener((obs, oldV, newV) -> {
+                if (!newV) { // lost focus
+                    String email = txtEmail.getText();
+                    if (email != null && !email.isBlank() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                        mostrarError("Formato de email inválido");
+                    }
+                }
+            });
+        }
+
+        if (txtPassword != null && txtConfirmPassword != null) {
+            txtConfirmPassword.focusedProperty().addListener((obs, oldV, newV) -> {
+                if (!newV) {
+                    String p = txtPassword.getText() != null ? txtPassword.getText() : "";
+                    String c = txtConfirmPassword.getText() != null ? txtConfirmPassword.getText() : "";
+                    if (!p.isBlank() && p.length() < 6) {
+                        mostrarError("La contraseña debe tener al menos 6 caracteres");
+                    } else if (!c.isBlank() && !p.equals(c)) {
+                        mostrarError("Las contraseñas no coinciden");
+                    }
+                }
+            });
         }
     }
 
     @Override
     protected void cargarDatos() {
         if (item != null) {
-            usernameField.setText(item.getUsername());
-            usernameField.setDisable(true); // No permitir cambiar el username en edición
-            nombreField.setText(item.getNombre());
-            emailField.setText(item.getEmail());
-            roleComboBox.setValue(item.getRole());
-            enabledCheckBox.setSelected(item.getEnabled());
+            txtUsername.setText(item.getUsername());
+            txtUsername.setDisable(true); // No permitir cambiar el username en edición
+            txtNombre.setText(item.getNombre());
+            txtEmail.setText(item.getEmail());
+            cbRole.setValue(item.getRole());
+            chkEnabled.setSelected(item.getEnabled());
+            if (chkBloqueado != null) chkBloqueado.setSelected(item.getBloqueado());
 
             // En modo edición, la contraseña es opcional
-            passwordField.setPromptText("Dejar vacío para mantener la actual");
-            confirmPasswordField.setPromptText("Dejar vacío para mantener la actual");
+            txtPassword.setPromptText("Dejar vacío para mantener la actual");
+            txtConfirmPassword.setPromptText("Dejar vacío para mantener la actual");
         }
     }
 
     @Override
     protected boolean validar() {
-        if (usernameField.getText().trim().isEmpty()) {
+        if (txtUsername.getText().trim().isEmpty()) {
             mostrarError("El nombre de usuario es obligatorio");
             return false;
         }
         
-        if (nombreField.getText().trim().isEmpty()) {
+        if (txtNombre.getText().trim().isEmpty()) {
             mostrarError("El nombre es obligatorio");
             return false;
         }
         
-        if (emailField.getText().trim().isEmpty()) {
+        if (txtEmail.getText().trim().isEmpty()) {
             mostrarError("El email es obligatorio");
             return false;
         }
         
-        if (roleComboBox.getValue() == null) {
+        if (cbRole.getValue() == null) {
             mostrarError("Debe seleccionar un rol");
             return false;
         }
         
         // Validar contraseña solo si se está creando o si se ha introducido una nueva
-        String password = passwordField.getText();
-        String confirmPassword = confirmPasswordField.getText();
-        
+        String password = txtPassword.getText();
+        String confirmPassword = txtConfirmPassword.getText();
+
         if (item == null) { // Modo creación
             if (password.isEmpty()) {
                 mostrarError("La contraseña es obligatoria");
@@ -95,8 +132,8 @@ public class UsuarioFormController extends BaseFormController<Usuario> {
         
         // Si se ha introducido contraseña, validar
         if (!password.isEmpty()) {
-            if (password.length() < 4) {
-                mostrarError("La contraseña debe tener al menos 4 caracteres");
+            if (password.length() < 6) {
+                mostrarError("La contraseña debe tener al menos 6 caracteres");
                 return false;
             }
             
@@ -114,13 +151,14 @@ public class UsuarioFormController extends BaseFormController<Usuario> {
         try {
             Usuario usuario = item != null ? item : new Usuario();
 
-            usuario.setUsername(usernameField.getText().trim());
-            usuario.setNombre(nombreField.getText().trim());
-            usuario.setEmail(emailField.getText().trim());
-            usuario.setRole(roleComboBox.getValue());
-            usuario.setEnabled(enabledCheckBox.isSelected());
-            
-            String password = passwordField.getText();
+            usuario.setUsername(txtUsername.getText().trim());
+            usuario.setNombre(txtNombre.getText().trim());
+            usuario.setEmail(txtEmail.getText().trim());
+            usuario.setRole(cbRole.getValue());
+            usuario.setEnabled(chkEnabled != null && chkEnabled.isSelected());
+            if (chkBloqueado != null) usuario.setBloqueado(chkBloqueado.isSelected());
+
+            String password = txtPassword.getText();
 
             if (item == null) {
                 // Crear nuevo usuario
@@ -129,9 +167,9 @@ public class UsuarioFormController extends BaseFormController<Usuario> {
                 // Actualizar usuario existente
                 usuarioService.actualizarUsuario(usuario);
 
-                // Si se cambió la contraseña, actualizarla
-                if (!password.isEmpty()) {
-                    usuarioService.cambiarPassword(usuario.getId(), password, password);
+                // Si se cambió la contraseña, actualizarla como administrador (sin pedir la antigua)
+                if (password != null && !password.isEmpty()) {
+                    usuarioService.cambiarPasswordAdmin(usuario.getId(), password);
                 }
             }
 
@@ -151,4 +189,3 @@ public class UsuarioFormController extends BaseFormController<Usuario> {
         alert.showAndWait();
     }
 }
-

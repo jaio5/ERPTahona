@@ -16,10 +16,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Controlador para el formulario de creacion/edicion de albaranes
@@ -40,6 +41,7 @@ public class AlbaranFormController {
     @FXML private TableColumn<LineaAlbaranTemp, Integer> colCantidad;
     @FXML private TableColumn<LineaAlbaranTemp, String> colUnidad;
     @FXML private TableColumn<LineaAlbaranTemp, String> colLote;
+    @FXML private Button btnGuardarAlbaran;
 
     // Datos de entrega
     @FXML private TextArea txtDireccionEntrega;
@@ -51,7 +53,7 @@ public class AlbaranFormController {
 
     private AlbaranVenta albaranActual;
     private boolean modoEdicion = false;
-    private ObservableList<LineaAlbaranTemp> lineasTemp = FXCollections.observableArrayList();
+    private final ObservableList<LineaAlbaranTemp> lineasTemp = FXCollections.observableArrayList();
 
     public AlbaranFormController(AlbaranVentaService albaranService,
                                  ClienteService clienteService,
@@ -69,6 +71,20 @@ public class AlbaranFormController {
         configurarProcedencia();
         configurarTablaLineas();
         configurarFechas();
+
+        // Bind del botón guardar: habilitar solo si cliente, fecha y al menos una línea
+        try {
+            if (btnGuardarAlbaran != null) {
+                btnGuardarAlbaran.disableProperty().bind(
+                    javafx.beans.binding.Bindings.createBooleanBinding(() ->
+                        cbCliente.getValue() == null || dpFecha.getValue() == null || lineasTemp.isEmpty(),
+                        cbCliente.valueProperty(), dpFecha.valueProperty(), lineasTemp
+                    )
+                );
+            }
+        } catch (Exception e) {
+            log.debug("No se pudo bindear btnGuardarAlbaran: {}", e.getMessage());
+        }
     }
 
     private void configurarClientes() {
@@ -80,7 +96,7 @@ public class AlbaranFormController {
 
             cbCliente.setItems(FXCollections.observableArrayList(clientes));
 
-            cbCliente.setCellFactory(param -> new ListCell<Cliente>() {
+            cbCliente.setCellFactory(param -> new ListCell<>() {
                 @Override
                 protected void updateItem(Cliente item, boolean empty) {
                     super.updateItem(item, empty);
@@ -92,7 +108,7 @@ public class AlbaranFormController {
                 }
             });
 
-            cbCliente.setButtonCell(new ListCell<Cliente>() {
+            cbCliente.setButtonCell(new ListCell<>() {
                 @Override
                 protected void updateItem(Cliente item, boolean empty) {
                     super.updateItem(item, empty);
@@ -142,7 +158,7 @@ public class AlbaranFormController {
         this.modoEdicion = (albaran != null && albaran.getId() != null);
 
         Platform.runLater(() -> {
-            if (modoEdicion) {
+            if (modoEdicion && albaran != null) {
                 cargarDatosAlbaran(albaran);
             } else {
                 limpiarFormulario();
@@ -203,7 +219,7 @@ public class AlbaranFormController {
                 .toList();
             cbArticulo.setItems(FXCollections.observableArrayList(articulos));
 
-            cbArticulo.setCellFactory(param -> new ListCell<Articulo>() {
+            cbArticulo.setCellFactory(param -> new ListCell<>() {
                 @Override
                 protected void updateItem(Articulo item, boolean empty) {
                     super.updateItem(item, empty);
@@ -215,7 +231,7 @@ public class AlbaranFormController {
                 }
             });
 
-            cbArticulo.setButtonCell(new ListCell<Articulo>() {
+            cbArticulo.setButtonCell(new ListCell<>() {
                 @Override
                 protected void updateItem(Articulo item, boolean empty) {
                     super.updateItem(item, empty);
@@ -258,7 +274,7 @@ public class AlbaranFormController {
         });
 
         Optional<LineaAlbaranTemp> result = dialog.showAndWait();
-        result.ifPresent(linea -> lineasTemp.add(linea));
+        result.ifPresent(lineasTemp::add);
     }
 
     @FXML
@@ -287,9 +303,29 @@ public class AlbaranFormController {
             albaranActual.setCliente(cbCliente.getValue());
             albaranActual.setObservaciones(txtObservaciones.getText());
 
+            // Convertir lineas temporales a entidades AlbaranVentaLinea
+            albaranActual.getLineas().clear();
+            for (LineaAlbaranTemp lt : lineasTemp) {
+                AlbaranVentaLinea linea = new AlbaranVentaLinea();
+                // buscar articulo por nombre - mejora futura: usar id
+                if (lt.getArticulo() != null) {
+                    Articulo a = articuloService.findAll().stream()
+                        .filter(x -> lt.getArticulo().equals(x.getNombre()) || lt.getArticulo().equals(x.getCodigo()))
+                        .findFirst().orElse(null);
+                    linea.setArticulo(a);
+                }
+                linea.setDescripcion(lt.getArticulo());
+                linea.setCantidad(new java.math.BigDecimal(lt.getCantidad()));
+                linea.setPrecio(java.math.BigDecimal.ZERO);
+                linea.setDescuento(java.math.BigDecimal.ZERO);
+                linea.setIva(new java.math.BigDecimal("21"));
+                linea.setAlbaran(albaranActual);
+                albaranActual.getLineas().add(linea);
+            }
+
             albaranService.save(albaranActual);
 
-            mostrarExito("Albaran guardado correctamente");
+            mostrarExito();
             cerrarVentana();
 
         } catch (Exception e) {
@@ -300,7 +336,7 @@ public class AlbaranFormController {
 
     @FXML
     public void onConvertirFactura() {
-        mostrarInfo("Funcionalidad de conversion a factura en desarrollo");
+        mostrarInfo();
     }
 
     @FXML
@@ -329,12 +365,14 @@ public class AlbaranFormController {
 
     private void mostrarError(String mensaje) { Dialogs.showError(mensaje); }
     private void mostrarAdvertencia(String mensaje) { Dialogs.showWarn(mensaje); }
-    private void mostrarExito(String mensaje) { Dialogs.showInfo(mensaje); }
-    private void mostrarInfo(String mensaje) { Dialogs.showInfo(mensaje); }
+    private void mostrarExito() { Dialogs.showInfo("Albaran guardado correctamente"); }
+    private void mostrarInfo() { Dialogs.showInfo("Funcionalidad de conversion a factura en desarrollo"); }
 
     /**
      * Clase temporal para las lineas de albaran en la tabla
      */
+    @Getter
+    @Setter
     public static class LineaAlbaranTemp {
         private String articulo;
         private int cantidad;
@@ -347,15 +385,6 @@ public class AlbaranFormController {
             this.unidad = unidad;
             this.lote = lote;
         }
-
-        public String getArticulo() { return articulo; }
-        public void setArticulo(String articulo) { this.articulo = articulo; }
-        public int getCantidad() { return cantidad; }
-        public void setCantidad(int cantidad) { this.cantidad = cantidad; }
-        public String getUnidad() { return unidad; }
-        public void setUnidad(String unidad) { this.unidad = unidad; }
-        public String getLote() { return lote; }
-        public void setLote(String lote) { this.lote = lote; }
     }
 }
 

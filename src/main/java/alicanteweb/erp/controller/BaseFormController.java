@@ -2,10 +2,8 @@ package alicanteweb.erp.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 import org.springframework.stereotype.Controller;
-import java.util.Optional;
 
 /**
  * Controlador base para todos los formularios de la aplicación
@@ -80,8 +78,27 @@ public abstract class BaseFormController<T> {
      * Cerrar ventana del formulario
      */
     protected void cerrar() {
-        Stage stage = (Stage) ((javafx.scene.Node) new javafx.scene.control.Button()).getScene().getWindow();
-        stage.close();
+        // Intentar cerrar la ventana activa (la que tiene el foco)
+        try {
+            java.util.Optional<javafx.stage.Window> maybeWindow = javafx.stage.Window.getWindows().stream()
+                    .filter(javafx.stage.Window::isFocused)
+                    .findFirst();
+            if (maybeWindow.isPresent() && maybeWindow.get() instanceof Stage) {
+                Stage stage = (Stage) maybeWindow.get();
+                stage.close();
+                return;
+            }
+
+            // Fallback: cerrar la primera ventana visible
+            maybeWindow = javafx.stage.Window.getWindows().stream().filter(javafx.stage.Window::isShowing).findFirst();
+            if (maybeWindow.isPresent() && maybeWindow.get() instanceof Stage) {
+                ((Stage) maybeWindow.get()).close();
+                return;
+            }
+        } catch (Exception e) {
+            // Si todo falla, lanzar excepción silenciosa para no bloquear la UI
+            // (las formas normales de cierre deberían funcionar en la mayoría de casos)
+        }
     }
     
     // === MÉTODOS DE NOTIFICACIÓN ===
@@ -107,4 +124,3 @@ public abstract class BaseFormController<T> {
         alert.showAndWait();
     }
 }
-

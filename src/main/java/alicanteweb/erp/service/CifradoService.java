@@ -17,6 +17,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import java.util.Base64;
 
 /**
@@ -30,6 +33,15 @@ public class CifradoService {
 
     @Value("${cifrado.aes.key:DEFAULT_KEY_32_CHARACTERS_MIN!!}")
     private String aesKeyString;
+
+    @Value("${cifrado.aes.use-pbkdf2:false}")
+    private boolean usePbkdf2;
+
+    @Value("${cifrado.aes.pbkdf2.salt:}")
+    private String pbkdf2Salt;
+
+    @Value("${cifrado.aes.pbkdf2.iterations:100000}")
+    private int pbkdf2Iterations;
 
     private final BCryptPasswordEncoder passwordEncoder;
     private final Environment environment;
@@ -229,9 +241,31 @@ public class CifradoService {
             }
 
             if (keyBytes.length == 0) {
-                // Fallback: derivar 32 bytes con SHA-256
-                MessageDigest md = MessageDigest.getInstance("SHA-256");
-                keyBytes = md.digest(aesKeyString.getBytes(StandardCharsets.UTF_8));
+                // Fallback: si está habilitado PBKDF2 y hay salt, derivar con PBKDF2;
+                // en caso contrario usar SHA-256 (compatibilidad).
+                if (usePbkdf2 && pbkdf2Salt != null && !pbkdf2Salt.isBlank()) {
+                    try {
+                        byte[] saltBytes;
+                        try {
+                            saltBytes = Base64.getDecoder().decode(pbkdf2Salt);
+                        } catch (IllegalArgumentException ex) {
+                            // Si no es Base64, usar la cadena directamente como salt (UTF-8)
+                            saltBytes = pbkdf2Salt.getBytes(StandardCharsets.UTF_8);
+                        }
+
+                        PBEKeySpec spec = new PBEKeySpec(aesKeyString.toCharArray(), saltBytes, pbkdf2Iterations, 256);
+                        SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+                        keyBytes = skf.generateSecret(spec).getEncoded();
+                    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        log.warn("PBKDF2 no disponible o falló la derivación, usando SHA-256 como fallback", e);
+                        MessageDigest md = MessageDigest.getInstance("SHA-256");
+                        keyBytes = md.digest(aesKeyString.getBytes(StandardCharsets.UTF_8));
+                    }
+                } else {
+                    // Fallback: derivar 32 bytes con SHA-256
+                    MessageDigest md = MessageDigest.getInstance("SHA-256");
+                    keyBytes = md.digest(aesKeyString.getBytes(StandardCharsets.UTF_8));
+                }
             }
 
             // Asegurar longitud 32 bytes para AES-256

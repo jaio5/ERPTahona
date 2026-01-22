@@ -35,6 +35,22 @@ public class AlmacenService {
 
     @Transactional
     public Almacen save(Almacen almacen) {
+        // Validaciones de negocio centralizadas
+        if (almacen == null) throw new IllegalArgumentException("almacen nulo");
+
+        if (almacen.getCapacidad() != null && almacen.getCapacidad().signum() < 0) {
+            throw new IllegalArgumentException("capacidad no puede ser negativa");
+        }
+
+        if (almacen.getDisponible() != null && almacen.getDisponible().signum() < 0) {
+            throw new IllegalArgumentException("disponible no puede ser negativo");
+        }
+
+        if (almacen.getCapacidad() != null && almacen.getDisponible() != null
+                && almacen.getDisponible().compareTo(almacen.getCapacidad()) > 0) {
+            throw new IllegalArgumentException("disponible mayor que capacidad");
+        }
+
         return repository.save(almacen);
     }
 
@@ -48,4 +64,3 @@ public class AlmacenService {
         repository.deleteById(id);
     }
 }
-

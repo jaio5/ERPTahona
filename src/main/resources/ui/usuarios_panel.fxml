@@ -18,6 +18,8 @@
     <HBox spacing="12" alignment="CENTER_LEFT">
         <TextField fx:id="txtBuscar" promptText="Buscar usuario..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
         <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+        <ComboBox fx:id="cmbFiltroRol" promptText="Rol" prefWidth="140"/>
+        <ComboBox fx:id="cmbFiltroEstado" promptText="Estado" prefWidth="140"/>
     </HBox>
 
     <TableView fx:id="tableUsuarios" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
@@ -29,6 +31,7 @@
             <TableColumn fx:id="colRol" text="Rol" minWidth="80" maxWidth="120"/>
             <TableColumn fx:id="colActivo" text="Activo" minWidth="60" maxWidth="80"/>
             <TableColumn fx:id="colUltimoAcceso" text="Último Acceso" minWidth="120"/>
+            <TableColumn fx:id="colAcciones" text="Acciones" minWidth="120"/>
         </columns>
     </TableView>
 
@@ -37,6 +40,7 @@
         <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
         <Button text="Cambiar Password" onAction="#onCambiarPassword" styleClass="button"/>
         <Button text="Bloquear" onAction="#onBloquear" styleClass="button-danger"/>
+        <Label fx:id="lblSeleccion" text="Ningún usuario seleccionado" style="-fx-text-fill: #6c757d;"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblTotal" text="0 usuarios" style="-fx-text-fill: #6c757d;"/>
     </HBox>

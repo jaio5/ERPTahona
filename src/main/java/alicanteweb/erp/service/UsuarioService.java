@@ -19,7 +19,6 @@ public class UsuarioService {
 
     private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
     private static final int MAX_INTENTOS_FALLIDOS = 5;
-    private static final int TOKEN_LENGTH = 32;
 
     private final UsuarioRepository usuarioRepository;
     private final CifradoService cifradoService;
@@ -132,6 +131,24 @@ public class UsuarioService {
     }
 
     /**
+     * Cambiar la contraseña de un usuario por un administrador sin necesidad de la contraseña anterior.
+     * Usar sólo desde interfaces administrativas y con autorización adecuada.
+     */
+    @Transactional
+    public void cambiarPasswordAdmin(Long usuarioId, String newPassword) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        usuario.setPassword(cifradoService.hashPassword(newPassword));
+        usuarioRepository.save(usuario);
+
+        auditoriaService.registrarAccion(null, "CAMBIO_PASSWORD_ADMIN", "Usuario", usuarioId.toString(),
+                "Contraseña cambiada por administrador para usuario: " + usuario.getUsername());
+
+        log.info("Contraseña cambiada por admin para usuario: {}", usuario.getUsername());
+    }
+
+    /**
      * Validar credenciales de usuario
      */
     @Transactional
@@ -218,6 +235,13 @@ public class UsuarioService {
     }
 
     /**
+     * Contar usuarios activos (método de compatibilidad para tests)
+     */
+    public long contarActivos() {
+        return usuarioRepository.countByEnabledTrue();
+    }
+
+    /**
      * Buscar usuarios por texto (nombre, username, email)
      */
     public List<Usuario> buscar(String texto) {
@@ -297,72 +321,6 @@ public class UsuarioService {
     }
 
     /**
-     * Generar token de recuperación de contraseña
-     * TODO: Requiere campos adicionales en la base de datos
-     */
-    /*
-    @Transactional
-    public String generarTokenRecuperacion(String email) {
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Email no encontrado"));
-
-        String token = cifradoService.generarTokenSeguro(TOKEN_LENGTH);
-        usuario.setTokenRecuperacion(token);
-        usuario.setFechaExpiracionToken(LocalDateTime.now().plusHours(24)); // Token válido 24 horas
-        usuarioRepository.save(usuario);
-
-        auditoriaService.registrarAccion(usuario, "TOKEN_RECUPERACION", "Usuario", usuario.getId().toString(),
-                "Token de recuperación generado");
-
-        log.info("Token de recuperación generado para: {}", email);
-        return token;
-    }
-    */
-
-    /**
-     * Recuperar contraseña usando token
-     * TODO: Requiere campos adicionales en la base de datos
-     */
-    /*
-    @Transactional
-    public void recuperarPassword(String token, String newPassword) {
-        Usuario usuario = usuarioRepository.findByTokenRecuperacionValido(token)
-                .orElseThrow(() -> new IllegalArgumentException("Token inválido o expirado"));
-
-        // Actualizar contraseña
-        usuario.setPassword(cifradoService.hashPassword(newPassword));
-        usuario.setTokenRecuperacion(null);
-        usuario.setFechaExpiracionToken(null);
-        usuario.setRequiereCambioPassword(false);
-        usuarioRepository.save(usuario);
-
-        auditoriaService.registrarAccion(usuario, "RECUPERACION_PASSWORD", "Usuario", usuario.getId().toString(),
-                "Contraseña recuperada mediante token");
-
-        log.info("Contraseña recuperada para usuario: {}", usuario.getUsername());
-    }
-    */
-
-    /**
-     * Actualizar último login
-     */
-    @Transactional
-    public void actualizarUltimoLogin(Long usuarioId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
-        usuario.setUltimoAcceso(LocalDateTime.now());
-        usuarioRepository.save(usuario);
-    }
-
-    /**
-     * Contar usuarios activos
-     */
-    public long contarActivos() {
-        return usuarioRepository.countByEnabledTrue();
-    }
-
-    /**
      * Eliminar usuario (desactivar)
      */
     @Transactional
@@ -397,6 +355,19 @@ public class UsuarioService {
         log.info("Token de recuperación generado para: {}", username);
         return usuario;
     }
+
+    /**
+     * Actualiza el timestamp de último acceso del usuario.
+     */
+    @Transactional
+    public void actualizarUltimoLogin(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        usuario.setUltimoLogin(LocalDateTime.now());
+        usuarioRepository.save(usuario);
+
+        auditoriaService.registrarAccion(usuario, "LOGIN", "Usuario", usuarioId.toString(),
+                "Usuario inició sesión");
+        log.info("Último acceso actualizado para usuario: {}", usuario.getUsername());
+    }
 }
-
-

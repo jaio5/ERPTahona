@@ -53,5 +53,5 @@
         </VBox>
     </ScrollPane>
 
-    <Separator/><HBox spacing="15" style="-fx-alignment: center-right; -fx-padding: 15;"><Region HBox.hgrow="ALWAYS"/><Button text="💾 Guardar" onAction="#onGuardar" style="-fx-padding: 12 30;"/><Button text="✓ Registrar" onAction="#onRegistrar" style="-fx-padding: 12 30;"/><Button text="❌ Cancelar" onAction="#onCancelar" style="-fx-padding: 12 30;"/></HBox>
+    <Separator/><HBox spacing="15" style="-fx-alignment: center-right; -fx-padding: 15;"><Region HBox.hgrow="ALWAYS"/><Button fx:id="btnGuardarFactura" text="💾 Guardar" onAction="#onGuardar" style="-fx-padding: 12 30;"/><Button text="✓ Registrar" onAction="#onRegistrar" style="-fx-padding: 12 30;"/><Button text="❌ Cancelar" onAction="#onCancelar" style="-fx-padding: 12 30;"/></HBox>
 </VBox>

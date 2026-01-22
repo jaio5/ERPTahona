@@ -29,6 +29,10 @@ public class ProveedorFormController {
     @FXML private TextField txtCIF;
     @FXML private TextField txtTelefono;
     @FXML private TextField txtEmail;
+    @FXML private Button btnGuardarProveedor;
+    @FXML private Label lblErrNombre;
+    @FXML private Label lblErrCIF;
+    @FXML private Label lblErrEmail;
 
     // Dirección
     @FXML private TextField txtDireccion;
@@ -58,6 +62,19 @@ public class ProveedorFormController {
         configurarProvincias();
         configurarFormasPago();
         configurarValidaciones();
+
+        // Bind botón Guardar y validación en tiempo real
+        try {
+            if (btnGuardarProveedor != null) {
+                setupInlineValidation();
+                btnGuardarProveedor.disableProperty().bind(
+                    javafx.beans.binding.Bindings.createBooleanBinding(() -> !isFormValid(),
+                        txtNombre.textProperty(), txtCIF.textProperty(), txtEmail.textProperty())
+                );
+            }
+        } catch (Exception e) {
+            log.debug("No se pudo bindear btnGuardar: {}", e.getMessage());
+        }
     }
 
     private void configurarProvincias() {
@@ -145,6 +162,7 @@ public class ProveedorFormController {
                 lblTitulo.setText("Nuevo Proveedor");
                 limpiarFormulario();
                 generarCodigoAutomatico();
+                Platform.runLater(() -> { if (txtNombre != null) txtNombre.requestFocus(); });
             }
         });
     }
@@ -237,6 +255,13 @@ public class ProveedorFormController {
 
             cerrarVentana();
 
+        } catch (IllegalArgumentException e) {
+            log.warn("Validación al guardar proveedor: {}", e.getMessage());
+            mostrarAlerta("No se pudo guardar: " + e.getMessage());
+            String msg = e.getMessage().toLowerCase();
+            if (msg.contains("codigo") && txtCodigo != null) txtCodigo.requestFocus();
+            else if (msg.contains("cif") && txtCIF != null) txtCIF.requestFocus();
+            else if (txtNombre != null) txtNombre.requestFocus();
         } catch (Exception e) {
             log.error("❌ Error guardando proveedor", e);
             mostrarError("Error al guardar el proveedor: " + e.getMessage());
@@ -306,4 +331,55 @@ public class ProveedorFormController {
     private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
     private void mostrarExito(String msg) { Dialogs.showInfo(msg); }
     private void mostrarError(String msg) { Dialogs.showError(msg); }
+
+    private void setupInlineValidation() {
+        if (txtNombre != null && lblErrNombre != null) {
+            txtNombre.textProperty().addListener((obs, oldV, newV) -> {
+                if (newV == null || newV.trim().isEmpty()) {
+                    lblErrNombre.setText("El nombre es obligatorio");
+                    txtNombre.setStyle("-fx-border-color: #e55353;");
+                } else {
+                    lblErrNombre.setText("");
+                    txtNombre.setStyle("");
+                }
+            });
+        }
+
+        if (txtCIF != null && lblErrCIF != null) {
+            txtCIF.textProperty().addListener((obs, oldV, newV) -> {
+                if (newV == null || newV.trim().isEmpty()) {
+                    lblErrCIF.setText("El CIF/NIF es obligatorio");
+                    txtCIF.setStyle("-fx-border-color: #e55353;");
+                } else if (!newV.trim().matches("[A-Z]?\\d{7,8}[A-Z0-9]")) {
+                    lblErrCIF.setText("Formato de CIF/NIF inválido");
+                    txtCIF.setStyle("-fx-border-color: #e55353;");
+                } else {
+                    lblErrCIF.setText("");
+                    txtCIF.setStyle("");
+                }
+            });
+        }
+
+        if (txtEmail != null && lblErrEmail != null) {
+            txtEmail.textProperty().addListener((obs, oldV, newV) -> {
+                if (newV == null || newV.trim().isEmpty()) {
+                    lblErrEmail.setText("");
+                    txtEmail.setStyle("");
+                } else if (!newV.trim().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                    lblErrEmail.setText("Formato de email inválido");
+                    txtEmail.setStyle("-fx-border-color: #e55353;");
+                } else {
+                    lblErrEmail.setText("");
+                    txtEmail.setStyle("");
+                }
+            });
+        }
+    }
+
+    private boolean isFormValid() {
+        boolean nameOk = txtNombre != null && txtNombre.getText() != null && !txtNombre.getText().trim().isEmpty();
+        boolean cifOk = txtCIF != null && txtCIF.getText() != null && txtCIF.getText().trim().matches("[A-Z]?\\d{7,8}[A-Z0-9]");
+        boolean emailOk = txtEmail == null || txtEmail.getText() == null || txtEmail.getText().trim().isEmpty() || txtEmail.getText().trim().matches("^[A-Za-z0-9+_.-]+@(.+)$");
+        return nameOk && cifOk && emailOk;
+    }
 }

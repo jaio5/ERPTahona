@@ -62,7 +62,7 @@ public class ProveedorController extends BaseController<Proveedor> {
     @Override
     protected void cargarDatos() {
         try {
-            List<Proveedor> proveedores = proveedorService.findAll();
+            List<Proveedor> proveedores = proveedorService.findActivos();
             actualizarTabla(proveedores);
             log.info("✅ Cargados {} proveedores", proveedores.size());
         } catch (Exception e) {

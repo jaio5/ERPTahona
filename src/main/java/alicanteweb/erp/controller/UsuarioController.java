@@ -313,27 +313,46 @@ public class UsuarioController {
             return;
         }
 
-        TextInputDialog dialog = new TextInputDialog();
+        // Diálogo personalizado con dos campos (nueva contraseña + confirmar)
+        Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Cambiar Contraseña");
         dialog.setHeaderText("Cambiar contraseña de: " + usuario.getUsername());
-        dialog.setContentText("Nueva contraseña:");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        Optional<String> result = dialog.showAndWait();
-        result.ifPresent(password -> {
-            if (password.length() < 6) {
+        PasswordField pfNew = new PasswordField();
+        pfNew.setPromptText("Nueva contraseña");
+        PasswordField pfConfirm = new PasswordField();
+        pfConfirm.setPromptText("Confirmar contraseña");
+
+        javafx.scene.layout.VBox box = new javafx.scene.layout.VBox(8, new Label("Nueva contraseña:"), pfNew, new Label("Confirmar contraseña:"), pfConfirm);
+        dialog.getDialogPane().setContent(box);
+
+        Button okButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
+        okButton.addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
+            String p = pfNew.getText() != null ? pfNew.getText() : "";
+            String c = pfConfirm.getText() != null ? pfConfirm.getText() : "";
+            if (p.length() < 6) {
                 mostrarError("La contraseña debe tener al menos 6 caracteres");
-                return;
+                ev.consume();
             }
+            if (!p.equals(c)) {
+                mostrarError("Las contraseñas no coinciden");
+                ev.consume();
+            }
+        });
+
+        Optional<ButtonType> res = dialog.showAndWait();
+        if (res.isPresent() && res.get() == ButtonType.OK) {
+            String password = pfNew.getText();
             try {
-                // Cambiar password (como admin, no necesitamos la contraseña anterior)
-                usuarioService.cambiarPassword(usuario.getId(), null, password);
+                usuarioService.cambiarPasswordAdmin(usuario.getId(), password);
                 mostrarExito("Contraseña cambiada correctamente");
                 log.info("✅ Contraseña cambiada para usuario: {}", usuario.getUsername());
             } catch (Exception e) {
                 log.error("❌ Error cambiando contraseña", e);
                 mostrarError("Error al cambiar contraseña: " + e.getMessage());
             }
-        });
+        }
     }
 
     @FXML

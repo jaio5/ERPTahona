@@ -54,7 +54,7 @@ public class AsientoFormController {
     private AsientoContable asientoContable;
 
     // Observable list que alimenta la tabla de apuntes
-    private ObservableList<LineaAsiento> lineasObservable = FXCollections.observableArrayList();
+    private final ObservableList<LineaAsiento> lineasObservable = FXCollections.observableArrayList();
 
     public AsientoFormController(AsientoContableService asientoContableService) {
         this.asientoContableService = asientoContableService;
@@ -78,59 +78,31 @@ public class AsientoFormController {
             tableApuntes.setEditable(true);
             tableApuntes.setPlaceholder(new Label("No hay apuntes"));
 
-            // Intentar obtener columnas por posición (orden definido en FXML)
-            TableColumn<LineaAsiento, String> localColCuenta = null;
-            TableColumn<LineaAsiento, String> localColNombreCuenta = null;
-            TableColumn<LineaAsiento, String> localColConcepto = null;
-            TableColumn<LineaAsiento, BigDecimal> localColDebe = null;
-            TableColumn<LineaAsiento, BigDecimal> localColHaber = null;
-            TableColumn<LineaAsiento, Void> localColAcciones = null;
-
-            try {
-                if (tableApuntes.getColumns().size() >= 6) {
-                    localColCuenta = (TableColumn<LineaAsiento, String>) tableApuntes.getColumns().get(0);
-                    localColNombreCuenta = (TableColumn<LineaAsiento, String>) tableApuntes.getColumns().get(1);
-                    localColConcepto = (TableColumn<LineaAsiento, String>) tableApuntes.getColumns().get(2);
-                    localColDebe = (TableColumn<LineaAsiento, BigDecimal>) tableApuntes.getColumns().get(3);
-                    localColHaber = (TableColumn<LineaAsiento, BigDecimal>) tableApuntes.getColumns().get(4);
-                    localColAcciones = (TableColumn<LineaAsiento, Void>) tableApuntes.getColumns().get(5);
-                }
-            } catch (ClassCastException e) {
-                log.warn("No se pudieron castear columnas de la tabla de apuntes: {}", e.getMessage());
-            }
-
-            // Configurar columnas si fueron encontradas
-            TableColumn<LineaAsiento, String> useColCuenta = colCuenta != null ? colCuenta : localColCuenta;
-            TableColumn<LineaAsiento, String> useColNombreCuenta = colNombreCuenta != null ? colNombreCuenta : localColNombreCuenta;
-            TableColumn<LineaAsiento, String> useColConcepto = colConcepto != null ? colConcepto : localColConcepto;
-            TableColumn<LineaAsiento, BigDecimal> useColDebe = colDebe != null ? colDebe : localColDebe;
-            TableColumn<LineaAsiento, BigDecimal> useColHaber = colHaber != null ? colHaber : localColHaber;
-            TableColumn<LineaAsiento, Void> useColAcciones = colAcciones != null ? colAcciones : localColAcciones;
-
-            if (useColCuenta != null) {
+            // Configurar columnas declaradas en FXML
+            if (colCuenta != null) {
                 colCuenta.setCellValueFactory(cell -> {
                     if (cell.getValue() == null || cell.getValue().getCuenta() == null) return new ReadOnlyStringWrapper("");
                     return new ReadOnlyStringWrapper(cell.getValue().getCuenta().getCodigo());
                 });
-                useColCuenta.setSortable(false);
+                colCuenta.setSortable(false);
             }
 
-            if (useColNombreCuenta != null) {
-                useColNombreCuenta.setCellValueFactory(cell -> {
+            if (colNombreCuenta != null) {
+                colNombreCuenta.setCellValueFactory(cell -> {
                     if (cell.getValue() == null || cell.getValue().getCuenta() == null) return new ReadOnlyStringWrapper("");
                     return new ReadOnlyStringWrapper(cell.getValue().getCuenta().getNombre());
                 });
-                useColNombreCuenta.setSortable(false);
+                colNombreCuenta.setSortable(false);
             }
 
-            if (useColConcepto != null) {
-                useColConcepto.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue() != null ? cell.getValue().getConcepto() : ""));
-                useColConcepto.setCellFactory(TextFieldTableCell.forTableColumn());
-                useColConcepto.setOnEditCommit(evt -> {
+            if (colConcepto != null) {
+                colConcepto.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue() != null ? cell.getValue().getConcepto() : ""));
+                colConcepto.setCellFactory(TextFieldTableCell.forTableColumn());
+                colConcepto.setOnEditCommit(evt -> {
                     LineaAsiento linea = evt.getRowValue();
                     if (linea != null) linea.setConcepto(evt.getNewValue());
                 });
-                useColConcepto.setSortable(false);
+                colConcepto.setSortable(false);
             }
 
             // Convertidor para BigDecimal en columnas editables
@@ -151,30 +123,30 @@ public class AsientoFormController {
                 }
             };
 
-            if (useColDebe != null) {
-                useColDebe.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue() != null ? cell.getValue().getDebe() : BigDecimal.ZERO));
-                useColDebe.setCellFactory(column -> new TextFieldTableCell<>(bigDecimalConverter));
-                useColDebe.setOnEditCommit(evt -> {
+            if (colDebe != null) {
+                colDebe.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue() != null ? cell.getValue().getDebe() : BigDecimal.ZERO));
+                colDebe.setCellFactory(column -> new TextFieldTableCell<>(bigDecimalConverter));
+                colDebe.setOnEditCommit(evt -> {
                     LineaAsiento linea = evt.getRowValue();
                     if (linea != null) linea.setDebe(evt.getNewValue());
                     recalcularTotales();
                 });
-                useColDebe.setSortable(false);
+                colDebe.setSortable(false);
             }
 
-            if (useColHaber != null) {
-                useColHaber.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue() != null ? cell.getValue().getHaber() : BigDecimal.ZERO));
-                useColHaber.setCellFactory(column -> new TextFieldTableCell<>(bigDecimalConverter));
-                useColHaber.setOnEditCommit(evt -> {
+            if (colHaber != null) {
+                colHaber.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue() != null ? cell.getValue().getHaber() : BigDecimal.ZERO));
+                colHaber.setCellFactory(column -> new TextFieldTableCell<>(bigDecimalConverter));
+                colHaber.setOnEditCommit(evt -> {
                     LineaAsiento linea = evt.getRowValue();
                     if (linea != null) linea.setHaber(evt.getNewValue());
                     recalcularTotales();
                 });
-                useColHaber.setSortable(false);
+                colHaber.setSortable(false);
             }
 
-            if (useColAcciones != null) {
-                useColAcciones.setCellFactory(col -> new TableCell<>() {
+            if (colAcciones != null) {
+                colAcciones.setCellFactory(col -> new TableCell<>() {
                     private final Button btnEliminar = new Button("Eliminar");
                     {
                         btnEliminar.getStyleClass().add("button-danger");
@@ -197,7 +169,7 @@ public class AsientoFormController {
                         }
                     }
                 });
-                useColAcciones.setSortable(false);
+                colAcciones.setSortable(false);
             }
         }
 
@@ -213,6 +185,7 @@ public class AsientoFormController {
         if (lblDiferencia != null) lblDiferencia.setText(lblDiferencia.getText());
     }
 
+    @FXML
     public void setAsientoContable(AsientoContable asientoContable) {
         this.asientoContable = asientoContable;
         cargarDatos();
@@ -352,5 +325,4 @@ public class AsientoFormController {
 
     private void mostrarError(String mensaje) { Dialogs.showError(mensaje); }
     private void mostrarExito(String mensaje) { Dialogs.showInfo(mensaje); }
-    private void mostrarAlerta(String mensaje) { Dialogs.showWarn(mensaje); }
  }

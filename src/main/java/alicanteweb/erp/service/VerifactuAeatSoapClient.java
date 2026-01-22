@@ -5,16 +5,34 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
+import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.DOMSignContext;
+import javax.xml.crypto.dsig.keyinfo.KeyInfo;
+import javax.xml.crypto.dsig.keyinfo.KeyInfoFactory;
+import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
+import javax.xml.crypto.dsig.spec.TransformParameterSpec;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 
 /**
  * Cliente SOAP REAL para enviar facturas a la AEAT
@@ -62,10 +80,8 @@ public class VerifactuAeatSoapClient {
             // 1. Crear mensaje SOAP
             SOAPMessage soapMessage = crearMensajeSOAP(xmlFactura);
 
-            // 2. Firmar el mensaje
-            if (firma != null) {
-                firmarMensajeSOAP(soapMessage, firma);
-            }
+            // 2. Firmar el mensaje (si no se pasa 'firma' externa, se firma con el keystore configurado)
+            firmarMensajeSOAP(soapMessage, firma);
 
             // 3. Enviar a AEAT
             SOAPMessage respuesta = enviarSOAP(soapMessage);
@@ -106,6 +122,11 @@ public class VerifactuAeatSoapClient {
         // Parsear el XML de la factura como documento
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
+        // Mitigar XXE
+        try {
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        } catch (Exception ignored) {
+        }
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document facturaDoc = builder.parse(new ByteArrayInputStream(xmlFactura.getBytes(StandardCharsets.UTF_8)));
 
@@ -113,9 +134,8 @@ public class VerifactuAeatSoapClient {
         soapBody.addDocument(facturaDoc);
 
         // Header SOAP (opcional según AEAT)
-        SOAPHeader soapHeader = envelope.getHeader();
-        if (soapHeader == null) {
-            soapHeader = envelope.addHeader();
+        if (envelope.getHeader() == null) {
+            envelope.addHeader();
         }
 
         soapMessage.saveChanges();
@@ -150,13 +170,174 @@ public class VerifactuAeatSoapClient {
             throw new Exception("No se pudo cargar el certificado digital. Verifica keystore, alias y password.");
         }
 
-        log.info("Certificado cargado: {}", certificate.getSubjectDN());
+        // Use modern API to obtain subject name
+        String subject = certificate.getSubjectX500Principal() != null ? certificate.getSubjectX500Principal().getName() : (certificate.getIssuerX500Principal() != null ? certificate.getIssuerX500Principal().getName() : "desconocido");
+        log.info("Certificado cargado: {}", subject);
 
-        // TODO: Implementar firma XMLDSig
-        // Por ahora el mensaje va sin firma XML (la AEAT puede aceptarlo en preproducción)
-        // En producción DEBE llevar firma digital
+        // Indicar si se recibió un 'firma' externa (evita warning por parámetro no usado)
+        if (firma != null) {
+            log.debug("Firma externa recibida (bytes): {}", firma.length);
+        }
 
-        log.warn("⚠️ Mensaje enviado SIN firma digital XMLDSig. Implementar para producción.");
+        // Implementar firma WS-Security: insertar BinarySecurityToken y firmar el Body referenciando wsu:Id
+        try {
+            // Convertir SOAPMessage a Document
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            soapMessage.writeTo(baos);
+            byte[] soapBytes = baos.toByteArray();
+
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setNamespaceAware(true);
+            try {
+                dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            } catch (Exception ignored) {}
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc;
+            try (InputStream is = new ByteArrayInputStream(soapBytes)) {
+                doc = db.parse(is);
+            }
+
+            // Namespaces WS-Security
+            final String WSSE_NS = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd";
+            final String WSU_NS = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd";
+            final String X509_TOKEN_TYPE = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3";
+
+            // Localizar el elemento payload dentro del Body (primer hijo elemento) y asignarle wsu:Id
+            Element payloadElem = null;
+            NodeList bodyList = doc.getElementsByTagNameNS("http://schemas.xmlsoap.org/soap/envelope/", "Body");
+            if (bodyList.getLength() == 0) bodyList = doc.getElementsByTagNameNS("http://www.w3.org/2003/05/soap-envelope", "Body");
+            if (bodyList.getLength() > 0) {
+                Element bodyElement = (Element) bodyList.item(0);
+                // buscar primer hijo elemento del Body
+                for (int i = 0; i < bodyElement.getChildNodes().getLength(); i++) {
+                    org.w3c.dom.Node n = bodyElement.getChildNodes().item(i);
+                    if (n instanceof Element) { payloadElem = (Element) n; break; }
+                }
+            }
+
+            if (payloadElem == null) {
+                throw new Exception("No se encontró el elemento payload dentro de SOAP Body para firmar");
+            }
+
+            // Crear un Id único con prefijo wsu en el payload (AEAT espera firmar la factura, no el Body)
+            String payloadId = "id-payload-" + System.currentTimeMillis();
+            payloadElem.setAttributeNS(WSU_NS, "wsu:Id", payloadId);
+            // Registrar atributo Id como id para la DOM
+            payloadElem.setIdAttributeNS(WSU_NS, "Id", true);
+
+            // Localizar o crear Header
+            Element headerElem = null;
+            NodeList headerNl = doc.getElementsByTagNameNS("http://schemas.xmlsoap.org/soap/envelope/", "Header");
+            if (headerNl.getLength() > 0) headerElem = (Element) headerNl.item(0);
+            else {
+                headerNl = doc.getElementsByTagNameNS("http://www.w3.org/2003/05/soap-envelope", "Header");
+                if (headerNl.getLength() > 0) headerElem = (Element) headerNl.item(0);
+            }
+            if (headerElem == null) {
+                // crear Header bajo Envelope
+                NodeList envList = doc.getElementsByTagNameNS("http://schemas.xmlsoap.org/soap/envelope/", "Envelope");
+                Element env = envList.getLength() > 0 ? (Element) envList.item(0) : doc.getDocumentElement();
+                headerElem = doc.createElementNS(env.getNamespaceURI(), "Header");
+                env.insertBefore(headerElem, env.getFirstChild());
+            }
+
+            // Crear wsse:Security dentro del Header
+            Element securityElem = doc.createElementNS(WSSE_NS, "wsse:Security");
+            securityElem.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:wsse", WSSE_NS);
+            securityElem.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:wsu", WSU_NS);
+            // declarar prefijo soapenv para mustUnderstand
+            final String SOAP_ENV_NS = "http://schemas.xmlsoap.org/soap/envelope/";
+            securityElem.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:soapenv", SOAP_ENV_NS);
+            // Marcar mustUnderstand para que intermediarios SOAP lo procesen según spec
+            securityElem.setAttributeNS(SOAP_ENV_NS, "soapenv:mustUnderstand", "1");
+            headerElem.appendChild(securityElem);
+
+            // Añadir Timestamp (wsu:Timestamp) para compatibilidad WS-Security
+            try {
+                String created = Instant.now().toString();
+                String expires = Instant.now().plusSeconds(300).toString();
+                Element timestamp = doc.createElementNS(WSU_NS, "wsu:Timestamp");
+                timestamp.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:wsu", WSU_NS);
+                Element createdElem = doc.createElementNS(WSU_NS, "wsu:Created");
+                createdElem.setTextContent(created);
+                Element expiresElem = doc.createElementNS(WSU_NS, "wsu:Expires");
+                expiresElem.setTextContent(expires);
+                timestamp.appendChild(createdElem);
+                timestamp.appendChild(expiresElem);
+                securityElem.appendChild(timestamp);
+            } catch (Exception ex) {
+                log.debug("No se pudo agregar Timestamp WS-Security: {}", ex.getMessage());
+            }
+
+            // Insertar BinarySecurityToken con el certificado (Base64)
+            String bstId = "X509-" + System.currentTimeMillis();
+            Element bst = doc.createElementNS(WSSE_NS, "wsse:BinarySecurityToken");
+            bst.setAttributeNS(WSU_NS, "wsu:Id", bstId);
+            bst.setAttribute("ValueType", X509_TOKEN_TYPE);
+            bst.setAttribute("EncodingType", "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary");
+            String certB64 = java.util.Base64.getEncoder().encodeToString(certificate.getEncoded());
+            bst.setTextContent(certB64);
+            securityElem.appendChild(bst);
+            // Registrar wsu:Id del BinarySecurityToken como ID (por si el validador lo requiere)
+            try {
+                bst.setIdAttributeNS(WSU_NS, "Id", true);
+            } catch (Exception ignore) {
+                // No crítico si no se puede marcar como id en algunas implementaciones DOM
+            }
+
+            // Preparar XMLSignatureFactory
+            XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM");
+
+            // Reference al payload por wsu:Id (AEAT requiere que el XML de factura/payload sea el firmado)
+            // Transforms: Enveloped + Exclusive C14N to match typical WS-Security requirements
+            Transform envTransform = fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null);
+            Transform c14nTransform = fac.newTransform(CanonicalizationMethod.EXCLUSIVE, (TransformParameterSpec) null);
+            Reference ref = fac.newReference("#" + payloadId,
+                    fac.newDigestMethod(DigestMethod.SHA256, null),
+                    java.util.Arrays.asList(envTransform, c14nTransform),
+                    null,
+                    null);
+
+            // SignedInfo con canonicalization exclusive y RSA-SHA256
+            SignedInfo si = fac.newSignedInfo(
+                    fac.newCanonicalizationMethod(CanonicalizationMethod.EXCLUSIVE, (C14NMethodParameterSpec) null),
+                    fac.newSignatureMethod(SignatureMethod.RSA_SHA256, null),
+                    java.util.Collections.singletonList(ref)
+            );
+
+            // Crear SecurityTokenReference DOM element: <wsse:SecurityTokenReference><wsse:Reference URI="#bstId" ValueType="...#X509v3"/></wsse:SecurityTokenReference>
+            Element str = doc.createElementNS(WSSE_NS, "wsse:SecurityTokenReference");
+            Element refElem = doc.createElementNS(WSSE_NS, "wsse:Reference");
+            refElem.setAttribute("URI", "#" + bstId);
+            refElem.setAttribute("ValueType", X509_TOKEN_TYPE);
+            str.appendChild(refElem);
+
+            // Crear KeyInfo que contenga el SecurityTokenReference
+            KeyInfoFactory kif = fac.getKeyInfoFactory();
+            javax.xml.crypto.dom.DOMStructure domStr = new javax.xml.crypto.dom.DOMStructure(str);
+            KeyInfo ki = kif.newKeyInfo(java.util.Collections.singletonList(domStr));
+
+            // Crear la firma XML y firmar colocando la firma dentro de wsse:Security
+            DOMSignContext dsc = new DOMSignContext(privateKey, securityElem);
+            XMLSignature signature = fac.newXMLSignature(si, ki);
+            signature.sign(dsc);
+
+            // Convertir Document firmado a SOAPMessage
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            ByteArrayOutputStream signedOut = new ByteArrayOutputStream();
+            transformer.transform(new DOMSource(doc), new StreamResult(signedOut));
+
+            MessageFactory mf = MessageFactory.newInstance(SOAPConstants.SOAP_1_1_PROTOCOL);
+            try (InputStream signedIs = new ByteArrayInputStream(signedOut.toByteArray())) {
+                SOAPMessage signedMsg = mf.createMessage(null, signedIs);
+                // Reemplazar contenido del soapMessage original
+                soapMessage.getSOAPPart().setContent(signedMsg.getSOAPPart().getContent());
+            }
+
+        } catch (Exception e) {
+            log.error("Error firmando mensaje SOAP (WS-Security): {}", e.getMessage(), e);
+            throw new Exception("Error al firmar mensaje SOAP: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -165,22 +346,33 @@ public class VerifactuAeatSoapClient {
     private SOAPMessage enviarSOAP(SOAPMessage soapMessage) throws Exception {
         log.info("Enviando mensaje SOAP a: {}", aeatEndpoint);
 
-        // Crear conexión SOAP
-        SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
-        SOAPConnection soapConnection = soapConnectionFactory.createConnection();
+        // Convertir SOAPMessage a bytes
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        soapMessage.writeTo(baos);
+        byte[] requestBytes = baos.toByteArray();
 
-        try {
-            // Llamada SOAP síncrona
-            SOAPMessage respuesta = soapConnection.call(soapMessage, aeatEndpoint);
+        // Enviar usando java.net.http.HttpClient en lugar de SOAPConnection (evita APIs deprecated)
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(aeatEndpoint))
+                .header("Content-Type", "text/xml; charset=utf-8")
+                .POST(HttpRequest.BodyPublishers.ofByteArray(requestBytes))
+                .build();
 
-            if (respuesta == null) {
+        HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        int status = response.statusCode();
+        if (status < 200 || status >= 300) {
+            throw new Exception("HTTP error from AEAT: " + status + " - " + new String(response.body(), StandardCharsets.UTF_8));
+        }
+
+        byte[] respBytes = response.body();
+        MessageFactory mf = MessageFactory.newInstance(SOAPConstants.SOAP_1_1_PROTOCOL);
+        try (InputStream is = new ByteArrayInputStream(respBytes)) {
+            SOAPMessage responseMsg = mf.createMessage(null, is);
+            if (responseMsg == null) {
                 throw new Exception("Respuesta SOAP nula de la AEAT");
             }
-
-            return respuesta;
-
-        } finally {
-            soapConnection.close();
+            return responseMsg;
         }
     }
 
@@ -254,7 +446,7 @@ public class VerifactuAeatSoapClient {
             }
         }
 
-        return errores.length() > 0 ? errores.toString() : "Error desconocido";
+        return !errores.isEmpty() ? errores.toString() : "Error desconocido";
     }
 
     /**
@@ -333,9 +525,18 @@ public class VerifactuAeatSoapClient {
             log.info("Verificando conexión con AEAT...");
 
             // Intentar crear una conexión simple
-            SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
-            SOAPConnection soapConnection = soapConnectionFactory.createConnection();
-            soapConnection.close();
+            HttpClient client = HttpClient.newBuilder().build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(aeatEndpoint))
+                    .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            int status = response.statusCode();
+            if (status < 200 || status >= 300) {
+                log.error("❌ Respuesta inesperada de AEAT (HEAD request): {}", status);
+                return false;
+            }
 
             log.info("✅ Conexión con AEAT verificada correctamente");
             return true;

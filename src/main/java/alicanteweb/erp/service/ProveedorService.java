@@ -57,9 +57,37 @@ public class ProveedorService {
      * Guarda o actualiza un proveedor
      */
     public Proveedor save(Proveedor proveedor) {
-        // Si es nuevo, generar código automáticamente
+        if (proveedor == null) throw new IllegalArgumentException("Proveedor nulo");
+
+        // Generar código si es nuevo y no tiene código
         if (proveedor.getId() == null && (proveedor.getCodigo() == null || proveedor.getCodigo().isEmpty())) {
             proveedor.setCodigo(generarCodigoProveedor());
+        }
+
+        // Validaciones básicas
+        String codigo = proveedor.getCodigo();
+        if (codigo == null || codigo.trim().isEmpty()) {
+            throw new IllegalArgumentException("El código del proveedor es obligatorio");
+        }
+
+        // Comprobar duplicado por código
+        var opt = proveedorRepository.findByCodigo(codigo.trim());
+        if (opt.isPresent()) {
+            Proveedor existente = opt.get();
+            if (proveedor.getId() == null || !existente.getId().equals(proveedor.getId())) {
+                throw new IllegalArgumentException("Ya existe un proveedor con el código: " + codigo);
+            }
+        }
+
+        // Comprobar duplicado por CIF si se ha introducido
+        if (proveedor.getCif() != null && !proveedor.getCif().trim().isEmpty()) {
+            var optCif = proveedorRepository.findByCif(proveedor.getCif().trim());
+            if (optCif.isPresent()) {
+                Proveedor existente = optCif.get();
+                if (proveedor.getId() == null || !existente.getId().equals(proveedor.getId())) {
+                    throw new IllegalArgumentException("Ya existe un proveedor con el CIF: " + proveedor.getCif());
+                }
+            }
         }
 
         log.info("Guardando proveedor: {}", proveedor.getCodigo());

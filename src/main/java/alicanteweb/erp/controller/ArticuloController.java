@@ -160,10 +160,9 @@ public class ArticuloController extends BaseController<Articulo> {
     @Override
     protected void eliminarItem(Articulo item) {
         if (item != null && item.getId() != null) {
-            // Dar de baja en lugar de eliminar
-            item.setActivo(false);
-            articuloService.save(item);
-            log.info("✅ Artículo dado de baja: {}", item.getCodigo());
+            // Delegar al servicio para centralizar la lógica de dar de baja
+            articuloService.darDeBaja(item.getId());
+            log.info("✅ Artículo dado de baja (servicio): {}", item.getCodigo());
         }
     }
 
@@ -184,29 +183,29 @@ public class ArticuloController extends BaseController<Articulo> {
         String categoriaSeleccionada = cmbCategoria != null ? cmbCategoria.getValue() : "Todas";
         String estadoSeleccionado = cmbActivo != null ? cmbActivo.getValue() : "Todos";
 
-        List<Articulo> filtrados = datosCompletos.stream()
+        // Base inicial: si se selecciona estado, usar consulta específica del servicio
+        List<Articulo> base;
+        if ("Activos".equals(estadoSeleccionado)) {
+            base = articuloService.findByActivo(true);
+        } else if ("Inactivos".equals(estadoSeleccionado)) {
+            base = articuloService.findByActivo(false);
+        } else {
+            base = datosCompletos;
+        }
+
+        // Si hay texto de búsqueda, preferir búsqueda en repositorio para rendimiento
+        List<Articulo> buscados;
+        if (terminoBusqueda != null && !terminoBusqueda.isBlank()) {
+            buscados = articuloService.searchByDescripcion(terminoBusqueda);
+            // intersect buscados with base
+            base = base.stream().filter(a -> buscados.stream().anyMatch(b -> b.getId().equals(a.getId()))).toList();
+        }
+
+        // Aplicar filtro por categoría si procede
+        List<Articulo> filtrados = base.stream()
             .filter(articulo -> {
-                // Filtro por texto de búsqueda
-                boolean coincideTexto = terminoBusqueda.isEmpty() || coincideConBusqueda(articulo, terminoBusqueda);
-
-                // Filtro por categoría
-                boolean coincideCategoria = categoriaSeleccionada == null ||
-                                           categoriaSeleccionada.equals("Todas") ||
-                                           (articulo.getCategoria() != null &&
-                                            articulo.getCategoria().equals(categoriaSeleccionada));
-
-                // Filtro por estado
-                boolean coincideEstado = true;
-                if (estadoSeleccionado != null) {
-                    if (estadoSeleccionado.equals("Activos")) {
-                        coincideEstado = articulo.getActivo() != null && articulo.getActivo();
-                    } else if (estadoSeleccionado.equals("Inactivos")) {
-                        coincideEstado = articulo.getActivo() == null || !articulo.getActivo();
-                    }
-                    // Si es "Todos", coincideEstado ya es true
-                }
-
-                return coincideTexto && coincideCategoria && coincideEstado;
+                if (categoriaSeleccionada == null || "Todas".equals(categoriaSeleccionada)) return true;
+                return articulo.getCategoria() != null && articulo.getCategoria().equals(categoriaSeleccionada);
             })
             .collect(Collectors.toList());
 

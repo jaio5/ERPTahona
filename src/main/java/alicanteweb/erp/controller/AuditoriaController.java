@@ -296,7 +296,8 @@ public class AuditoriaController {
                 // Filtro de módulo
                 if (filtroModulo != null && !filtroModulo.contains("Todos")) {
                     String modulo = a.getModulo();
-                    if (modulo == null || !filtroModulo.contains(modulo)) return false;
+                    boolean moduloValido = modulo != null && filtroModulo.contains(modulo);
+                    if (!moduloValido) return false;
                 }
 
                 return true;
@@ -518,11 +519,15 @@ public class AuditoriaController {
 
     @FXML
     public void onExportar() {
-        Dialogs.showWarn("Funcionalidad de exportación en desarrollo\n\n" +
-                "Próximamente podrá exportar los registros de auditoría a:\n" +
-                "• Excel (.xlsx)\n" +
-                "• CSV (.csv)\n" +
-                "• PDF (.pdf)");
+        String mensaje = """
+            Funcionalidad de exportación en desarrollo
+            
+            Próximamente podrá exportar los registros de auditoría a:
+            • Excel (.xlsx)
+            • CSV (.csv)
+            • PDF (.pdf)
+            """;
+        Dialogs.showWarn(mensaje);
     }
 
     private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }

@@ -3,11 +3,14 @@ package alicanteweb.erp.controller;
 import alicanteweb.erp.entities.Almacen;
 import alicanteweb.erp.service.AlmacenService;
 import javafx.fxml.FXML;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +37,10 @@ public class AlmacenController {
     @FXML private Label lblTotal;
 
     private final AlmacenService almacenService;
+    private final ApplicationContext applicationContext;
 
-    public AlmacenController(AlmacenService almacenService) {
+    public AlmacenController(ApplicationContext applicationContext, AlmacenService almacenService) {
+        this.applicationContext = applicationContext;
         this.almacenService = almacenService;
     }
 
@@ -152,8 +157,26 @@ public class AlmacenController {
 
     @FXML
     public void onNuevo() {
-        log.info("Crear nuevo almacén");
-        mostrarAlerta("Función en desarrollo: Crear nuevo almacén");
+        try {
+            log.info("Crear nuevo almacén - abriendo formulario");
+            java.net.URL resource = getClass().getResource("/ui/almacen_form.fxml");
+            if (resource == null) { mostrarAlerta("No se encuentra el formulario de almacén"); return; }
+
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(resource);
+            loader.setControllerFactory(applicationContext::getBean);
+            Parent root = loader.load();
+            Stage dialog = new Stage();
+            dialog.setTitle("Nuevo Almacén");
+            dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            dialog.setScene(new javafx.scene.Scene(root));
+            dialog.showAndWait();
+
+            // Refrescar despues de cerrar
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario de almacén", e);
+            mostrarError("No se pudo abrir el formulario: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -163,8 +186,28 @@ public class AlmacenController {
             mostrarAlerta("Selecciona un almacén para editar");
             return;
         }
-        log.info("Editar almacén: {}", almacen.getCodigo());
-        mostrarAlerta("Función en desarrollo: Editar almacén");
+        try {
+            java.net.URL resource = getClass().getResource("/ui/almacen_form.fxml");
+            if (resource == null) { mostrarAlerta("No se encuentra el formulario de almacén"); return; }
+
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(resource);
+            loader.setControllerFactory(applicationContext::getBean);
+            Parent root = loader.load();
+            Object ctrl = loader.getController();
+            if (ctrl instanceof alicanteweb.erp.controller.AlmacenFormController) {
+                ((alicanteweb.erp.controller.AlmacenFormController) ctrl).setAlmacen(almacen);
+            }
+
+            Stage dialog = new Stage();
+            dialog.setTitle("Editar Almacén");
+            dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            dialog.setScene(new javafx.scene.Scene(root));
+            dialog.showAndWait();
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario de edición", e);
+            mostrarError("No se pudo abrir el formulario: " + e.getMessage());
+        }
     }
 
     @FXML

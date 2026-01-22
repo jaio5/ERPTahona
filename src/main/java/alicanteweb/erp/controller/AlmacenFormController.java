@@ -2,36 +2,31 @@ package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Almacen;
 import alicanteweb.erp.service.AlmacenService;
-import alicanteweb.erp.ui.Dialogs;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 
 import java.math.BigDecimal;
 
-/**
- * Controlador para el formulario de creación/edición de almacenes
- */
 @Controller
 public class AlmacenFormController {
     private static final Logger log = LoggerFactory.getLogger(AlmacenFormController.class);
 
     @FXML private TextField txtCodigo;
     @FXML private TextField txtNombre;
-    @FXML private Button btnCancelar;
-
-    // Campos adicionales que aparecen en FXML — añadidos para alinear controller con vista
     @FXML private TextArea txtDescripcion;
     @FXML private TextField txtCapacidad;
     @FXML private TextField txtDisponible;
     @FXML private TextField txtLocalidad;
     @FXML private TextField txtResponsable;
-    @FXML private CheckBox chkActivo;
 
     private final AlmacenService almacenService;
-    private Almacen almacenActual;
+    private Almacen almacen;
 
     public AlmacenFormController(AlmacenService almacenService) {
         this.almacenService = almacenService;
@@ -39,104 +34,76 @@ public class AlmacenFormController {
 
     @FXML
     public void initialize() {
-        log.info("AlmacenFormController inicializado");
+        // nothing
     }
 
-
     public void setAlmacen(Almacen almacen) {
-        this.almacenActual = almacen;
+        this.almacen = almacen;
         if (almacen != null) {
             txtCodigo.setText(almacen.getCodigo());
             txtNombre.setText(almacen.getNombre());
-            if (txtDescripcion != null) txtDescripcion.setText(almacen.getDescripcion() != null ? almacen.getDescripcion() : "");
-            if (txtCapacidad != null) txtCapacidad.setText(almacen.getCapacidad() != null ? almacen.getCapacidad().toPlainString() : "");
-            if (txtDisponible != null) txtDisponible.setText(almacen.getDisponible() != null ? almacen.getDisponible().toPlainString() : "");
-            if (txtLocalidad != null) txtLocalidad.setText(almacen.getLocalidad() != null ? almacen.getLocalidad() : "");
-            if (txtResponsable != null) txtResponsable.setText(almacen.getResponsable() != null ? almacen.getResponsable() : "");
-            if (chkActivo != null) chkActivo.setSelected(almacen.getActivo() != null ? almacen.getActivo() : true);
+            txtDescripcion.setText(almacen.getDescripcion());
+            txtCapacidad.setText(almacen.getCapacidad() != null ? almacen.getCapacidad().toString() : "");
+            txtDisponible.setText(almacen.getDisponible() != null ? almacen.getDisponible().toString() : "");
+            txtLocalidad.setText(almacen.getLocalidad());
+            txtResponsable.setText(almacen.getResponsable());
         }
     }
 
     @FXML
     public void onGuardar() {
-        if (validar()) {
-            try {
-                if (almacenActual == null) {
-                    almacenActual = new Almacen();
-                }
+        try {
+            if (almacen == null) almacen = new Almacen();
+            almacen.setCodigo(txtCodigo.getText());
+            almacen.setNombre(txtNombre.getText());
+            almacen.setDescripcion(txtDescripcion.getText());
+            almacen.setCapacidad(parseDecimal(txtCapacidad.getText()));
+            almacen.setDisponible(parseDecimal(txtDisponible.getText()));
+            almacen.setLocalidad(txtLocalidad.getText());
+            almacen.setResponsable(txtResponsable.getText());
 
-                almacenActual.setCodigo(txtCodigo.getText());
-                almacenActual.setNombre(txtNombre.getText());
-                almacenActual.setDescripcion(txtDescripcion != null ? txtDescripcion.getText() : null);
+            // Validaciones simples
+            if (almacen.getCapacidad() != null && almacen.getCapacidad().signum() < 0) throw new IllegalArgumentException("capacidad negativa");
+            if (almacen.getDisponible() != null && almacen.getDisponible().signum() < 0) throw new IllegalArgumentException("disponible negativa");
+            if (almacen.getCapacidad() != null && almacen.getDisponible() != null && almacen.getDisponible().compareTo(almacen.getCapacidad()) > 0)
+                throw new IllegalArgumentException("disponible mayor que capacidad");
 
-                // Parsear capacidad y disponible de manera segura
-                if (txtCapacidad != null && !txtCapacidad.getText().isBlank()) {
-                    try {
-                        almacenActual.setCapacidad(new BigDecimal(txtCapacidad.getText().trim()));
-                    } catch (NumberFormatException nfe) {
-                        mostrarError("Capacidad no es un número válido");
-                        return;
-                    }
-                } else {
-                    almacenActual.setCapacidad(null);
-                }
-
-                if (txtDisponible != null && !txtDisponible.getText().isBlank()) {
-                    try {
-                        almacenActual.setDisponible(new BigDecimal(txtDisponible.getText().trim()));
-                    } catch (NumberFormatException nfe) {
-                        mostrarError("Disponible no es un número válido");
-                        return;
-                    }
-                } else {
-                    almacenActual.setDisponible(null);
-                }
-
-                // Validación: disponible no puede ser mayor que capacidad
-                if (almacenActual.getCapacidad() != null && almacenActual.getDisponible() != null) {
-                    if (almacenActual.getDisponible().compareTo(almacenActual.getCapacidad()) > 0) {
-                        mostrarError("El espacio disponible no puede ser mayor que la capacidad total");
-                        return;
-                    }
-                }
-
-                almacenActual.setLocalidad(txtLocalidad != null ? txtLocalidad.getText() : null);
-                almacenActual.setResponsable(txtResponsable != null ? txtResponsable.getText() : null);
-
-                // Usar el valor del checkbox si existe en la UI
-                if (chkActivo != null) {
-                    almacenActual.setActivo(chkActivo.isSelected());
-                } else {
-                    almacenActual.setActivo(true);
-                }
-
-                almacenService.save(almacenActual);
-                log.info("Almacén guardado: {}", almacenActual.getId());
-
-                mostrarExito();
-
-                btnCancelar.getScene().getWindow().hide();
-            } catch (Exception e) {
-                log.error("Error guardando almacén", e);
-                mostrarError("Error al guardar: " + e.getMessage());
-            }
+            almacenService.save(almacen);
+            String ok = "Almacén guardado";
+            mostrarExito(ok);
+            cerrarVentana();
+        } catch (Exception e) {
+            log.error("Error guardando almacen", e);
+            mostrarError("Error: " + e.getMessage());
         }
     }
 
     @FXML
     public void onCancelar() {
-        btnCancelar.getScene().getWindow().hide();
+        cerrarVentana();
     }
 
-    private boolean validar() {
-        if (txtCodigo.getText().isEmpty() || txtNombre.getText().isEmpty()) {
-            mostrarAlerta();
-            return false;
-        }
-        return true;
+    private BigDecimal parseDecimal(String s) {
+        if (s == null || s.isBlank()) return null;
+        try { return new BigDecimal(s.trim()); } catch (Exception e) { return null; }
     }
 
-    private void mostrarAlerta() { Dialogs.showWarn("Código y nombre son obligatorios"); }
-    private void mostrarExito() { Dialogs.showInfo("Almacén guardado correctamente"); }
-    private void mostrarError(String msg) { Dialogs.showError(msg); }
+    private void mostrarError(String msg) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle("Error");
+        a.setContentText(msg);
+        a.showAndWait();
+    }
+
+    private void mostrarExito(String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle("Éxito");
+        a.setContentText(msg);
+        a.showAndWait();
+    }
+
+    private void cerrarVentana() {
+        Stage stage = (Stage) txtCodigo.getScene().getWindow();
+        stage.close();
+    }
 }

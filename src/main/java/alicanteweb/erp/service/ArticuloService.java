@@ -36,6 +36,22 @@ public class ArticuloService {
 
     @Transactional
     public Articulo save(Articulo articulo) {
+        if (articulo == null) throw new IllegalArgumentException("Articulo nulo");
+
+        String codigo = articulo.getCodigo();
+        if (codigo == null || codigo.trim().isEmpty()) {
+            throw new IllegalArgumentException("El código del artículo es obligatorio");
+        }
+
+        var opt = repository.findByCodigo(codigo.trim());
+        if (opt.isPresent()) {
+            Articulo existente = opt.get();
+            // Si es distinto (nuevo artículo o id diferente) => duplicado
+            if (articulo.getId() == null || !existente.getId().equals(articulo.getId())) {
+                throw new IllegalArgumentException("Ya existe un artículo con el código: " + codigo);
+            }
+        }
+
         return repository.save(articulo);
     }
 
