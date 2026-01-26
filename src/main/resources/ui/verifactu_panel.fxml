@@ -40,16 +40,17 @@
         </HBox>
 
         <HBox spacing="12">
-            <Button text="💾 Guardar" onAction="#onGuardar" styleClass="button-success"/>
-            <Button text="🔍 Probar" onAction="#onProbar" styleClass="button-primary"/>
+            <Button fx:id="btnGuardar" text="💾 Guardar" onAction="#onGuardar" styleClass="button-success"/>
+            <Button fx:id="btnProbar" text="🔍 Probar" onAction="#onProbar" styleClass="button-primary"/>
         </HBox>
     </VBox>
 
     <HBox spacing="12" alignment="CENTER_LEFT">
-        <Button text="📤 Enviar Facturas" onAction="#onEnviar" styleClass="button-primary"/>
+        <Button fx:id="btnEnviar" text="📤 Enviar Facturas" onAction="#onEnviar" styleClass="button-primary"/>
         <Button text="✔️ Verificar" onAction="#onVerificar" styleClass="button"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblInfo" text="0 pendientes" style="-fx-text-fill: #6c757d;"/>
+        <ProgressIndicator fx:id="progressIndicator" visible="false" prefWidth="20" prefHeight="20"/>
     </HBox>
 
     <VBox VBox.vgrow="ALWAYS" spacing="12">

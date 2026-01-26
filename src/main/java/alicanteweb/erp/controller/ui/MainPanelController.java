@@ -139,7 +139,11 @@ public class MainPanelController {
     @FXML
     public void onUsuarios() {
         log.info(">>> BOTÓN USUARIOS PRESIONADO <<<");
-        cargarVistaModulo("/ui/usuarios_panel.fxml");
+        try {
+            cargarVista("/ui/usuarios_panel.fxml");
+        } catch (Exception e) {
+            log.error("Error cargando vista usuarios: {}", e.getMessage(), e);
+        }
     }
 
     @FXML
@@ -204,7 +208,27 @@ public class MainPanelController {
 
     // Métodos para accesos rápidos del dashboard
     public void cargarVista(String vista) {
-        cargarVistaModulo(vista);
+        log.info("INTENTANDO CARGAR VISTA: {}", vista);
+        try {
+            var url = getClass().getResource(vista);
+            if (url == null) {
+                log.error("Vista no encontrada: {} (resource url null)", vista);
+                return;
+            }
+            log.info("Archivo encontrado en: {}", url);
+            FXMLLoader loader = new FXMLLoader(url);
+            loader.setControllerFactory(springContext::getBean);
+            var node = loader.load();
+            if (node instanceof javafx.scene.Parent) {
+                contentArea.getChildren().clear();
+                contentArea.getChildren().add((javafx.scene.Parent) node);
+                log.info("VISTA CARGADA EXITOSAMENTE: {}", vista);
+            } else {
+                log.warn("La vista cargada no es un Parent válido: {}", vista);
+            }
+        } catch (Throwable t) {
+            log.error("Error cargando FXML {}", vista, t);
+        }
     }
 
     @FXML

@@ -19,7 +19,8 @@
         <TextField fx:id="txtBuscar" promptText="Buscar artículo..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
         <ComboBox fx:id="cmbCategoria" promptText="Categoría" minWidth="120" maxWidth="160"/>
         <ComboBox fx:id="cmbActivo" promptText="Estado" minWidth="100" maxWidth="140"/>
-        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+        <!-- Handler renombrado para evitar colisión con BaseController.onBuscar -->
+        <Button text="Buscar" onAction="#onBuscarArticulo" styleClass="button-primary"/>
     </HBox>
 
     <TableView fx:id="tableArticulos" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
@@ -34,9 +35,10 @@
     </TableView>
 
     <HBox spacing="12" alignment="CENTER_LEFT">
-        <Button text="Ver" onAction="#onVer" styleClass="button"/>
+        <!-- Renombrado handlers para evitar colisión con BaseController -->
+        <Button text="Ver" onAction="#onVerArticulo" styleClass="button"/>
         <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
-        <Button text="Dar de Baja" onAction="#onDarBaja" styleClass="button-danger"/>
+        <Button text="Dar de Baja" onAction="#onDarBajaArticulo" styleClass="button-danger"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblTotal" text="0 artículos" style="-fx-text-fill: #6c757d;"/>
     </HBox>

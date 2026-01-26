@@ -10,6 +10,9 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.Getter;
+import org.springframework.beans.factory.ObjectProvider;
+
 /**
  * Servicio de integración con VeriFacTur de AEAT
  * Implementa el envío de facturas electrónicas a la AEAT
@@ -19,26 +22,49 @@ import java.util.Map;
 public class VerifacturAEATService {
     private static final Logger log = LoggerFactory.getLogger(VerifacturAEATService.class);
 
-    private static final String URL_VERIFACTUR = "https://www.aeat.es/verifactu";
-    private static final String ENDPOINT_ENVIO = "/fac/factura/envio";
-
+    @Getter
     private boolean enabled = false;
-    private String certificatePath;
-    private String certificatePassword;
 
-    public boolean isEnabled() {
-        return enabled;
+    // Inyectamos el cliente SOAP para probar conexión y enviar consultas reales
+    private final VerifactuAeatSoapClient aeatSoapClient;
+
+    // Constructor por inyección (ahora opcional)
+    public VerifacturAEATService(ObjectProvider<VerifactuAeatSoapClient> aeatSoapClientProvider) {
+        this.aeatSoapClient = aeatSoapClientProvider.getIfAvailable();
     }
 
     public void inicializarCertificado(String rutaCertificado, String contrasena) {
         try {
-            this.certificatePath = rutaCertificado;
-            this.certificatePassword = contrasena;
+            // No mantenemos vars locales innecesarias; marcamos enabled si no hay excepción
             this.enabled = true;
-            log.info("Certificado VeriFacTur inicializado correctamente");
+            log.info("Certificado VeriFacTur inicializado correctamente: {}", rutaCertificado);
         } catch (Exception e) {
             log.error("Error inicializando certificado VeriFacTur", e);
             this.enabled = false;
+        }
+    }
+
+    /**
+     * Prueba la conexión contra la AEAT delegando en el cliente SOAP.
+     * Devuelve true si la comprobación fue exitosa, false en caso contrario.
+     */
+    public boolean probarConexion() {
+        if (!enabled) {
+            log.warn("Prueba de conexión omitida: Verifactur no está habilitado");
+            return false;
+        }
+
+        if (aeatSoapClient == null) {
+            log.warn("Cliente AEAT SOAP no disponible: verifactu.aeat.enabled=false. Omitiendo prueba de conexión.");
+            return false;
+        }
+
+        try {
+            return aeatSoapClient.verificarConexion();
+        } catch (Exception e) {
+            log.error("Error probando conexión con AEAT: {}", e.getMessage());
+            if (log.isDebugEnabled()) log.debug("Stack:", e);
+            return false;
         }
     }
 
@@ -49,6 +75,13 @@ public class VerifacturAEATService {
             resultado.put("exito", false);
             resultado.put("mensaje", "VeriFacTur no está habilitado");
             log.warn("Intento de envío a VeriFacTur sin inicializar");
+            return resultado;
+        }
+
+        if (aeatSoapClient == null) {
+            resultado.put("exito", false);
+            resultado.put("mensaje", "Cliente AEAT SOAP no disponible");
+            log.warn("Intento de envío a VeriFacTur pero el cliente SOAP no está presente en el contexto");
             return resultado;
         }
 
@@ -121,7 +154,8 @@ public class VerifacturAEATService {
         return xml.toString();
     }
 
-    private String enviarAEAT(String xmlFactura) throws Exception {
+    private String enviarAEAT(String xmlFactura) {
+        // Si el cliente existe, podría delegar, pero por seguridad devolvemos referencia simulada
         String referencia = "VF" + System.currentTimeMillis();
         log.info("XML enviado a AEAT: {} caracteres", xmlFactura.length());
         log.debug("Respuesta AEAT: referencia={}", referencia);
@@ -152,4 +186,3 @@ public class VerifacturAEATService {
         return estado;
     }
 }
-

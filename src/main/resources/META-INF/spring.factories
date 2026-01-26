@@ -1,0 +1,2 @@
+# Register EnvironmentPostProcessor implementations
+org.springframework.boot.env.EnvironmentPostProcessor=alicanteweb.erp.config.DatabaseStartupChecker

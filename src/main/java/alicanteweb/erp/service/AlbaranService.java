@@ -76,6 +76,12 @@ public class AlbaranService {
         // Generar número si no existe
         if (albaran.getNumero() == null || albaran.getNumero().isEmpty()) {
             albaran.setNumero(generarNumeroAlbaran());
+        } else {
+            // Validación: si ya existe otro albarán con el mismo número, evitar duplicado
+            Optional<AlbaranVenta> existente = obtenerPorNumero(albaran.getNumero());
+            if (existente.isPresent() && (albaran.getId() == null || !existente.get().getId().equals(albaran.getId()))) {
+                throw new IllegalStateException("Ya existe un albarán con el número: " + albaran.getNumero());
+            }
         }
 
         // Establecer fecha si no existe
@@ -180,7 +186,7 @@ public class AlbaranService {
     public Factura convertirVariosAFactura(List<Long> albaranIds, Usuario usuario) {
         log.info("🔄 Convirtiendo {} albaranes a una factura", albaranIds.size());
 
-        if (albaranIds == null || albaranIds.isEmpty()) {
+        if (albaranIds.isEmpty()) {
             throw new IllegalArgumentException("Debe seleccionar al menos un albarán");
         }
 
@@ -258,6 +264,13 @@ public class AlbaranService {
         Factura facturaGuardada = facturaService.save(factura);
 
         log.info("✅ {} albaranes convertidos a factura: {}", albaranes.size(), facturaGuardada.getNumero());
+
+        // Registrar auditoría usando el usuario proporcionado (si existe)
+        if (auditoriaService != null && usuario != null) {
+            auditoriaService.registrarAccion(usuario, "ALBARAN", "CONVERTIR_FACTURA_MASIVO",
+                "Albaranes " + observaciones + " convertidos a factura " + facturaGuardada.getNumero(),
+                "EXITOSO");
+        }
 
         return facturaGuardada;
     }

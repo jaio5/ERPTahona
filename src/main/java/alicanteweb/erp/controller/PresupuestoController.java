@@ -26,17 +26,20 @@ public class PresupuestoController {
     private static final Logger log = LoggerFactory.getLogger(PresupuestoController.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    @FXML private TableView<Presupuesto> tablePresupuestos;
-    @FXML private TableColumn<Presupuesto, String> colNumero;
-    @FXML private TableColumn<Presupuesto, LocalDate> colFecha;
-    @FXML private TableColumn<Presupuesto, String> colCliente;
-    @FXML private TableColumn<Presupuesto, BigDecimal> colBaseImponible;
-    @FXML private TableColumn<Presupuesto, BigDecimal> colTotal;
-    @FXML private TableColumn<Presupuesto, String> colEstado;
+    @FXML private TableView<Presupuesto> pres_tablePresupuestos;
+    @FXML private TableColumn<Presupuesto, String> pres_colNumero;
+    @FXML private TableColumn<Presupuesto, LocalDate> pres_colFecha;
+    @FXML private TableColumn<Presupuesto, String> pres_colCliente;
+    @FXML private TableColumn<Presupuesto, BigDecimal> pres_colBaseImponible;
+    @FXML private TableColumn<Presupuesto, BigDecimal> pres_colTotal;
+    @FXML private TableColumn<Presupuesto, LocalDate> pres_colValidez;
+    @FXML private TableColumn<Presupuesto, String> pres_colEstado;
 
     @FXML private TextField txtBuscar;
     @FXML private ComboBox<String> cmbEstado;
-    @FXML private Label lblEstado;
+    @FXML private Label pres_lblTotal;
+    @FXML private DatePicker dpFechaDesde;
+    @FXML private DatePicker dpFechaHasta;
 
     private final PresupuestoService presupuestoService;
 
@@ -55,24 +58,38 @@ public class PresupuestoController {
             txtBuscar.textProperty().addListener((obs, oldV, newV) -> filtrarPresupuestos(newV));
         }
 
-        // Aplicar estilo a la tabla
-        if (tablePresupuestos != null) {
-            tablePresupuestos.setStyle("-fx-background-color: white; -fx-text-fill: #212529;");
-
-            // Estilo de filas
-            tablePresupuestos.setRowFactory(tv -> {
-                TableRow<Presupuesto> row = new TableRow<>();
-                row.setOnMouseEntered(event -> {
-                    if (!row.isEmpty()) {
-                        row.setStyle("-fx-background-color: #e9ecef; -fx-cursor: hand;");
-                    }
-                });
-                row.setOnMouseExited(event -> {
-                    row.setStyle("");
-                });
-                return row;
-            });
+        // Listeners para los datepickers: re-filtrar cuando cambian
+        if (dpFechaDesde == null) {
+            // Si la inyección falla (p. ej. en tests), crear uno defensivamente
+            dpFechaDesde = new DatePicker(LocalDate.now().withDayOfMonth(1));
+        } else if (dpFechaDesde.getValue() == null) {
+            dpFechaDesde.setValue(LocalDate.now().withDayOfMonth(1));
         }
+        dpFechaDesde.valueProperty().addListener((obs, oldV, newV) -> filtrarPresupuestos(txtBuscar != null ? txtBuscar.getText() : ""));
+
+        if (dpFechaHasta == null) {
+            dpFechaHasta = new DatePicker(LocalDate.now());
+        } else if (dpFechaHasta.getValue() == null) {
+            dpFechaHasta.setValue(LocalDate.now());
+        }
+        dpFechaHasta.valueProperty().addListener((obs, oldV, newV) -> filtrarPresupuestos(txtBuscar != null ? txtBuscar.getText() : ""));
+
+         // Aplicar estilo a la tabla
+         if (pres_tablePresupuestos != null) {
+             pres_tablePresupuestos.setStyle("-fx-background-color: white; -fx-text-fill: #212529;");
+
+             // Estilo de filas
+             pres_tablePresupuestos.setRowFactory(tv -> {
+                 TableRow<Presupuesto> row = new TableRow<>();
+                 row.setOnMouseEntered(event -> {
+                     if (!row.isEmpty()) {
+                         row.setStyle("-fx-background-color: #e9ecef; -fx-cursor: hand;");
+                     }
+                 });
+                 row.setOnMouseExited(event -> row.setStyle(""));
+                 return row;
+             });
+         }
     }
 
     /**
@@ -114,9 +131,9 @@ public class PresupuestoController {
     }
 
     private void configurarColumnas() {
-        if (colNumero != null) {
-            colNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
-            colNumero.setCellFactory(column -> new TableCell<Presupuesto, String>() {
+        if (pres_colNumero != null) {
+            pres_colNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
+            pres_colNumero.setCellFactory(column -> new TableCell<>() {
                 @Override
                 protected void updateItem(String item, boolean empty) {
                     super.updateItem(item, empty);
@@ -130,9 +147,9 @@ public class PresupuestoController {
                 }
             });
         }
-        if (colFecha != null) {
-            colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-            colFecha.setCellFactory(column -> new TableCell<Presupuesto, LocalDate>() {
+        if (pres_colFecha != null) {
+            pres_colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+            pres_colFecha.setCellFactory(column -> new TableCell<>() {
                 @Override
                 protected void updateItem(LocalDate item, boolean empty) {
                     super.updateItem(item, empty);
@@ -145,8 +162,8 @@ public class PresupuestoController {
                 }
             });
         }
-        if (colCliente != null) {
-            colCliente.setCellValueFactory(cellData -> {
+        if (pres_colCliente != null) {
+            pres_colCliente.setCellValueFactory(cellData -> {
                 Presupuesto presupuesto = cellData.getValue();
                 String nombreCliente = "";
                 if (presupuesto != null && presupuesto.getCliente() != null) {
@@ -154,7 +171,7 @@ public class PresupuestoController {
                 }
                 return new SimpleStringProperty(nombreCliente);
             });
-            colCliente.setCellFactory(column -> new TableCell<Presupuesto, String>() {
+            pres_colCliente.setCellFactory(column -> new TableCell<>() {
                 @Override
                 protected void updateItem(String item, boolean empty) {
                     super.updateItem(item, empty);
@@ -167,15 +184,15 @@ public class PresupuestoController {
                 }
             });
         }
-        if (colBaseImponible != null) {
-            colBaseImponible.setCellValueFactory(cellData -> {
+        if (pres_colBaseImponible != null) {
+            pres_colBaseImponible.setCellValueFactory(cellData -> {
                 Presupuesto presupuesto = cellData.getValue();
                 BigDecimal base = presupuesto.getTotal() != null ?
                     presupuesto.getTotal().divide(new BigDecimal("1.21"), 2, RoundingMode.HALF_UP) :
                     BigDecimal.ZERO;
                 return new javafx.beans.property.SimpleObjectProperty<>(base);
             });
-            colBaseImponible.setCellFactory(column -> new TableCell<Presupuesto, BigDecimal>() {
+            pres_colBaseImponible.setCellFactory(column -> new TableCell<>() {
                 @Override
                 protected void updateItem(BigDecimal item, boolean empty) {
                     super.updateItem(item, empty);
@@ -188,9 +205,9 @@ public class PresupuestoController {
                 }
             });
         }
-        if (colTotal != null) {
-            colTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
-            colTotal.setCellFactory(column -> new TableCell<Presupuesto, BigDecimal>() {
+        if (pres_colTotal != null) {
+            pres_colTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
+            pres_colTotal.setCellFactory(column -> new TableCell<>() {
                 @Override
                 protected void updateItem(BigDecimal item, boolean empty) {
                     super.updateItem(item, empty);
@@ -203,9 +220,24 @@ public class PresupuestoController {
                 }
             });
         }
-        if (colEstado != null) {
-            colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
-            colEstado.setCellFactory(column -> new TableCell<Presupuesto, String>() {
+        if (pres_colValidez != null) {
+            pres_colValidez.setCellValueFactory(new PropertyValueFactory<>("fechaValidez"));
+            pres_colValidez.setCellFactory(column -> new TableCell<>() {
+                @Override
+                protected void updateItem(LocalDate item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        setText(item.format(DATE_FORMATTER));
+                        setStyle("-fx-text-fill: #495057;");
+                    }
+                }
+            });
+        }
+        if (pres_colEstado != null) {
+            pres_colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
+            pres_colEstado.setCellFactory(column -> new TableCell<>() {
                 @Override
                 protected void updateItem(String item, boolean empty) {
                     super.updateItem(item, empty);
@@ -254,11 +286,11 @@ public class PresupuestoController {
     private void cargarDatos() {
         try {
             var presupuestos = presupuestoService.obtenerTodos();
-            if (tablePresupuestos != null) {
-                tablePresupuestos.setItems(FXCollections.observableArrayList(presupuestos));
+            if (pres_tablePresupuestos != null) {
+                pres_tablePresupuestos.setItems(FXCollections.observableArrayList(presupuestos));
             }
-            if (lblEstado != null) {
-                lblEstado.setText(presupuestos.size() + " presupuestos");
+            if (pres_lblTotal != null) {
+                pres_lblTotal.setText(presupuestos.size() + " presupuestos");
             }
             log.info("Presupuestos cargados: {}", presupuestos.size());
         } catch (Exception e) {
@@ -271,35 +303,50 @@ public class PresupuestoController {
         try {
             var presupuestos = presupuestoService.obtenerTodos();
 
-            // Filtrar por estado si está seleccionado
-            if (cmbEstado != null && cmbEstado.getValue() != null &&
-                !cmbEstado.getValue().equals("TODOS")) {
-                String estadoFiltro = cmbEstado.getValue();
+            // Filtrar por rango de fechas si están seleccionadas
+            LocalDate desde = dpFechaDesde != null ? dpFechaDesde.getValue() : null;
+            LocalDate hasta = dpFechaHasta != null ? dpFechaHasta.getValue() : null;
+
+            if (desde != null) {
                 presupuestos = presupuestos.stream()
-                    .filter(p -> p.getEstado() != null && p.getEstado().equals(estadoFiltro))
+                    .filter(p -> p.getFecha() != null && !p.getFecha().isBefore(desde))
+                    .toList();
+            }
+            if (hasta != null) {
+                presupuestos = presupuestos.stream()
+                    .filter(p -> p.getFecha() != null && !p.getFecha().isAfter(hasta))
                     .toList();
             }
 
-            // Filtrar por texto de búsqueda
-            if (busqueda != null && !busqueda.isEmpty()) {
-                String search = busqueda.toLowerCase();
-                presupuestos = presupuestos.stream()
-                    .filter(p -> (p.getNumero() != null && p.getNumero().toLowerCase().contains(search)) ||
-                                (p.getCliente() != null && p.getCliente().getNombre() != null &&
-                                 p.getCliente().getNombre().toLowerCase().contains(search)))
-                    .toList();
-            }
+             // Filtrar por estado si está seleccionado
+             if (cmbEstado != null && cmbEstado.getValue() != null &&
+                 !cmbEstado.getValue().equals("TODOS")) {
+                 String estadoFiltro = cmbEstado.getValue();
+                 presupuestos = presupuestos.stream()
+                     .filter(p -> p.getEstado() != null && p.getEstado().equals(estadoFiltro))
+                     .toList();
+             }
 
-            if (tablePresupuestos != null) {
-                tablePresupuestos.setItems(FXCollections.observableArrayList(presupuestos));
-            }
-            if (lblEstado != null) {
-                lblEstado.setText(presupuestos.size() + " presupuestos");
-            }
-        } catch (Exception e) {
-            log.error("Error filtrando presupuestos", e);
-        }
-    }
+             // Filtrar por texto de búsqueda
+             if (busqueda != null && !busqueda.isEmpty()) {
+                 String search = busqueda.toLowerCase();
+                 presupuestos = presupuestos.stream()
+                     .filter(p -> (p.getNumero() != null && p.getNumero().toLowerCase().contains(search)) ||
+                                 (p.getCliente() != null && p.getCliente().getNombre() != null &&
+                                  p.getCliente().getNombre().toLowerCase().contains(search)))
+                     .toList();
+             }
+
+             if (pres_tablePresupuestos != null) {
+                 pres_tablePresupuestos.setItems(FXCollections.observableArrayList(presupuestos));
+             }
+             if (pres_lblTotal != null) {
+                 pres_lblTotal.setText(presupuestos.size() + " presupuestos");
+             }
+         } catch (Exception e) {
+             log.error("Error filtrando presupuestos", e);
+         }
+     }
 
     @FXML
     public void onBuscar() {
@@ -315,20 +362,22 @@ public class PresupuestoController {
 
     @FXML
     public void onVer() {
-        Presupuesto presupuesto = tablePresupuestos.getSelectionModel().getSelectedItem();
+        Presupuesto presupuesto = pres_tablePresupuestos.getSelectionModel().getSelectedItem();
         if (presupuesto == null) {
             mostrarAlerta("Selecciona un presupuesto primero");
             return;
         }
         log.info("Ver presupuesto: {}", presupuesto.getNumero());
 
-        String info = String.format(
-            "Presupuesto: %s\n" +
-            "Fecha: %s\n" +
-            "Cliente: %s\n" +
-            "Total: %.2f €\n" +
-            "Estado: %s\n\n" +
-            "Observaciones: %s",
+        String info = String.format("""
+            Presupuesto: %s
+            Fecha: %s
+            Cliente: %s
+            Total: %.2f €
+            Estado: %s
+
+            Observaciones: %s
+            """,
             presupuesto.getNumero(),
             presupuesto.getFecha().format(DATE_FORMATTER),
             presupuesto.getCliente() != null ? presupuesto.getCliente().getNombre() : "-",
@@ -342,7 +391,7 @@ public class PresupuestoController {
 
     @FXML
     public void onEditar() {
-        Presupuesto presupuesto = tablePresupuestos.getSelectionModel().getSelectedItem();
+        Presupuesto presupuesto = pres_tablePresupuestos.getSelectionModel().getSelectedItem();
         if (presupuesto == null) {
             mostrarAlerta("Selecciona un presupuesto para editar");
             return;
@@ -353,7 +402,7 @@ public class PresupuestoController {
 
     @FXML
     public void onEliminar() {
-        Presupuesto presupuesto = tablePresupuestos.getSelectionModel().getSelectedItem();
+        Presupuesto presupuesto = pres_tablePresupuestos.getSelectionModel().getSelectedItem();
         if (presupuesto == null) {
             mostrarAlerta("Selecciona un presupuesto para eliminar");
             return;
@@ -379,7 +428,7 @@ public class PresupuestoController {
 
     @FXML
     public void onAceptar() {
-        Presupuesto presupuesto = tablePresupuestos.getSelectionModel().getSelectedItem();
+        Presupuesto presupuesto = pres_tablePresupuestos.getSelectionModel().getSelectedItem();
         if (presupuesto == null) {
             mostrarAlerta("Selecciona un presupuesto para aceptar");
             return;
@@ -406,7 +455,7 @@ public class PresupuestoController {
 
     @FXML
     public void onRechazar() {
-        Presupuesto presupuesto = tablePresupuestos.getSelectionModel().getSelectedItem();
+        Presupuesto presupuesto = pres_tablePresupuestos.getSelectionModel().getSelectedItem();
         if (presupuesto == null) {
             mostrarAlerta("Selecciona un presupuesto para rechazar");
             return;
@@ -478,4 +527,3 @@ public class PresupuestoController {
         return result.isPresent() && result.get() == ButtonType.OK;
     }
 }
-

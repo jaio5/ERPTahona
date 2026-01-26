@@ -3,6 +3,8 @@ package alicanteweb.erp.service;
 import jakarta.xml.soap.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -39,22 +41,24 @@ import java.time.Instant;
  * Implementación completa y funcional
  */
 @Service
+@Lazy
+@ConditionalOnProperty(prefix = "verifactu.aeat", name = "enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class VerifactuAeatSoapClient {
 
-    @Value("${verifactu.aeat.endpoint}")
+    @Value("${verifactu.aeat.endpoint:}")
     private String aeatEndpoint;
 
     @Value("${verifactu.aeat.enabled:false}")
     private boolean aeatEnabled;
 
-    @Value("${verifactu.keystore.path}")
+    @Value("${verifactu.keystore.path:}")
     private String keystorePath;
 
-    @Value("${verifactu.keystore.password}")
+    @Value("${verifactu.keystore.password:}")
     private String keystorePassword;
 
-    @Value("${verifactu.key.alias}")
+    @Value("${verifactu.key.alias:}")
     private String keyAlias;
 
     @Value("${verifactu.key.password:${verifactu.keystore.password}}")

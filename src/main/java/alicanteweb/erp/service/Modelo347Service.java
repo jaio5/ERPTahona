@@ -1,8 +1,6 @@
 package alicanteweb.erp.service;
 
-import alicanteweb.erp.entities.Cliente;
 import alicanteweb.erp.entities.Factura;
-import alicanteweb.erp.entities.Proveedor;
 import alicanteweb.erp.repository.ClienteRepository;
 import alicanteweb.erp.repository.FacturaRepository;
 import alicanteweb.erp.repository.ProveedorRepository;

@@ -27,8 +27,8 @@ public class Usuario {
     private String username;
 
     @NotNull
-    @Size(max = 255)
-    @Column(name = "password", nullable = false)
+    @Size(max = 4096)
+    @Column(name = "password", nullable = false, length = 4096)
     private String password;
 
     @ColumnDefault("true")
@@ -149,7 +149,3 @@ public class Usuario {
         fechaModificacion = LocalDateTime.now();
     }
 }
-
-
-
-

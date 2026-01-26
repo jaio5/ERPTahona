@@ -1,0 +1,11 @@
+target/
+logs/
+*.log
+*.p12
+*.keystore
+.mvn/
+.mvnw
+.mvnw.cmd
+.idea/
+.vscode/
+*.iml

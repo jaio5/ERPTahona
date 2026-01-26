@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.AsientoFormController"
+            fx:controller="alicanteweb.erp.controller.formcontroller.AsientoFormController"
             stylesheets="@/styles/modern-theme.css"
             style="-fx-background-color: #f8fafc;">
 
@@ -79,7 +78,7 @@
                             <TableColumn fx:id="colConcepto" text="Concepto" prefWidth="200"/>
                             <TableColumn fx:id="colDebe" text="Debe" prefWidth="120" style="-fx-alignment: CENTER-RIGHT;"/>
                             <TableColumn fx:id="colHaber" text="Haber" prefWidth="120" style="-fx-alignment: CENTER-RIGHT;"/>
-                            <TableColumn fx:id="colAcciones" text="" prefWidth="80"/>
+                            <TableColumn fx:id="colAcciones"/>
                         </columns>
                     </TableView>
 

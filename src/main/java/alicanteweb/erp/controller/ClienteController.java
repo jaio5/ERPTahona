@@ -9,6 +9,10 @@ import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.input.KeyCode;
 
 /**
  * Controlador para el módulo de Clientes
@@ -76,6 +80,26 @@ public class ClienteController extends BaseController<Cliente> {
 
         // Inicializar controlador base
         initController();
+
+        // Añadir menú contextual para desactivar/activar cliente
+        if (tableClientes != null) {
+            ContextMenu cm = new ContextMenu();
+            MenuItem desactivar = new MenuItem("Dar de baja");
+            desactivar.setOnAction(e -> onDesactivarCliente());
+            MenuItem activar = new MenuItem("Activar");
+            activar.setOnAction(e -> onActivarCliente());
+            cm.getItems().addAll(desactivar, activar);
+            tableClientes.setContextMenu(cm);
+
+            // Atajos de teclado
+            tableClientes.setOnKeyPressed(evt -> {
+                if (evt.isControlDown() && evt.getCode() == KeyCode.D) {
+                    onDesactivarCliente();
+                } else if (evt.isControlDown() && evt.getCode() == KeyCode.A) {
+                    onActivarCliente();
+                }
+            });
+        }
     }
 
     @Override
@@ -110,5 +134,69 @@ public class ClienteController extends BaseController<Cliente> {
     @Override
     protected void eliminarItem(Cliente cliente) {
         clienteService.deleteById(cliente.getId());
+    }
+
+    // Handlers renombrados para evitar colisiones con BaseController
+    @FXML
+    public void onBuscarCliente() {
+        String termino = (txtBuscar != null) ? txtBuscar.getText() : null;
+        if (termino != null && !termino.trim().isEmpty()) {
+            try {
+                List<Cliente> resultados = clienteService.searchByNombre(termino.trim());
+                if (tableClientes != null) tableClientes.setItems(FXCollections.observableArrayList(resultados));
+                if (lblTotal != null) lblTotal.setText(resultados.size() + " clientes");
+            } catch (Exception e) {
+                log.error("Error buscando clientes por nombre", e);
+                mostrarError("Error buscando clientes: " + e.getMessage());
+            }
+            return;
+        }
+
+        // fallback: delegar a la implementación base
+        onBuscar();
+    }
+
+    @FXML
+    public void onVerCliente() {
+        onVer();
+    }
+
+    @FXML
+    public void onDarBajaCliente() {
+        onDarBaja();
+    }
+
+    @FXML
+    public void onDesactivarCliente() {
+        var seleccionado = tableClientes.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAdvertencia("Selecciona un cliente para dar de baja");
+            return;
+        }
+        try {
+            clienteService.darDeBaja(seleccionado.getId());
+            mostrarInfo("Cliente dado de baja: " + seleccionado.getNombre());
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error dando de baja cliente", e);
+            mostrarError("Error dando de baja cliente: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onActivarCliente() {
+        var seleccionado = tableClientes.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAdvertencia("Selecciona un cliente para activar");
+            return;
+        }
+        try {
+            clienteService.activar(seleccionado.getId());
+            mostrarInfo("Cliente activado: " + seleccionado.getNombre());
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error activando cliente", e);
+            mostrarError("Error activando cliente: " + e.getMessage());
+        }
     }
 }

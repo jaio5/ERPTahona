@@ -13,7 +13,7 @@ import javafx.beans.property.SimpleStringProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import alicanteweb.erp.ui.Dialogs;
+import alicanteweb.erp.ui.DialogUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -257,7 +257,7 @@ public class AuditoriaController {
             log.info("✅ {} registros de auditoría cargados", auditoriaList.size());
         } catch (Exception e) {
             log.error("❌ Error cargando auditoría", e);
-            mostrarError("Error al cargar auditoría: " + e.getMessage());
+            DialogUtils.showError("Error al cargar auditoría: " + e.getMessage());
         }
     }
 
@@ -296,8 +296,7 @@ public class AuditoriaController {
                 // Filtro de módulo
                 if (filtroModulo != null && !filtroModulo.contains("Todos")) {
                     String modulo = a.getModulo();
-                    boolean moduloValido = modulo != null && filtroModulo.contains(modulo);
-                    if (!moduloValido) return false;
+                    return modulo != null && filtroModulo.contains(modulo);
                 }
 
                 return true;
@@ -379,7 +378,7 @@ public class AuditoriaController {
     public void onVerDetalles() {
         AuditoriaAccion auditoria = tableAuditoria.getSelectionModel().getSelectedItem();
         if (auditoria == null) {
-            mostrarAlerta("Por favor, seleccione un registro para ver detalles");
+            DialogUtils.showWarning("Por favor, seleccione un registro para ver detalles");
             return;
         }
         mostrarDetalleCompleto(auditoria);
@@ -415,22 +414,13 @@ public class AuditoriaController {
             detalle.append("\n❌ Error:\n").append(auditoria.getMensajeError()).append("\n");
         }
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Detalle de Auditoría");
-        alert.setHeaderText("Registro #" + auditoria.getId());
-        alert.setContentText(detalle.toString());
-
-        // Hacer el diálogo más grande
-        alert.getDialogPane().setMinWidth(600);
-        alert.getDialogPane().setMinHeight(400);
-
-        alert.showAndWait();
+        DialogUtils.showInfo(detalle.toString());
     }
 
     @FXML
     public void onEstadisticas() {
         if (auditoriaList.isEmpty()) {
-            mostrarAlerta("No hay datos para mostrar estadísticas");
+            DialogUtils.showWarning("No hay datos para mostrar estadísticas");
             return;
         }
 
@@ -470,12 +460,7 @@ public class AuditoriaController {
             .limit(5)
             .forEach(e -> stats.append("  • ").append(e.getKey()).append(": ").append(e.getValue()).append("\n"));
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Estadísticas de Auditoría");
-        alert.setHeaderText("Resumen de actividad");
-        alert.setContentText(stats.toString());
-        alert.getDialogPane().setMinWidth(500);
-        alert.showAndWait();
+        DialogUtils.showInfo(stats.toString());
     }
 
     @FXML
@@ -527,9 +512,6 @@ public class AuditoriaController {
             • CSV (.csv)
             • PDF (.pdf)
             """;
-        Dialogs.showWarn(mensaje);
+        DialogUtils.showWarning(mensaje);
     }
-
-    private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
-    private void mostrarError(String msg) { Dialogs.showError(msg); }
- }
+}

@@ -1,50 +1,27 @@
 /* ============================================
-   🎨 TEMA MODERNO PROFESIONAL - ERP TAHONA 2026
+   TEMA MODERNO PROFESIONAL - ERP TAHONA 2026
    Sistema de Diseño Limpio, Intuitivo y Elegante
    ============================================ */
 
 /* ============================================
-   🔧 VARIABLES GLOBALES
+   VARIABLES GLOBALES
    ============================================ */
 
 .root {
-    /* Colores primarios */
-    -primary-color: #3b82f6;
-    -primary-hover: #2563eb;
-    -primary-light: #dbeafe;
-    -primary-dark: #1e40af;
-
-    /* Colores secundarios */
-    -success-color: #10b981;
-    -danger-color: #ef4444;
-    -warning-color: #f59e0b;
-    -info-color: #3b82f6;
-
-    /* Grises */
-    -gray-50: #f9fafb;
-    -gray-100: #f3f4f6;
-    -gray-200: #e5e7eb;
-    -gray-300: #d1d5db;
-    -gray-400: #9ca3af;
-    -gray-500: #6b7280;
-    -gray-600: #4b5563;
-    -gray-700: #374151;
-    -gray-800: #1f2937;
-    -gray-900: #111827;
-
-    /* Tipografía */
-    -fx-font-family: "Segoe UI", "Inter", -apple-system, system-ui, sans-serif;
+    /* Propiedades JavaFX estándar - evitar variables CSS personalizadas que no son compatibles */
+    -fx-font-family: "Segoe UI", "Inter", system-ui, sans-serif;
     -fx-font-smoothing-type: gray;
     -fx-font-size: 14px;
     -fx-background-color: #f9fafb;
 }
 
 /* ============================================
-   🔐 PANTALLA DE LOGIN
+   PANTALLA DE LOGIN
    ============================================ */
 
 .login-background {
-    -fx-background-color: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    /* Gradiente compatible con JavaFX: usar paradas directas */
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #3b82f6 0%, #1e40af 100%);
 }
 
 .login-container {
@@ -84,7 +61,7 @@
     -fx-prompt-text-fill: #9ca3af;
 }
 
-.login-field:focused {
+.login-fieldfocused {
     -fx-background-color: white;
     -fx-border-color: #3b82f6;
     -fx-border-width: 2;
@@ -113,7 +90,7 @@
 }
 
 /* ============================================
-   🎯 BOTONES GENERALES
+   BOTONES GENERALES
    ============================================ */
 
 .button {
@@ -187,7 +164,7 @@
 }
 
 /* ============================================
-   📝 INPUTS Y FORMULARIOS
+   INPUTS Y FORMULARIOS
    ============================================ */
 
 .text-field, .text-area, .password-field {
@@ -235,7 +212,7 @@
 }
 
 /* ============================================
-   📊 TABLAS
+   TABLAS
    ============================================ */
 
 .table-view {
@@ -290,7 +267,7 @@
 }
 
 /* ============================================
-   📦 CONTENEDORES Y CARDS
+   CONTENEDORES Y CARDS
    ============================================ */
 
 .card {
@@ -306,7 +283,7 @@
 }
 
 /* ============================================
-   🏷️ TEXTOS Y LABELS
+   TEXTOS Y LABELS
    ============================================ */
 
 .label {
@@ -332,7 +309,7 @@
 }
 
 /* ============================================
-   🎨 SIDEBAR
+   SIDEBAR
    ============================================ */
 
 .sidebar {
@@ -364,7 +341,7 @@
 }
 
 /* ============================================
-   🔝 HEADER
+   HEADER
    ============================================ */
 
 .header {
@@ -382,7 +359,7 @@
 }
 
 /* ============================================
-   🔍 SEARCH BOX
+   SEARCH BOX
    ============================================ */
 
 .search-box {
@@ -402,7 +379,7 @@
 }
 
 /* ============================================
-   ↕️ SCROLLBARS
+   SCROLLBARS
    ============================================ */
 
 .scroll-pane {
@@ -441,7 +418,7 @@
 }
 
 /* ============================================
-   ☑️ CHECKBOXES
+   CHECKBOXES
    ============================================ */
 
 .check-box {
@@ -467,7 +444,7 @@
 }
 
 /* ============================================
-   💬 TOOLTIPS
+   TOOLTIPS
    ============================================ */
 
 .tooltip {
@@ -479,7 +456,7 @@
 }
 
 /* ============================================
-   ⚡ PROGRESS BARS
+   PROGRESS BARS
    ============================================ */
 
 .progress-bar .bar {
@@ -493,7 +470,7 @@
 }
 
 /* ============================================
-   ⚠️ ALERTAS
+   ALERTAS
    ============================================ */
 
 .alert-success {
@@ -533,7 +510,7 @@
 }
 
 /* ============================================
-   🎨 BADGES
+   BADGES
    ============================================ */
 
 .badge {
@@ -559,7 +536,7 @@
 }
 
 /* ============================================
-   ➖ SEPARADORES
+   SEPARADORES
    ============================================ */
 
 .separator .line {
@@ -568,7 +545,7 @@
 }
 
 /* ============================================
-   🚫 ESTADO DISABLED
+   ESTADO DISABLED
    ============================================ */
 
 .button:disabled,
@@ -579,7 +556,7 @@
 }
 
 /* ============================================
-   📊 STATUS BAR
+   STATUS BAR
    ============================================ */
 
 .status-bar {
@@ -593,4 +570,3 @@
     -fx-text-fill: #6b7280;
     -fx-font-size: 12;
 }
-

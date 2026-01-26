@@ -21,7 +21,7 @@
         <ComboBox fx:id="cmbEstado" promptText="Estado" minWidth="100" maxWidth="140"/>
         <DatePicker fx:id="dpFechaDesde" promptText="Desde"/>
         <DatePicker fx:id="dpFechaHasta" promptText="Hasta"/>
-        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+        <Button text="Buscar" onAction="#onBuscarFactura" styleClass="button-primary"/>
     </HBox>
 
     <TableView fx:id="tableFacturas" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
@@ -37,7 +37,7 @@
     </TableView>
 
     <HBox spacing="12" alignment="CENTER_LEFT">
-        <Button text="Ver" onAction="#onVer" styleClass="button"/>
+        <Button text="Ver" onAction="#onVerFactura" styleClass="button"/>
         <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
         <Button text="Imprimir" onAction="#onImprimir" styleClass="button"/>
         <Button text="Anular" onAction="#onAnular" styleClass="button-danger"/>

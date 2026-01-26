@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller;
 
+import alicanteweb.erp.controller.formcontroller.AsientoFormController;
 import alicanteweb.erp.entities.AsientoContable;
 import alicanteweb.erp.service.AsientoContableService;
 import javafx.fxml.FXML;
@@ -14,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import alicanteweb.erp.ui.Dialogs;
+import alicanteweb.erp.ui.DialogUtils;
 
 /**
  * Controlador para la gestión de Asientos Contables
@@ -120,7 +121,7 @@ public class AsientoContableController {
             log.info("Asientos contables cargados: {}", asientos.size());
         } catch (Exception e) {
             log.error("Error cargando asientos contables", e);
-            mostrarError("Error al cargar asientos: " + e.getMessage());
+            DialogUtils.showError("Error al cargar asientos: " + e.getMessage());
         }
     }
 
@@ -179,7 +180,7 @@ public class AsientoContableController {
             }
         } catch (Exception e) {
             log.error("Error buscando asientos", e);
-            mostrarError("Error en la búsqueda: " + e.getMessage());
+            DialogUtils.showError("Error en la búsqueda: " + e.getMessage());
         }
     }
 
@@ -211,7 +212,7 @@ public class AsientoContableController {
             cargarDatos();
         } catch (Exception e) {
             log.error("Error abriendo formulario de asiento", e);
-            mostrarError("Error abriendo formulario: " + e.getMessage());
+            DialogUtils.showError("Error abriendo formulario: " + e.getMessage());
         }
     }
 
@@ -219,7 +220,7 @@ public class AsientoContableController {
     public void onVer() {
         AsientoContable asiento = tableAsientos.getSelectionModel().getSelectedItem();
         if (asiento == null) {
-            mostrarAlerta("Selecciona un asiento primero");
+            DialogUtils.showWarning("Selecciona un asiento primero");
             return;
         }
         log.info("Ver asiento: {}", asiento.getNumero());
@@ -249,38 +250,38 @@ public class AsientoContableController {
             cuadrado ? "✅ CUADRADO" : "❌ DESCUADRADO"
         );
 
-        mostrarInfo(info);
+        DialogUtils.showInfo(info);
     }
 
     @FXML
     public void onEditar() {
         AsientoContable asiento = tableAsientos.getSelectionModel().getSelectedItem();
         if (asiento == null) {
-            mostrarAlerta("Selecciona un asiento para editar");
+            DialogUtils.showWarning("Selecciona un asiento para editar");
             return;
         }
         log.info("Editar asiento: {}", asiento.getNumero());
-        mostrarAlerta("Función en desarrollo: Editar asiento contable");
+        DialogUtils.showWarning("Función en desarrollo: Editar asiento contable");
     }
 
     @FXML
     public void onEliminar() {
         AsientoContable asiento = tableAsientos.getSelectionModel().getSelectedItem();
         if (asiento == null) {
-            mostrarAlerta("Selecciona un asiento para eliminar");
+            DialogUtils.showWarning("Selecciona un asiento para eliminar");
             return;
         }
 
-        if (mostrarConfirmacion("¿Deseas eliminar este asiento?\n\n" +
+        if (DialogUtils.showConfirm("¿Deseas eliminar este asiento?\n\n" +
                                 "Número: " + asiento.getNumero() + "\n" +
                                 "Concepto: " + asiento.getConcepto())) {
             try {
                 asientoContableService.deleteById(asiento.getId());
                 cargarDatos();
-                mostrarExito();
+                DialogUtils.showSuccess("Asiento eliminado correctamente");
             } catch (Exception e) {
                 log.error("Error eliminando asiento", e);
-                mostrarError("Error al eliminar: " + e.getMessage());
+                DialogUtils.showError("Error al eliminar: " + e.getMessage());
             }
         }
     }
@@ -291,9 +292,4 @@ public class AsientoContableController {
         cargarDatos();
     }
 
-    private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
-    private void mostrarError(String msg) { Dialogs.showError(msg); }
-    private void mostrarExito() { Dialogs.showInfo("Asiento eliminado correctamente"); }
-    private void mostrarInfo(String msg) { Dialogs.showInfo(msg); }
-    private boolean mostrarConfirmacion(String msg) { return Dialogs.showConfirm(msg); }
 }

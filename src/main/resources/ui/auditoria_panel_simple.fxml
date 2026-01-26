@@ -50,8 +50,8 @@
         <Button text="📤 Exportar" onAction="#onExportar" styleClass="button-primary"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblTotal" text="0 registros" style="-fx-text-fill: #6c757d;"/>
-        <Label fx:id="lblEstadisticas" text="" style="-fx-text-fill: #6c757d;"/>
-        <Label fx:id="lblSeleccion" text="" style="-fx-text-fill: #6c757d;"/>
+        <Label fx:id="lblEstadisticas"  style="-fx-text-fill: #6c757d;"/>
+        <Label fx:id="lblSeleccion" style="-fx-text-fill: #6c757d;"/>
     </HBox>
 
 </VBox>

@@ -13,8 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import alicanteweb.erp.ui.Dialogs;
+import alicanteweb.erp.ui.DialogUtils;
 
 /**
  * Controlador para la gestión de Movimientos de Caja
@@ -22,19 +21,25 @@ import alicanteweb.erp.ui.Dialogs;
 @Controller
 public class CajaController {
     private static final Logger log = LoggerFactory.getLogger(CajaController.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    // No se usa DATE_FORMATTER actualmente
 
     @FXML private TableView<MovimientoCaja> tableMovimientos;
     @FXML private TableColumn<MovimientoCaja, LocalDate> colFecha;
     @FXML private TableColumn<MovimientoCaja, String> colConcepto;
     @FXML private TableColumn<MovimientoCaja, String> colTipo;
     @FXML private TableColumn<MovimientoCaja, BigDecimal> colImporte;
-    @FXML private TableColumn<MovimientoCaja, String> colSaldo;
+    @FXML private final TableColumn<MovimientoCaja, String> colSaldo = new TableColumn<>("Saldo");
 
+    // Campos añadidos para resolver unresolved fx:id
+    @FXML private TableColumn<MovimientoCaja, String> colCategoria;
+    @FXML private TableColumn<MovimientoCaja, String> colDocumento;
     @FXML private TextField txtBuscar;
     @FXML private DatePicker dpFechaDesde;
     @FXML private DatePicker dpFechaHasta;
     @FXML private Label lblSaldo;
+    @FXML private Label lblTotalIngresos;
+    @FXML private Label lblTotalGastos;
+    @FXML private ComboBox<String> cmbTipo;
 
     private final MovimientoCajaService movimientoCajaService;
 
@@ -46,6 +51,16 @@ public class CajaController {
     public void initialize() {
         log.info("Inicializando CajaController");
         configurarColumnas();
+
+        // Inicializar combobox de tipo
+        if (cmbTipo != null) {
+            cmbTipo.setItems(FXCollections.observableArrayList("INGRESO", "GASTO"));
+            cmbTipo.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
+                // al cambiar tipo, aplicar filtro simple
+                filtrarPorTipo(newV);
+            });
+        }
+
         cargarDatos();
 
         if (txtBuscar != null) {
@@ -71,7 +86,7 @@ public class CajaController {
         if (colTipo != null) {
             colTipo.setCellValueFactory(cellData -> {
                 MovimientoCaja movimiento = cellData.getValue();
-                String tipo = movimiento.getTipo();
+                String tipo = movimiento.getTipo() == null ? "" : movimiento.getTipo();
                 String tipoFormateado = tipo.equals("INGRESO") ? "✅ " + tipo : "❌ " + tipo;
                 return new SimpleStringProperty(tipoFormateado);
             });
@@ -79,7 +94,7 @@ public class CajaController {
         if (colImporte != null) {
             colImporte.setCellValueFactory(new PropertyValueFactory<>("importe"));
             // Formatear importe con color según tipo
-            colImporte.setCellFactory(column -> new TableCell<MovimientoCaja, BigDecimal>() {
+            colImporte.setCellFactory(column -> new TableCell<>() {
                 @Override
                 protected void updateItem(BigDecimal item, boolean empty) {
                     super.updateItem(item, empty);
@@ -89,7 +104,7 @@ public class CajaController {
                     } else {
                         MovimientoCaja movimiento = getTableView().getItems().get(getIndex());
                         setText(String.format("%.2f €", item));
-                        if (movimiento.getTipo().equals("INGRESO")) {
+                        if (movimiento != null && "INGRESO".equals(movimiento.getTipo())) {
                             setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
                         } else {
                             setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
@@ -98,13 +113,17 @@ public class CajaController {
                 }
             });
         }
-        if (colSaldo != null) {
-            // Columna calculada de saldo acumulado
-            colSaldo.setCellValueFactory(cellData -> {
-                // Por ahora mostrar "-" hasta implementar cálculo acumulado
-                return new SimpleStringProperty("-");
-            });
+
+        // Columnas añadidas desde FXML
+        if (colCategoria != null) {
+            colCategoria.setCellValueFactory(new PropertyValueFactory<>("categoria"));
         }
+        if (colDocumento != null) {
+            colDocumento.setCellValueFactory(new PropertyValueFactory<>("documento"));
+        }
+
+        // Columna calculada de saldo acumulado (placeholder)
+        colSaldo.setCellValueFactory(cellData -> new SimpleStringProperty("-"));
     }
 
     private void cargarDatos() {
@@ -115,6 +134,7 @@ public class CajaController {
             }
             log.info("Movimientos de caja cargados: {}", movimientos.size());
             actualizarSaldo();
+            actualizarTotales(movimientos);
         } catch (Exception e) {
             log.error("Error cargando movimientos de caja", e);
             mostrarError("Error al cargar movimientos: " + e.getMessage());
@@ -138,6 +158,22 @@ public class CajaController {
         }
     }
 
+    private void actualizarTotales(java.util.List<MovimientoCaja> movimientos) {
+        if (movimientos == null) return;
+        BigDecimal ingresos = BigDecimal.ZERO;
+        BigDecimal gastos = BigDecimal.ZERO;
+        for (MovimientoCaja m : movimientos) {
+            if (m == null || m.getImporte() == null) continue;
+            if ("INGRESO".equals(m.getTipo())) {
+                ingresos = ingresos.add(m.getImporte());
+            } else {
+                gastos = gastos.add(m.getImporte());
+            }
+        }
+        if (lblTotalIngresos != null) lblTotalIngresos.setText(String.format("Ingresos: %.2f EUR", ingresos));
+        if (lblTotalGastos != null) lblTotalGastos.setText(String.format("Gastos: %.2f EUR", gastos));
+    }
+
     private void filtrarMovimientos(String busqueda) {
         try {
             var movimientos = movimientoCajaService.findAll();
@@ -153,6 +189,7 @@ public class CajaController {
             if (tableMovimientos != null) {
                 tableMovimientos.setItems(FXCollections.observableArrayList(movimientos));
             }
+            actualizarTotales(movimientos);
         } catch (Exception e) {
             log.error("Error filtrando movimientos", e);
         }
@@ -185,9 +222,26 @@ public class CajaController {
             if (tableMovimientos != null) {
                 tableMovimientos.setItems(FXCollections.observableArrayList(movimientos));
             }
+            actualizarTotales(movimientos);
         } catch (Exception e) {
             log.error("Error buscando movimientos", e);
             mostrarError("Error en la búsqueda: " + e.getMessage());
+        }
+    }
+
+    // Filtrar por tipo (desde cmbTipo)
+    private void filtrarPorTipo(String tipo) {
+        try {
+            var movimientos = movimientoCajaService.findAll();
+            if (tipo != null && !tipo.isEmpty()) {
+                movimientos = movimientos.stream()
+                    .filter(m -> tipo.equals(m.getTipo()))
+                    .toList();
+            }
+            if (tableMovimientos != null) tableMovimientos.setItems(FXCollections.observableArrayList(movimientos));
+            actualizarTotales(movimientos);
+        } catch (Exception e) {
+            log.error("Error filtrando por tipo", e);
         }
     }
 
@@ -233,7 +287,7 @@ public class CajaController {
             try {
                 movimientoCajaService.deleteById(movimiento.getId());
                 cargarDatos();
-                mostrarExito("Movimiento eliminado correctamente");
+                mostrarExito();
             } catch (Exception e) {
                 log.error("Error eliminando movimiento", e);
                 mostrarError("Error al eliminar: " + e.getMessage());
@@ -248,9 +302,8 @@ public class CajaController {
     }
 
 
-    private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
-    private void mostrarError(String msg) { Dialogs.showError(msg); }
-    private void mostrarExito(String msg) { Dialogs.showInfo(msg); }
-    private boolean mostrarConfirmacion(String msg) { return Dialogs.showConfirm(msg); }
+    private void mostrarAlerta(String msg) { DialogUtils.showWarning(msg); }
+    private void mostrarError(String msg) { DialogUtils.showError(msg); }
+    private void mostrarExito() { DialogUtils.showSuccess("Movimiento eliminado correctamente"); }
+    private boolean mostrarConfirmacion(String msg) { return DialogUtils.showConfirm(msg); }
 }
-

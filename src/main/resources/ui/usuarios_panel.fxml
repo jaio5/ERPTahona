@@ -2,48 +2,46 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="alicanteweb.erp.controller.UsuarioController"
-      stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
-      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.UsuarioController">
+    <center>
+        <VBox spacing="8">
+            <HBox spacing="8">
+                <TextField fx:id="txtBuscar" promptText="Buscar..." />
+                <ComboBox fx:id="cmbFiltroRol" />
+                <ComboBox fx:id="cmbFiltroEstado" />
+                <Button text="Buscar" onAction="#onBuscar" />
+            </HBox>
 
-    <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="USUARIOS" styleClass="title"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Refrescar" onAction="#onRefresh" styleClass="button"/>
-        <Button text="+ Nuevo Usuario" onAction="#onNuevo" styleClass="button-success"/>
-    </HBox>
+            <TableView fx:id="tableUsuarios">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" />
+                    <TableColumn fx:id="colUsername" text="Usuario" />
+                    <TableColumn fx:id="colNombre" text="Nombre" />
+                    <TableColumn fx:id="colEmail" text="Email" />
+                    <TableColumn fx:id="colRol" text="Rol" />
+                    <TableColumn fx:id="colActivo" text="Estado" />
+                    <TableColumn fx:id="colUltimoAcceso" text="Último Acceso" />
+                    <TableColumn fx:id="colAcciones" text="Acciones" />
+                </columns>
+            </TableView>
 
-    <HBox spacing="12" alignment="CENTER_LEFT">
-        <TextField fx:id="txtBuscar" promptText="Buscar usuario..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
-        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
-        <ComboBox fx:id="cmbFiltroRol" promptText="Rol" prefWidth="140"/>
-        <ComboBox fx:id="cmbFiltroEstado" promptText="Estado" prefWidth="140"/>
-    </HBox>
+            <HBox spacing="8">
+                <Label fx:id="lblTotal" text="0 usuarios" />
+                <Label fx:id="lblSeleccion" text="Ningún usuario seleccionado" />
+            </HBox>
+        </VBox>
+    </center>
 
-    <TableView fx:id="tableUsuarios" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
-        <columns>
-            <TableColumn fx:id="colId" text="ID" minWidth="40" maxWidth="60"/>
-            <TableColumn fx:id="colUsername" text="Usuario" minWidth="100"/>
-            <TableColumn fx:id="colNombre" text="Nombre" minWidth="150"/>
-            <TableColumn fx:id="colEmail" text="Email" minWidth="150"/>
-            <TableColumn fx:id="colRol" text="Rol" minWidth="80" maxWidth="120"/>
-            <TableColumn fx:id="colActivo" text="Activo" minWidth="60" maxWidth="80"/>
-            <TableColumn fx:id="colUltimoAcceso" text="Último Acceso" minWidth="120"/>
-            <TableColumn fx:id="colAcciones" text="Acciones" minWidth="120"/>
-        </columns>
-    </TableView>
-
-    <HBox spacing="12" alignment="CENTER_LEFT">
-        <Button text="Ver" onAction="#onVer" styleClass="button"/>
-        <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
-        <Button text="Cambiar Password" onAction="#onCambiarPassword" styleClass="button"/>
-        <Button text="Bloquear" onAction="#onBloquear" styleClass="button-danger"/>
-        <Label fx:id="lblSeleccion" text="Ningún usuario seleccionado" style="-fx-text-fill: #6c757d;"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblTotal" text="0 usuarios" style="-fx-text-fill: #6c757d;"/>
-    </HBox>
-
-</VBox>
-
+    <bottom>
+        <HBox spacing="8">
+            <Button text="Nuevo" onAction="#onNuevo" />
+            <Button text="Editar" onAction="#onEditar" />
+            <Button text="Eliminar" onAction="#onEliminar" />
+            <Button text="Cambiar contraseña" onAction="#onCambiarPassword" />
+            <Button text="Bloquear" onAction="#onBloquear" />
+            <Button text="Desbloquear" onAction="#onDesbloquear" />
+            <Button text="Desactivar" onAction="#onDesactivar" />
+            <Button text="Refresh" onAction="#onRefresh" />
+        </HBox>
+    </bottom>
+</BorderPane>

@@ -26,7 +26,7 @@
     </TableView>
 
     <HBox spacing="12" alignment="CENTER_LEFT">
-        <Label fx:id="lblInfo" text=""/>
+        <Label fx:id="lblInfo"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="Ver detalle" onAction="#onVerDetalle" styleClass="button"/>
     </HBox>

@@ -17,7 +17,7 @@
 
     <HBox spacing="12" alignment="CENTER_LEFT">
         <TextField fx:id="txtBuscar" promptText="Buscar proveedor..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
-        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+        <Button text="Buscar" onAction="#onBuscarProveedor" styleClass="button-primary"/>
     </HBox>
 
     <TableView fx:id="tableProveedores" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
@@ -33,9 +33,9 @@
     </TableView>
 
     <HBox spacing="12" alignment="CENTER_LEFT">
-        <Button text="Ver" onAction="#onVer" styleClass="button"/>
+        <Button text="Ver" onAction="#onVerProveedor" styleClass="button"/>
         <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
-        <Button text="Dar de Baja" onAction="#onDarBaja" styleClass="button-danger"/>
+        <Button text="Dar de Baja" onAction="#onDarBajaProveedor" styleClass="button-danger"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblTotal" text="0 proveedores" style="-fx-text-fill: #6c757d;"/>
     </HBox>

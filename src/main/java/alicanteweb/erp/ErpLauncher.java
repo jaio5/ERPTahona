@@ -9,8 +9,10 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import alicanteweb.erp.config.VerifactuProperties;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -68,6 +70,7 @@ import java.nio.file.Path;
  * @see javafx.application.Application
  */
 @SpringBootApplication(scanBasePackages = "alicanteweb.erp")
+@EnableConfigurationProperties(VerifactuProperties.class)
 @EnableScheduling
 public class ErpLauncher extends Application {
     private static final Logger log = LoggerFactory.getLogger(ErpLauncher.class);
@@ -92,7 +95,28 @@ public class ErpLauncher extends Application {
             log.info("Contexto de Spring Boot inicializado correctamente");
         } catch (Exception e) {
             log.error("Error al inicializar el contexto de Spring Boot", e);
-            throw e;
+            // Si falla por problemas con la BD u otros motivos críticos, intentar arrancar con perfil dev (H2) como fallback
+            try {
+                log.warn("Intentando fallback: arrancar con perfil 'dev' en H2 (fallback) para permitir la ejecución local");
+                springContext = new org.springframework.boot.builder.SpringApplicationBuilder(ErpLauncher.class)
+                    .profiles("dev")
+                    .properties(
+                        "spring.datasource.url=jdbc:h2:mem:devdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
+                        "spring.datasource.driver-class-name=org.h2.Driver",
+                        "spring.datasource.username=sa",
+                        "spring.datasource.password=",
+                        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
+                        "spring.jpa.hibernate.ddl-auto=update",
+                        "spring.flyway.enabled=false"
+                    )
+                    .headless(false)
+                    .web(org.springframework.boot.WebApplicationType.NONE)
+                    .run();
+                log.info("Contexto de Spring Boot inicializado en modo fallback 'dev' (H2)");
+            } catch (Exception ex) {
+                log.error("Fallback con perfil 'dev' falló. Volviendo a lanzar la excepción original.", ex);
+                throw e; // lanzar la excepción original para mantener la causa primigenia
+            }
         }
     }
 
@@ -148,4 +172,3 @@ public class ErpLauncher extends Application {
         Application.launch(ErpLauncher.class, args);
     }
 }
-

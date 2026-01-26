@@ -25,10 +25,10 @@
             <TableColumn fx:id="colDireccion" text="Dirección" prefWidth="220"/>
             <TableColumn fx:id="colPoblacion" text="Población" prefWidth="120"/>
             <TableColumn fx:id="colProvincia" text="Provincia" prefWidth="120"/>
-            <TableColumn fx:id="colCP" text="CP" prefWidth="80"/>
+            <TableColumn fx:id="colCP" text="CP"/>
             <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="120"/>
             <TableColumn fx:id="colNotas" text="Notas" prefWidth="200"/>
-            <TableColumn fx:id="colAcciones" text="" prefWidth="120"/>
+            <TableColumn fx:id="colAcciones" prefWidth="120"/>
         </columns>
     </TableView>
 

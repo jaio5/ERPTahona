@@ -59,6 +59,12 @@ public class BackupService {
 
         log.info("🔄 Iniciando backup automático...");
 
+        // Comprobar disponibilidad de mysqldump antes de intentar el backup
+        if (!verificarDisponibilidad()) {
+            log.warn("⚠️ mysqldump no está disponible; se omite el backup automático");
+            return;
+        }
+
         try {
             String archivoBackup = realizarBackup();
             log.info("✅ Backup completado exitosamente: {}", archivoBackup);

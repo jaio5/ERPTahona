@@ -118,13 +118,10 @@ public class AutenticacionService {
         }
 
         // Si es ROLE_ADMIN, tiene todos los permisos
-        if ("ROLE_ADMIN".equals(usuarioActual.getRole())) {
-            return true;
-        }
+        return "ROLE_ADMIN".equals(usuarioActual.getRole());
 
         // Por ahora, si no es admin, no tiene permisos
         // TODO: implementar sistema de roles más complejo
-        return false;
     }
 
     /**

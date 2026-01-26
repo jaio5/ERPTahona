@@ -1,22 +1,30 @@
 package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Factura;
+import alicanteweb.erp.entities.EmpresaConfig;
+import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.service.VerifacturAEATService;
 import alicanteweb.erp.service.FacturaService;
+import alicanteweb.erp.service.EmpresaConfigService;
+import alicanteweb.erp.service.VerifactuEvidenceService;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.stage.FileChooser;
+import javafx.stage.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
-import alicanteweb.erp.ui.Dialogs;
+import alicanteweb.erp.ui.DialogUtils;
 
 import java.io.File;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -36,53 +44,105 @@ public class VerifactuController {
     @FXML private TextField txtNif;
     @FXML private Label lblInfo;
 
+    // Controles de interacción
+    @FXML private Button btnEnviar;
+    @FXML private Button btnGuardar;
+    @FXML private Button btnProbar;
+    @FXML private ProgressIndicator progressIndicator;
+
     // Tabla
-    @FXML private TableView<Map<String, Object>> tableEnvios;
-    @FXML private TableColumn<Map<String, Object>, String> colFecha;
-    @FXML private TableColumn<Map<String, Object>, String> colFactura;
-    @FXML private TableColumn<Map<String, Object>, String> colCliente;
-    @FXML private TableColumn<Map<String, Object>, String> colImporte;
-    @FXML private TableColumn<Map<String, Object>, String> colEstado;
-    @FXML private TableColumn<Map<String, Object>, String> colReferencia;
-    @FXML private TableColumn<Map<String, Object>, String> colMensaje;
+    @FXML private TableView<VerifactuEvidence> tableEnvios;
+    @FXML private TableColumn<VerifactuEvidence, String> colFecha;
+    @FXML private TableColumn<VerifactuEvidence, String> colFactura;
+    @FXML private TableColumn<VerifactuEvidence, String> colCliente;
+    @FXML private TableColumn<VerifactuEvidence, String> colImporte;
+    @FXML private TableColumn<VerifactuEvidence, String> colEstado;
+    @FXML private TableColumn<VerifactuEvidence, String> colReferencia;
+    @FXML private TableColumn<VerifactuEvidence, String> colMensaje;
 
     @FXML private TextField txtBuscar;
     @FXML private Label lblTotal;
 
     private final VerifacturAEATService verifacturService;
     private final FacturaService facturaService;
-    private final ObservableList<Map<String, Object>> listaEnvios = FXCollections.observableArrayList();
+    private final EmpresaConfigService empresaConfigService;
+    private final VerifactuEvidenceService evidenceService;
+    private final ObservableList<VerifactuEvidence> listaEnvios = FXCollections.observableArrayList();
     private boolean verifactuHabilitado = false;
 
-    public VerifactuController(VerifacturAEATService verifacturService, FacturaService facturaService) {
+    public VerifactuController(VerifacturAEATService verifacturService, FacturaService facturaService,
+                               EmpresaConfigService empresaConfigService, VerifactuEvidenceService evidenceService) {
         this.verifacturService = verifacturService;
         this.facturaService = facturaService;
+        this.empresaConfigService = empresaConfigService;
+        this.evidenceService = evidenceService;
     }
 
     @FXML
     public void initialize() {
         log.info("✅ VerifactuController inicializado");
         configurarTabla();
+        // Asegurar que txtBuscar existe (si FXMLLoader no lo inyectó, crearlo)
+        if (txtBuscar == null) {
+            txtBuscar = new TextField();
+        }
+        txtBuscar.setPromptText("Buscar factura...");
         cargarConfiguracion();
         cargarDatos();
     }
 
     private void configurarTabla() {
         // Configurar columnas
-        colFecha.setCellValueFactory(cellData ->
-            new SimpleStringProperty((String) cellData.getValue().get("fecha")));
+        colFecha.setCellValueFactory(cellData -> {
+            VerifactuEvidence e = cellData.getValue();
+            String fecha = "-";
+            if (e.getFechaEnvio() != null) {
+                fecha = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.systemDefault()).format(e.getFechaEnvio());
+            } else if (e.getFechaEmision() != null) {
+                fecha = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.systemDefault()).format(e.getFechaEmision());
+            }
+            return new SimpleStringProperty(fecha);
+        });
 
-        colFactura.setCellValueFactory(cellData ->
-            new SimpleStringProperty((String) cellData.getValue().get("factura")));
+        colFactura.setCellValueFactory(cellData -> new SimpleStringProperty(
+            cellData.getValue().getNumero() != null ? cellData.getValue().getNumero() : "-"));
 
-        colCliente.setCellValueFactory(cellData ->
-            new SimpleStringProperty((String) cellData.getValue().get("cliente")));
+        colCliente.setCellValueFactory(cellData -> {
+            VerifactuEvidence e = cellData.getValue();
+            String cliente = "-";
+            try {
+                if (e.getFacturaId() != null && !e.getFacturaId().isEmpty()) {
+                    try {
+                        long fid = Long.parseLong(e.getFacturaId());
+                        var opt = facturaService.findById(fid);
+                        if (opt.isPresent() && opt.get().getCliente() != null) cliente = opt.get().getCliente().getNombre();
+                    } catch (NumberFormatException ex) {
+                        // facturaId may be not numeric; ignore
+                    }
+                }
+            } catch (Exception ex) {
+                log.debug("No se pudo obtener cliente para evidencia {}: {}", e.getId(), ex.getMessage());
+            }
+            return new SimpleStringProperty(cliente);
+        });
 
-        colImporte.setCellValueFactory(cellData ->
-            new SimpleStringProperty((String) cellData.getValue().get("importe")));
+        colImporte.setCellValueFactory(cellData -> {
+            VerifactuEvidence e = cellData.getValue();
+            String importe = "0.00 €";
+            try {
+                if (e.getFacturaId() != null && !e.getFacturaId().isEmpty()) {
+                    try {
+                        long fid = Long.parseLong(e.getFacturaId());
+                        var opt = facturaService.findById(fid);
+                        if (opt.isPresent() && opt.get().getTotal() != null) importe = String.format("%.2f €", opt.get().getTotal());
+                    } catch (NumberFormatException ex) { }
+                }
+            } catch (Exception ex) { log.debug("No se pudo obtener importe para evidencia {}: {}", e.getId(), ex.getMessage()); }
+            return new SimpleStringProperty(importe);
+        });
 
         colEstado.setCellValueFactory(cellData -> {
-            String estado = (String) cellData.getValue().get("estado");
+            String estado = cellData.getValue().getEstado() != null ? cellData.getValue().getEstado() : "-";
             String emoji = switch (estado) {
                 case "ACEPTADA" -> "✅ ACEPTADA";
                 case "PENDIENTE" -> "⏳ PENDIENTE";
@@ -93,24 +153,29 @@ public class VerifactuController {
             return new SimpleStringProperty(emoji);
         });
 
-        colReferencia.setCellValueFactory(cellData ->
-            new SimpleStringProperty((String) cellData.getValue().get("referencia")));
+        colReferencia.setCellValueFactory(cellData -> new SimpleStringProperty(
+            cellData.getValue().getCodigoRespuestaAEAT() != null ? cellData.getValue().getCodigoRespuestaAEAT() : (cellData.getValue().getHash() != null ? cellData.getValue().getHash() : "-")));
 
-        colMensaje.setCellValueFactory(cellData ->
-            new SimpleStringProperty((String) cellData.getValue().get("mensaje")));
+        colMensaje.setCellValueFactory(cellData -> new SimpleStringProperty(
+            cellData.getValue().getErrorMessage() != null ? cellData.getValue().getErrorMessage() : ""));
 
         tableEnvios.setItems(listaEnvios);
     }
 
     private void cargarConfiguracion() {
-        // TODO: Cargar desde base de datos o properties
-        // Temporalmente deshabilitado por defecto
-        verifactuHabilitado = false; // verifacturService.isHabilitado();
-
-        if (chkHabilitado != null) {
-            chkHabilitado.setSelected(verifactuHabilitado);
+        try {
+            // Intentar cargar configuración desde EmpresaConfig si existe
+            empresaConfigService.getConfiguracionActiva().ifPresent(cfg -> {
+                verifactuHabilitado = Boolean.TRUE.equals(cfg.getVerifactuHabilitado());
+                if (chkHabilitado != null) chkHabilitado.setSelected(verifactuHabilitado);
+                if (txtNif != null && cfg.getVerifactuNifEmisor() != null) txtNif.setText(cfg.getVerifactuNifEmisor());
+            });
+        } catch (Exception e) {
+            log.warn("No se pudo cargar configuración de empresa para Verifactu: {}", e.getMessage());
         }
 
+        // Actualizar estado visual
+        if (chkHabilitado != null) chkHabilitado.setSelected(verifactuHabilitado);
         actualizarEstado();
     }
 
@@ -127,49 +192,31 @@ public class VerifactuController {
     }
 
     private void cargarDatos() {
-        listaEnvios.clear();
-
         try {
-            log.info("📊 Cargando registros de VeriFacTur...");
+            log.info("📊 Cargando registros de VeriFacTur (evidencias)...");
 
-            // Obtener facturas enviadas a VeriFacTur
-            List<Factura> facturas = facturaService.findAll();
+            List<VerifactuEvidence> evidencias = evidenceService.findAll();
+            listaEnvios.clear();
+            listaEnvios.addAll(evidencias);
+
+            // Contar pendientes a partir de facturas
             int pendientes = 0;
-
+            List<Factura> facturas = facturaService.findAll();
             for (Factura factura : facturas) {
-                if (Boolean.TRUE.equals(factura.getVerifactuEnviada())) {
-                    Map<String, Object> registro = new java.util.HashMap<>();
-                    registro.put("id", factura.getId());
-                    registro.put("fecha", factura.getFechaEmisionVerifactu() != null ?
-                        factura.getFechaEmisionVerifactu().format(DATE_FORMATTER) : "-");
-                    registro.put("factura", factura.getNumero());
-                    registro.put("cliente", factura.getCliente() != null ?
-                        factura.getCliente().getNombre() : "-");
-                    registro.put("importe", String.format("%.2f €", factura.getTotal()));
-                    registro.put("estado", "ACEPTADA");
-                    // Generar referencia temporal ya que getCodigoVerifactu no existe aún
-                    registro.put("referencia", "VF-" + factura.getNumero());
-                    registro.put("mensaje", "Enviada correctamente a AEAT");
-
-                    listaEnvios.add(registro);
-                } else if ("EMITIDA".equals(factura.getEstado()) || "REVISADA".equals(factura.getEstado())) {
+                if (("EMITIDA".equals(factura.getEstado()) || "REVISADA".equals(factura.getEstado()))
+                    && !Boolean.TRUE.equals(factura.getVerifactuEnviada())) {
                     pendientes++;
                 }
             }
 
-            if (lblTotal != null) {
-                lblTotal.setText(listaEnvios.size() + " registros");
-            }
+            if (lblTotal != null) lblTotal.setText(listaEnvios.size() + " registros");
+            if (lblInfo != null) lblInfo.setText(pendientes + " facturas pendientes de enviar");
 
-            if (lblInfo != null) {
-                lblInfo.setText(pendientes + " facturas pendientes de enviar");
-            }
-
-            log.info("✅ {} registros cargados, {} pendientes", listaEnvios.size(), pendientes);
+            log.info("✅ {} evidencias cargadas, {} pendientes", listaEnvios.size(), pendientes);
 
         } catch (Exception e) {
             log.error("❌ Error cargando datos de VeriFacTur", e);
-            mostrarError("Error al cargar datos: " + e.getMessage());
+            DialogUtils.showError("Error al cargar datos: " + e.getMessage());
         }
     }
 
@@ -182,17 +229,27 @@ public class VerifactuController {
 
     @FXML
     public void onSeleccionarCertificado() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Seleccionar Certificado Digital");
-        fileChooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("Certificados", "*.pfx", "*.p12"),
-            new FileChooser.ExtensionFilter("Todos los archivos", "*.*")
-        );
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Seleccionar Certificado Digital");
+            fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Certificados", "*.pfx", "*.p12"),
+                new FileChooser.ExtensionFilter("Todos los archivos", "*.*")
+            );
 
-        File file = fileChooser.showOpenDialog(txtCertificado.getScene().getWindow());
-        if (file != null) {
-            txtCertificado.setText(file.getAbsolutePath());
-            log.info("Certificado seleccionado: {}", file.getAbsolutePath());
+            // Determinar ventana propietaria de forma segura
+            Window owner = null;
+            if (txtCertificado != null && txtCertificado.getScene() != null) {
+                owner = txtCertificado.getScene().getWindow();
+            }
+
+            File file = fileChooser.showOpenDialog(owner);
+            if (file != null) {
+                txtCertificado.setText(file.getAbsolutePath());
+                log.info("Certificado seleccionado: {}", file.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo abrir el selector de archivos: {}", e.getMessage());
         }
     }
 
@@ -206,26 +263,36 @@ public class VerifactuController {
 
         if (verifactuHabilitado) {
             if (certificado.isEmpty()) {
-                mostrarAlerta("Por favor, selecciona un certificado digital");
+                DialogUtils.showWarning("Por favor, selecciona un certificado digital");
                 return;
             }
             if (password.isEmpty()) {
-                mostrarAlerta("Por favor, introduce la contraseña del certificado");
+                DialogUtils.showWarning("Por favor, introduce la contraseña del certificado");
                 return;
             }
             if (nif.isEmpty()) {
-                mostrarAlerta("Por favor, introduce el NIF de la empresa");
+                DialogUtils.showWarning("Por favor, introduce el NIF de la empresa");
                 return;
             }
         }
 
         try {
-            // TODO: Guardar configuración en base de datos o properties
-            mostrarExito("Configuración guardada correctamente");
-            log.info("✅ Configuración de VeriFacTur guardada");
+            // Persistir configuración mínima en empresa config
+            EmpresaConfig cfg = empresaConfigService.getConfiguracionActiva().orElseGet(EmpresaConfig::new);
+            cfg.setVerifactuHabilitado(verifactuHabilitado);
+            if (nif != null && !nif.isEmpty()) cfg.setVerifactuNifEmisor(nif);
+            empresaConfigService.save(cfg);
+
+            // Inicializar certificado en el servicio (si se ha proporcionado)
+            if (certificado != null && !certificado.isEmpty()) {
+                verifacturService.inicializarCertificado(certificado, password);
+            }
+
+            DialogUtils.showSuccess("Configuración guardada correctamente");
+             log.info("✅ Configuración de VeriFacTur guardada");
         } catch (Exception e) {
             log.error("❌ Error guardando configuración", e);
-            mostrarError("Error al guardar: " + e.getMessage());
+            DialogUtils.showError("Error al guardar: " + e.getMessage());
         }
     }
 
@@ -234,82 +301,145 @@ public class VerifactuController {
         log.info("🧪 Probando conexión con VeriFacTur...");
 
         if (!verifactuHabilitado) {
-            mostrarAlerta("VeriFacTur está deshabilitado. Actívalo primero.");
+            DialogUtils.showWarning("VeriFacTur está deshabilitado. Actívalo primero.");
             return;
         }
 
         try {
-            // TODO: Probar conexión real con AEAT cuando el método esté implementado
-            // Por ahora simulamos una prueba exitosa
-            boolean conexionOk = true; // verifacturService.probarConexion();
+            boolean conexionOk = verifacturService.probarConexion();
 
             if (conexionOk) {
-                mostrarExito("✅ Conexión con AEAT establecida correctamente\n\nVeriFacTur está listo para enviar facturas.");
+                DialogUtils.showSuccess("✅ Conexión con AEAT establecida correctamente\n\nVeriFacTur está listo para enviar facturas.");
             } else {
-                mostrarError("❌ No se pudo conectar con AEAT\n\nVerifica tu certificado y contraseña.");
+                DialogUtils.showError("❌ No se pudo conectar con AEAT\n\nVerifica tu certificado y contraseña.");
             }
         } catch (Exception e) {
             log.error("❌ Error probando conexión", e);
-            mostrarError("Error en prueba de conexión: " + e.getMessage());
+            DialogUtils.showError("Error en prueba de conexión: " + e.getMessage());
         }
     }
 
     @FXML
     public void onEnviar() {
-        log.info("📤 Enviando facturas pendientes a VeriFacTur...");
+        log.info("📤 Iniciando proceso de envío de facturas pendientes a VeriFacTur...");
 
         if (!verifactuHabilitado) {
-            mostrarAlerta("VeriFacTur está deshabilitado. Actívalo primero en la configuración.");
+            DialogUtils.showWarning("VeriFacTur está deshabilitado. Actívalo primero en la configuración.");
             return;
         }
 
-        if (!mostrarConfirmacion("¿Deseas enviar todas las facturas pendientes a VeriFacTur (AEAT)?")) {
+        if (!DialogUtils.showConfirm("¿Deseas enviar todas las facturas pendientes a VeriFacTur (AEAT)?")) {
             return;
         }
 
-        try {
-            List<Factura> facturas = facturaService.findAll();
-            int enviadas = 0;
-            int errores = 0;
-
-            for (Factura factura : facturas) {
-                // Solo enviar facturas emitidas o revisadas que no se hayan enviado
-                if (("EMITIDA".equals(factura.getEstado()) || "REVISADA".equals(factura.getEstado()))
+        // Preparar lista de facturas pendientes para poder mostrar progreso
+        List<Factura> todas = facturaService.findAll();
+        List<Factura> pendientesList = new ArrayList<>();
+        for (Factura factura : todas) {
+            if (("EMITIDA".equals(factura.getEstado()) || "REVISADA".equals(factura.getEstado()))
                     && !Boolean.TRUE.equals(factura.getVerifactuEnviada())) {
+                pendientesList.add(factura);
+            }
+        }
 
+        if (pendientesList.isEmpty()) {
+            DialogUtils.showInfo("No hay facturas pendientes para enviar.");
+            return;
+        }
+
+        // Deshabilitar controles y mostrar indicador si existen
+        if (btnEnviar != null) btnEnviar.setDisable(true);
+        if (btnGuardar != null) btnGuardar.setDisable(true);
+        if (btnProbar != null) btnProbar.setDisable(true);
+        if (progressIndicator != null) {
+            progressIndicator.setVisible(true);
+            progressIndicator.setProgress(0);
+        }
+        if (lblInfo != null) lblInfo.setText("Enviando facturas a VeriFacTur...");
+
+        int total = pendientesList.size();
+
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() {
+                int enviados = 0;
+                int errores = 0;
+                for (int i = 0; i < pendientesList.size(); i++) {
+                    if (isCancelled()) break;
+                    Factura factura = pendientesList.get(i);
                     try {
                         Map<String, Object> resultado = verifacturService.enviarFactura(factura);
-
                         if ((boolean) resultado.getOrDefault("exito", false)) {
-                            enviadas++;
+                            enviados++;
                             log.info("✅ Factura {} enviada", factura.getNumero());
                         } else {
                             errores++;
-                            log.warn("⚠️ Error en factura {}: {}", factura.getNumero(),
-                                resultado.get("mensaje"));
+                            log.warn("⚠️ Error en factura {}: {}", factura.getNumero(), resultado.get("mensaje"));
                         }
                     } catch (Exception e) {
                         errores++;
                         log.error("❌ Error enviando factura {}", factura.getNumero(), e);
                     }
+                    updateProgress(i + 1, total);
                 }
-            }
-            
-            cargarDatos();
-            
-            mostrarExito(String.format("Proceso completado:\n\n✅ %d facturas enviadas\n❌ %d errores",
-                enviadas, errores));
 
-        } catch (Exception e) {
-            log.error("❌ Error en proceso de envío masivo", e);
-            mostrarError("Error: " + e.getMessage());
+                final int fEnviadas = enviados;
+                final int fErrores = errores;
+                Platform.runLater(() -> {
+                    cargarDatos();
+                    DialogUtils.showSuccess(String.format("Proceso completado:\n\n✅ %d facturas enviadas\n❌ %d errores", fEnviadas, fErrores));
+                });
+                return null;
+            }
+        };
+
+        // Bind progress indicator if present
+        if (progressIndicator != null) {
+            progressIndicator.progressProperty().bind(task.progressProperty());
         }
+
+        task.setOnSucceeded(ev -> {
+            if (progressIndicator != null) {
+                progressIndicator.progressProperty().unbind();
+                progressIndicator.setVisible(false);
+            }
+            if (btnEnviar != null) btnEnviar.setDisable(false);
+            if (btnGuardar != null) btnGuardar.setDisable(false);
+            if (btnProbar != null) btnProbar.setDisable(false);
+            if (lblInfo != null) lblInfo.setText("Proceso finalizado");
+        });
+
+        task.setOnFailed(ev -> {
+            if (progressIndicator != null) {
+                progressIndicator.progressProperty().unbind();
+                progressIndicator.setVisible(false);
+            }
+            if (btnEnviar != null) btnEnviar.setDisable(false);
+            if (btnGuardar != null) btnGuardar.setDisable(false);
+            if (btnProbar != null) btnProbar.setDisable(false);
+            if (lblInfo != null) lblInfo.setText("Error durante el envío");
+        });
+
+        task.setOnCancelled(ev -> {
+            if (progressIndicator != null) {
+                progressIndicator.progressProperty().unbind();
+                progressIndicator.setVisible(false);
+            }
+            if (btnEnviar != null) btnEnviar.setDisable(false);
+            if (btnGuardar != null) btnGuardar.setDisable(false);
+            if (btnProbar != null) btnProbar.setDisable(false);
+            if (lblInfo != null) lblInfo.setText("Envío cancelado");
+        });
+
+        Thread th = new Thread(task, "Verifactu-Envio-Thread");
+        th.setDaemon(true);
+        th.start();
     }
 
     @FXML
     public void onVerificar() {
         log.info("🔍 Verificando estado de envíos...");
-        mostrarAlerta("Funcionalidad en desarrollo\n\nPróximamente podrás verificar el estado de las facturas enviadas directamente desde AEAT.");
+        DialogUtils.showWarning("Funcionalidad en desarrollo\n\nPróximamente podrás verificar el estado de las facturas enviadas directamente desde AEAT.");
     }
 
     @FXML
@@ -320,50 +450,38 @@ public class VerifactuController {
 
     @FXML
     public void onVerDetalles() {
-        Map<String, Object> selected = tableEnvios.getSelectionModel().getSelectedItem();
+        VerifactuEvidence selected = tableEnvios.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            mostrarAlerta("Por favor, selecciona un registro");
+            DialogUtils.showWarning("Por favor, selecciona un registro");
             return;
         }
 
-        StringBuilder detalle = new StringBuilder();
-        detalle.append("📋 DETALLE DE ENVÍO VERIFACTUR\n");
-        detalle.append("═══════════════════════════════════════\n\n");
-        detalle.append("📄 Factura: ").append(selected.get("factura")).append("\n");
-        detalle.append("👤 Cliente: ").append(selected.get("cliente")).append("\n");
-        detalle.append("💰 Importe: ").append(selected.get("importe")).append("\n");
-        detalle.append("📅 Fecha envío: ").append(selected.get("fecha")).append("\n");
-        detalle.append("✅ Estado: ").append(selected.get("estado")).append("\n");
-        detalle.append("🔖 Referencia: ").append(selected.get("referencia")).append("\n");
-        detalle.append("📝 Mensaje: ").append(selected.get("mensaje")).append("\n");
+        String detalle = "📋 DETALLE DE ENVÍO VERIFACTUR\n" +
+                "═══════════════════════════════════════\n\n" +
+                "📄 Factura: " + (selected.getNumero() != null ? selected.getNumero() : selected.getFacturaId()) + "\n" +
+                "👤 Cliente: " + "(ver detalles)" + "\n" +
+                "💰 Importe: " + "(ver detalles)" + "\n" +
+                "📅 Fecha envío: " + (selected.getFechaEnvio() != null ? DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.systemDefault()).format(selected.getFechaEnvio()) : "-") + "\n" +
+                "✅ Estado: " + selected.getEstado() + "\n" +
+                "🔖 Referencia: " + (selected.getCodigoRespuestaAEAT() != null ? selected.getCodigoRespuestaAEAT() : selected.getHash()) + "\n" +
+                "📝 Mensaje: " + (selected.getErrorMessage() != null ? selected.getErrorMessage() : "") + "\n";
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Detalle del Envío");
-        alert.setHeaderText("Información completa");
-        alert.setContentText(detalle.toString());
-        alert.getDialogPane().setMinWidth(500);
-        alert.showAndWait();
+        DialogUtils.showInfo(detalle);
     }
 
     @FXML
     public void onReenviar() {
-        Map<String, Object> selected = tableEnvios.getSelectionModel().getSelectedItem();
+        VerifactuEvidence selected = tableEnvios.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            mostrarAlerta("Por favor, selecciona un registro");
+            DialogUtils.showWarning("Por favor, selecciona un registro");
             return;
         }
 
-        mostrarAlerta("Funcionalidad en desarrollo\n\nPróximamente podrás reenviar facturas a VeriFacTur.");
+        DialogUtils.showWarning("Funcionalidad en desarrollo\n\nPróximamente podrás reenviar facturas a VeriFacTur.");
     }
 
     @FXML
     public void onExportar() {
-        mostrarAlerta("Funcionalidad en desarrollo\n\nPróximamente podrás exportar el registro de envíos a Excel o PDF.");
+        DialogUtils.showWarning("Funcionalidad en desarrollo\n\nPróximamente podrás exportar el registro de envíos a Excel o PDF.");
     }
-
-    // Métodos auxiliares
-    private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
-    private void mostrarExito(String msg) { Dialogs.showInfo(msg); }
-    private void mostrarError(String msg) { Dialogs.showError(msg); }
-    private boolean mostrarConfirmacion(String msg) { return Dialogs.showConfirm(msg); }
- }
+}

@@ -3,7 +3,7 @@
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="alicanteweb.erp.controller.FacturaCompraFormController"
+      fx:controller="alicanteweb.erp.controller.formcontroller.FacturaCompraFormController"
       styleClass="main-container" spacing="15">
 
     <Label text="📥 FACTURA DE COMPRA" styleClass="title-panel"/>
@@ -29,7 +29,7 @@
                     <TableView fx:id="tableLineas" prefHeight="200">
                         <columns>
                             <TableColumn fx:id="colArticulo" text="Artículo" prefWidth="150"/>
-                            <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="80"/>
+                            <TableColumn fx:id="colCantidad" text="Cantidad"/>
                             <TableColumn fx:id="colPrecio" text="Precio" prefWidth="100"/>
                         </columns>
                     </TableView>

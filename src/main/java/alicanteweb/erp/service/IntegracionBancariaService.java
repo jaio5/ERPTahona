@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -156,7 +157,7 @@ public class IntegracionBancariaService {
             String nombreArchivo = "ReporteMovimientos_" + System.currentTimeMillis() + ".html";
             String ruta = "target/reportes/" + nombreArchivo;
 
-            java.nio.file.Files.write(java.nio.file.Paths.get(ruta), html.toString().getBytes("UTF-8"));
+            java.nio.file.Files.write(java.nio.file.Paths.get(ruta), html.toString().getBytes(StandardCharsets.UTF_8));
 
             log.info("Reporte generado: {}", ruta);
             return ruta;

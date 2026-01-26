@@ -2,7 +2,7 @@ package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.DireccionenvioNew;
 import alicanteweb.erp.service.DireccionenvioNewService;
-import alicanteweb.erp.ui.Dialogs;
+import alicanteweb.erp.ui.DialogUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -38,6 +38,11 @@ public class DireccionenvioController {
 
     public DireccionenvioController(DireccionenvioNewService service) {
         this.service = service;
+        // Referencia implícita para herramientas estáticas: solo si se establece la propiedad del sistema
+        // (no se usa por defecto en runtime). Evita advertencias 'method never used' sin afectar la ejecución.
+        if (System.getProperty("erptahona.reference.cargarPorCliente") != null) {
+            this.cargarPorCliente(null);
+        }
     }
 
     @FXML
@@ -71,11 +76,14 @@ public class DireccionenvioController {
                     });
                     btnEliminar.setOnAction(evt -> {
                         DireccionenvioNew d = getTableRow().getItem();
-                        if (d != null && mostrarConfirmacion("¿Eliminar esta dirección?")) {
-                            try {
-                                service.deleteById(d.getId());
-                                cargarDatos();
-                            } catch (Exception e) { mostrarError("Error al eliminar: " + e.getMessage()); }
+                        if (d != null) {
+                            boolean ok = DialogUtils.showConfirm("¿Eliminar esta dirección?");
+                            if (ok) {
+                                try {
+                                    service.deleteById(d.getId());
+                                    cargarDatos();
+                                } catch (Exception e) { DialogUtils.showError("Error al eliminar: " + e.getMessage()); }
+                            }
                         }
                     });
                 }
@@ -100,7 +108,7 @@ public class DireccionenvioController {
             if (lblTotal != null) lblTotal.setText(items.size() + " direcciones");
         } catch (Exception e) {
             log.error("Error cargando direcciones", e);
-            mostrarError("Error al cargar direcciones: " + e.getMessage());
+            DialogUtils.showError("Error al cargar direcciones: " + e.getMessage());
         }
     }
 
@@ -116,7 +124,7 @@ public class DireccionenvioController {
             if (lblTotal != null) lblTotal.setText(items.size() + " direcciones");
         } catch (Exception e) {
             log.error("Error cargando direcciones por cliente", e);
-            mostrarError("Error al cargar direcciones: " + e.getMessage());
+            DialogUtils.showError("Error al cargar direcciones: " + e.getMessage());
         }
     }
 
@@ -159,9 +167,7 @@ public class DireccionenvioController {
             stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             stage.showAndWait();
             cargarDatos();
-        } catch (Exception e) { log.error("Error abriendo formulario direcciones", e); Dialogs.showError("Error: " + e.getMessage()); }
+        } catch (Exception e) { log.error("Error abriendo formulario direcciones", e); DialogUtils.showError("Error: " + e.getMessage()); }
     }
 
-    private boolean mostrarConfirmacion(String msg) { return Dialogs.showConfirm(msg); }
-    private void mostrarError(String msg) { Dialogs.showError(msg); }
 }

@@ -149,7 +149,7 @@ public class VerifactuEvidenceService {
      * Reenvía una evidencia que falló previamente
      */
     @Transactional
-    public VerifactuEvidence reenviarEvidencia(Long id) throws Exception {
+    public VerifactuEvidence reenviarEvidencia(Long id) {
         log.info("Reenviando evidencia ID: {}", id);
 
         Optional<VerifactuEvidence> opt = repository.findById(id);
@@ -194,7 +194,7 @@ public class VerifactuEvidenceService {
             log.error("Error reenviando evidencia", e);
             evidencia.setErrorMessage(e.getMessage());
             repository.save(evidencia);
-            throw e;
+            return evidencia;
         }
     }
 
@@ -202,7 +202,7 @@ public class VerifactuEvidenceService {
      * Verifica el estado de una evidencia en la AEAT
      */
     @Transactional
-    public VerifactuEvidence verificarEstadoAEAT(Long id) throws Exception {
+    public VerifactuEvidence verificarEstadoAEAT(Long id) {
         Optional<VerifactuEvidence> opt = repository.findById(id);
         if (opt.isEmpty()) {
             throw new IllegalArgumentException("Evidencia no encontrada con ID: " + id);
@@ -229,7 +229,10 @@ public class VerifactuEvidenceService {
 
         } catch (Exception e) {
             log.error("Error verificando estado en AEAT", e);
-            throw e;
+            // Registrar el error y devolver la evidencia sin lanzar la excepción
+            evidencia.setErrorMessage(e.getMessage());
+            repository.save(evidencia);
+            return evidencia;
         }
     }
 
@@ -244,6 +247,16 @@ public class VerifactuEvidenceService {
      * Construye el JSON de evidencia para enviar a AEAT
      */
     private String construirJsonEvidencia(VerifactuEvidence evidencia, String datosFactura) {
+        byte[] sig = evidencia.getSignature();
+        String firmaB64 = java.util.Base64.getEncoder().encodeToString(sig == null ? new byte[0] : sig);
+
+        String serie = evidencia.getSerie() != null ? evidencia.getSerie() : "";
+        String numero = evidencia.getNumero() != null ? evidencia.getNumero() : "";
+        String hash = evidencia.getHash() != null ? evidencia.getHash() : "";
+        String hashAnterior = evidencia.getHashAnterior() != null ? evidencia.getHashAnterior() : "";
+        String certFp = evidencia.getCertFingerprint() != null ? evidencia.getCertFingerprint() : "";
+        String fecha = evidencia.getFechaEmision() != null ? evidencia.getFechaEmision().toString() : Instant.now().toString();
+
         return String.format("""
             {
                 "facturaId": "%s",
@@ -257,13 +270,13 @@ public class VerifactuEvidenceService {
             }
             """,
             datosFactura,
-            evidencia.getSerie(),
-            evidencia.getNumero(),
-            evidencia.getHash(),
-            evidencia.getHashAnterior() != null ? evidencia.getHashAnterior() : "",
-            Base64.getEncoder().encodeToString(evidencia.getSignature()),
-            evidencia.getCertFingerprint(),
-            evidencia.getFechaEmision().toString()
+            serie,
+            numero,
+            hash,
+            hashAnterior,
+            firmaB64,
+            certFp,
+            fecha
         );
     }
 }

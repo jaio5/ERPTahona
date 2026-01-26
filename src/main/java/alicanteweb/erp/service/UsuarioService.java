@@ -50,7 +50,9 @@ public class UsuarioService {
         }
 
         // Cifrar la contraseña
-        usuario.setPassword(cifradoService.hashPassword(passwordPlain));
+        String hashed = cifradoService.hashPassword(passwordPlain);
+        log.info("Hashed password length={} for user={}", hashed != null ? hashed.length() : 0, usuario.getUsername());
+        usuario.setPassword(hashed);
         usuario.setFechaCreacion(LocalDateTime.now());
         usuario.setIntentosFallidos(0);
         usuario.setEnabled(true);

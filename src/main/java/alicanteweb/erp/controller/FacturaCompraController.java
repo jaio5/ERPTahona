@@ -21,7 +21,7 @@ import javafx.stage.Stage;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import alicanteweb.erp.ui.Dialogs;
+import alicanteweb.erp.ui.DialogUtils;
 
 /**
  * Controlador para la gestión de Facturas de Compra
@@ -226,7 +226,7 @@ public class FacturaCompraController {
             log.info("Facturas de compra cargadas: {}", facturas.size());
         } catch (Exception e) {
             log.error("Error cargando facturas de compra", e);
-            Dialogs.showError("Error al cargar facturas de compra: " + e.getMessage());
+            DialogUtils.showError("Error al cargar facturas de compra: " + e.getMessage());
         }
     }
 
@@ -312,7 +312,7 @@ public class FacturaCompraController {
             cargarDatos();
         } catch (Exception e) {
             log.error("Error abriendo formulario factura de compra", e);
-            Dialogs.showError("Error abriendo formulario: " + e.getMessage());
+            DialogUtils.showError("Error abriendo formulario: " + e.getMessage());
         }
     }
 
@@ -320,7 +320,7 @@ public class FacturaCompraController {
     public void onVer() {
         FacturaCompra factura = tableFacturas.getSelectionModel().getSelectedItem();
         if (factura == null) {
-            Dialogs.showWarn("Selecciona una factura primero");
+            DialogUtils.showWarning("Selecciona una factura primero");
             return;
         }
         log.info("Ver factura: {}", factura.getNumero());
@@ -343,14 +343,14 @@ public class FacturaCompraController {
             factura.getEstado()
         );
 
-        Dialogs.showInfo(info);
+        DialogUtils.showInfo(info);
     }
 
     @FXML
     public void onEditar() {
         FacturaCompra factura = tableFacturas.getSelectionModel().getSelectedItem();
         if (factura == null) {
-            Dialogs.showWarn("Selecciona una factura para editar");
+            DialogUtils.showWarning("Selecciona una factura para editar");
             return;
         }
         log.info("Editar factura: {}", factura.getNumero());
@@ -383,7 +383,7 @@ public class FacturaCompraController {
             cargarDatos();
         } catch (Exception e) {
             log.error("Error abriendo formulario factura de compra", e);
-            Dialogs.showError("Error abriendo formulario: " + e.getMessage());
+            DialogUtils.showError("Error abriendo formulario: " + e.getMessage());
         }
     }
 
@@ -391,25 +391,25 @@ public class FacturaCompraController {
     public void onContabilizar() {
         FacturaCompra factura = tableFacturas.getSelectionModel().getSelectedItem();
         if (factura == null) {
-            Dialogs.showWarn("Selecciona una factura para contabilizar");
+            DialogUtils.showWarning("Selecciona una factura para contabilizar");
             return;
         }
 
         if (factura.getEstado().equals("CONTABILIZADA")) {
-            Dialogs.showWarn("Esta factura ya está contabilizada");
+            DialogUtils.showWarning("Esta factura ya está contabilizada");
             return;
         }
 
-        if (Dialogs.showConfirm("¿Deseas contabilizar esta factura?\n\n" +
+        if (DialogUtils.showConfirm("¿Deseas contabilizar esta factura?\n\n" +
                                 factura.getNumero() + " - " + factura.getProveedor().getNombre())) {
             try {
                 factura.setEstado("CONTABILIZADA");
                 facturaCompraService.guardar(factura);
                 cargarDatos();
-                Dialogs.showInfo("Factura contabilizada correctamente");
+                DialogUtils.showInfo("Factura contabilizada correctamente");
              } catch (Exception e) {
                 log.error("Error contabilizando factura", e);
-                Dialogs.showError("Error al contabilizar: " + e.getMessage());
+                DialogUtils.showError("Error al contabilizar: " + e.getMessage());
              }
          }
      }

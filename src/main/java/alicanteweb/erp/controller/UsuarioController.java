@@ -1,5 +1,12 @@
 package alicanteweb.erp.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import alicanteweb.erp.controller.formcontroller.UsuarioFormController;
 import alicanteweb.erp.entities.Usuario;
 import alicanteweb.erp.service.UsuarioService;
 import javafx.application.Platform;
@@ -11,10 +18,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.stage.Stage;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Controller;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,12 +35,12 @@ public class UsuarioController {
     @FXML private TableColumn<Usuario, String> colUsername;
     @FXML private TableColumn<Usuario, String> colNombre;
     @FXML private TableColumn<Usuario, String> colEmail;
-    @FXML private TableColumn<Usuario, String> colRole;
+    // columna para mostrar el rol (fx:id en FXML debe ser 'colRol')
+    @FXML private TableColumn<Usuario, String> colRol;
     @FXML private TableColumn<Usuario, String> colActivo;
     @FXML private TableColumn<Usuario, String> colUltimoAcceso;
     @FXML private TableColumn<Usuario, Void> colAcciones;
     @FXML private TableColumn<Usuario, Long> colId;
-    @FXML private TableColumn<Usuario, String> colRol;
 
     @FXML private TextField txtBuscar;
     @FXML private ComboBox<String> cmbFiltroRol;
@@ -47,9 +50,11 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final ApplicationContext context;
+
     private final ObservableList<Usuario> usuariosList = FXCollections.observableArrayList();
     private final ObservableList<Usuario> usuariosFilteredList = FXCollections.observableArrayList();
 
+    @Autowired
     public UsuarioController(UsuarioService usuarioService, ApplicationContext context) {
         this.usuarioService = usuarioService;
         this.context = context;
@@ -82,7 +87,7 @@ public class UsuarioController {
         colEmail.setCellValueFactory(cellData ->
             new SimpleStringProperty(Optional.ofNullable(cellData.getValue().getEmail()).orElse("-")));
 
-        colRole.setCellValueFactory(cellData -> {
+        colRol.setCellValueFactory(cellData -> {
             String role = cellData.getValue().getRole();
             String roleText = role != null ? role : "N/A";
             String emoji = switch (roleText.toUpperCase()) {
@@ -515,13 +520,40 @@ public class UsuarioController {
             loader.setControllerFactory(context::getBean);
             Parent root = loader.load();
 
-            UsuarioFormController controller = loader.getController();
-            controller.setItem(usuario);
-            controller.setCallback(this::cargarDatos);
+            Object controllerObj = loader.getController();
+            if (controllerObj instanceof alicanteweb.erp.controller.formcontroller.UsuarioFormController controller) {
+                controller.setItem(usuario);
+                // Usar el setter generado (Lombok) para inicializar el callback
+                try { controller.setCallback(this::cargarDatos); } catch (Exception ignored) {}
+            } else {
+                // fallback: intentar configurar mediante reflexión si no es la clase esperada
+                try {
+                    java.lang.reflect.Method setItem = controllerObj.getClass().getMethod("setItem", Usuario.class);
+                    setItem.invoke(controllerObj, usuario);
+                } catch (Exception ignored) {}
+            }
 
             Stage stage = new Stage();
             stage.setTitle(usuario == null ? "Nuevo Usuario" : "Editar Usuario");
-            stage.setScene(new javafx.scene.Scene(root));
+            // Envolver root en Scene y hacer responsive solo si es Region
+            javafx.scene.Scene scene = new javafx.scene.Scene(root);
+            stage.setScene(scene);
+            stage.setResizable(true);
+            stage.setMinWidth(640);
+            stage.setMinHeight(480);
+            if (root instanceof javafx.scene.layout.Region region) {
+                region.prefWidthProperty().bind(stage.widthProperty());
+                region.prefHeightProperty().bind(stage.heightProperty());
+            }
+
+            // Si el controlador del formulario extiende BaseFormController, pasarle el stage
+            if (controllerObj instanceof alicanteweb.erp.controller.formcontroller.BaseFormController<?> baseFormController) {
+                try {
+                    baseFormController.setStage(stage);
+                } catch (Exception ignored) {
+                }
+            }
+
             stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             stage.showAndWait();
 

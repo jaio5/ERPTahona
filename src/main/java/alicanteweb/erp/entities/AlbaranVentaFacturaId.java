@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -14,6 +15,7 @@ import java.util.Objects;
 @Setter
 @Embeddable
 public class AlbaranVentaFacturaId implements Serializable {
+    @Serial
     private static final long serialVersionUID = 8149121220522206594L;
     @NotNull
     @Column(name = "albaranesVentas_id", nullable = false)

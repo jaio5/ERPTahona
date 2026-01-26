@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Servicio para generación automática de asientos contables
@@ -22,169 +22,44 @@ public class AsientoAutomaticoService {
 
     private final AsientoContableRepository asientoRepository;
     private final PlanCuentasRepository planCuentasRepository;
+    private final ContabilidadService contabilidadService;
 
     public AsientoAutomaticoService(AsientoContableRepository asientoRepository,
-                                   PlanCuentasRepository planCuentasRepository) {
+                                   PlanCuentasRepository planCuentasRepository,
+                                   ContabilidadService contabilidadService) {
         this.asientoRepository = asientoRepository;
         this.planCuentasRepository = planCuentasRepository;
+        this.contabilidadService = contabilidadService;
     }
 
     /**
      * Genera asiento al emitir una factura de venta
-     * DEBE: 430 Clientes (base + IVA)
-     * HABER: 700 Ventas (base)
-     * HABER: 477 IVA repercutido (IVA)
      */
     public AsientoContable generarAsientoFacturaVenta(Factura factura) {
         log.info("Generando asiento automático para factura: {}", factura.getNumero());
-
-        AsientoContable asiento = new AsientoContable();
-        asiento.setFecha(LocalDate.now());
-        asiento.setDescripcion("Factura de venta " + factura.getNumero());
-        asiento.setConcepto("VENTA");
-        asiento.setAsientoApertura(false);
-        asiento.setAsientoCierre(false);
-
-        Set<LineaAsiento> lineas = new HashSet<>();
-
-        // DEBE: 430 Clientes
-        LineaAsiento lineaCliente = new LineaAsiento();
-        PlanCuentas cuentaClientes = buscarCuenta("430");
-        lineaCliente.setCuenta(cuentaClientes);
-        lineaCliente.setConcepto("Cliente: " + factura.getCliente().getNombre());
-        lineaCliente.setDebe(factura.getTotal());
-        lineaCliente.setHaber(BigDecimal.ZERO);
-        lineaCliente.setAsiento(asiento);
-        lineas.add(lineaCliente);
-
-        // HABER: 700 Ventas (base)
-        LineaAsiento lineaVentas = new LineaAsiento();
-        PlanCuentas cuentaVentas = buscarCuenta("700");
-        lineaVentas.setCuenta(cuentaVentas);
-        lineaVentas.setConcepto("Venta según factura " + factura.getNumero());
-        lineaVentas.setDebe(BigDecimal.ZERO);
-        lineaVentas.setHaber(factura.getBaseImponible());
-        lineaVentas.setAsiento(asiento);
-        lineas.add(lineaVentas);
-
-        // HABER: 477 IVA repercutido
-        LineaAsiento lineaIva = new LineaAsiento();
-        PlanCuentas cuentaIvaRepercutido = buscarCuenta("477");
-        lineaIva.setCuenta(cuentaIvaRepercutido);
-        lineaIva.setConcepto("IVA repercutido factura " + factura.getNumero());
-        lineaIva.setDebe(BigDecimal.ZERO);
-        lineaIva.setHaber(factura.getTotalIva());
-        lineaIva.setAsiento(asiento);
-        lineas.add(lineaIva);
-
-        asiento.setLineas(lineas);
-
-        // Guardar
-        AsientoContable asientoGuardado = asientoRepository.save(asiento);
-        log.info("✅ Asiento {} generado para factura {}", asientoGuardado.getId(), factura.getNumero());
-
-        return asientoGuardado;
+        // Delegar a ContabilidadService (sin usuario, ejecución automática)
+        return contabilidadService.generarAsientoFactura(factura, null);
     }
 
     /**
      * Genera asiento al cobrar una factura
-     * DEBE: 572 Banco (importe)
-     * HABER: 430 Clientes (importe)
      */
-    public AsientoContable generarAsientoCobroFactura(Factura factura, Banco banco) {
+    public AsientoContable generarAsientoCobroFactura(Factura factura, Banco banco, BigDecimal importe) {
         log.info("Generando asiento de cobro para factura: {}", factura.getNumero());
-
-        AsientoContable asiento = new AsientoContable();
-        asiento.setFecha(LocalDate.now());
-        asiento.setDescripcion("Cobro factura " + factura.getNumero());
-        asiento.setConcepto("COBRO");
-        asiento.setAsientoApertura(false);
-        asiento.setAsientoCierre(false);
-
-        Set<LineaAsiento> lineas = new HashSet<>();
-
-        // DEBE: 572 Banco
-        LineaAsiento lineaBanco = new LineaAsiento();
-        PlanCuentas cuentaBanco = buscarCuenta("572");
-        lineaBanco.setCuenta(cuentaBanco);
-        lineaBanco.setConcepto("Cobro de " + factura.getCliente().getNombre());
-        lineaBanco.setDebe(factura.getTotal());
-        lineaBanco.setHaber(BigDecimal.ZERO);
-        lineaBanco.setAsiento(asiento);
-        lineas.add(lineaBanco);
-
-        // HABER: 430 Clientes
-        LineaAsiento lineaCliente = new LineaAsiento();
-        PlanCuentas cuentaClientes = buscarCuenta("430");
-        lineaCliente.setCuenta(cuentaClientes);
-        lineaCliente.setConcepto("Cobro factura " + factura.getNumero());
-        lineaCliente.setDebe(BigDecimal.ZERO);
-        lineaCliente.setHaber(factura.getTotal());
-        lineaCliente.setAsiento(asiento);
-        lineas.add(lineaCliente);
-
-        asiento.setLineas(lineas);
-
-        AsientoContable asientoGuardado = asientoRepository.save(asiento);
-        log.info("✅ Asiento de cobro {} generado", asientoGuardado.getId());
-
-        return asientoGuardado;
+        // Delegar a ContabilidadService
+        return contabilidadService.generarAsientoPago(factura, importe, banco == null ? "TRANSFERENCIA" : "EFECTIVO", null);
     }
 
     /**
      * Genera asiento de compra a proveedor
-     * DEBE: 600 Compras (base)
-     * DEBE: 472 IVA soportado (IVA)
-     * HABER: 400 Proveedores (base + IVA)
      */
     public AsientoContable generarAsientoCompra(FacturaCompra facturaCompra) {
-        log.info("Generando asiento de compra para factura: {}", facturaCompra.getNumeroFactura());
-
-        AsientoContable asiento = new AsientoContable();
-        asiento.setFecha(LocalDate.now());
-        asiento.setDescripcion("Compra según factura " + facturaCompra.getNumeroFactura());
-        asiento.setConcepto("COMPRA");
-        asiento.setAsientoApertura(false);
-        asiento.setAsientoCierre(false);
-
-        Set<LineaAsiento> lineas = new HashSet<>();
-
-        // DEBE: 600 Compras
-        LineaAsiento lineaCompras = new LineaAsiento();
-        PlanCuentas cuentaCompras = buscarCuenta("600");
-        lineaCompras.setCuenta(cuentaCompras);
-        lineaCompras.setConcepto("Compra a " + facturaCompra.getProveedor().getNombre());
-        lineaCompras.setDebe(facturaCompra.getBaseImponible());
-        lineaCompras.setHaber(BigDecimal.ZERO);
-        lineaCompras.setAsiento(asiento);
-        lineas.add(lineaCompras);
-
-        // DEBE: 472 IVA soportado
-        LineaAsiento lineaIva = new LineaAsiento();
-        PlanCuentas cuentaIvaSoportado = buscarCuenta("472");
-        lineaIva.setCuenta(cuentaIvaSoportado);
-        lineaIva.setConcepto("IVA soportado factura " + facturaCompra.getNumeroFactura());
-        lineaIva.setDebe(facturaCompra.getCuotaIva());
-        lineaIva.setHaber(BigDecimal.ZERO);
-        lineaIva.setAsiento(asiento);
-        lineas.add(lineaIva);
-
-        // HABER: 400 Proveedores
-        LineaAsiento lineaProveedor = new LineaAsiento();
-        PlanCuentas cuentaProveedores = buscarCuenta("400");
-        lineaProveedor.setCuenta(cuentaProveedores);
-        lineaProveedor.setConcepto("Proveedor: " + facturaCompra.getProveedor().getNombre());
-        lineaProveedor.setDebe(BigDecimal.ZERO);
-        lineaProveedor.setHaber(facturaCompra.getTotalFactura());
-        lineaProveedor.setAsiento(asiento);
-        lineas.add(lineaProveedor);
-
-        asiento.setLineas(lineas);
-
-        AsientoContable asientoGuardado = asientoRepository.save(asiento);
-        log.info("✅ Asiento de compra {} generado", asientoGuardado.getId());
-
-        return asientoGuardado;
+        log.info("Generando asiento automático de compra para factura: {}", facturaCompra.getNumeroFactura());
+        BigDecimal base = facturaCompra.getBaseImponible() != null ? facturaCompra.getBaseImponible() : BigDecimal.ZERO;
+        BigDecimal iva = facturaCompra.getImporteIva() != null ? facturaCompra.getImporteIva() : BigDecimal.ZERO;
+        BigDecimal total = facturaCompra.getTotal() != null ? facturaCompra.getTotal() : BigDecimal.ZERO;
+        // Delegar a ContabilidadService
+        return contabilidadService.generarAsientoCompra(facturaCompra.getId(), base, iva, total, null);
     }
 
     /**
@@ -209,18 +84,18 @@ public class AsientoAutomaticoService {
         PlanCuentas cuentaProveedores = buscarCuenta("400");
         lineaProveedor.setCuenta(cuentaProveedores);
         lineaProveedor.setConcepto("Pago a " + facturaCompra.getProveedor().getNombre());
-        lineaProveedor.setDebe(facturaCompra.getTotalFactura());
+        lineaProveedor.setDebe(facturaCompra.getTotal());
         lineaProveedor.setHaber(BigDecimal.ZERO);
         lineaProveedor.setAsiento(asiento);
         lineas.add(lineaProveedor);
 
-        // HABER: 572 Banco
+        // HABER: 572 Banco (si hay banco) o 570 Caja
         LineaAsiento lineaBanco = new LineaAsiento();
-        PlanCuentas cuentaBanco = buscarCuenta("572");
+        PlanCuentas cuentaBanco = buscarCuenta(banco != null ? "572" : "570");
         lineaBanco.setCuenta(cuentaBanco);
         lineaBanco.setConcepto("Pago factura " + facturaCompra.getNumeroFactura());
         lineaBanco.setDebe(BigDecimal.ZERO);
-        lineaBanco.setHaber(facturaCompra.getTotalFactura());
+        lineaBanco.setHaber(facturaCompra.getTotal());
         lineaBanco.setAsiento(asiento);
         lineas.add(lineaBanco);
 
@@ -321,4 +196,3 @@ public class AsientoAutomaticoService {
         return totalDebe.compareTo(totalHaber) == 0;
     }
 }
-

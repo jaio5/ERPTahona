@@ -7,9 +7,11 @@ import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.repository.VerifactuEvidenceRepository;
 import alicanteweb.erp.util.HashUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import alicanteweb.erp.util.CertificateUtils;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -19,24 +21,26 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
+import lombok.Getter;
+import org.springframework.beans.factory.ObjectProvider;
+
 @Service
-public class VerifactuService {
+public class VerifactuService implements InitializingBean {
 
     private static final Logger log = LoggerFactory.getLogger(VerifactuService.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
-    @Value("${verifactu.keystore.path}")
+    @Value("${verifactu.keystore.path:}")
     private String keystorePath;
 
-    @Value("${verifactu.keystore.password}")
+    @Value("${verifactu.keystore.password:}")
     private String keystorePassword;
 
-    @Value("${verifactu.key.alias}")
+    @Value("${verifactu.key.alias:}")
     private String keyAlias;
 
     @Value("${verifactu.key.password:${verifactu.keystore.password}}")
@@ -53,57 +57,89 @@ public class VerifactuService {
     private final FacturaLineaService facturaLineaService;
     private final QrCodeService qrCodeService;
     private final VerifactuAeatSoapClient aeatSoapClient;
-    private final KeyStore keyStore;
-    private final PrivateKey privateKey;
-    private final X509Certificate certificate;
-    private final boolean enabled;
+    private PrivateKey privateKey;
+    private X509Certificate certificate;
+
+    @Getter
+    private boolean enabled;
 
     public VerifactuService(VerifactuEvidenceRepository evidenceRepository,
                            EmpresaConfigService empresaConfigService,
                            FacturaLineaService facturaLineaService,
                            QrCodeService qrCodeService,
-                           VerifactuAeatSoapClient aeatSoapClient) {
+                           ObjectProvider<VerifactuAeatSoapClient> aeatSoapClientProvider) {
         this.evidenceRepository = evidenceRepository;
         this.empresaConfigService = empresaConfigService;
         this.facturaLineaService = facturaLineaService;
         this.qrCodeService = qrCodeService;
-        this.aeatSoapClient = aeatSoapClient;
-        KeyStore ks = null;
+        // Obtener el bean si está disponible (el cliente SOAP puede estar deshabilitado por properties)
+        this.aeatSoapClient = aeatSoapClientProvider.getIfAvailable();
+        // Inicialización provisional; la carga real del keystore se hace en @PostConstruct
+        this.privateKey = null;
+        this.certificate = null;
+        this.enabled = false;
+    }
+
+    private void initKeystore() {
         PrivateKey pk = null;
         X509Certificate cert = null;
         boolean ok = false;
 
         try (InputStream is = openKeystoreStream(keystorePath)) {
             if (is == null) {
-                log.warn("Keystore no encontrado en {} (classpath o disco) â€” verifactu deshabilitado", keystorePath);
+                log.warn("Keystore not found at {} (classpath or file system) - Verifactu disabled", keystorePath);
             } else {
-                ks = KeyStore.getInstance("PKCS12");
-                ks.load(is, getPassword(keystorePassword).toCharArray());
-
-                Key key = ks.getKey(keyAlias, getPassword(keyPassword, keystorePassword).toCharArray());
-                if (key instanceof PrivateKey) {
-                    pk = (PrivateKey) key;
-                } else {
-                    log.warn("La clave con alias {} no es privada; verifactu deshabilitado", keyAlias);
+                // Seguridad: si el keystore es grande (> MAX_KEYSTORE_SIZE_BYTES) considerarlo sospechoso
+                try {
+                    if (keystorePath != null) {
+                        java.io.File kf = new java.io.File(keystorePath);
+                        if (kf.exists() && kf.isFile() && kf.length() > CertificateUtils.MAX_KEYSTORE_SIZE_BYTES) {
+                            log.warn("Keystore {} too large ({} bytes) - Verifactu disabled for safety", keystorePath, kf.length());
+                            // No attemptamos cargar keystores sospechosos
+                            // dejar pk/cert nulos y salir del bloque
+                            // cerrar stream implícitamente por try-with-resources y continuar
+                            this.privateKey = null;
+                            this.certificate = null;
+                            this.enabled = false;
+                            return;
+                        }
+                    }
+                } catch (Exception ex) {
+                    if (log.isDebugEnabled()) log.debug("Could not check keystore size: {}", ex.getMessage(), ex);
                 }
+                 KeyStore ks = KeyStore.getInstance("PKCS12");
+                 ks.load(is, getPassword(keystorePassword).toCharArray());
 
-                Certificate c = ks.getCertificate(keyAlias);
-                if (c instanceof X509Certificate) {
+                 Key key = ks.getKey(keyAlias, getPassword(keyPassword, keystorePassword).toCharArray());
+                 if (key instanceof PrivateKey) {
+                     pk = (PrivateKey) key;
+                 } else {
+                     log.warn("La clave con alias {} no es privada; verifactu deshabilitado", keyAlias);
+                 }
+
+                 Certificate c = ks.getCertificate(keyAlias);
+                 if (c instanceof X509Certificate) {
                     cert = (X509Certificate) c;
-                } else {
-                    log.warn("El certificado con alias {} no es X509; verifactu deshabilitado", keyAlias);
-                }
+                    try {
+                        // Validación defensiva del certificado para mitigar CVE relacionados con parsing/ldap
+                        CertificateUtils.validateCertificateSafe(cert);
+                    } catch (Exception cvEx) {
+                        log.warn("Certificado con problemas de validación: {} - verifactu deshabilitado", cvEx.getMessage());
+                        cert = null;
+                    }
+                 } else {
+                     log.warn("El certificado con alias {} no es X509; verifactu deshabilitado", keyAlias);
+                 }
 
-                if (pk != null && cert != null) {
-                    ok = true;
-                }
-            }
+                 if (pk != null && cert != null) {
+                     ok = true;
+                 }
+             }
         } catch (Exception e) {
-            log.warn("Error cargando el keystore para verifactu â€” verifactu deshabilitado: {}", e.getMessage());
+            log.warn("Error cargando el keystore para verifactu - verifactu deshabilitado: {}", e.getMessage());
             if (log.isDebugEnabled()) log.debug("Stack:", e);
         }
 
-        this.keyStore = ks;
         this.privateKey = pk;
         this.certificate = cert;
         this.enabled = ok;
@@ -111,15 +147,14 @@ public class VerifactuService {
         if (this.enabled) {
             log.info("Verifactu inicializado usando keystore {}", keystorePath);
         } else {
-            log.info("Verifactu deshabilitado â€” la aplicación continuará sin registrar evidencias");
+            log.info("Verifactu deshabilitado - la aplicación continuará sin registrar evidencias");
         }
     }
 
-    /**
-     * Indica si el servicio VeriFactu está habilitado
-     */
-    public boolean isEnabled() {
-        return enabled;
+    @Override
+    public void afterPropertiesSet() {
+        // Ejecutar la inicialización del keystore después de la inyección de propiedades/beans
+        initKeystore();
     }
 
     /**
@@ -158,13 +193,15 @@ public class VerifactuService {
     /**
      * Verifica una firma digital
      */
+    @SuppressWarnings("unused")
     public boolean verificarFirma(byte[] datos, byte[] firma) throws Exception {
         if (!enabled) {
             throw new IllegalStateException("VeriFactu no está habilitado - no se puede verificar");
         }
 
         Signature signature = Signature.getInstance("SHA256withRSA");
-        signature.initVerify(certificate);
+        // Use the certificate's public key explicitly to initialize verification
+        signature.initVerify(certificate.getPublicKey());
         signature.update(datos);
         return signature.verify(firma);
     }
@@ -217,13 +254,46 @@ public class VerifactuService {
     }
 
     private static InputStream openKeystoreStream(String keystorePath) {
-        InputStream is = VerifactuService.class.getResourceAsStream(keystorePath);
-        if (is == null) {
+        // Validar entrada para evitar NullPointerException dentro de Class.getResourceAsStream
+        if (keystorePath == null || keystorePath.trim().isEmpty()) {
+            if (log.isWarnEnabled()) log.warn("Keystore path is null or empty");
+            return null;
+        }
+
+        InputStream is = null;
+        try {
+            // Intentar cargar desde classpath con ClassLoader (recomendado)
             try {
-                is = new java.io.FileInputStream(keystorePath);
-            } catch (Exception ex) {
-                // No es necesario loggear aquí, ya se hace en el constructor
+                is = Thread.currentThread().getContextClassLoader().getResourceAsStream(keystorePath.startsWith("/") ? keystorePath.substring(1) : keystorePath);
+                if (is == null) {
+                    // fallback al comportamiento anterior
+                    is = VerifactuService.class.getResourceAsStream(keystorePath);
+                }
+            } catch (NullPointerException npe) {
+                // Defensive: getResourceAsStream lanza NPE si recibe null, ya manejado arriba
+                if (log.isDebugEnabled()) log.debug("getResourceAsStream threw NPE for path: {}", keystorePath, npe);
             }
+
+            // Si no lo encontramos, intentar con prefijo '/'
+            if (is == null) {
+                String alt = keystorePath.startsWith("/") ? keystorePath : ("/" + keystorePath);
+                try {
+                    is = VerifactuService.class.getResourceAsStream(alt);
+                } catch (NullPointerException npe) {
+                    if (log.isDebugEnabled()) log.debug("getResourceAsStream threw NPE for alt path: {}", alt, npe);
+                }
+            }
+
+            // Si sigue null, intentar abrir desde sistema de ficheros
+            if (is == null) {
+                java.io.File f = new java.io.File(keystorePath);
+                if (f.exists() && f.isFile()) {
+                    is = new java.io.FileInputStream(f);
+                }
+            }
+        } catch (Exception ex) {
+            // No queremos propagar la excepción: el constructor maneja la situación y deshabilita Verifactu si hay error
+            if (log.isDebugEnabled()) log.debug("Could not open keystore at '{}': {}", keystorePath, ex.getMessage(), ex);
         }
         return is;
     }
@@ -325,6 +395,7 @@ public class VerifactuService {
     /**
      * Envía una factura a Verifactu/AEAT con todas las validaciones
      */
+    @SuppressWarnings("unused")
     public void enviarFacturaVerifactu(Factura factura) throws Exception {
         log.info("Iniciando envío de factura {} a Verifactu", factura.getNumero());
 
@@ -456,15 +527,6 @@ public class VerifactuService {
     }
 
     /**
-     * Envía el XML de la factura a la AEAT mediante HTTP POST
-     * Este método implementa el envío REAL a la AEAT usando el protocolo oficial
-     *
-     * @param xml El XML de la factura según esquema Verifactu
-     * @param firma La firma digital (puede ser null si no hay certificado)
-     * @return La respuesta de la AEAT en formato XML o JSON
-     * @throws Exception Si hay error en el envío
-     */
-    /**
      * Envía el XML de la factura a la AEAT mediante SOAP
      * Este método implementa el envío REAL a la AEAT usando el cliente SOAP
      *
@@ -482,6 +544,9 @@ public class VerifactuService {
         log.info("Firma digital: {}", firma != null ? "SÍ (" + firma.length + " bytes)" : "NO");
 
         try {
+            if (this.aeatSoapClient == null) {
+                throw new IllegalStateException("Cliente AEAT SOAP no disponible en el contexto Spring (bean ausente). Verifica la propiedad verifactu.aeat.enabled o implementa un bean fallback para dev.");
+            }
             // Delegar al cliente SOAP real
             String respuesta = aeatSoapClient.enviarFacturaAeat(xml, firma);
 

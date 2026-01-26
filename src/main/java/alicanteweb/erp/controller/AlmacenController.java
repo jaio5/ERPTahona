@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller;
 
+import alicanteweb.erp.controller.formcontroller.AlmacenFormController;
 import alicanteweb.erp.entities.Almacen;
 import alicanteweb.erp.service.AlmacenService;
 import javafx.fxml.FXML;
@@ -14,7 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import alicanteweb.erp.ui.Dialogs;
+import alicanteweb.erp.ui.DialogUtils;
 
 import java.text.DecimalFormat;
 
@@ -194,8 +195,8 @@ public class AlmacenController {
             loader.setControllerFactory(applicationContext::getBean);
             Parent root = loader.load();
             Object ctrl = loader.getController();
-            if (ctrl instanceof alicanteweb.erp.controller.AlmacenFormController) {
-                ((alicanteweb.erp.controller.AlmacenFormController) ctrl).setAlmacen(almacen);
+            if (ctrl instanceof AlmacenFormController) {
+                ((AlmacenFormController) ctrl).setAlmacen(almacen);
             }
 
             Stage dialog = new Stage();
@@ -238,11 +239,11 @@ public class AlmacenController {
         cargarDatos();
     }
 
-    private void mostrarAlerta(String msg) { Dialogs.showWarn(msg); }
+    private void mostrarAlerta(String msg) { DialogUtils.showWarning(msg); }
 
-    private void mostrarExito() { Dialogs.showInfo("Almacén eliminado correctamente"); }
+    private void mostrarExito() { DialogUtils.showInfo("Almacén eliminado correctamente"); }
 
-    private void mostrarError(String msg) { Dialogs.showError(msg); }
+    private void mostrarError(String msg) { DialogUtils.showError(msg); }
 
-    private boolean mostrarConfirmacion(String msg) { return Dialogs.showConfirm(msg); }
+    private boolean mostrarConfirmacion(String msg) { return DialogUtils.showConfirm(msg); }
 }

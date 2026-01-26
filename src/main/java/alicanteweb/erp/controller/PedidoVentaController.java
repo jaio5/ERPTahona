@@ -1,13 +1,14 @@
 package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Pedido;
+import alicanteweb.erp.entities.Cliente;
 import alicanteweb.erp.service.PedidoVentaService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.control.cell.PropertyValueFactory;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,12 +20,15 @@ public class PedidoVentaController {
     private static final Logger log = LoggerFactory.getLogger(PedidoVentaController.class);
 
     @FXML private TableView<Pedido> tablePedidos;
-    @FXML private TableColumn<Pedido, Long> colId;
     @FXML private TableColumn<Pedido, String> colNumero;
     @FXML private TableColumn<Pedido, String> colFecha;
     @FXML private TableColumn<Pedido, String> colCliente;
     @FXML private TableColumn<Pedido, String> colEstado;
     @FXML private TextField txtBuscar;
+
+    @FXML private TableColumn<Pedido, String> colTotal;
+    @FXML private ComboBox<String> cmbEstado;
+    @FXML private Label lblTotal;
 
     private final PedidoVentaService pedidoVentaService;
     private final ObservableList<Pedido> pedidosList = FXCollections.observableArrayList();
@@ -41,27 +45,20 @@ public class PedidoVentaController {
         if (txtBuscar != null) {
             txtBuscar.textProperty().addListener((obs, oldV, newV) -> filtrarPedidos(newV));
         }
+
+        if (cmbEstado != null) {
+            cmbEstado.setItems(FXCollections.observableArrayList("PENDIENTE", "EN_PROCESO", "SERVIDO", "CANCELADO"));
+        }
     }
 
     private void configurarColumnas() {
-        if (colId != null) {
-            colId.setCellValueFactory(cell -> new SimpleObjectProperty<>(cell.getValue() == null ? null : cell.getValue().getId()));
-        }
-        if (colNumero != null) {
-            colNumero.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getNumero()).map(Object::toString).orElse("")));
-        }
-        if (colFecha != null) {
-            colFecha.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getFecha()).map(Object::toString).orElse("")));
-        }
-        if (colCliente != null) {
-            colCliente.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getCliente()).map(c -> c.getNombre()).orElse("")));
-        }
-        if (colEstado != null) {
-            colEstado.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getEstado()).orElse("")));
-        }
-        if (tablePedidos != null) {
-            tablePedidos.setItems(pedidosList);
-        }
+        if (colNumero != null) colNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
+        if (colFecha != null) colFecha.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getFecha()).map(Object::toString).orElse("")));
+        if (colCliente != null) colCliente.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getCliente()).map(Cliente::getNombre).orElse("")));
+        if (colEstado != null) colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        if (colTotal != null) colTotal.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue() == null ? "" : Optional.ofNullable(cell.getValue().getTotal()).map(Object::toString).orElse("")));
+
+        if (tablePedidos != null) tablePedidos.setItems(pedidosList);
     }
 
     private void cargarDatos() {
@@ -72,9 +69,11 @@ public class PedidoVentaController {
             javafx.application.Platform.runLater(() -> {
                 if (tablePedidos != null) tablePedidos.refresh();
             });
+
+            if (lblTotal != null) lblTotal.setText(pedidosList.size() + " pedidos");
+
         } catch (Exception e) {
             log.error("Error cargando pedidos", e);
-            mostrarError("Error al cargar pedidos: " + e.getMessage());
         }
     }
 
@@ -97,33 +96,39 @@ public class PedidoVentaController {
         mostrarAlerta("Crear nuevo pedido de venta en desarrollo");
     }
 
+    // Wrapper para el botón Buscar en el FXML
+    @FXML
+    public void onBuscar() {
+        filtrarPedidos(txtBuscar != null ? txtBuscar.getText() : null);
+    }
+
     @FXML
     public void onEditar() {
         Pedido pedido = tablePedidos.getSelectionModel().getSelectedItem();
-        if (pedido == null) {
-            mostrarAlerta("Seleccione un pedido para editar");
-            return;
-        }
+        if (pedido == null) { mostrarAlerta("Seleccione un pedido para editar"); return; }
         mostrarAlerta("Edición de pedido en desarrollo");
     }
 
     @FXML
     public void onEliminar() {
         Pedido pedido = tablePedidos.getSelectionModel().getSelectedItem();
-        if (pedido == null) {
-            mostrarAlerta("Seleccione un pedido para eliminar");
-            return;
-        }
-        if (mostrarConfirmacion("¿Desea eliminar este pedido?")) {
+        if (pedido == null) { mostrarAlerta("Seleccione un pedido para eliminar"); return; }
+        if (mostrarConfirmacion()) {
             try {
                 pedidoVentaService.eliminar(pedido.getId());
                 cargarDatos();
-                mostrarExito("Pedido eliminado correctamente");
+                mostrarExito();
             } catch (Exception e) {
                 log.error("Error eliminando pedido", e);
                 mostrarError("Error al eliminar: " + e.getMessage());
             }
         }
+    }
+
+    // Nuevo handler para el boton 'Servir' en el FXML
+    @FXML
+    public void onServir() {
+        mostrarAlerta("Servir pedido en desarrollo");
     }
 
     @FXML
@@ -138,10 +143,10 @@ public class PedidoVentaController {
         alert.showAndWait();
     }
 
-    private void mostrarExito(String msg) {
+    private void mostrarExito() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Éxito");
-        alert.setContentText(msg);
+        alert.setContentText("Pedido eliminado correctamente");
         alert.showAndWait();
     }
 
@@ -152,12 +157,11 @@ public class PedidoVentaController {
         alert.showAndWait();
     }
 
-    private boolean mostrarConfirmacion(String msg) {
+    private boolean mostrarConfirmacion() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirmación");
-        alert.setHeaderText(msg);
+        alert.setHeaderText("¿Desea eliminar este pedido?");
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
     }
 }
-

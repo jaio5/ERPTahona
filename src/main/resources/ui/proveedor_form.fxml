@@ -3,7 +3,7 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.ProveedorFormController"
+            fx:controller="alicanteweb.erp.controller.formcontroller.ProveedorFormController"
             stylesheets="@/styles/modern-theme.css"
             style="-fx-background-color: #f8fafc;">
 
@@ -39,13 +39,13 @@
                         <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.columnSpan="2">
                             <Label text="Nombre / Razon Social *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextField fx:id="txtNombre" promptText="Nombre del proveedor" style="-fx-padding: 10;"/>
-                            <Label fx:id="lblErrNombre" text="" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
+                            <Label fx:id="lblErrNombre" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
                             <Label text="CIF / NIF *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextField fx:id="txtCIF" promptText="B12345678" style="-fx-padding: 10;"/>
-                            <Label fx:id="lblErrCIF" text="" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
+                            <Label fx:id="lblErrCIF" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
@@ -56,7 +56,7 @@
                         <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="1">
                             <Label text="Email" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextField fx:id="txtEmail" promptText="proveedor@email.com" style="-fx-padding: 10;"/>
-                            <Label fx:id="lblErrEmail" text="" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
+                            <Label fx:id="lblErrEmail" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
                         </VBox>
                     </GridPane>
                 </VBox>

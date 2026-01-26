@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.PresupuestoFormController"
+            fx:controller="alicanteweb.erp.controller.formcontroller.PresupuestoFormController"
             stylesheets="@/styles/modern-theme.css"
             style="-fx-background-color: #f8fafc;">
 
@@ -84,12 +83,12 @@
 
                     <TableView fx:id="tableLineas" VBox.vgrow="ALWAYS" prefHeight="250">
                         <columns>
-                            <TableColumn fx:id="colArticulo" text="Artículo" prefWidth="250"/>
-                            <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="200"/>
-                            <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="100"/>
-                            <TableColumn fx:id="colPrecio" text="Precio Unit." prefWidth="120"/>
-                            <TableColumn fx:id="colDescuento" text="Dto. %" prefWidth="80"/>
-                            <TableColumn fx:id="colImporte" text="Importe" prefWidth="120"/>
+                            <TableColumn fx:id="colArticulo" text="Artículo" />
+                            <TableColumn fx:id="colDescripcion" text="Descripción" />
+                            <TableColumn fx:id="colCantidad" text="Cantidad" />
+                            <TableColumn fx:id="colPrecio" text="Precio Unit." />
+                            <TableColumn fx:id="colDescuento" text="Dto. %" />
+                            <TableColumn fx:id="colImporte" text="Importe" />
                         </columns>
                     </TableView>
                 </VBox>
@@ -113,15 +112,15 @@
                         </columnConstraints>
 
                         <Label text="Subtotal:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-size: 13; -fx-text-fill: #64748b;"/>
-                        <Label fx:id="txtSubtotal" text="0.00 €" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-font-size: 13; -fx-text-fill: #1e293b; -fx-alignment: center-right;"/>
+                        <Label fx:id="lblSubtotalValue" text="0.00 €" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-font-size: 13; -fx-text-fill: #1e293b; -fx-alignment: center-right;"/>
 
                         <Label text="IVA (21%):" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-size: 13; -fx-text-fill: #64748b;"/>
-                        <Label fx:id="txtIVA" text="0.00 €" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-font-size: 13; -fx-text-fill: #1e293b; -fx-alignment: center-right;"/>
+                        <Label fx:id="lblIVAValue" text="0.00 €" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-font-size: 13; -fx-text-fill: #1e293b; -fx-alignment: center-right;"/>
 
                         <Separator GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2"/>
 
                         <Label text="TOTAL:" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                        <Label fx:id="txtTotal" text="0.00 €" GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #8b5cf6; -fx-alignment: center-right;"/>
+                        <Label fx:id="lblTotalValue" text="0.00 €" GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #8b5cf6; -fx-alignment: center-right;"/>
                     </GridPane>
                 </VBox>
 
@@ -133,7 +132,7 @@
         <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
             <Button text="Cancelar" onAction="#onCancelar" style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13;"/>
             <Button text="✓ Guardar" onAction="#onGuardar" styleClass="button-primary" style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
-            <Button text="✓ Aprobar" onAction="#onAprobar" styleClass="button-success" style="-fx-padding: 10 24; -fx:font-size: 13; -fx-font-weight: bold;"/>
+            <Button text="✓ Aprobar" onAction="#onAprobar" styleClass="button-success" style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
         </HBox>
     </bottom>
 

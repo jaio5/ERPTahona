@@ -3,7 +3,7 @@
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="alicanteweb.erp.controller.AlbaranFormController"
+      fx:controller="alicanteweb.erp.controller.formcontroller.AlbaranFormController"
       styleClass="main-container" spacing="15">
 
     <Label text="📦 FORMULARIO DE ALBARÁN" styleClass="title-panel"/>
@@ -39,8 +39,8 @@
                     <TableView fx:id="tableLineas" prefHeight="200">
                         <columns>
                             <TableColumn fx:id="colArticulo" text="Artículo" prefWidth="150"/>
-                            <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="80"/>
-                            <TableColumn fx:id="colUnidad" text="Unidad" prefWidth="80"/>
+                            <TableColumn fx:id="colCantidad" text="Cantidad"/>
+                            <TableColumn fx:id="colUnidad" text="Unidad"/>
                             <TableColumn fx:id="colLote" text="Lote/Serie" prefWidth="100"/>
                         </columns>
                     </TableView>

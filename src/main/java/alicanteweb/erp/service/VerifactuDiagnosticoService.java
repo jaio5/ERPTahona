@@ -24,19 +24,19 @@ public class VerifactuDiagnosticoService {
 
     private static final Logger log = LoggerFactory.getLogger(VerifactuDiagnosticoService.class);
 
-    @Value("${verifactu.keystore.path}")
+    @Value("${verifactu.keystore.path:}")
     private String keystorePath;
 
-    @Value("${verifactu.keystore.password}")
+    @Value("${verifactu.keystore.password:}")
     private String keystorePassword;
 
-    @Value("${verifactu.key.alias}")
+    @Value("${verifactu.key.alias:}")
     private String keyAlias;
 
     @Value("${verifactu.aeat.enabled:false}")
     private boolean aeatEnabled;
 
-    @Value("${verifactu.aeat.endpoint}")
+    @Value("${verifactu.aeat.endpoint:}")
     private String aeatEndpoint;
 
     private final EmpresaConfigRepository empresaConfigRepository;
@@ -133,8 +133,7 @@ public class VerifactuDiagnosticoService {
             is.close();
 
             Certificate cert = ks.getCertificate(keyAlias);
-            if (cert instanceof X509Certificate) {
-                X509Certificate x509 = (X509Certificate) cert;
+            if (cert instanceof X509Certificate x509) {
                 log.info("✅ Certificado encontrado y cargado correctamente");
                 log.info("   Titular: {}", x509.getSubjectX500Principal().getName());
                 log.info("   Emisor: {}", x509.getIssuerX500Principal().getName());

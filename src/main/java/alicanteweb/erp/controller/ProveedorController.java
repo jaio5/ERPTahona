@@ -104,9 +104,19 @@ public class ProveedorController extends BaseController<Proveedor> {
         }
     }
 
+    // Handlers delegadores para evitar colisiones con BaseController
     @FXML
-    public void onBuscar() {
-        String termino = txtBuscar != null ? txtBuscar.getText() : "";
-        filtrar(termino);
+    public void onBuscarProveedor() {
+        onBuscar();
+    }
+
+    @FXML
+    public void onVerProveedor() {
+        onVer();
+    }
+
+    @FXML
+    public void onDarBajaProveedor() {
+        onDarBaja();
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -197,7 +198,7 @@ public class ReportePDFService {
      */
     private void guardarHTML(String html, String ruta) throws Exception {
         try (FileOutputStream fos = new FileOutputStream(ruta)) {
-            fos.write(html.getBytes("UTF-8"));
+            fos.write(html.getBytes(StandardCharsets.UTF_8));
         }
     }
 }

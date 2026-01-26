@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class FacturaController extends BaseController<Factura> {
@@ -32,7 +33,7 @@ public class FacturaController extends BaseController<Factura> {
     @FXML private TableColumn<Factura, BigDecimal> colTotal;
     @FXML private TableColumn<Factura, String> colEstado;
 
-    @FXML private TextField txtBuscar;
+    // txtBuscar ya está heredado de BaseController
     @FXML private ComboBox<String> cmbEstado;
     @FXML private DatePicker dpFechaDesde;
     @FXML private DatePicker dpFechaHasta;
@@ -73,6 +74,15 @@ public class FacturaController extends BaseController<Factura> {
         if (cmbEstado != null) {
             cmbEstado.getItems().addAll("Todas", "BORRADOR", "EMITIDA", "PAGADA", "ANULADA");
             cmbEstado.setValue("Todas");
+            cmbEstado.valueProperty().addListener((obs, oldV, newV) -> filtrar(txtBuscar != null ? txtBuscar.getText() : ""));
+        }
+
+        // Reaccionar a cambios en los datepickers para re-filtrar
+        if (dpFechaDesde != null) {
+            dpFechaDesde.valueProperty().addListener((obs, oldV, newV) -> filtrar(txtBuscar != null ? txtBuscar.getText() : ""));
+        }
+        if (dpFechaHasta != null) {
+            dpFechaHasta.valueProperty().addListener((obs, oldV, newV) -> filtrar(txtBuscar != null ? txtBuscar.getText() : ""));
         }
 
         // Aplicar estilo a la tabla
@@ -128,10 +138,16 @@ public class FacturaController extends BaseController<Factura> {
         }
     }
 
+    // Delegador para el botón Buscar en el FXML (renombrado)
     @FXML
-    public void onBuscar() {
-        String termino = txtBuscar != null ? txtBuscar.getText() : "";
-        filtrar(termino);
+    public void onBuscarFactura() {
+        onBuscar();
+    }
+
+    // Delegador para el botón Ver en el FXML (renombrado)
+    @FXML
+    public void onVerFactura() {
+        onVer();
     }
 
     @FXML
@@ -223,5 +239,40 @@ public class FacturaController extends BaseController<Factura> {
     private void cargarFacturas() {
         cargarDatos();
     }
-}
 
+    // Sobrescribimos filtrar para aplicar fecha y estado además del texto
+    @Override
+    protected void filtrar(String termino) {
+        List<Factura> facturas = facturaService.findAll();
+
+        String t = termino != null ? termino.toLowerCase() : "";
+        LocalDate desde = dpFechaDesde != null ? dpFechaDesde.getValue() : null;
+        LocalDate hasta = dpFechaHasta != null ? dpFechaHasta.getValue() : null;
+        String estadoSel = cmbEstado != null && cmbEstado.getValue() != null ? cmbEstado.getValue() : "Todas";
+
+        List<Factura> filtradas = facturas.stream()
+            .filter(f -> {
+                boolean matchesText = t.isEmpty() || coincideConBusqueda(f, t);
+
+                boolean matchesDesde = true;
+                if (desde != null && f.getFecha() != null) {
+                    matchesDesde = !f.getFecha().isBefore(desde);
+                }
+
+                boolean matchesHasta = true;
+                if (hasta != null && f.getFecha() != null) {
+                    matchesHasta = !f.getFecha().isAfter(hasta);
+                }
+
+                boolean matchesEstado = true;
+                if (estadoSel != null && !"Todas".equalsIgnoreCase(estadoSel)) {
+                    matchesEstado = f.getEstado() != null && f.getEstado().equalsIgnoreCase(estadoSel);
+                }
+
+                return matchesText && matchesDesde && matchesHasta && matchesEstado;
+            })
+            .collect(Collectors.toList());
+
+        actualizarTabla(filtradas);
+    }
+}

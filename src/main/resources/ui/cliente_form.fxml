@@ -2,11 +2,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.ClienteFormController"
-            stylesheets="@/styles/modern-theme.css"
-            style="-fx-background-color: #f8fafc;">
-
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.formcontroller.ClienteFormController">
     <top>
         <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
             <Label text="Cliente" style="-fx-font-size: 24;"/>
@@ -35,21 +31,19 @@
 
                         <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
                             <Label text="Codigo" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtCodigo" promptText="Auto" editable="false"
-                                       style="-fx-padding: 10; -fx-background-color: #f1f5f9;"/>
+                            <TextField fx:id="txtCodigo" promptText="Auto" editable="false" style="-fx-padding: 10; -fx-background-color: #f1f5f9;"/>
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.columnSpan="2">
                             <Label text="Nombre / Razon Social *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtNombre" promptText="Nombre completo o razon social"
-                                       style="-fx-padding: 10;"/>
-                            <Label fx:id="lblErrNombre" text="" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
+                            <TextField fx:id="txtNombre" promptText="Nombre completo o razon social" style="-fx-padding: 10;"/>
+                            <Label fx:id="lblErrNombre"  style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
                             <Label text="CIF / NIF *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextField fx:id="txtCIF" promptText="B12345678" style="-fx-padding: 10;"/>
-                            <Label fx:id="lblErrCIF" text="" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
+                            <Label fx:id="lblErrCIF"  style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
                         </VBox>
 
                         <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
@@ -60,7 +54,7 @@
                         <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="1">
                             <Label text="Email" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
                             <TextField fx:id="txtEmail" promptText="cliente@email.com" style="-fx-padding: 10;"/>
-                            <Label fx:id="lblErrEmail" text="" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
+                            <Label fx:id="lblErrEmail"  style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
                         </VBox>
                     </GridPane>
                 </VBox>
@@ -125,8 +119,7 @@
 
                         <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="3">
                             <Label text="Notas" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextArea fx:id="txtNotas" promptText="Observaciones sobre el cliente..."
-                                      prefRowCount="3" wrapText="true" style="-fx-padding: 10;"/>
+                            <TextArea fx:id="txtNotas" promptText="Observaciones sobre el cliente..." prefRowCount="3" wrapText="true" style="-fx-padding: 10;"/>
                         </VBox>
                     </GridPane>
 
@@ -141,12 +134,9 @@
 
     <bottom>
         <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
-            <Button text="Cancelar" onAction="#onCancelar"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13; -fx-cursor: hand;"/>
-            <Button fx:id="btnGuardar" text="Guardar Cliente" onAction="#onGuardar" styleClass="button-success"
-                    style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
+            <Button text="Cancelar" onAction="#onCancelar" style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13; -fx-cursor: hand;"/>
+            <Button fx:id="btnGuardar" text="Guardar Cliente" onAction="#onGuardar" styleClass="button-success" style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
         </HBox>
     </bottom>
 
 </BorderPane>
-

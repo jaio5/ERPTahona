@@ -3,7 +3,7 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.PedidoVentaFormController"
+            fx:controller="alicanteweb.erp.controller.formcontroller.PedidoVentaFormController"
             stylesheets="@/styles/modern-theme.css"
             style="-fx-background-color: #f8fafc;">
 
@@ -78,7 +78,7 @@
                             <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="200"/>
                             <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="100"/>
                             <TableColumn fx:id="colPrecio" text="Precio Unit." prefWidth="120"/>
-                            <TableColumn fx:id="colDescuento" text="Dto. %" prefWidth="80"/>
+                            <TableColumn fx:id="colDescuento" text="Dto. %"/>
                             <TableColumn fx:id="colImporte" text="Importe" prefWidth="120"/>
                         </columns>
                     </TableView>

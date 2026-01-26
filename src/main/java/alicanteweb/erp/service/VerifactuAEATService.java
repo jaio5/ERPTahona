@@ -1,7 +1,6 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.util.HashUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -19,33 +18,17 @@ public class VerifactuAEATService {
 
     private static final Logger log = LoggerFactory.getLogger(VerifactuAEATService.class);
 
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
-
-    @Value("${verifactu.cert.path}")
+    @Value("${verifactu.cert.path:}")
     private String certPath;
 
-    @Value("${verifactu.cert.password}")
+    @Value("${verifactu.cert.password:}")
     private String certPassword;
 
-    @Value("${verifactu.aeat.endpoint}")
+    @Value("${verifactu.aeat.endpoint:}")
     private String aeatEndpoint;
 
     @Value("${verifactu.aeat.enabled:false}")
     private boolean aeatEnabled;
-
-    /**
-     * Genera el hash SHA-256 de los datos de la factura (Base64 URL-safe sin padding)
-     */
-    public String generarHash(String datosFactura) throws Exception {
-        try {
-            return HashUtils.sha256Base64UrlSafe(datosFactura);
-        } catch (Exception e) {
-            log.error("Error generando hash", e);
-            throw new Exception("Error generando hash: " + e.getMessage(), e);
-        }
-    }
 
     /**
      * Firma digitalmente los datos usando el certificado
@@ -60,7 +43,7 @@ public class VerifactuAEATService {
             String alias = ks.aliases().nextElement();
             PrivateKey pk = (PrivateKey) ks.getKey(alias, certPassword.toCharArray());
 
-            Signature signature = Signature.getInstance("SHA256withRSA", "BC");
+            Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(pk);
             signature.update(datos);
 
@@ -92,6 +75,25 @@ public class VerifactuAEATService {
             log.error("Error obteniendo fingerprint del certificado", e);
             throw new Exception("Error obteniendo fingerprint: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Genera el hash SHA-256 de los datos de la factura (Base64 URL-safe sin padding)
+     */
+    public String generarHash(String datosFactura) throws Exception {
+        try {
+            return HashUtils.sha256Base64UrlSafe(datosFactura);
+        } catch (Exception e) {
+            log.error("Error generando hash", e);
+            throw new Exception("Error generando hash: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Indica si el envío a AEAT está habilitado
+     */
+    public boolean isAeatEnabled() {
+        return aeatEnabled;
     }
 
     /**
@@ -174,12 +176,5 @@ public class VerifactuAEATService {
             mensaje,
             java.time.Instant.now().toString()
         );
-    }
-
-    /**
-     * Indica si el envío a AEAT está habilitado
-     */
-    public boolean isAeatEnabled() {
-        return aeatEnabled;
     }
 }

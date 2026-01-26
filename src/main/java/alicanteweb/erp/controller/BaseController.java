@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
-import alicanteweb.erp.ui.Dialogs;
+import alicanteweb.erp.ui.DialogUtils;
 
 /**
  * Controlador base para todos los módulos de la aplicación
@@ -101,12 +101,12 @@ public abstract class BaseController<T> {
      * Abrir formulario de creación/edición
      */
     @FXML
-    protected void onNuevo() {
+    public void onNuevo() {
         abrirFormulario(null);
     }
 
     @FXML
-    protected void onEditar() {
+    public void onEditar() {
         T seleccionado = table.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAdvertencia("Selecciona un elemento para editar");
@@ -116,7 +116,7 @@ public abstract class BaseController<T> {
     }
 
     @FXML
-    protected void onEliminar() {
+    public void onEliminar() {
         T seleccionado = table.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAdvertencia("Selecciona un elemento para eliminar");
@@ -135,13 +135,13 @@ public abstract class BaseController<T> {
     }
 
     @FXML
-    protected void onRefresh() {
+    public void onRefresh() {
         cargarDatos();
         mostrarInfo("Datos actualizados");
     }
 
     @FXML
-    protected void onBuscar() {
+    public void onBuscar() {
         // El filtrado se hace automáticamente con el listener del txtBuscar
         // Este método está aquí para el botón de buscar en el FXML
         String termino = txtBuscar != null ? txtBuscar.getText() : "";
@@ -149,7 +149,7 @@ public abstract class BaseController<T> {
     }
 
     @FXML
-    protected void onVer() {
+    public void onVer() {
         T seleccionado = table.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAdvertencia("Selecciona un elemento para ver");
@@ -160,7 +160,7 @@ public abstract class BaseController<T> {
     }
 
     @FXML
-    protected void onDarBaja() {
+    public void onDarBaja() {
         // Alias para onEliminar
         onEliminar();
     }
@@ -193,7 +193,7 @@ public abstract class BaseController<T> {
             if (item != null) {
                 try {
                     // Buscar método setCliente, setArticulo, setItem, etc.
-                    Method setMethod = findSetMethod(controller, item);
+                    Method setMethod = findSetMethod(controller);
                     if (setMethod != null) {
                         setMethod.invoke(controller, item);
                         log.info("✅ Item configurado en el formulario");
@@ -204,7 +204,7 @@ public abstract class BaseController<T> {
             } else {
                 // Modo crear - intentar llamar setCliente(null) o similar
                 try {
-                    Method setMethod = findSetMethod(controller, null);
+                    Method setMethod = findSetMethod(controller);
                     if (setMethod != null) {
                         setMethod.invoke(controller, (Object) null);
                         log.info("✅ Modo crear configurado");
@@ -214,10 +214,48 @@ public abstract class BaseController<T> {
                 }
             }
 
+            // Si el parent no es un ScrollPane, envolverlo para permitir scroll automático
+            Parent rootForScene = parent;
+            if (!(parent instanceof javafx.scene.control.ScrollPane)) {
+                javafx.scene.control.ScrollPane wrapper = new javafx.scene.control.ScrollPane();
+                wrapper.setContent(parent);
+                wrapper.setFitToWidth(true);
+                wrapper.setFitToHeight(false);
+                // Opcional: agregar estilos para mantener consistencia
+                wrapper.setStyle("-fx-background-color: transparent;");
+                rootForScene = wrapper;
+            }
+
             // Crear y mostrar stage
             Stage stage = new Stage();
             stage.setTitle(item == null ? "Nuevo " + getNombreModulo() : "Editar " + getNombreModulo());
-            stage.setScene(new Scene(parent));
+            stage.setScene(new Scene(rootForScene));
+            // Hacer que el diálogo sea redimensionable y establecer tamaños mínimos razonables
+            stage.setResizable(true);
+            stage.setMinWidth(640);
+            stage.setMinHeight(480);
+            // Vincular el tamaño del contenido principal al tamaño del stage.
+            // Preferimos enlazar el ScrollPane si existe; si no, enlazamos la Region principal.
+            javafx.scene.layout.Region regionToBind = null;
+            if (rootForScene instanceof javafx.scene.control.ScrollPane) {
+                regionToBind = (javafx.scene.layout.Region) rootForScene;
+            } else if (rootForScene instanceof javafx.scene.layout.Region) {
+                regionToBind = (javafx.scene.layout.Region) rootForScene;
+            }
+            if (regionToBind != null) {
+                regionToBind.prefWidthProperty().bind(stage.widthProperty());
+                regionToBind.prefHeightProperty().bind(stage.heightProperty());
+            }
+
+            // Si el controller es un BaseFormController, pasarle el stage para permitir cerrar desde el controller
+            if (controller instanceof alicanteweb.erp.controller.formcontroller.BaseFormController<?> baseFormController) {
+                try {
+                    baseFormController.setStage(stage);
+                } catch (Exception ignored) {
+                    // No bloquear si no acepta stage
+                }
+            }
+
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
 
@@ -234,7 +272,7 @@ public abstract class BaseController<T> {
     /**
      * Buscar método set apropiado usando reflexión
      */
-    private Method findSetMethod(Object controller, T item) {
+    private Method findSetMethod(Object controller) {
         Class<?> controllerClass = controller.getClass();
 
         // Intentar nombres comunes de métodos
@@ -267,9 +305,9 @@ public abstract class BaseController<T> {
 
     // === MÉTODOS DE NOTIFICACIÓN ===
 
-    protected void mostrarError(String mensaje) { Dialogs.showError(mensaje); }
-    protected void mostrarAdvertencia(String mensaje) { Dialogs.showWarn(mensaje); }
-    protected void mostrarExito(String mensaje) { Dialogs.showInfo(mensaje); }
-    protected void mostrarInfo(String mensaje) { Dialogs.showInfo(mensaje); }
-    protected boolean mostrarConfirmacion(String mensaje) { return Dialogs.showConfirm(mensaje); }
+    protected void mostrarError(String mensaje) { DialogUtils.showError(mensaje); }
+    protected void mostrarAdvertencia(String mensaje) { DialogUtils.showWarning(mensaje); }
+    protected void mostrarExito(String mensaje) { DialogUtils.showSuccess(mensaje); }
+    protected void mostrarInfo(String mensaje) { DialogUtils.showInfo(mensaje); }
+    protected boolean mostrarConfirmacion(String mensaje) { return DialogUtils.showConfirm(mensaje); }
 }

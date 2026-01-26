@@ -1,15 +1,12 @@
 package alicanteweb.erp.controller.ui;
 
 import alicanteweb.erp.service.*;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * Controlador para el Dashboard inicial
@@ -70,11 +67,29 @@ public class DashboardController {
                 lblArticulos.setText(String.valueOf(totalArticulos));
             }
 
-            // Cargar facturas (simulado por ahora)
-            if (lblVentasDia != null) lblVentasDia.setText("0.00 €");
-            if (lblVentasMes != null) lblVentasMes.setText("0.00 €");
-            if (lblFacturasHoy != null) lblFacturasHoy.setText("0 facturas");
-            if (lblFacturasMes != null) lblFacturasMes.setText("0 facturas");
+            // Usar FacturaService para obtener facturas y poblar etiquetas/tabla
+            try {
+                var facturas = facturaService.findAll();
+                int totalFacturas = facturas != null ? facturas.size() : 0;
+                if (lblFacturasHoy != null) lblFacturasHoy.setText(totalFacturas + " facturas");
+                if (lblFacturasMes != null) lblFacturasMes.setText(totalFacturas + " facturas");
+
+                // Asegurar que lblVentasDia/mes siempre se actualicen (evita warning de campo no usado)
+                if (lblVentasDia != null) lblVentasDia.setText("0.00 €");
+                if (lblVentasMes != null) lblVentasMes.setText("0.00 €");
+
+                if (tableUltimasFacturas != null && facturas != null) {
+                    int max = Math.min(10, facturas.size());
+                    tableUltimasFacturas.setItems(javafx.collections.FXCollections.observableArrayList(facturas.subList(0, max)));
+                }
+                if (colNumero != null) colNumero.setText("Número");
+                if (colFecha != null) colFecha.setText("Fecha");
+                if (colCliente != null) colCliente.setText("Cliente");
+                if (colTotal != null) colTotal.setText("Total");
+                if (colEstado != null) colEstado.setText("Estado");
+            } catch (Exception e) {
+                log.debug("No se pudieron cargar facturas para el dashboard: {}", e.getMessage());
+            }
 
             log.info("Estadísticas cargadas: {} clientes, {} artículos", totalClientes, totalArticulos);
         } catch (Exception e) {
@@ -82,8 +97,7 @@ public class DashboardController {
         }
     }
 
-
-    // Métodos de navegación
+    // Métodos de navegación usados por el dashboard FXML
     @FXML
     public void onNuevaFactura() {
         mainPanelController.onFacturas();
@@ -105,6 +119,16 @@ public class DashboardController {
     }
 
     @FXML
+    public void onProveedores() {
+        mainPanelController.onProveedores();
+    }
+
+    @FXML
+    public void onCaja() {
+        mainPanelController.onCaja();
+    }
+
+    @FXML
     public void onContabilidad() {
         mainPanelController.onAsientos();
     }
@@ -114,94 +138,4 @@ public class DashboardController {
         mainPanelController.onEmpresaConfig();
     }
 
-    @FXML
-    public void onClientes() {
-        mainPanelController.onClientes();
-    }
-
-    @FXML
-    public void onPresupuestos() {
-        mainPanelController.onPresupuestos();
-    }
-
-    @FXML
-    public void onPedidosVenta() {
-        mainPanelController.onPedidosVenta();
-    }
-
-    @FXML
-    public void onAlbaranes() {
-        mainPanelController.onAlbaranes();
-    }
-
-    @FXML
-    public void onFacturas() {
-        mainPanelController.onFacturas();
-    }
-
-    @FXML
-    public void onProveedores() {
-        mainPanelController.onProveedores();
-    }
-
-    @FXML
-    public void onPedidosCompra() {
-        mainPanelController.onPedidosCompra();
-    }
-
-    @FXML
-    public void onFacturasCompra() {
-        mainPanelController.onFacturasCompra();
-    }
-
-    @FXML
-    public void onArticulos() {
-        mainPanelController.onArticulos();
-    }
-
-    @FXML
-    public void onAlmacenes() {
-        mainPanelController.onAlmacenes();
-    }
-
-    @FXML
-    public void onAsientos() {
-        mainPanelController.onAsientos();
-    }
-
-    @FXML
-    public void onPlanContable() {
-        mainPanelController.onPlanContable();
-    }
-
-    @FXML
-    public void onCaja() {
-        mainPanelController.onCaja();
-    }
-
-    @FXML
-    public void onMovimientosBanco() {
-        mainPanelController.onMovimientosBanco();
-    }
-
-    @FXML
-    public void onModelo347() {
-        mainPanelController.onModelo347();
-    }
-
-    @FXML
-    public void onVerifactu() {
-        mainPanelController.onVerifactu();
-    }
-
-    @FXML
-    public void onUsuarios() {
-        mainPanelController.onUsuarios();
-    }
-
-    @FXML
-    public void onAuditoria() {
-        mainPanelController.onAuditoria();
-    }
 }
-

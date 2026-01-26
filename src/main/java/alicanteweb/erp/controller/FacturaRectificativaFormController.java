@@ -342,7 +342,7 @@ public class FacturaRectificativaFormController {
         }
 
         if (errores.length() > 0) {
-            mostrarAlerta("Por favor, corrija los siguientes errores:\n\n" + errores.toString());
+            mostrarAlerta("Por favor, corrija los siguientes errores:\n\n" + errores);
             return false;
         }
 

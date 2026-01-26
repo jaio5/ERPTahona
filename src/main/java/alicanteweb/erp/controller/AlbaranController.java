@@ -1,6 +1,8 @@
 package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.AlbaranVenta;
+import alicanteweb.erp.entities.Factura;
+import alicanteweb.erp.service.AlbaranService;
 import alicanteweb.erp.service.AlbaranVentaService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -14,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.List;
+import javafx.scene.input.KeyCode;
 
 /**
  * Controlador para la gestión de Albaranes de Venta
@@ -36,15 +40,18 @@ public class AlbaranController {
     @FXML private Label lblTotal;
 
     private final AlbaranVentaService albaranVentaService;
+    private final AlbaranService albaranService;
 
-    public AlbaranController(AlbaranVentaService albaranVentaService) {
+    public AlbaranController(AlbaranVentaService albaranVentaService, AlbaranService albaranService) {
         this.albaranVentaService = albaranVentaService;
+        this.albaranService = albaranService;
     }
 
     @FXML
     public void initialize() {
         log.info("Inicializando AlbaranController");
         configurarColumnas();
+        configurarFiltros();
         cargarDatos();
 
         if (txtBuscar != null) {
@@ -54,6 +61,20 @@ public class AlbaranController {
         // Aplicar estilo a la tabla
         if (tableAlbaranes != null) {
             tableAlbaranes.setStyle("-fx-background-color: white; -fx-text-fill: black;");
+
+            // Añadir menú contextual con acción 'Duplicar' para usar onDuplicar()
+            ContextMenu cm = new ContextMenu();
+            MenuItem duplicarItem = new MenuItem("Duplicar");
+            duplicarItem.setOnAction(e -> onDuplicar());
+            cm.getItems().add(duplicarItem);
+            tableAlbaranes.setContextMenu(cm);
+
+            // Atajo de teclado: Ctrl+D para duplicar
+            tableAlbaranes.setOnKeyPressed(evt -> {
+                if (evt.isControlDown() && evt.getCode() == KeyCode.D) {
+                    onDuplicar();
+                }
+            });
         }
     }
 
@@ -78,13 +99,40 @@ public class AlbaranController {
             colTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
         }
         if (colEstado != null) {
-            colEstado.setCellValueFactory(cellData -> new SimpleStringProperty("Pendiente"));
+            // Mostrar de forma derivada si el albarán tiene observaciones (ya que AlbaranVenta no tiene campo 'estado')
+            colEstado.setCellValueFactory(cellData -> {
+                AlbaranVenta a = cellData.getValue();
+                String estado = "";
+                if (a != null) {
+                    String obs = a.getObservaciones();
+                    estado = (obs != null && !obs.trim().isEmpty()) ? "Con obs" : "Sin obs";
+                }
+                return new SimpleStringProperty(estado);
+            });
+        }
+    }
+
+    private void configurarFiltros() {
+        // Inicializar combo de estados y listeners para filtrar
+        if (cmbEstado != null) {
+            // Reutilizamos el combo para filtrar por observaciones: Todos / Con observaciones / Sin observaciones
+            cmbEstado.setItems(FXCollections.observableArrayList("Todos", "Con observaciones", "Sin observaciones"));
+            cmbEstado.getSelectionModel().selectFirst();
+            cmbEstado.valueProperty().addListener((obs, oldV, newV) -> filtrarAlbaranes(txtBuscar != null ? txtBuscar.getText() : ""));
+        }
+
+        // Añadir listeners a los datepickers para re-filtrar
+        if (dpFechaDesde != null) {
+            dpFechaDesde.valueProperty().addListener((obs, oldV, newV) -> filtrarAlbaranes(txtBuscar != null ? txtBuscar.getText() : ""));
+        }
+        if (dpFechaHasta != null) {
+            dpFechaHasta.valueProperty().addListener((obs, oldV, newV) -> filtrarAlbaranes(txtBuscar != null ? txtBuscar.getText() : ""));
         }
     }
 
     private void cargarDatos() {
         try {
-            var albaranes = albaranVentaService.findAll();
+            List<AlbaranVenta> albaranes = albaranVentaService.findAll();
             if (tableAlbaranes != null) {
                 tableAlbaranes.setItems(FXCollections.observableArrayList(albaranes));
             }
@@ -100,14 +148,44 @@ public class AlbaranController {
 
     private void filtrarAlbaranes(String busqueda) {
         try {
-            var albaranes = albaranVentaService.findAll();
+            List<AlbaranVenta> albaranes = albaranVentaService.findAll();
 
-            if (busqueda != null && !busqueda.isEmpty()) {
-                String search = busqueda.toLowerCase();
+            String search = (busqueda != null) ? busqueda.toLowerCase() : null;
+
+            LocalDate desde = (dpFechaDesde != null) ? dpFechaDesde.getValue() : null;
+            LocalDate hasta = (dpFechaHasta != null) ? dpFechaHasta.getValue() : null;
+            String estadoSel = (cmbEstado != null && cmbEstado.getValue() != null) ? cmbEstado.getValue() : "Todos";
+
+            if ((search != null && !search.isEmpty()) || desde != null || hasta != null || (estadoSel != null && !"Todos".equalsIgnoreCase(estadoSel))) {
+                final String finalSearch = search;
+                final LocalDate finalDesde = desde;
+                final LocalDate finalHasta = hasta;
+                final String finalEstado = estadoSel;
+
                 albaranes = albaranes.stream()
-                    .filter(a -> (a.getNumero() != null && a.getNumero().toLowerCase().contains(search)) ||
-                                (a.getCliente() != null && a.getCliente().getNombre() != null &&
-                                 a.getCliente().getNombre().toLowerCase().contains(search)))
+                    .filter(a -> {
+                        boolean matchesSearch = true;
+                        if (finalSearch != null && !finalSearch.isEmpty()) {
+                            matchesSearch = (a.getNumero() != null && a.getNumero().toLowerCase().contains(finalSearch)) ||
+                                            (a.getCliente() != null && a.getCliente().getNombre() != null &&
+                                             a.getCliente().getNombre().toLowerCase().contains(finalSearch));
+                        }
+
+                        boolean matchesDesde = true;
+                        if (finalDesde != null && a.getFecha() != null) {
+                            matchesDesde = !a.getFecha().isBefore(finalDesde);
+                        }
+
+                        boolean matchesHasta = true;
+                        if (finalHasta != null && a.getFecha() != null) {
+                            matchesHasta = !a.getFecha().isAfter(finalHasta);
+                        }
+
+                        // Filtrado por observaciones según selección en cmbEstado
+                        boolean matchesEstado = isMatchesEstado(a, finalEstado);
+
+                        return matchesSearch && matchesDesde && matchesHasta && matchesEstado;
+                    })
                     .toList();
             }
 
@@ -122,9 +200,44 @@ public class AlbaranController {
         }
     }
 
+    private static boolean isMatchesEstado(AlbaranVenta a, String finalEstado) {
+        boolean matchesEstado = true;
+        if (finalEstado != null && !"Todos".equalsIgnoreCase(finalEstado)) {
+            String obs = a.getObservaciones();
+            if ("Con observaciones".equalsIgnoreCase(finalEstado)) {
+                matchesEstado = obs != null && !obs.trim().isEmpty();
+            } else if ("Sin observaciones".equalsIgnoreCase(finalEstado)) {
+                matchesEstado = obs == null || obs.trim().isEmpty();
+            }
+        }
+        return matchesEstado;
+    }
+
     @FXML
     public void onBuscar() {
         String busqueda = txtBuscar != null ? txtBuscar.getText() : "";
+        if (busqueda != null && busqueda.trim().startsWith("ALB-")) {
+            // búsqueda por número exacto
+            albaranService.obtenerPorNumero(busqueda.trim()).ifPresentOrElse(a -> {
+                tableAlbaranes.setItems(FXCollections.observableArrayList(java.util.List.of(a)));
+                if (lblTotal != null) lblTotal.setText("1 albarán");
+            }, () -> mostrarAlerta("No se encontró el albarán: " + busqueda));
+            return;
+        }
+
+        // si la búsqueda es sólo dígitos, buscar por cliente id
+        if (busqueda != null && busqueda.matches("^\\d+$")) {
+            try {
+                Long clienteId = Long.parseLong(busqueda);
+                List<AlbaranVenta> porCliente = albaranService.findByCliente(clienteId);
+                tableAlbaranes.setItems(FXCollections.observableArrayList(porCliente));
+                if (lblTotal != null) lblTotal.setText(porCliente.size() + " albaranes");
+                return;
+            } catch (NumberFormatException ignored) {
+                // fallback a filtrado habitual
+            }
+        }
+
         filtrarAlbaranes(busqueda);
     }
 
@@ -169,13 +282,35 @@ public class AlbaranController {
 
     @FXML
     public void onFacturar() {
-        AlbaranVenta albaran = tableAlbaranes.getSelectionModel().getSelectedItem();
-        if (albaran == null) {
+        var selected = tableAlbaranes.getSelectionModel().getSelectedItems();
+        if (selected == null || selected.isEmpty()) {
             mostrarAlerta("Selecciona un albarán para facturar");
             return;
         }
-        log.info("Facturar albarán: {}", albaran.getNumero());
-        mostrarAlerta("Función en desarrollo: Convertir albarán en factura");
+
+        try {
+            if (selected.size() == 1) {
+                AlbaranVenta albaran = selected.get(0);
+                log.info("Facturar albarán: {}", albaran.getNumero());
+                Factura factura = albaranService.convertirAFactura(albaran.getId(), null);
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setTitle("Éxito");
+                info.setContentText("Albarán convertido a factura: " + (factura != null ? factura.getNumero() : "(sin número)"));
+                info.showAndWait();
+            } else {
+                // convertir varios
+                List<Long> ids = selected.stream().map(AlbaranVenta::getId).toList();
+                Factura factura = albaranService.convertirVariosAFactura(ids, null);
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setTitle("Éxito");
+                info.setContentText("Albaranes convertidos a factura: " + (factura != null ? factura.getNumero() : "(sin número)"));
+                info.showAndWait();
+            }
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error al convertir albarán(es) a factura", e);
+            mostrarError("Error al convertir albarán(es) a factura: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -186,7 +321,14 @@ public class AlbaranController {
             return;
         }
         log.info("Eliminar albarán: {}", albaran.getNumero());
-        mostrarAlerta("Eliminación de albaranes no permitida en este momento");
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirmación");
+        confirm.setHeaderText("¿Estás seguro de que deseas eliminar este albarán?");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            // No se permite eliminación real por ahora
+            mostrarAlerta("Eliminación de albaranes no permitida en este momento");
+        }
     }
 
     @FXML
@@ -195,17 +337,27 @@ public class AlbaranController {
         cargarDatos();
     }
 
+    @FXML
+    public void onDuplicar() {
+        AlbaranVenta seleccionado = tableAlbaranes.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarAlerta("Selecciona un albarán para duplicar");
+            return;
+        }
+        try {
+            AlbaranVenta duplicado = albaranService.duplicar(seleccionado.getId());
+            mostrarAlerta("Albarán duplicado: " + duplicado.getNumero());
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error duplicando albarán", e);
+            mostrarError("Error duplicando albarán: " + e.getMessage());
+        }
+    }
+
     private void mostrarAlerta(String msg) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("Atención");
         alert.setHeaderText(msg);
-        alert.showAndWait();
-    }
-
-    private void mostrarExito(String msg) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Éxito");
-        alert.setContentText(msg);
         alert.showAndWait();
     }
 
@@ -216,13 +368,4 @@ public class AlbaranController {
         alert.showAndWait();
     }
 
-
-    private boolean mostrarConfirmacion(String msg) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmación");
-        alert.setHeaderText(msg);
-        Optional<ButtonType> result = alert.showAndWait();
-        return result.isPresent() && result.get() == ButtonType.OK;
-    }
 }
-

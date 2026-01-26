@@ -3,7 +3,7 @@ package alicanteweb.erp.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 
@@ -25,7 +25,7 @@ import java.util.Base64;
 /**
  * Servicio de cifrado para cumplimiento RGPD
  * - AES-256-GCM para datos personales (autenticado)
- * - BCrypt para contraseñas
+ * - PBKDF2 (o el encoder configurado) para contraseñas
  */
 @Service
 @Slf4j
@@ -43,13 +43,16 @@ public class CifradoService {
     @Value("${cifrado.aes.pbkdf2.iterations:100000}")
     private int pbkdf2Iterations;
 
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final Environment environment;
 
     private static final int GCM_TAG_LENGTH = 128; // bits
     private static final int GCM_IV_LENGTH = 12; // bytes (96 bits recommended)
 
-    public CifradoService(BCryptPasswordEncoder passwordEncoder, Environment environment) {
+    // Máxima longitud soportada por la columna 'password' en la entidad Usuario
+    private static final int MAX_PASSWORD_COLUMN_LENGTH = 4096;
+
+    public CifradoService(PasswordEncoder passwordEncoder, Environment environment) {
         this.passwordEncoder = passwordEncoder;
         this.environment = environment;
     }
@@ -79,8 +82,38 @@ public class CifradoService {
             } else {
                 if (aesKeyString == null || aesKeyString.isBlank() || aesKeyString.equals("DEFAULT_KEY_32_CHARACTERS_MIN!!")) {
                     log.warn("⚠️ Clave AES no configurada (entorno no productivo). Para producción, configure 'cifrado.aes.key' con una clave Base64 segura.");
+
+                    // Generar una clave de ejemplo para desarrolladores y setearla localmente
+                    try {
+                        String ejemploKey = generarKeyAES();
+                        log.info("Clave AES de ejemplo (no use en producción): {}", ejemploKey);
+                        // Usamos setSecretKey para demostrar su utilidad en entornos de desarrollo
+                        setSecretKey(ejemploKey);
+                    } catch (Exception e) {
+                        log.debug("No se pudo generar clave de ejemplo: {}", e.getMessage());
+                    }
+                } else {
+                    // Si hay clave configurada (aunque sea legible), probamos cifrar/descifrar para validar
+                    try {
+                        String prueba = "verificacion-cifrado";
+                        String cifrado = cifrarAES256(prueba);
+                        String desc = descifrarAES256(cifrado);
+                        if (!prueba.equals(desc)) {
+                            log.warn("Verificación cifrado/descifrado falló en entorno no productivo");
+                        } else {
+                            log.debug("Verificación cifrado OK (entorno no productivo)");
+                        }
+                    } catch (Exception e) {
+                        log.warn("No se pudo verificar cifrado AES en entorno no productivo: {}", e.getMessage());
+                    }
                 }
-            }
+
+                // Generar un token seguro de diagnóstico (no se guarda)
+                try {
+                    String token = generarTokenSeguro(16);
+                    log.debug("Token seguro de diagnóstico generado: {}", token);
+                } catch (Exception ignored) {}
+             }
         } catch (RuntimeException e) {
             // No encapsular; preferimos fallar rápido en caso de mala configuración en prod
             log.error("Fallo en validación de clave AES en @PostConstruct", e);
@@ -156,21 +189,40 @@ public class CifradoService {
     }
 
     /**
-     * Cifra una contraseña usando BCrypt
+     * Cifra una contraseña usando el encoder configurado
      * @param password Contraseña en texto plano
-     * @return Hash BCrypt
+     * @return Hash (formato según PasswordEncoder)
      */
     public String hashPassword(String password) {
         if (password == null || password.isEmpty()) {
             throw new IllegalArgumentException("La contraseña no puede estar vacía");
         }
-        return passwordEncoder.encode(password);
+        String hashed = passwordEncoder.encode(password);
+
+        // Registramos la longitud en DEBUG y un prefijo limitado para depuración
+        try {
+            int len = hashed != null ? hashed.length() : 0;
+            String prefix = hashed != null ? hashed.substring(0, Math.min(hashed.length(), 200)) : "null";
+            log.debug("Generated password hash length={} prefix={}", len, prefix);
+
+            // Validación: asegurarnos que cabe en la columna 'password'
+            if (len > MAX_PASSWORD_COLUMN_LENGTH) {
+                log.error("Generated password hash too long: {} (max allowed {})", len, MAX_PASSWORD_COLUMN_LENGTH);
+                throw new IllegalStateException("Hash de contraseña demasiado largo: " + len + " (max " + MAX_PASSWORD_COLUMN_LENGTH + ")");
+            }
+        } catch (Exception e) {
+            // Si el logging falla por cualquier motivo, no ocultamos el hash, lanzamos Runtime
+            log.error("Error validando hash de contraseña", e);
+            throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
+        }
+
+        return hashed;
     }
 
     /**
-     * Verifica si una contraseña coincide con un hash BCrypt
+     * Verifica si una contraseña coincide con un hash
      * @param password Contraseña en texto plano
-     * @param hash Hash BCrypt almacenado o texto plano
+     * @param hash Hash almacenado o texto plano
      * @return true si coinciden
      */
     public boolean verificarPassword(String password, String hash) {
@@ -185,17 +237,17 @@ public class CifradoService {
             return true;
         }
 
-        // PRIORIDAD 2: Verificación BCrypt
+        // PRIORIDAD 2: Verificación usando el PasswordEncoder configurado
         try {
-            boolean bcryptMatch = passwordEncoder.matches(password, hash);
-            if (bcryptMatch) {
-                log.info("MATCH BCRYPT");
+            boolean match = passwordEncoder.matches(password, hash);
+            if (match) {
+                log.info("MATCH encoder");
             } else {
-                log.warn("NO MATCH - Ni texto plano ni BCrypt coinciden");
+                log.warn("NO MATCH - Ni texto plano ni encoder coinciden");
             }
-            return bcryptMatch;
+            return match;
         } catch (Exception e) {
-            log.error("Error verificando BCrypt: {}", e.getMessage());
+            log.error("Error verificando password: {}", e.getMessage());
             return false;
         }
     }

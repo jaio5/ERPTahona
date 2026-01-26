@@ -29,7 +29,7 @@ public class ArticuloController extends BaseController<Articulo> {
     @FXML private TableColumn<Articulo, BigDecimal> colStock;
     @FXML private TableColumn<Articulo, Boolean> colActivo;
 
-    @FXML private TextField txtBuscar;
+    // El campo txtBuscar se hereda desde BaseController (protected TextField txtBuscar)
     @FXML private ComboBox<String> cmbCategoria;
     @FXML private ComboBox<String> cmbActivo;
     @FXML private Label lblTotal;
@@ -167,7 +167,7 @@ public class ArticuloController extends BaseController<Articulo> {
     }
 
     @FXML
-    public void onBuscar() {
+    public void onBuscarArticulo() {
         aplicarFiltros();
     }
 
@@ -220,7 +220,7 @@ public class ArticuloController extends BaseController<Articulo> {
     }
 
     @FXML
-    public void onDarBaja() {
+    public void onDarBajaArticulo() {
         Articulo seleccionado = tableArticulos.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAdvertencia("Selecciona un artículo para dar de baja");
@@ -252,7 +252,7 @@ public class ArticuloController extends BaseController<Articulo> {
     }
 
     @FXML
-    public void onVer() {
+    public void onVerArticulo() {
         Articulo seleccionado = tableArticulos.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAdvertencia("Selecciona un artículo para ver");
@@ -286,4 +286,3 @@ public class ArticuloController extends BaseController<Articulo> {
         mostrarInfo(info.toString());
     }
 }
-

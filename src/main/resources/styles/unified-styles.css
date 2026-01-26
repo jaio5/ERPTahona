@@ -4,16 +4,17 @@
    ============================================ */
 
 /* COLORES PRINCIPALES */
-:root {
-    -color-primary: #2C3E50;
-    -color-secondary: #3498DB;
-    -color-accent: #E74C3C;
-    -color-success: #27AE60;
-    -color-warning: #F39C12;
-    -color-info: #3498DB;
-    -color-light-bg: #ECF0F1;
-    -color-dark-text: #2C3E50;
-    -color-border: #BDC3C7;
+.root {
+    /* Paleta de colores convertida a propiedades JavaFX */
+    -fx-color-primary: #2C3E50;
+    -fx-color-secondary: #3498DB;
+    -fx-color-accent: #E74C3C;
+    -fx-color-success: #27AE60;
+    -fx-color-warning: #F39C12;
+    -fx-color-info: #3498DB;
+    -fx-color-light-bg: #ECF0F1;
+    -fx-color-dark-text: #2C3E50;
+    -fx-color-border: #BDC3C7;
 }
 
 /* FUENTES */
@@ -49,7 +50,7 @@
    ============================================ */
 
 .header {
-    -fx-background-color: linear-gradient(to right, #2C3E50 0%, #34495E 100%);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #2C3E50 0%, #34495E 100%);
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-font-size: 16;
@@ -359,7 +360,7 @@
 }
 
 .titled-pane > .title {
-    -fx-background-color: linear-gradient(to right, #ECF0F1 0%, #BDC3C7 100%);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #ECF0F1 0%, #BDC3C7 100%);
     -fx-padding: 12;
     -fx-font-weight: bold;
     -fx-font-size: 13;
@@ -368,7 +369,7 @@
 }
 
 .titled-pane:expanded > .title {
-    -fx-background-color: linear-gradient(to right, #3498DB 0%, #2980B9 100%);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #3498DB 0%, #2980B9 100%);
     -fx-text-fill: white;
 }
 
@@ -447,4 +448,3 @@
 .dialog-pane .content-text {
     -fx-text-fill: #2C3E50;
 }
-

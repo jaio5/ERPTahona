@@ -1,6 +1,7 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Factura;
+import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.repository.FacturaRepository;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -64,17 +65,16 @@ public class FacturaService {
         Factura saved = repository.save(factura);
         try {
             // Intentamos registrar evidencia en Verifactu (firma/huella y envío a AEAT)
-            // La implementación actual de registrarEvidenciaAEAT espera: datosFactura, serie, numero.
-            // Aquí pasamos el id como string y el número de factura. Ajusta según tu entidad.
-            verifactuEvidenceService.registrarEvidenciaAEAT(
+            VerifactuEvidence evidencia = verifactuEvidenceService.registrarEvidenciaAEAT(
                 saved.getId() != null ? saved.getId().toString() : "",
                 "", // No hay campo serie en Factura (ajustar si existe)
                 saved.getNumero() != null ? saved.getNumero() : ""
             );
+            if (evidencia != null && evidencia.getId() != null) {
+                System.out.println("Evidencia registrada con ID: " + evidencia.getId());
+            }
         } catch (Exception e) {
             // No lanzamos la excepción para no impedir la continuación de la aplicación.
-            // En una aplicación real, aquí deberías guardar el error en logs estructurados
-            // y/o mostrar un aviso en la UI para que el usuario sepa que la evidencia falló.
             System.err.println("Error registrando evidencia Verifactur: " + e.getMessage());
         }
         return saved;
@@ -158,11 +158,14 @@ public class FacturaService {
 
         // Intentar registrar en Verifactu (no falla la transacción si hay error)
         try {
-            verifactuEvidenceService.registrarEvidenciaAEAT(
+            VerifactuEvidence evidencia = verifactuEvidenceService.registrarEvidenciaAEAT(
                 saved.getId() != null ? saved.getId().toString() : "",
                 "",
                 saved.getNumero() != null ? saved.getNumero() : ""
             );
+            if (evidencia != null && evidencia.getId() != null) {
+                System.out.println("Evidencia registrada al emitir factura, ID: " + evidencia.getId());
+            }
         } catch (Exception e) {
             System.err.println("Error registrando evidencia Verifactu (factura ya guardada): " + e.getMessage());
             // La factura ya está guardada, el error de Verifactu no debe revertir la transacción
