@@ -2,47 +2,52 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.ScrollPane?>
 
-<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="alicanteweb.erp.controller.formcontroller.DireccionenvioFormController" spacing="8">
-    <padding>
-        <Insets top="10" right="10" bottom="10" left="10" />
-    </padding>
-    <Label fx:id="lblTitulo" text="Nueva Dirección" />
+<ScrollPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.formcontroller.DireccionenvioFormController" fitToWidth="true" fitToHeight="true">
+    <content>
+        <VBox spacing="8">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10" />
+            </padding>
+            <Label fx:id="lblTitulo" text="Nueva Dirección" />
 
-    <GridPane hgap="8" vgap="8">
-        <columnConstraints>
-            <ColumnConstraints halignment="RIGHT" minWidth="120" />
-            <ColumnConstraints hgrow="ALWAYS" />
-        </columnConstraints>
+            <GridPane hgap="8" vgap="8">
+                <columnConstraints>
+                    <ColumnConstraints halignment="RIGHT" minWidth="120" />
+                    <ColumnConstraints hgrow="ALWAYS" />
+                </columnConstraints>
 
-        <Label text="Código:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
-        <TextField fx:id="txtCodigoDireccion" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                <Label text="Código:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                <TextField fx:id="txtCodigoDireccion" GridPane.rowIndex="0" GridPane.columnIndex="1" />
 
-        <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
-        <TextField fx:id="txtNombre" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                <TextField fx:id="txtNombre" GridPane.rowIndex="1" GridPane.columnIndex="1" />
 
-        <Label text="Dirección:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
-        <TextField fx:id="txtDireccion" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                <Label text="Dirección:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                <TextField fx:id="txtDireccion" GridPane.rowIndex="2" GridPane.columnIndex="1" />
 
-        <Label text="Población:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
-        <TextField fx:id="txtPoblacion" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                <Label text="Población:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                <TextField fx:id="txtPoblacion" GridPane.rowIndex="3" GridPane.columnIndex="1" />
 
-        <Label text="Provincia:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
-        <TextField fx:id="txtProvincia" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+                <Label text="Provincia:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                <TextField fx:id="txtProvincia" GridPane.rowIndex="4" GridPane.columnIndex="1" />
 
-        <Label text="CP:" GridPane.rowIndex="5" GridPane.columnIndex="0" />
-        <TextField fx:id="txtCP" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+                <Label text="CP:" GridPane.rowIndex="5" GridPane.columnIndex="0" />
+                <TextField fx:id="txtCP" GridPane.rowIndex="5" GridPane.columnIndex="1" />
 
-        <Label text="Teléfono:" GridPane.rowIndex="6" GridPane.columnIndex="0" />
-        <TextField fx:id="txtTelefono" GridPane.rowIndex="6" GridPane.columnIndex="1" />
+                <Label text="Teléfono:" GridPane.rowIndex="6" GridPane.columnIndex="0" />
+                <TextField fx:id="txtTelefono" GridPane.rowIndex="6" GridPane.columnIndex="1" />
 
-        <Label text="Notas:" GridPane.rowIndex="7" GridPane.columnIndex="0" />
-        <TextArea fx:id="txtNotas" GridPane.rowIndex="7" GridPane.columnIndex="1" prefRowCount="3" />
-    </GridPane>
+                <Label text="Notas:" GridPane.rowIndex="7" GridPane.columnIndex="0" />
+                <TextArea fx:id="txtNotas" GridPane.rowIndex="7" GridPane.columnIndex="1" prefRowCount="3" />
+            </GridPane>
 
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button text="Guardar" onAction="#onGuardar" />
-        <Button text="Cancelar" onAction="#onCancelar" />
-    </HBox>
-</VBox>
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Guardar" onAction="#onGuardar" />
+                <Button text="Cancelar" onAction="#onCancelar" />
+            </HBox>
+        </VBox>
+    </content>
+</ScrollPane>

@@ -2,156 +2,158 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.FacturaRectificativaFormController"
-            stylesheets="@/styles/modern-theme.css"
-            style="-fx-background-color: #f8fafc;">
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.FacturaRectificativaFormController" fitToWidth="true" fitToHeight="true">
+    <content>
+        <BorderPane xmlns="http://javafx.com/javafx/21"
+                    stylesheets="@/styles/modern-theme.css"
+                    style="-fx-background-color: #f8fafc;">
 
-    <top>
-        <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
-            <Label text="🔄" style="-fx-font-size: 24;"/>
-            <Label fx:id="lblTitulo" text="Crear Factura Rectificativa" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label text="* Campos obligatorios" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
-        </HBox>
-    </top>
+            <top>
+                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
+                    <Label text="🔄" style="-fx-font-size: 24;"/>
+                    <Label fx:id="lblTitulo" text="Crear Factura Rectificativa" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="* Campos obligatorios" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
+                </HBox>
+            </top>
 
-    <center>
-        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
-            <VBox spacing="15" style="-fx-padding: 20;">
+            <center>
+                <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+                    <VBox spacing="15" style="-fx-padding: 20;">
 
-                <!-- Factura Original -->
-                <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                    <Label text="Factura Original *" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                    <Separator/>
+                        <!-- Factura Original -->
+                        <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
+                            <Label text="Factura Original *" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                            <Separator/>
 
-                    <VBox spacing="8">
-                        <Label text="Seleccionar Factura a Rectificar:" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                        <ComboBox fx:id="cbFacturaOriginal" promptText="Seleccione una factura emitida..." maxWidth="Infinity"/>
+                            <VBox spacing="8">
+                                <Label text="Seleccionar Factura a Rectificar:" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <ComboBox fx:id="cbFacturaOriginal" promptText="Seleccione una factura emitida..." maxWidth="Infinity"/>
+                            </VBox>
+
+                            <GridPane hgap="20" vgap="10" style="-fx-padding: 10; -fx-background-color: #f1f5f9; -fx-background-radius: 8;">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="25"/>
+                                    <ColumnConstraints percentWidth="25"/>
+                                    <ColumnConstraints percentWidth="25"/>
+                                    <ColumnConstraints percentWidth="25"/>
+                                </columnConstraints>
+
+                                <VBox spacing="4" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <Label text="Número:" style="-fx-font-size: 11; -fx-text-fill: #64748b;"/>
+                                    <Label fx:id="lblNumeroOriginal" text="-" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                                </VBox>
+
+                                <VBox spacing="4" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <Label text="Fecha:" style="-fx-font-size: 11; -fx-text-fill: #64748b;"/>
+                                    <Label fx:id="lblFechaOriginal" text="-" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                                </VBox>
+
+                                <VBox spacing="4" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                    <Label text="Cliente:" style="-fx-font-size: 11; -fx-text-fill: #64748b;"/>
+                                    <Label fx:id="lblClienteOriginal" text="-" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                                </VBox>
+
+                                <VBox spacing="4" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                                    <Label text="Total:" style="-fx-font-size: 11; -fx-text-fill: #64748b;"/>
+                                    <Label fx:id="lblTotalOriginal" text="-" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #0ea5e9;"/>
+                                </VBox>
+                            </GridPane>
+                        </VBox>
+
+                        <!-- Datos de Rectificación -->
+                        <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
+                            <Label text="Datos de Rectificación" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                            <Separator/>
+
+                            <GridPane hgap="15" vgap="15">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="33.33"/>
+                                    <ColumnConstraints percentWidth="33.33"/>
+                                    <ColumnConstraints percentWidth="33.33"/>
+                                </columnConstraints>
+
+                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <Label text="Tipo de Rectificación *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                    <ComboBox fx:id="cbTipoRectificacion" maxWidth="Infinity"/>
+                                    <Label text="SUSTITUCIÓN: Anula la original" style="-fx-font-size: 10; -fx-text-fill: #64748b;"/>
+                                    <Label text="DIFERENCIAS: Solo ajusta importes" style="-fx-font-size: 10; -fx-text-fill: #64748b;"/>
+                                </VBox>
+
+                                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <Label text="Fecha Rectificativa *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                    <DatePicker fx:id="dpFechaRectificativa" maxWidth="Infinity"/>
+                                </VBox>
+                            </GridPane>
+
+                            <VBox spacing="6">
+                                <Label text="Motivo de Rectificación *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <TextArea fx:id="txtMotivo" promptText="Describa el motivo de la rectificación (obligatorio según RD 1619/2012)..."
+                                          prefRowCount="3" wrapText="true" style="-fx-padding: 10;"/>
+                                <Label text="Ejemplos: Error en cantidad, Error en precio, Devolución de mercancía, Descuento posterior..."
+                                       style="-fx-font-size: 10; -fx-text-fill: #64748b;"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Ajuste de Importes (solo para DIFERENCIAS) -->
+                        <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
+                            <Label text="Ajuste de Importes (tipo DIFERENCIAS)" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                            <Separator/>
+
+                            <GridPane hgap="15" vgap="15">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="33.33"/>
+                                    <ColumnConstraints percentWidth="33.33"/>
+                                    <ColumnConstraints percentWidth="33.33"/>
+                                </columnConstraints>
+
+                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <Label text="Nueva Base Imponible" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                    <TextField fx:id="txtNuevaBaseImponible" promptText="0.00" style="-fx-padding: 10;"/>
+                                    <Label fx:id="lblDiferenciaBase" text="Diferencia: 0.00 EUR" style="-fx-font-size: 11; -fx-font-weight: bold;"/>
+                                </VBox>
+
+                                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <Label text="Nuevo IVA" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                    <TextField fx:id="txtNuevoIva" promptText="0.00" style="-fx-padding: 10;"/>
+                                    <Label fx:id="lblDiferenciaIva" text="Diferencia: 0.00 EUR" style="-fx-font-size: 11; -fx-font-weight: bold;"/>
+                                </VBox>
+
+                                <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                    <Label text="Nuevo Total" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                    <TextField fx:id="txtNuevoTotal" promptText="0.00" style="-fx-padding: 10;"/>
+                                    <Label fx:id="lblDiferenciaTotal" text="Diferencia: 0.00 EUR" style="-fx-font-size: 11; -fx-font-weight: bold;"/>
+                                </VBox>
+                            </GridPane>
+
+                            <HBox spacing="10" style="-fx-background-color: #fef3c7; -fx-padding: 12; -fx-background-radius: 8;">
+                                <Label text="⚠️" style="-fx-font-size: 16;"/>
+                                <VBox spacing="4">
+                                    <Label text="Información Importante:" style="-fx-font-weight: bold; -fx-text-fill: #92400e;"/>
+                                    <Label text="• SUSTITUCIÓN: Anula completamente la factura original y crea una nueva desde cero"
+                                           style="-fx-font-size: 11; -fx-text-fill: #92400e;"/>
+                                    <Label text="• DIFERENCIAS: Solo se aplican los ajustes (positivos o negativos) sobre la original"
+                                           style="-fx-font-size: 11; -fx-text-fill: #92400e;"/>
+                                    <Label text="• La factura rectificativa debe indicar el número y fecha de la factura original (RD 1619/2012)"
+                                           style="-fx-font-size: 11; -fx-text-fill: #92400e;"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
                     </VBox>
+                </ScrollPane>
+            </center>
 
-                    <GridPane hgap="20" vgap="10" style="-fx-padding: 10; -fx-background-color: #f1f5f9; -fx-background-radius: 8;">
-                        <columnConstraints>
-                            <ColumnConstraints percentWidth="25"/>
-                            <ColumnConstraints percentWidth="25"/>
-                            <ColumnConstraints percentWidth="25"/>
-                            <ColumnConstraints percentWidth="25"/>
-                        </columnConstraints>
+            <bottom>
+                <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
+                    <Button text="Cancelar" onAction="#onCancelar"
+                            style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13;"/>
+                    <Button text="🔄 Crear Factura Rectificativa" onAction="#onCrearRectificativa"
+                            styleClass="button-success"
+                            style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
+                </HBox>
+            </bottom>
 
-                        <VBox spacing="4" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                            <Label text="Número:" style="-fx-font-size: 11; -fx-text-fill: #64748b;"/>
-                            <Label fx:id="lblNumeroOriginal" text="-" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                        </VBox>
-
-                        <VBox spacing="4" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <Label text="Fecha:" style="-fx-font-size: 11; -fx-text-fill: #64748b;"/>
-                            <Label fx:id="lblFechaOriginal" text="-" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                        </VBox>
-
-                        <VBox spacing="4" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                            <Label text="Cliente:" style="-fx-font-size: 11; -fx-text-fill: #64748b;"/>
-                            <Label fx:id="lblClienteOriginal" text="-" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                        </VBox>
-
-                        <VBox spacing="4" GridPane.columnIndex="3" GridPane.rowIndex="0">
-                            <Label text="Total:" style="-fx-font-size: 11; -fx-text-fill: #64748b;"/>
-                            <Label fx:id="lblTotalOriginal" text="-" style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #0ea5e9;"/>
-                        </VBox>
-                    </GridPane>
-                </VBox>
-
-                <!-- Datos de Rectificación -->
-                <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                    <Label text="Datos de Rectificación" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                    <Separator/>
-
-                    <GridPane hgap="15" vgap="15">
-                        <columnConstraints>
-                            <ColumnConstraints percentWidth="33.33"/>
-                            <ColumnConstraints percentWidth="33.33"/>
-                            <ColumnConstraints percentWidth="33.33"/>
-                        </columnConstraints>
-
-                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                            <Label text="Tipo de Rectificación *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <ComboBox fx:id="cbTipoRectificacion" maxWidth="Infinity"/>
-                            <Label text="SUSTITUCIÓN: Anula la original" style="-fx-font-size: 10; -fx-text-fill: #64748b;"/>
-                            <Label text="DIFERENCIAS: Solo ajusta importes" style="-fx-font-size: 10; -fx-text-fill: #64748b;"/>
-                        </VBox>
-
-                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <Label text="Fecha Rectificativa *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <DatePicker fx:id="dpFechaRectificativa" maxWidth="Infinity"/>
-                        </VBox>
-                    </GridPane>
-
-                    <VBox spacing="6">
-                        <Label text="Motivo de Rectificación *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                        <TextArea fx:id="txtMotivo" promptText="Describa el motivo de la rectificación (obligatorio según RD 1619/2012)..."
-                                  prefRowCount="3" wrapText="true" style="-fx-padding: 10;"/>
-                        <Label text="Ejemplos: Error en cantidad, Error en precio, Devolución de mercancía, Descuento posterior..."
-                               style="-fx-font-size: 10; -fx-text-fill: #64748b;"/>
-                    </VBox>
-                </VBox>
-
-                <!-- Ajuste de Importes (solo para DIFERENCIAS) -->
-                <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                    <Label text="Ajuste de Importes (tipo DIFERENCIAS)" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                    <Separator/>
-
-                    <GridPane hgap="15" vgap="15">
-                        <columnConstraints>
-                            <ColumnConstraints percentWidth="33.33"/>
-                            <ColumnConstraints percentWidth="33.33"/>
-                            <ColumnConstraints percentWidth="33.33"/>
-                        </columnConstraints>
-
-                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                            <Label text="Nueva Base Imponible" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtNuevaBaseImponible" promptText="0.00" style="-fx-padding: 10;"/>
-                            <Label fx:id="lblDiferenciaBase" text="Diferencia: 0.00 EUR" style="-fx-font-size: 11; -fx-font-weight: bold;"/>
-                        </VBox>
-
-                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <Label text="Nuevo IVA" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtNuevoIva" promptText="0.00" style="-fx-padding: 10;"/>
-                            <Label fx:id="lblDiferenciaIva" text="Diferencia: 0.00 EUR" style="-fx-font-size: 11; -fx-font-weight: bold;"/>
-                        </VBox>
-
-                        <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                            <Label text="Nuevo Total" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtNuevoTotal" promptText="0.00" style="-fx-padding: 10;"/>
-                            <Label fx:id="lblDiferenciaTotal" text="Diferencia: 0.00 EUR" style="-fx-font-size: 11; -fx-font-weight: bold;"/>
-                        </VBox>
-                    </GridPane>
-
-                    <HBox spacing="10" style="-fx-background-color: #fef3c7; -fx-padding: 12; -fx-background-radius: 8;">
-                        <Label text="⚠️" style="-fx-font-size: 16;"/>
-                        <VBox spacing="4">
-                            <Label text="Información Importante:" style="-fx-font-weight: bold; -fx-text-fill: #92400e;"/>
-                            <Label text="• SUSTITUCIÓN: Anula completamente la factura original y crea una nueva desde cero"
-                                   style="-fx-font-size: 11; -fx-text-fill: #92400e;"/>
-                            <Label text="• DIFERENCIAS: Solo se aplican los ajustes (positivos o negativos) sobre la original"
-                                   style="-fx-font-size: 11; -fx-text-fill: #92400e;"/>
-                            <Label text="• La factura rectificativa debe indicar el número y fecha de la factura original (RD 1619/2012)"
-                                   style="-fx-font-size: 11; -fx-text-fill: #92400e;"/>
-                        </VBox>
-                    </HBox>
-                </VBox>
-
-            </VBox>
-        </ScrollPane>
-    </center>
-
-    <bottom>
-        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
-            <Button text="Cancelar" onAction="#onCancelar"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13;"/>
-            <Button text="🔄 Crear Factura Rectificativa" onAction="#onCrearRectificativa"
-                    styleClass="button-success"
-                    style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
-        </HBox>
-    </bottom>
-
-</BorderPane>
-
+        </BorderPane>
+    </content>
+</ScrollPane>

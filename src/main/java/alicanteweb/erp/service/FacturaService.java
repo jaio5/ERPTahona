@@ -63,20 +63,9 @@ public class FacturaService {
     public Factura save(Factura factura) {
         // Guardamos la factura usando JPA.
         Factura saved = repository.save(factura);
-        try {
-            // Intentamos registrar evidencia en Verifactu (firma/huella y envío a AEAT)
-            VerifactuEvidence evidencia = verifactuEvidenceService.registrarEvidenciaAEAT(
-                saved.getId() != null ? saved.getId().toString() : "",
-                "", // No hay campo serie en Factura (ajustar si existe)
-                saved.getNumero() != null ? saved.getNumero() : ""
-            );
-            if (evidencia != null && evidencia.getId() != null) {
-                System.out.println("Evidencia registrada con ID: " + evidencia.getId());
-            }
-        } catch (Exception e) {
-            // No lanzamos la excepción para no impedir la continuación de la aplicación.
-            System.err.println("Error registrando evidencia Verifactur: " + e.getMessage());
-        }
+        // NOTA: Eliminada la lógica de registro automático en Verifactu aquí para mantener
+        // el comportamiento manual. El registro de evidencias se realiza únicamente
+        // cuando el usuario ejecuta la acción desde la vista VeriFacTur (VerifactuController).
         return saved;
     }
 
@@ -152,24 +141,14 @@ public class FacturaService {
             throw new IllegalStateException("Solo se pueden emitir facturas en estado REVISION");
         }
 
-        // Cambiar estado antes de intentar registrar en Verifactu
+        // Cambiar estado antes de persistir
         factura.setEstado("EMITIDA");
         Factura saved = repository.save(factura);
 
-        // Intentar registrar en Verifactu (no falla la transacción si hay error)
-        try {
-            VerifactuEvidence evidencia = verifactuEvidenceService.registrarEvidenciaAEAT(
-                saved.getId() != null ? saved.getId().toString() : "",
-                "",
-                saved.getNumero() != null ? saved.getNumero() : ""
-            );
-            if (evidencia != null && evidencia.getId() != null) {
-                System.out.println("Evidencia registrada al emitir factura, ID: " + evidencia.getId());
-            }
-        } catch (Exception e) {
-            System.err.println("Error registrando evidencia Verifactu (factura ya guardada): " + e.getMessage());
-            // La factura ya está guardada, el error de Verifactu no debe revertir la transacción
-        }
+        // NOTA: Anteriormente aquí se intentaba registrar evidencia en Verifactu.
+        // Para mantener el envío manual (desde la vista de VeriFacTur) eliminamos esa llamada.
+        // Si más adelante se requiere un envío automático configurable, podemos introducir
+        // una propiedad 'verifactu.autoSendOnEmit' y ejecutar el envío en background.
 
         return saved;
     }

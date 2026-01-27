@@ -11,16 +11,16 @@ import java.util.Optional;
 public interface EmpresaConfigRepository extends JpaRepository<EmpresaConfig, Long> {
 
     /**
-     * Obtiene la configuración activa de la empresa
+     * Obtiene la configuración activa de la empresa (el primer registro activo)
+     * Se usa findFirstByActivoTrue para evitar NonUniqueResultException si hay varias filas activas.
      */
-    @Query("SELECT e FROM EmpresaConfig e WHERE e.activo = true")
-    Optional<EmpresaConfig> findActive();
+    Optional<EmpresaConfig> findFirstByActivoTrue();
 
     /**
-     * Buscar empresa activa (alias para compatibilidad)
+     * Alias para compatibilidad con código existente
      */
-    default Optional<EmpresaConfig> findByActivoTrue() {
-        return findActive();
+    default Optional<EmpresaConfig> findActive() {
+        return findFirstByActivoTrue();
     }
 
     /**
@@ -29,5 +29,3 @@ public interface EmpresaConfigRepository extends JpaRepository<EmpresaConfig, Lo
     @Query("SELECT COUNT(e) > 0 FROM EmpresaConfig e WHERE e.activo = true")
     boolean existsActive();
 }
-
-

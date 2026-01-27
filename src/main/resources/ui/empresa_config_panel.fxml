@@ -2,114 +2,113 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="alicanteweb.erp.controller.EmpresaConfigController"
-      stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
-      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.EmpresaConfigController" fitToWidth="true" fitToHeight="true">
+    <content>
+        <VBox xmlns="http://javafx.com/javafx/21"
+              stylesheets="@/styles/simple-theme.css"
+              spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+              VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
-    <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="Configuración de Empresa" styleClass="title"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="btnCancelar" text="Cancelar" onAction="#onCancelar" styleClass="button-secondary"/>
-        <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
-    </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <Label text="Configuración de Empresa" styleClass="title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnCancelar" text="Cancelar" onAction="#onCancelar" styleClass="button-secondary"/>
+                <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
+            </HBox>
 
-    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
-        <VBox spacing="20">
+            <VBox spacing="20">
 
-            <VBox styleClass="card" spacing="12">
-                <Label text="Datos Generales" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
+                <VBox styleClass="card" spacing="12">
+                    <Label text="Datos Generales" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
 
-                <HBox spacing="12">
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="Nombre de la Empresa" styleClass="form-label"/>
-                        <TextField fx:id="txtNombre"/>
+                    <HBox spacing="12">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Nombre de la Empresa" styleClass="form-label"/>
+                            <TextField fx:id="txtNombre"/>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Código" styleClass="form-label"/>
+                            <TextField fx:id="txtCodigo"/>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="CIF" styleClass="form-label"/>
+                            <TextField fx:id="txtCif"/>
+                        </VBox>
+                    </HBox>
+
+                    <VBox spacing="8">
+                        <Label text="Dirección" styleClass="form-label"/>
+                        <TextField fx:id="txtDireccion"/>
                     </VBox>
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="Código" styleClass="form-label"/>
-                        <TextField fx:id="txtCodigo"/>
-                    </VBox>
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="CIF" styleClass="form-label"/>
-                        <TextField fx:id="txtCif"/>
-                    </VBox>
-                </HBox>
 
-                <VBox spacing="8">
-                    <Label text="Dirección" styleClass="form-label"/>
-                    <TextField fx:id="txtDireccion"/>
+                    <HBox spacing="12">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Población" styleClass="form-label"/>
+                            <TextField fx:id="txtPoblacion"/>
+                        </VBox>
+                        <VBox spacing="8" prefWidth="150">
+                            <Label text="Código Postal" styleClass="form-label"/>
+                            <TextField fx:id="txtCodigoPostal"/>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Provincia" styleClass="form-label"/>
+                            <TextField fx:id="txtProvincia"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Teléfono" styleClass="form-label"/>
+                            <TextField fx:id="txtTelefono"/>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Email" styleClass="form-label"/>
+                            <TextField fx:id="txtEmail"/>
+                        </VBox>
+                    </HBox>
                 </VBox>
 
-                <HBox spacing="12">
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="Población" styleClass="form-label"/>
-                        <TextField fx:id="txtPoblacion"/>
-                    </VBox>
-                    <VBox spacing="8" prefWidth="150">
-                        <Label text="Código Postal" styleClass="form-label"/>
-                        <TextField fx:id="txtCodigoPostal"/>
-                    </VBox>
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="Provincia" styleClass="form-label"/>
-                        <TextField fx:id="txtProvincia"/>
-                    </VBox>
-                </HBox>
+                <VBox styleClass="card" spacing="12">
+                    <Label text="Datos Fiscales" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
 
-                <HBox spacing="12">
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="Teléfono" styleClass="form-label"/>
-                        <TextField fx:id="txtTelefono"/>
-                    </VBox>
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="Email" styleClass="form-label"/>
-                        <TextField fx:id="txtEmail"/>
-                    </VBox>
-                </HBox>
-            </VBox>
-
-            <VBox styleClass="card" spacing="12">
-                <Label text="Datos Fiscales" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
-
-                <HBox spacing="12">
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="Régimen IVA" styleClass="form-label"/>
-                        <ComboBox fx:id="cmbRegimenIVA" maxWidth="Infinity"/>
-                    </VBox>
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="Tipo IRPF (%)" styleClass="form-label"/>
-                        <TextField fx:id="txtIRPF"/>
-                    </VBox>
-                </HBox>
-            </VBox>
-
-            <VBox styleClass="card" spacing="12">
-                <Label text="Datos Bancarios" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
-
-                <VBox spacing="8">
-                    <Label text="IBAN" styleClass="form-label"/>
-                    <TextField fx:id="txtIBAN"/>
+                    <HBox spacing="12">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Régimen IVA" styleClass="form-label"/>
+                            <ComboBox fx:id="cmbRegimenIVA" maxWidth="Infinity"/>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Tipo IRPF (%)" styleClass="form-label"/>
+                            <TextField fx:id="txtIRPF"/>
+                        </VBox>
+                    </HBox>
                 </VBox>
 
-                <HBox spacing="12">
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="Banco" styleClass="form-label"/>
-                        <TextField fx:id="txtBanco"/>
-                    </VBox>
-                    <VBox spacing="8" HBox.hgrow="ALWAYS">
-                        <Label text="SWIFT/BIC" styleClass="form-label"/>
-                        <TextField fx:id="txtSwift"/>
-                    </VBox>
-                </HBox>
-            </VBox>
+                <VBox styleClass="card" spacing="12">
+                    <Label text="Datos Bancarios" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
 
-            <VBox styleClass="card" spacing="12">
-                <Label text="Notas" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
-                <TextArea fx:id="txtNotas" prefRowCount="4"/>
-            </VBox>
+                    <VBox spacing="8">
+                        <Label text="IBAN" styleClass="form-label"/>
+                        <TextField fx:id="txtIBAN"/>
+                    </VBox>
 
+                    <HBox spacing="12">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Banco" styleClass="form-label"/>
+                            <TextField fx:id="txtBanco"/>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="SWIFT/BIC" styleClass="form-label"/>
+                            <TextField fx:id="txtSwift"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <VBox styleClass="card" spacing="12">
+                    <Label text="Notas" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
+                    <TextArea fx:id="txtNotas" prefRowCount="4"/>
+                </VBox>
+
+            </VBox>
         </VBox>
-    </ScrollPane>
-
-</VBox>
-
+    </content>
+</ScrollPane>

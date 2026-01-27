@@ -12,6 +12,7 @@ import javafx.beans.property.SimpleStringProperty;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -41,10 +42,12 @@ public class AlbaranController {
 
     private final AlbaranVentaService albaranVentaService;
     private final AlbaranService albaranService;
+    private final ApplicationContext applicationContext;
 
-    public AlbaranController(AlbaranVentaService albaranVentaService, AlbaranService albaranService) {
+    public AlbaranController(AlbaranVentaService albaranVentaService, AlbaranService albaranService, ApplicationContext applicationContext) {
         this.albaranVentaService = albaranVentaService;
         this.albaranService = albaranService;
+        this.applicationContext = applicationContext;
     }
 
     @FXML
@@ -243,8 +246,29 @@ public class AlbaranController {
 
     @FXML
     public void onNuevo() {
-        log.info("Crear nuevo albarán");
-        mostrarAlerta("Función en desarrollo: Crear nuevo albarán");
+        try {
+            log.info("Crear nuevo albarán - abriendo formulario");
+            java.net.URL resource = getClass().getResource("/ui/albaran_form.fxml");
+            if (resource == null) { mostrarAlerta("No se encuentra el formulario de albarán"); return; }
+
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(resource);
+            loader.setControllerFactory(applicationContext::getBean);
+            javafx.scene.Parent root = loader.load();
+            Object ctrl = loader.getController();
+            if (ctrl instanceof alicanteweb.erp.controller.formcontroller.AlbaranFormController) {
+                ((alicanteweb.erp.controller.formcontroller.AlbaranFormController) ctrl).setAlbaran(null);
+            }
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Nuevo Albarán");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario de albarán", e);
+            mostrarError("Error al abrir formulario: " + e.getMessage());
+        }
     }
 
     @FXML

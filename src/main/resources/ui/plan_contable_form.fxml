@@ -2,129 +2,129 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.formcontroller.PlanContableFormController"
-            stylesheets="@/styles/modern-theme.css"
-            style="-fx-background-color: #f8fafc;">
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.formcontroller.PlanContableFormController" fitToWidth="true" fitToHeight="true">
+    <content>
+        <BorderPane xmlns="http://javafx.com/javafx/21"
+                    stylesheets="@/styles/modern-theme.css"
+                    style="-fx-background-color: #f8fafc;">
 
-    <!-- HEADER -->
-    <top>
-        <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
-            <Label fx:id="lblTitulo" text="✏️ Nueva Cuenta Contable" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label text="*" style="-fx-text-fill: #dc2626; -fx-font-size: 12;"/>
-            <Label text="Campos obligatorios" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
-        </HBox>
-    </top>
-
-    <!-- CONTENIDO -->
-    <center>
-        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
-            <VBox spacing="15" style="-fx-padding: 20;">
-
-                <!-- DATOS PRINCIPALES -->
-                <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
-                    <Label text="Datos de la Cuenta" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                    <Separator/>
-
-                    <GridPane hgap="15" vgap="15">
-                        <columnConstraints>
-                            <ColumnConstraints percentWidth="50"/>
-                            <ColumnConstraints percentWidth="50"/>
-                        </columnConstraints>
-
-                        <!-- CÓDIGO CUENTA -->
-                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                            <Label text="Código Cuenta *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtCodigo" promptText="Ej: 430001"
-                                       style="-fx-padding: 10; -fx-font-size: 13; -fx-border-color: #e2e8f0; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;"/>
-                            <Label text="Formato: numérico, 6 dígitos" style="-fx-text-fill: #94a3b8; -fx-font-size: 11;"/>
-                        </VBox>
-
-                        <!-- NOMBRE -->
-                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <Label text="Nombre de la Cuenta *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtNombre" promptText="Ej: Cliente Juan Pérez S.L."
-                                       style="-fx-padding: 10; -fx-font-size: 13; -fx-border-color: #e2e8f0; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;"/>
-                        </VBox>
-
-                        <!-- GRUPO -->
-                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                            <Label text="Grupo *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <ComboBox fx:id="cbGrupo" promptText="Seleccionar grupo" maxWidth="Infinity" style="-fx-font-size: 13;"/>
-                            <Label text="Primer dígito del código cuenta" style="-fx-text-fill: #94a3b8; -fx-font-size: 11;"/>
-                        </VBox>
-
-                        <!-- TIPO CUENTA -->
-                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                            <Label text="Tipo de Cuenta *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <ComboBox fx:id="cbTipoCuenta" promptText="Seleccionar tipo" maxWidth="Infinity" style="-fx-font-size: 13;"/>
-                        </VBox>
-
-                        <!-- SALDO INICIAL -->
-                        <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2">
-                            <Label text="Saldo Inicial" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtSaldoInicial" text="0.00" promptText="0.00"
-                                       style="-fx-padding: 10; -fx-font-size: 13; -fx-border-color: #e2e8f0; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;"/>
-                            <Label text="Saldo al crear la cuenta" style="-fx-text-fill: #94a3b8; -fx-font-size: 11;"/>
-                        </VBox>
-
-                        <!-- NIVEL -->
-                        <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                            <Label text="Nivel Contable" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextField fx:id="txtNivel" text="0" editable="false"
-                                       style="-fx-padding: 10; -fx-font-size: 13; -fx-background-color: #f1f5f9;"/>
-                            <Label text="Auto-calculado según dígitos" style="-fx-text-fill: #94a3b8; -fx-font-size: 11;"/>
-                        </VBox>
-                    </GridPane>
-                </VBox>
-
-                <!-- CONFIGURACIÓN ADICIONAL -->
-                <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
-                    <Label text="Configuración Adicional" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                    <Separator/>
-
-                    <VBox spacing="15">
-                        <!-- DESCRIPCIÓN -->
-                        <VBox spacing="6">
-                            <Label text="Descripción / Notas" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                            <TextArea fx:id="txtDescripcion" promptText="Información adicional sobre esta cuenta..."
-                                      prefRowCount="3" wrapText="true"
-                                      style="-fx-padding: 10; -fx-font-size: 13; -fx-border-color: #e2e8f0; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;"/>
-                        </VBox>
-
-                        <!-- CHECKBOXES -->
-                        <HBox spacing="30">
-                            <CheckBox fx:id="chkActivo" text="Cuenta activa" selected="true" style="-fx-font-size: 13;"/>
-                            <CheckBox fx:id="chkImputable" text="Imputable" selected="true" style="-fx-font-size: 13;"/>
-                            <CheckBox fx:id="chkAuxiliar" text="Cuenta auxiliar" style="-fx-font-size: 13;"/>
-                        </HBox>
-                    </VBox>
-                </VBox>
-
-                <!-- INFORMACIÓN -->
-                <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-background-color: #dbeafe; -fx-padding: 12 16; -fx-border-radius: 8; -fx-background-radius: 8;">
-                    <Label text="ℹ️" style="-fx-font-size: 16;"/>
-                    <VBox spacing="4">
-                        <Label text="Información sobre el Plan Contable PGC 2007" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #1e40af;"/>
-                        <Label text="Las cuentas deben seguir la estructura del Plan General Contable español vigente."
-                               wrapText="true" style="-fx-text-fill: #1e3a8a; -fx-font-size: 11;"/>
-                    </VBox>
+            <!-- HEADER -->
+            <top>
+                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
+                    <Label fx:id="lblTitulo" text="✏️ Nueva Cuenta Contable" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="*" style="-fx-text-fill: #dc2626; -fx-font-size: 12;"/>
+                    <Label text="Campos obligatorios" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
                 </HBox>
+            </top>
 
-            </VBox>
-        </ScrollPane>
-    </center>
+            <!-- CONTENIDO -->
+            <center>
+                <VBox spacing="15" style="-fx-padding: 20;">
 
-    <!-- FOOTER CON BOTONES -->
-    <bottom>
-        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
-            <Button text="Cancelar" onAction="#onCancelar"
-                    style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand;"/>
-            <Button text="✓ Guardar Cuenta" onAction="#onGuardar" styleClass="button-success"
-                    style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
-        </HBox>
-    </bottom>
+                    <!-- DATOS PRINCIPALES -->
+                    <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+                        <Label text="Datos de la Cuenta" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                        <Separator/>
 
-</BorderPane>
+                        <GridPane hgap="15" vgap="15">
+                            <columnConstraints>
+                                <ColumnConstraints percentWidth="50"/>
+                                <ColumnConstraints percentWidth="50"/>
+                            </columnConstraints>
 
+                            <!-- CÓDIGO CUENTA -->
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label text="Código Cuenta *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <TextField fx:id="txtCodigo" promptText="Ej: 430001"
+                                           style="-fx-padding: 10; -fx-font-size: 13; -fx-border-color: #e2e8f0; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;"/>
+                                <Label text="Formato: numérico, 6 dígitos" style="-fx-text-fill: #94a3b8; -fx-font-size: 11;"/>
+                            </VBox>
+
+                            <!-- NOMBRE -->
+                            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label text="Nombre de la Cuenta *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <TextField fx:id="txtNombre" promptText="Ej: Cliente Juan Pérez S.L."
+                                           style="-fx-padding: 10; -fx-font-size: 13; -fx-border-color: #e2e8f0; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;"/>
+                            </VBox>
+
+                            <!-- GRUPO -->
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <Label text="Grupo *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <ComboBox fx:id="cbGrupo" promptText="Seleccionar grupo" maxWidth="Infinity" style="-fx-font-size: 13;"/>
+                                <Label text="Primer dígito del código cuenta" style="-fx-text-fill: #94a3b8; -fx-font-size: 11;"/>
+                            </VBox>
+
+                            <!-- TIPO CUENTA -->
+                            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                <Label text="Tipo de Cuenta *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <ComboBox fx:id="cbTipoCuenta" promptText="Seleccionar tipo" maxWidth="Infinity" style="-fx-font-size: 13;"/>
+                            </VBox>
+
+                            <!-- SALDO INICIAL -->
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="2">
+                                <Label text="Saldo Inicial" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <TextField fx:id="txtSaldoInicial" text="0.00" promptText="0.00"
+                                           style="-fx-padding: 10; -fx-font-size: 13; -fx-border-color: #e2e8f0; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;"/>
+                                <Label text="Saldo al crear la cuenta" style="-fx-text-fill: #94a3b8; -fx-font-size: 11;"/>
+                            </VBox>
+
+                            <!-- NIVEL -->
+                            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                <Label text="Nivel Contable" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <TextField fx:id="txtNivel" text="0" editable="false"
+                                           style="-fx-padding: 10; -fx-font-size: 13; -fx-background-color: #f1f5f9;"/>
+                                <Label text="Auto-calculado según dígitos" style="-fx-text-fill: #94a3b8; -fx-font-size: 11;"/>
+                            </VBox>
+                        </GridPane>
+                    </VBox>
+
+                    <!-- CONFIGURACIÓN ADICIONAL -->
+                    <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);">
+                        <Label text="Configuración Adicional" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                        <Separator/>
+
+                        <VBox spacing="15">
+                            <!-- DESCRIPCIÓN -->
+                            <VBox spacing="6">
+                                <Label text="Descripción / Notas" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <TextArea fx:id="txtDescripcion" promptText="Información adicional sobre esta cuenta..."
+                                          prefRowCount="3" wrapText="true"
+                                          style="-fx-padding: 10; -fx-font-size: 13; -fx-border-color: #e2e8f0; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;"/>
+                            </VBox>
+
+                            <!-- CHECKBOXES -->
+                            <HBox spacing="30">
+                                <CheckBox fx:id="chkActivo" text="Cuenta activa" selected="true" style="-fx-font-size: 13;"/>
+                                <CheckBox fx:id="chkImputable" text="Imputable" selected="true" style="-fx-font-size: 13;"/>
+                                <CheckBox fx:id="chkAuxiliar" text="Cuenta auxiliar" style="-fx-font-size: 13;"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <!-- INFORMACIÓN -->
+                    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-background-color: #dbeafe; -fx-padding: 12 16; -fx-border-radius: 8; -fx-background-radius: 8;">
+                        <Label text="ℹ️" style="-fx-font-size: 16;"/>
+                        <VBox spacing="4">
+                            <Label text="Información sobre el Plan Contable PGC 2007" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #1e40af;"/>
+                            <Label text="Las cuentas deben seguir la estructura del Plan General Contable español vigente."
+                                   wrapText="true" style="-fx-text-fill: #1e3a8a; -fx-font-size: 11;"/>
+                        </VBox>
+                    </HBox>
+
+                </VBox>
+            </center>
+
+            <!-- FOOTER CON BOTONES -->
+            <bottom>
+                <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
+                    <Button text="Cancelar" onAction="#onCancelar"
+                            style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                    <Button text="✓ Guardar Cuenta" onAction="#onGuardar" styleClass="button-success"
+                            style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
+                </HBox>
+            </bottom>
+
+        </BorderPane>
+    </content>
+</ScrollPane>

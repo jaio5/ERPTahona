@@ -2,10 +2,10 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.repository.EmpresaConfigRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +28,8 @@ public class EmpresaConfigService {
      * Obtiene la configuración activa de la empresa
      */
     public Optional<EmpresaConfig> getConfiguracionActiva() {
-        return empresaConfigRepository.findActive();
+        // Llamamos directamente a findFirstByActivoTrue para evitar NonUniqueResultException
+        return empresaConfigRepository.findFirstByActivoTrue();
     }
 
     /**
@@ -116,5 +117,3 @@ public class EmpresaConfigService {
         log.info("Configuración {} eliminada", id);
     }
 }
-
-

@@ -2,79 +2,80 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="alicanteweb.erp.controller.formcontroller.AlbaranFormController"
-      styleClass="main-container" spacing="15">
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fitToWidth="true" fx:controller="alicanteweb.erp.controller.formcontroller.AlbaranFormController">
+    <content>
+        <VBox styleClass="main-container" spacing="15" style="-fx-padding:12; -fx-pref-width:800;">
 
-    <Label text="📦 FORMULARIO DE ALBARÁN" styleClass="title-panel"/>
+            <Label text="📦 FORMULARIO DE ALBARÁN" styleClass="title-panel"/>
 
-    <ScrollPane fitToWidth="true">
-        <VBox spacing="15" style="-fx-padding: 15;">
+            <!-- Reemplazado ScrollPane anidado por VBox para evitar doble scroll y permitir VGrow -->
+            <VBox spacing="15" style="-fx-padding: 15; -fx-pref-width:780;" maxWidth="Infinity">
 
-            <!-- DATOS DE ALBARÁN -->
-            <TitledPane text="📋 Datos de Albarán" collapsible="false" style="-fx-font-weight: bold;">
-                <GridPane hgap="20" vgap="15" style="-fx-padding: 15;">
-                    <columnConstraints>
-                        <ColumnConstraints percentWidth="50"/>
-                        <ColumnConstraints percentWidth="50"/>
-                    </columnConstraints>
+                <!-- DATOS DE ALBARÁN -->
+                <TitledPane text="📋 Datos de Albarán" collapsible="false" style="-fx-font-weight: bold;">
+                    <GridPane hgap="20" vgap="15" style="-fx-padding: 15;">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="50" />
+                            <ColumnConstraints percentWidth="50" />
+                        </columnConstraints>
 
-                    <Label text="Número Albarán:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
-                    <TextField fx:id="txtNumero" promptText="Auto-generado" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-min-height: 35;"/>
+                        <Label text="Número Albarán:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                        <TextField fx:id="txtNumero" promptText="Auto-generado" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-                    <Label text="Fecha:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
-                    <DatePicker fx:id="dpFecha" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-min-height: 35;"/>
+                        <Label text="Fecha:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                        <DatePicker fx:id="dpFecha" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
-                    <Label text="Cliente:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
-                    <ComboBox fx:id="cbCliente" promptText="Selecciona cliente..." GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-min-height: 35;"/>
+                        <Label text="Cliente:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="cbCliente" promptText="Selecciona cliente..." GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                    <Label text="Procedencia:" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
-                    <ComboBox fx:id="cbProcedencia" promptText="Pedido/Presupuesto..." GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-min-height: 35;"/>
-                </GridPane>
-            </TitledPane>
+                        <Label text="Procedencia:" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="cbProcedencia" promptText="Pedido/Presupuesto..." GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                    </GridPane>
+                </TitledPane>
 
-            <!-- LÍNEAS DE ALBARÁN -->
-            <TitledPane text="📦 Líneas de Albarán" collapsible="false" style="-fx-font-weight: bold;">
-                <VBox spacing="10" style="-fx-padding: 15;">
-                    <TableView fx:id="tableLineas" prefHeight="200">
-                        <columns>
-                            <TableColumn fx:id="colArticulo" text="Artículo" prefWidth="150"/>
-                            <TableColumn fx:id="colCantidad" text="Cantidad"/>
-                            <TableColumn fx:id="colUnidad" text="Unidad"/>
-                            <TableColumn fx:id="colLote" text="Lote/Serie" prefWidth="100"/>
-                        </columns>
-                    </TableView>
-                    <HBox spacing="10">
-                        <Button text="➕ Agregar Línea" styleClass="button-action" onAction="#onAgregarLinea" style="-fx-padding: 8 16;"/>
-                        <Button text="🗑️ Eliminar Línea" styleClass="button-danger" onAction="#onEliminarLinea" style="-fx-padding: 8 16;"/>
-                    </HBox>
-                </VBox>
-            </TitledPane>
+                <!-- LÍNEAS DE ALBARÁN -->
+                <TitledPane text="📦 Líneas de Albarán" collapsible="false" style="-fx-font-weight: bold;">
+                    <VBox spacing="10" style="-fx-padding: 15;">
+                        <TableView fx:id="tableLineas" VBox.vgrow="ALWAYS" prefHeight="200" maxHeight="Infinity">
+                            <columns>
+                                <TableColumn fx:id="colArticulo" text="Artículo" prefWidth="150" />
+                                <TableColumn fx:id="colCantidad" text="Cantidad" />
+                                <TableColumn fx:id="colUnidad" text="Unidad" />
+                                <TableColumn fx:id="colLote" text="Lote/Serie" prefWidth="100" />
+                            </columns>
+                        </TableView>
+                        <HBox spacing="10">
+                            <Button text="➕ Agregar Línea" styleClass="button-action" onAction="#onAgregarLinea" />
+                            <Button text="🗑️ Eliminar Línea" styleClass="button-danger" onAction="#onEliminarLinea" />
+                        </HBox>
+                    </VBox>
+                </TitledPane>
 
-            <!-- DATOS DE ENTREGA -->
-            <TitledPane text="📍 Datos de Entrega" collapsible="false" style="-fx-font-weight: bold;">
-                <GridPane hgap="20" vgap="15" style="-fx-padding: 15;">
-                    <columnConstraints>
-                        <ColumnConstraints percentWidth="100"/>
-                    </columnConstraints>
+                <!-- DATOS DE ENTREGA -->
+                <TitledPane text="📍 Datos de Entrega" collapsible="false" style="-fx-font-weight: bold;">
+                    <GridPane hgap="20" vgap="15" style="-fx-padding: 15;">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="100" />
+                        </columnConstraints>
 
-                    <Label text="Dirección de Entrega:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
-                    <TextArea fx:id="txtDireccionEntrega" promptText="Dirección de entrega..." GridPane.columnIndex="0" GridPane.rowIndex="1" prefRowCount="3" style="-fx-min-height: 60;"/>
+                        <Label text="Dirección de Entrega:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                        <TextArea fx:id="txtDireccionEntrega" promptText="Dirección de entrega..." GridPane.columnIndex="0" GridPane.rowIndex="1" prefRowCount="3" />
 
-                    <Label text="Observaciones:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
-                    <TextArea fx:id="txtObservaciones" promptText="Instrucciones especiales..." GridPane.columnIndex="0" GridPane.rowIndex="3" prefRowCount="3" style="-fx-min-height: 60;"/>
-                </GridPane>
-            </TitledPane>
+                        <Label text="Observaciones:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                        <TextArea fx:id="txtObservaciones" promptText="Instrucciones especiales..." GridPane.columnIndex="0" GridPane.rowIndex="3" prefRowCount="3" />
+                    </GridPane>
+                </TitledPane>
+            </VBox>
+
+            <Separator />
+
+            <!-- BOTONES -->
+            <HBox spacing="15" style="-fx-alignment: center-right; -fx-padding: 15;">
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="btnGuardarAlbaran" text="💾 Guardar" styleClass="button-primary" onAction="#onGuardar" />
+                <Button fx:id="btnConvertirFactura" text="🧾 Convertir a Factura" styleClass="button-success" onAction="#onConvertirFactura" />
+                <Button fx:id="btnCancelarAlbaran" text="❌ Cancelar" styleClass="button-neutral" onAction="#onCancelar" />
+            </HBox>
         </VBox>
-    </ScrollPane>
-
-    <Separator/>
-
-    <!-- BOTONES -->
-    <HBox spacing="15" style="-fx-alignment: center-right; -fx-padding: 15;">
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="btnGuardarAlbaran" text="💾 Guardar" styleClass="button-primary" onAction="#onGuardar" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
-        <Button fx:id="btnConvertirFactura" text="🧾 Convertir a Factura" styleClass="button-success" onAction="#onConvertirFactura" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
-        <Button fx:id="btnCancelarAlbaran" text="❌ Cancelar" styleClass="button-neutral" onAction="#onCancelar" style="-fx-padding: 12 30; -fx-font-size: 13;"/>
-    </HBox>
-</VBox>
+    </content>
+</ScrollPane>

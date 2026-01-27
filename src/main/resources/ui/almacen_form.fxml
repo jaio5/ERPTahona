@@ -1,42 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="alicanteweb.erp.controller.formcontroller.AlmacenFormController">
-    <center>
-        <VBox spacing="10" style="-fx-padding: 16;">
-            <GridPane hgap="10" vgap="10">
-                <columnConstraints>
-                    <ColumnConstraints percentWidth="30"/>
-                    <ColumnConstraints percentWidth="70"/>
-                </columnConstraints>
-                <Label text="Código:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtCodigo" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.formcontroller.AlmacenFormController" fitToWidth="true" fitToHeight="true">
+    <content>
+        <BorderPane xmlns="http://javafx.com/javafx/21">
+            <center>
+                <VBox spacing="10" style="-fx-padding: 16;">
+                    <GridPane hgap="10" vgap="10">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="30"/>
+                            <ColumnConstraints percentWidth="70"/>
+                        </columnConstraints>
+                        <Label text="Código:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCodigo" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-                <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtNombre" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtNombre" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-                <Label text="Descripción:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                <TextArea fx:id="txtDescripcion" prefRowCount="3" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                        <Label text="Descripción:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <TextArea fx:id="txtDescripcion" prefRowCount="3" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-                <Label text="Capacidad:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtCapacidad" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        <Label text="Capacidad:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtCapacidad" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-                <Label text="Disponible:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtDisponible" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                        <Label text="Disponible:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtDisponible" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
 
-                <Label text="Localidad:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtLocalidad" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                        <Label text="Localidad:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtLocalidad" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
 
-                <Label text="Responsable:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-                <TextField fx:id="txtResponsable" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
-            </GridPane>
-        </VBox>
-    </center>
-    <bottom>
-        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10;">
-            <Button text="Cancelar" onAction="#onCancelar"/>
-            <Button text="Guardar" onAction="#onGuardar"/>
-        </HBox>
-    </bottom>
-</BorderPane>
+                        <Label text="Responsable:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                        <TextField fx:id="txtResponsable" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+                    </GridPane>
+                </VBox>
+            </center>
+            <bottom>
+                <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10;">
+                    <Button text="Cancelar" onAction="#onCancelar"/>
+                    <Button text="Guardar" onAction="#onGuardar"/>
+                </HBox>
+            </bottom>
+        </BorderPane>
+    </content>
+</ScrollPane>

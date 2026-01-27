@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 
 /**
@@ -411,19 +412,20 @@ public class ReportesPDFService {
      * Obtener datos de la empresa
      */
     private EmpresaConfig obtenerDatosEmpresa() {
-        return empresaConfigRepository.findByActivoTrue()
-            .orElseGet(() -> {
-                EmpresaConfig empresa = new EmpresaConfig();
-                empresa.setNombreEmpresa("GRUPO BABO");
-                empresa.setNombreComercial("Panadería Tahona");
-                empresa.setCif("B12345678");
-                empresa.setDireccion("Calle Principal, 123");
-                empresa.setCodigoPostal("03001");
-                empresa.setCiudad("Alicante");
-                empresa.setProvincia("Alicante");
-                empresa.setPais("España");
-                return empresa;
-            });
+        // Se usa findFirstByActivoTrue() (repositorio) que devuelve Optional<EmpresaConfig>
+        Optional<EmpresaConfig> opt = empresaConfigRepository.findFirstByActivoTrue();
+        return opt.orElseGet(() -> {
+            EmpresaConfig empresa = new EmpresaConfig();
+            empresa.setNombreEmpresa("GRUPO BABO");
+            empresa.setNombreComercial("Panadería Tahona");
+            empresa.setCif("B12345678");
+            empresa.setDireccion("Calle Principal, 123");
+            empresa.setCodigoPostal("03001");
+            empresa.setCiudad("Alicante");
+            empresa.setProvincia("Alicante");
+            empresa.setPais("España");
+            return empresa;
+        });
     }
 
     /**
