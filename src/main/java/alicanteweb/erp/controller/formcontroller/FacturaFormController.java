@@ -14,6 +14,7 @@ import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.AlbaranVentaService;
 import alicanteweb.erp.service.AlbaranVentaFacturaService;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -119,7 +120,7 @@ public class FacturaFormController {
             if (colAlbNumero != null) colAlbNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
             if (colAlbFecha != null) {
                 colAlbFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-                colAlbFecha.setCellFactory(col -> new TableCell<>() {
+                colAlbFecha.setCellFactory(col -> new TableCell<AlbaranVenta, LocalDate>() {
                     private final java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     @Override
                     protected void updateItem(LocalDate item, boolean empty) {
@@ -130,7 +131,7 @@ public class FacturaFormController {
             }
             if (colAlbTotal != null) {
                 colAlbTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
-                colAlbTotal.setCellFactory(col -> new TableCell<>() {
+                colAlbTotal.setCellFactory(col -> new TableCell<AlbaranVenta, BigDecimal>() {
                     @Override
                     protected void updateItem(BigDecimal item, boolean empty) {
                         super.updateItem(item, empty);
@@ -143,7 +144,7 @@ public class FacturaFormController {
             if (colVincNumero != null) colVincNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
             if (colVincFecha != null) {
                 colVincFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-                colVincFecha.setCellFactory(col -> new TableCell<>() {
+                colVincFecha.setCellFactory(col -> new TableCell<AlbaranVenta, LocalDate>() {
                     private final java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     @Override
                     protected void updateItem(LocalDate item, boolean empty) {
@@ -167,32 +168,34 @@ public class FacturaFormController {
                 .filter(c -> c.getActivo() != null && c.getActivo())
                 .toList();
 
-            cbCliente.setItems(FXCollections.observableArrayList(clientes));
+            if (cbCliente != null) {
+                cbCliente.setItems(FXCollections.observableArrayList(clientes));
 
-            // Configurar cómo se muestra el cliente
-            cbCliente.setCellFactory(param -> new ListCell<>() {
-                @Override
-                protected void updateItem(Cliente item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || item == null) {
-                        setText(null);
-                    } else {
-                        setText(item.getCodigo() + " - " + item.getNombre());
+                // Configurar cómo se muestra el cliente
+                cbCliente.setCellFactory(param -> new ListCell<Cliente>() {
+                    @Override
+                    protected void updateItem(Cliente item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null);
+                        } else {
+                            setText(item.getCodigo() + " - " + item.getNombre());
+                        }
                     }
-                }
-            });
+                });
 
-            cbCliente.setButtonCell(new ListCell<>() {
-                @Override
-                protected void updateItem(Cliente item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || item == null) {
-                        setText(null);
-                    } else {
-                        setText(item.getCodigo() + " - " + item.getNombre());
+                cbCliente.setButtonCell(new ListCell<Cliente>() {
+                    @Override
+                    protected void updateItem(Cliente item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null);
+                        } else {
+                            setText(item.getCodigo() + " - " + item.getNombre());
+                        }
                     }
-                }
-            });
+                });
+            }
 
         } catch (Exception e) {
             log.error("Error cargando clientes", e);
@@ -216,22 +219,25 @@ public class FacturaFormController {
     }
 
     private void configurarTablaLineas() {
-        colArticulo.setCellValueFactory(new PropertyValueFactory<>("articulo"));
-        colDescripcion.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
-        colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
-        colPrecio.setCellValueFactory(new PropertyValueFactory<>("precio"));
-        colIVA.setCellValueFactory(new PropertyValueFactory<>("iva"));
-        colSubtotal.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
+        // Evitar NPE si las columnas no están presentes en FXML
+        if (colArticulo != null) colArticulo.setCellValueFactory(new PropertyValueFactory<>("articulo"));
+        if (colDescripcion != null) colDescripcion.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
+        if (colCantidad != null) colCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
+        if (colPrecio != null) colPrecio.setCellValueFactory(new PropertyValueFactory<>("precio"));
+        if (colIVA != null) colIVA.setCellValueFactory(new PropertyValueFactory<>("iva"));
+        if (colSubtotal != null) colSubtotal.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
 
-        tableLineas.setItems(lineasTemp);
+        if (tableLineas != null) {
+            tableLineas.setItems(lineasTemp);
+        }
 
         // Listener para recalcular totales
         lineasTemp.addListener((javafx.collections.ListChangeListener<LineaFacturaTemp>) c -> calcularTotales());
     }
 
     private void configurarFechas() {
-        dpFechaEmision.setValue(LocalDate.now());
-        dpFechaVencimiento.setValue(LocalDate.now().plusDays(30));
+        if (dpFechaEmision != null) dpFechaEmision.setValue(LocalDate.now());
+        if (dpFechaVencimiento != null) dpFechaVencimiento.setValue(LocalDate.now().plusDays(30));
     }
 
     public void setFactura(Factura factura) {
@@ -240,31 +246,33 @@ public class FacturaFormController {
 
         Platform.runLater(() -> {
             if (modoEdicion && factura != null) {
-                lblTitulo.setText("Editar Factura");
+                if (lblTitulo != null) lblTitulo.setText("Editar Factura");
                 cargarDatosFactura(factura);
             } else {
-                lblTitulo.setText("Nueva Factura");
+                if (lblTitulo != null) lblTitulo.setText("Nueva Factura");
                 limpiarFormulario();
             }
         });
     }
 
     private void cargarDatosFactura(Factura factura) {
-        if (factura.getCliente() != null) {
+        if (factura == null) return;
+
+        if (factura.getCliente() != null && cbCliente != null) {
             cbCliente.setValue(factura.getCliente());
         }
 
-        if (factura.getFecha() != null) {
+        if (factura.getFecha() != null && dpFechaEmision != null) {
             dpFechaEmision.setValue(factura.getFecha());
         }
 
-        if (factura.getFechaVencimiento() != null) {
+        if (factura.getFechaVencimiento() != null && dpFechaVencimiento != null) {
             dpFechaVencimiento.setValue(factura.getFechaVencimiento());
         }
 
-        txtObservaciones.setText(factura.getObservaciones() != null ? factura.getObservaciones() : "");
-        lblNumeroFactura.setText("Numero: " + (factura.getNumero() != null ? factura.getNumero() : "Pendiente"));
-        lblEstado.setText(factura.getEstado() != null ? factura.getEstado() : "BORRADOR");
+        if (txtObservaciones != null) txtObservaciones.setText(factura.getObservaciones() != null ? factura.getObservaciones() : "");
+        if (lblNumeroFactura != null) lblNumeroFactura.setText("Numero: " + (factura.getNumero() != null ? factura.getNumero() : "Pendiente"));
+        if (lblEstado != null) lblEstado.setText(factura.getEstado() != null ? factura.getEstado() : "BORRADOR");
 
         // Las líneas se cargarían aquí si tuviéramos la relación en la entidad
         // Por ahora, en modo crear empezamos sin líneas
@@ -355,14 +363,14 @@ public class FacturaFormController {
     // ---------------- end albaranes ----------------
 
     private void limpiarFormulario() {
-        cbCliente.setValue(null);
-        dpFechaEmision.setValue(LocalDate.now());
-        dpFechaVencimiento.setValue(LocalDate.now().plusDays(30));
-        cbFormaPago.setValue("Contado");
-        txtObservaciones.clear();
+        if (cbCliente != null) cbCliente.setValue(null);
+        if (dpFechaEmision != null) dpFechaEmision.setValue(LocalDate.now());
+        if (dpFechaVencimiento != null) dpFechaVencimiento.setValue(LocalDate.now().plusDays(30));
+        if (cbFormaPago != null) cbFormaPago.setValue("Contado");
+        if (txtObservaciones != null) txtObservaciones.clear();
         lineasTemp.clear();
-        lblNumeroFactura.setText("Numero: Pendiente");
-        lblEstado.setText("BORRADOR");
+        if (lblNumeroFactura != null) lblNumeroFactura.setText("Numero: Pendiente");
+        if (lblEstado != null) lblEstado.setText("BORRADOR");
         calcularTotales();
     }
 
@@ -396,7 +404,7 @@ public class FacturaFormController {
                 .toList();
             cbArticulo.setItems(FXCollections.observableArrayList(articulos));
 
-            cbArticulo.setCellFactory(param -> new ListCell<>() {
+            cbArticulo.setCellFactory(param -> new ListCell<Articulo>() {
                 @Override
                 protected void updateItem(Articulo item, boolean empty) {
                     super.updateItem(item, empty);
@@ -411,7 +419,7 @@ public class FacturaFormController {
                 }
             });
 
-            cbArticulo.setButtonCell(new ListCell<>() {
+            cbArticulo.setButtonCell(new ListCell<Articulo>() {
                 @Override
                 protected void updateItem(Articulo item, boolean empty) {
                     super.updateItem(item, empty);
@@ -478,15 +486,39 @@ public class FacturaFormController {
                     }
                     linea.setDescripcion(descripcion);
 
-                    linea.setCantidad(Integer.parseInt(txtCantidad.getText()));
-                    linea.setPrecio(new BigDecimal(txtPrecio.getText()));
-                    linea.setIva(new BigDecimal(txtIva.getText()));
+                    // Validar y parsear cantidad, precio e IVA de forma segura
+                    try {
+                        int cantidadVal = Integer.parseInt(txtCantidad.getText().trim());
+                        linea.setCantidad(cantidadVal);
+                    } catch (Exception ex) {
+                        mostrarError("Cantidad inválida: " + txtCantidad.getText());
+                        return null;
+                    }
+
+                    try {
+                        BigDecimal precioVal = new BigDecimal(txtPrecio.getText().trim());
+                        linea.setPrecio(precioVal);
+                    } catch (Exception ex) {
+                        mostrarError("Precio inválido: " + txtPrecio.getText());
+                        return null;
+                    }
+
+                    try {
+                        BigDecimal ivaVal = new BigDecimal(txtIva.getText().trim());
+                        linea.setIva(ivaVal);
+                    } catch (Exception ex) {
+                        mostrarError("IVA inválido: " + txtIva.getText());
+                        return null;
+                    }
+
                     linea.calcularSubtotal();
 
                     log.info("✅ Línea agregada: {} (ID:{}) x{} = {}",
                         nombreArticulo, articuloSeleccionado.getId(), linea.getCantidad(), linea.getSubtotal());
 
                     return linea;
+                } else {
+                    mostrarAdvertencia("Seleccione un artículo antes de agregar.");
                 }
             }
             return null;
@@ -501,7 +533,7 @@ public class FacturaFormController {
 
     @FXML
     public void onEliminarLinea() {
-        LineaFacturaTemp selected = tableLineas.getSelectionModel().getSelectedItem();
+        LineaFacturaTemp selected = tableLineas != null ? tableLineas.getSelectionModel().getSelectedItem() : null;
         if (selected != null) {
             lineasTemp.remove(selected);
             calcularTotales();
@@ -515,20 +547,24 @@ public class FacturaFormController {
         BigDecimal totalIVA = BigDecimal.ZERO;
 
         for (LineaFacturaTemp linea : lineasTemp) {
-            BigDecimal subtotal = linea.getSubtotal();
+            BigDecimal subtotal = linea.getSubtotal() != null ? linea.getSubtotal() : BigDecimal.ZERO;
             baseImponible = baseImponible.add(subtotal);
 
-            BigDecimal ivaLinea = subtotal.multiply(linea.getIva())
-                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+            BigDecimal ivaLinea = BigDecimal.ZERO;
+            if (linea.getIva() != null) {
+                ivaLinea = subtotal.multiply(linea.getIva())
+                    .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+            }
             totalIVA = totalIVA.add(ivaLinea);
         }
 
         BigDecimal total = baseImponible.add(totalIVA);
 
-        lblBaseImponible.setText(String.format("%.2f EUR", baseImponible));
-        lblIVA.setText(String.format("%.2f EUR", totalIVA));
-        lblTotalFactura.setText(String.format("%.2f EUR", total));
-        lblTotal.setText(String.format("Total: %.2f EUR", total));
+        // Actualizar UI sólo si los labels existen
+        if (lblBaseImponible != null) lblBaseImponible.setText(String.format("%.2f EUR", baseImponible));
+        if (lblIVA != null) lblIVA.setText(String.format("%.2f EUR", totalIVA));
+        if (lblTotalFactura != null) lblTotalFactura.setText(String.format("%.2f EUR", total));
+        if (lblTotal != null) lblTotal.setText(String.format("Total: %.2f EUR", total));
     }
 
     @FXML
@@ -541,7 +577,56 @@ public class FacturaFormController {
         if (!validarFormulario()) {
             return;
         }
-        guardarFactura("EMITIDA");
+
+        // Guardar primero en estado REVISION para que Verifactu valide el estado y las líneas
+        guardarFactura("REVISION");
+
+        // facturaActual debe tener ahora un ID
+        if (facturaActual == null || facturaActual.getId() == null) {
+            mostrarError("No se pudo obtener el ID de la factura tras guardarla. No se puede emitir.");
+            return;
+        }
+
+        // Preparar tarea en background para aprobar y emitir (envío obligatorio a AEAT)
+        Task<Void> tareaEmitir = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                // Llamada que lanza excepción si el envío a AEAT falla
+                facturaService.aprobarYEmitir(facturaActual.getId());
+                return null;
+            }
+        };
+
+        // Mostrar indicador de progreso modal
+        ProgressIndicator pi = new ProgressIndicator();
+        pi.setPrefSize(80, 80);
+
+        Platform.runLater(() -> {
+            Stage stage = (Stage) lblTitulo.getScene().getWindow();
+            Dialog<Void> dialog = new Dialog<>();
+            dialog.initOwner(stage);
+            dialog.setTitle("Emitir factura");
+            dialog.getDialogPane().setContent(pi);
+            dialog.getDialogPane().getButtonTypes().clear();
+            dialog.setResizable(false);
+            dialog.show();
+
+            tareaEmitir.setOnSucceeded(ev -> {
+                dialog.close();
+                mostrarExito("Factura emitida y enviada a AEAT correctamente");
+                // Cerrar ventana del formulario
+                cerrarVentana();
+            });
+
+            tareaEmitir.setOnFailed(ev -> {
+                dialog.close();
+                Throwable ex = tareaEmitir.getException();
+                String msg = ex != null ? ex.getMessage() : "Error desconocido al emitir";
+                mostrarError("Error al emitir la factura: " + msg);
+            });
+
+            new Thread(tareaEmitir, "emitir-factura-thread").start();
+        });
     }
 
     private void guardarFactura(String estado) {
@@ -551,14 +636,14 @@ public class FacturaFormController {
             }
 
             // Datos básicos
-            facturaActual.setCliente(cbCliente.getValue());
-            facturaActual.setFecha(dpFechaEmision.getValue());
-            facturaActual.setFechaVencimiento(dpFechaVencimiento.getValue());
-            facturaActual.setObservaciones(txtObservaciones.getText());
+            if (cbCliente != null) facturaActual.setCliente(cbCliente.getValue());
+            if (dpFechaEmision != null) facturaActual.setFecha(dpFechaEmision.getValue());
+            if (dpFechaVencimiento != null) facturaActual.setFechaVencimiento(dpFechaVencimiento.getValue());
+            if (txtObservaciones != null) facturaActual.setObservaciones(txtObservaciones.getText());
             facturaActual.setEstado(estado);
 
             // Forma de pago
-            if (cbFormaPago.getValue() != null) {
+            if (cbFormaPago != null && cbFormaPago.getValue() != null) {
                 facturaActual.setMedioCobro(cbFormaPago.getValue());
             }
 
@@ -567,9 +652,12 @@ public class FacturaFormController {
             BigDecimal totalIVA = BigDecimal.ZERO;
 
             for (LineaFacturaTemp linea : lineasTemp) {
-                baseImponible = baseImponible.add(linea.getSubtotal());
-                BigDecimal ivaLinea = linea.getSubtotal().multiply(linea.getIva())
-                    .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                baseImponible = baseImponible.add(linea.getSubtotal() != null ? linea.getSubtotal() : BigDecimal.ZERO);
+                BigDecimal ivaLinea = BigDecimal.ZERO;
+                if (linea.getIva() != null && linea.getSubtotal() != null) {
+                    ivaLinea = linea.getSubtotal().multiply(linea.getIva())
+                        .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                }
                 totalIVA = totalIVA.add(ivaLinea);
             }
 
@@ -591,10 +679,6 @@ public class FacturaFormController {
             if (!lineasTemp.isEmpty()) {
                 log.info("💾 Guardando {} líneas de factura...", lineasTemp.size());
 
-                // Primero eliminar las líneas existentes si estamos editando
-                // Si estamos en modo edición, podría eliminarse la lógica de limpieza de líneas anteriores aquí (pendiente)
-
-                // Guardar las nuevas líneas
                 for (LineaFacturaTemp lineaTemp : lineasTemp) {
                     FacturaLinea linea = new FacturaLinea();
                     linea.setFactura(guardada);
@@ -625,7 +709,10 @@ public class FacturaFormController {
             mostrarExito("Factura " + (estado.equals("EMITIDA") ? "emitida" : "guardada") + " correctamente\n" +
                 "Número: " + guardada.getNumero() + "\n" +
                 "Total: " + guardada.getTotal() + " EUR");
-            cerrarVentana();
+            // No cerrar la ventana si la factura queda en REVISION (se lanzará el envío en background)
+            if (!"REVISION".equals(estado)) {
+                cerrarVentana();
+            }
 
         } catch (Exception e) {
             log.error("❌ Error guardando factura", e);
@@ -680,11 +767,11 @@ public class FacturaFormController {
     private boolean validarFormulario() {
         StringBuilder errores = new StringBuilder();
 
-        if (cbCliente.getValue() == null) {
+        if (cbCliente == null || cbCliente.getValue() == null) {
             errores.append("Debe seleccionar un cliente\n");
         }
 
-        if (dpFechaEmision.getValue() == null) {
+        if (dpFechaEmision == null || dpFechaEmision.getValue() == null) {
             errores.append("La fecha de emision es obligatoria\n");
         }
 
@@ -702,10 +789,11 @@ public class FacturaFormController {
     }
 
     private boolean formularioModificado() {
-        return cbCliente.getValue() != null || !lineasTemp.isEmpty();
+        return (cbCliente != null && cbCliente.getValue() != null) || !lineasTemp.isEmpty();
     }
 
     private void cerrarVentana() {
+        if (lblTitulo == null) return;
         Stage stage = (Stage) lblTitulo.getScene().getWindow();
         stage.close();
     }
@@ -741,10 +829,12 @@ public class FacturaFormController {
     }
 
     private void mostrarAdvertencia(String msg) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Advertencia");
-        alert.setContentText(msg);
-        alert.showAndWait();
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Advertencia");
+            alert.setContentText(msg);
+            alert.showAndWait();
+        });
     }
 
     // Clase interna para las líneas temporales
@@ -762,6 +852,8 @@ public class FacturaFormController {
         public void calcularSubtotal() {
             if (cantidad != null && precio != null) {
                 this.subtotal = precio.multiply(new BigDecimal(cantidad));
+            } else {
+                this.subtotal = BigDecimal.ZERO;
             }
         }
     }

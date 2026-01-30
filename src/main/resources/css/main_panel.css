@@ -24,7 +24,7 @@
 
     -fx-background: #F8F9FA;
     -fx-sidebar-bg: #FFFFFF;
-    -fx-header-bg: linear-gradient(to right, #D4922B, #B87A1F);
+    -fx-header-bg: linear-gradient(from 0% 50% to 100% 50%, #D4922B 0%, #B87A1F 100%);
 
     -fx-text-primary: #2C3E50;
     -fx-text-secondary: #7F8C8D;
@@ -518,4 +518,3 @@
 .sidebar-button {
     -fx-transition: all 0.3s ease;
 }
-

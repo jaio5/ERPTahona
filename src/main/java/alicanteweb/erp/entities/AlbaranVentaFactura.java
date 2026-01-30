@@ -17,4 +17,10 @@ public class AlbaranVentaFactura {
     @JoinColumn(name = "facturas_id", nullable = false)
     private Factura facturas;
 
+    // Relación al albarán: se asigna al campo embebido albaranesventasId
+    @MapsId("albaranesventasId")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "albaranesVentas_id", nullable = false)
+    private AlbaranVenta albaran;
+
 }

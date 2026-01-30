@@ -3,6 +3,7 @@ package alicanteweb.erp.controller;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.service.FacturaService;
 import alicanteweb.erp.service.ImpresionService;
+import alicanteweb.erp.service.VerifactuService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -15,6 +16,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.concurrent.Task;
+import javafx.application.Platform;
+import java.util.Map;
 
 @Component
 public class FacturaController extends BaseController<Factura> {
@@ -23,6 +27,7 @@ public class FacturaController extends BaseController<Factura> {
     private final FacturaService facturaService;
     private final ApplicationContext applicationContext;
     private final ImpresionService impresionService;
+    private final VerifactuService verifactuService;
 
     @FXML private TableView<Factura> tableFacturas;
     @FXML private TableColumn<Factura, String> colNumero;
@@ -40,10 +45,11 @@ public class FacturaController extends BaseController<Factura> {
     @FXML private Label lblTotal;
 
     public FacturaController(FacturaService facturaService, ApplicationContext applicationContext,
-                            ImpresionService impresionService) {
+                            ImpresionService impresionService, VerifactuService verifactuService) {
         this.facturaService = facturaService;
         this.applicationContext = applicationContext;
         this.impresionService = impresionService;
+        this.verifactuService = verifactuService;
     }
 
     @FXML
@@ -202,7 +208,40 @@ public class FacturaController extends BaseController<Factura> {
         Factura selected = table.getSelectionModel().getSelectedItem();
         if (selected != null) {
             log.info("Enviar factura a AEAT: {}", selected.getNumero());
-            mostrarInfo("Envío a AEAT en desarrollo");
+
+            // Confirmación con el usuario
+            if (!mostrarConfirmacion("¿Deseas enviar la factura " + selected.getNumero() + " a Verifactu/AEAT?")) {
+                return;
+            }
+
+            // Ejecutar envío en background para no bloquear la UI
+            Task<Map<String, Object>> task = new Task<>() {
+                @Override
+                protected Map<String, Object> call() throws Exception {
+                    return verifactuService.enviarFactura(selected);
+                }
+            };
+
+            task.setOnSucceeded(ev -> {
+                Map<String, Object> resultado = task.getValue();
+                boolean exito = Boolean.TRUE.equals(resultado.get("exito"));
+                String mensaje = (String) resultado.getOrDefault("mensaje", "Resultado desconocido");
+                if (exito) {
+                    mostrarExito("Factura enviada correctamente: " + mensaje);
+                } else {
+                    mostrarError("Error enviando factura: " + mensaje);
+                }
+                // Refrescar tabla
+                cargarDatos();
+            });
+
+            task.setOnFailed(ev -> {
+                Throwable ex = task.getException();
+                log.error("Error enviando factura a AEAT", ex);
+                mostrarError("Error enviando factura: " + (ex != null ? ex.getMessage() : "Exception"));
+            });
+
+            new Thread(task, "verifactu-enviar-thread").start();
         } else {
             mostrarAdvertencia("Selecciona una factura primero");
         }

@@ -44,7 +44,7 @@
    ============================================ */
 
 .login-background {
-    -fx-background-color: linear-gradient(to bottom right, #3b82f6, #1e40af);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #3b82f6 0%, #1e40af 100%);
 }
 
 .login-container {

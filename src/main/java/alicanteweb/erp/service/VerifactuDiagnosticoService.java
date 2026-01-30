@@ -96,79 +96,63 @@ public class VerifactuDiagnosticoService {
         log.info("   Ruta configurada: {}", keystorePath);
         log.info("   Alias configurado: {}", keyAlias);
 
+        InputStream is = null;
         try {
-            // Intentar cargar el certificado
-            InputStream is = getClass().getResourceAsStream(keystorePath);
+            // Reutilizar el método robusto de apertura de stream del servicio Verifactu
+            is = VerifactuService.openKeystoreStream(keystorePath);
             if (is == null) {
-                // Intentar desde el sistema de archivos
-                try {
-                    is = new java.io.FileInputStream(keystorePath);
-                } catch (Exception e) {
-                    log.error("❌ Certificado NO encontrado");
-                    log.error("   Ubicación buscada: {}", keystorePath);
-                    log.error("   El certificado debe estar en src/main/resources/certs/");
-                    log.info("");
-                    log.info("   📝 PARA OBTENER UN CERTIFICADO:");
-                    log.info("   ────────────────────────────────────────────────────");
-                    log.info("   1. CERTIFICADO REAL (Producción):");
-                    log.info("      - Web: https://www.sede.fnmt.gob.es/certificados");
-                    log.info("      - Solicitar: Certificado de Persona Jurídica");
-                    log.info("      - Empresa: GRUPO BABO, S.Coop.V.L.");
-                    log.info("      - Exportar como .p12 y copiar a: {}", keystorePath);
-                    log.info("");
-                    log.info("   2. CERTIFICADO DE PRUEBA (Desarrollo):");
-                    log.info("      - Web: https://www.agenciatributaria.es");
-                    log.info("      - Buscar: Verifactu → Entorno de preproducción");
-                    log.info("");
-                    log.info("   3. CONTINUAR SIN CERTIFICADO:");
-                    log.info("      - La app funcionará pero solo guardará evidencias locales");
-                    log.info("      - NO enviará facturas a la AEAT");
-                    log.info("");
+                log.warn("❌ Certificado NO encontrado o no legible: {}", keystorePath);
+                log.info("");
+                log.info("   Puedes añadir el fichero .p12 en: src/main/resources/certs/mi_certificado.p12");
+                log.info("   O configurar otra ruta en application.properties: verifactu.keystore.path");
+                log.info("");
+                log.info("   Mientras tanto la aplicación funcionará sin firma digital (solo evidencias locales)");
+                return;
+            }
+
+            // Comprobar si el stream está vacío
+            try {
+                if (is.available() == 0) {
+                    log.warn("❌ El fichero de keystore existe pero parece vacío o no accesible: {}", keystorePath);
                     return;
                 }
+            } catch (Exception ex) {
+                if (log.isDebugEnabled()) log.debug("No se pudo comprobar available() del InputStream: {}", ex.getMessage());
             }
 
             KeyStore ks = KeyStore.getInstance("PKCS12");
-            ks.load(is, keystorePassword.toCharArray());
-            is.close();
+            ks.load(is, keystorePassword == null ? new char[0] : keystorePassword.toCharArray());
 
             Certificate cert = ks.getCertificate(keyAlias);
             if (cert instanceof X509Certificate x509) {
                 log.info("✅ Certificado encontrado y cargado correctamente");
                 log.info("   Titular: {}", x509.getSubjectX500Principal().getName());
                 log.info("   Emisor: {}", x509.getIssuerX500Principal().getName());
-                log.info("   Válido desde: {}", x509.getNotBefore().toInstant()
-                    .atZone(java.time.ZoneId.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-                log.info("   Válido hasta: {}", x509.getNotAfter().toInstant()
-                    .atZone(java.time.ZoneId.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-
-                // Verificar si está caducado
+                log.info("   Válido desde: {}", x509.getNotBefore());
+                log.info("   Válido hasta: {}", x509.getNotAfter());
                 try {
                     x509.checkValidity();
                     log.info("   Estado: ✅ VÁLIDO");
                 } catch (Exception e) {
-                    log.error("   Estado: ❌ CADUCADO o NO VÁLIDO");
-                    log.error("   Necesitas renovar el certificado");
+                    log.warn("   Estado: ❌ CADUCADO o NO VÁLIDO: {}", e.getMessage());
                 }
-
-                // Obtener fingerprint
                 try {
                     String fingerprint = verifactuService.getCertificateFingerprint();
                     log.info("   Fingerprint (SHA-256): {}", fingerprint != null ? fingerprint.substring(0, 20) + "..." : "N/A");
                 } catch (Exception e) {
                     log.warn("   No se pudo obtener fingerprint: {}", e.getMessage());
                 }
-
             } else {
-                log.error("❌ El certificado no es de tipo X509");
+                log.warn("❌ El certificado no es de tipo X509 o alias incorrecto: {}", keyAlias);
             }
 
         } catch (Exception e) {
-            log.error("❌ Error al verificar certificado: {}", e.getMessage());
-            if (log.isDebugEnabled()) {
-                log.debug("Stack trace:", e);
+            // Evitar un stacktrace ruidoso en producción; logging detallado solo en DEBUG
+            log.warn("❌ Error al verificar certificado (keystore corrupto o contraseña incorrecta): {}", e.getMessage());
+            if (log.isDebugEnabled()) log.debug("Stack trace:", e);
+        } finally {
+            if (is != null) {
+                try { is.close(); } catch (Exception ignored) {}
             }
         }
         log.info("");

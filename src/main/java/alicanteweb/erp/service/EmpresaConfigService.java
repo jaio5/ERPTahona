@@ -28,8 +28,15 @@ public class EmpresaConfigService {
      * Obtiene la configuración activa de la empresa
      */
     public Optional<EmpresaConfig> getConfiguracionActiva() {
-        // Llamamos directamente a findFirstByActivoTrue para evitar NonUniqueResultException
-        return empresaConfigRepository.findFirstByActivoTrue();
+        // Llamamos a repo que devuelve la primera por activo. Añadimos diagnóstico si hay múltiples.
+        List<EmpresaConfig> activas = empresaConfigRepository.findByActivoTrue();
+        if (activas == null || activas.isEmpty()) {
+            return Optional.empty();
+        }
+        if (activas.size() > 1) {
+            log.warn("Se detectaron {} configuraciones activas en la BD. Usando la primera encontrada (id={}). Revisa la tabla empresa_config.", activas.size(), activas.get(0).getId());
+        }
+        return Optional.ofNullable(activas.get(0));
     }
 
     /**

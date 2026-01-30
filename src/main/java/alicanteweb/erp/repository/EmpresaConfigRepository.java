@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -15,6 +16,11 @@ public interface EmpresaConfigRepository extends JpaRepository<EmpresaConfig, Lo
      * Se usa findFirstByActivoTrue para evitar NonUniqueResultException si hay varias filas activas.
      */
     Optional<EmpresaConfig> findFirstByActivoTrue();
+
+    /**
+     * Devuelve todas las configuraciones marcadas como activas (para diagnóstico)
+     */
+    List<EmpresaConfig> findByActivoTrue();
 
     /**
      * Alias para compatibilidad con código existente

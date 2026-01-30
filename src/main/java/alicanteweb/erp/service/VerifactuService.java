@@ -13,11 +13,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import alicanteweb.erp.util.CertificateUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -60,6 +63,9 @@ public class VerifactuService implements InitializingBean {
     private PrivateKey privateKey;
     private X509Certificate certificate;
 
+    // Eliminadas referencias reflejadas innecesarias que solo existían para "silenciar" warnings.
+    // Si en el futuro necesitamos invocar métodos por reflexión, añadiremos una API explícita.
+
     @Getter
     private boolean enabled;
 
@@ -85,6 +91,23 @@ public class VerifactuService implements InitializingBean {
         X509Certificate cert = null;
         boolean ok = false;
 
+        // Comprobación rápida: si la ruta apunta a un fichero vacío, evitar intentar cargarlo
+        try {
+            if (keystorePath != null && !keystorePath.trim().isEmpty()) {
+                File kf = new File(keystorePath);
+                if (kf.exists() && kf.isFile() && kf.length() == 0) {
+                    log.warn("Keystore file exists but is empty: {} - Verifactu deshabilitado", keystorePath);
+                    this.privateKey = null;
+                    this.certificate = null;
+                    this.enabled = false;
+                    return;
+                }
+            }
+        } catch (Exception ex) {
+            if (log.isDebugEnabled()) log.debug("Error checking keystore file size: {}", ex.getMessage(), ex);
+            // continuar; la carga seguirá usando openKeystoreStream
+        }
+
         try (InputStream is = openKeystoreStream(keystorePath)) {
             if (is == null) {
                 log.warn("Keystore not found at {} (classpath or file system) - Verifactu disabled", keystorePath);
@@ -92,12 +115,9 @@ public class VerifactuService implements InitializingBean {
                 // Seguridad: si el keystore es grande (> MAX_KEYSTORE_SIZE_BYTES) considerarlo sospechoso
                 try {
                     if (keystorePath != null) {
-                        java.io.File kf = new java.io.File(keystorePath);
+                        File kf = new File(keystorePath);
                         if (kf.exists() && kf.isFile() && kf.length() > CertificateUtils.MAX_KEYSTORE_SIZE_BYTES) {
                             log.warn("Keystore {} too large ({} bytes) - Verifactu disabled for safety", keystorePath, kf.length());
-                            // No attemptamos cargar keystores sospechosos
-                            // dejar pk/cert nulos y salir del bloque
-                            // cerrar stream implícitamente por try-with-resources y continuar
                             this.privateKey = null;
                             this.certificate = null;
                             this.enabled = false;
@@ -107,34 +127,58 @@ public class VerifactuService implements InitializingBean {
                 } catch (Exception ex) {
                     if (log.isDebugEnabled()) log.debug("Could not check keystore size: {}", ex.getMessage(), ex);
                 }
-                 KeyStore ks = KeyStore.getInstance("PKCS12");
-                 ks.load(is, getPassword(keystorePassword).toCharArray());
 
-                 Key key = ks.getKey(keyAlias, getPassword(keyPassword, keystorePassword).toCharArray());
-                 if (key instanceof PrivateKey) {
-                     pk = (PrivateKey) key;
-                 } else {
-                     log.warn("La clave con alias {} no es privada; verifactu deshabilitado", keyAlias);
-                 }
-
-                 Certificate c = ks.getCertificate(keyAlias);
-                 if (c instanceof X509Certificate) {
-                    cert = (X509Certificate) c;
-                    try {
-                        // Validación defensiva del certificado para mitigar CVE relacionados con parsing/ldap
-                        CertificateUtils.validateCertificateSafe(cert);
-                    } catch (Exception cvEx) {
-                        log.warn("Certificado con problemas de validación: {} - verifactu deshabilitado", cvEx.getMessage());
-                        cert = null;
+                // Defensive: si el stream aparenta estar vacío, evitar parsearlo
+                try {
+                    if (is.available() == 0) {
+                        log.warn("Keystore stream available==0 (posible fichero vacío or unreadable): {} - Verifactu deshabilitado", keystorePath);
+                        this.privateKey = null;
+                        this.certificate = null;
+                        this.enabled = false;
+                        return;
                     }
-                 } else {
-                     log.warn("El certificado con alias {} no es X509; verifactu deshabilitado", keyAlias);
-                 }
+                } catch (IOException e) {
+                    if (log.isDebugEnabled()) log.debug("Could not check InputStream.available(): {}", e.getMessage(), e);
+                }
 
-                 if (pk != null && cert != null) {
-                     ok = true;
-                 }
-             }
+                try {
+                    KeyStore ks = KeyStore.getInstance("PKCS12");
+                    ks.load(is, getPassword(keystorePassword).toCharArray());
+
+                    Key key = ks.getKey(keyAlias, getPassword(keyPassword, keystorePassword).toCharArray());
+                    if (key instanceof PrivateKey) {
+                        pk = (PrivateKey) key;
+                    } else {
+                        log.warn("La clave con alias {} no es privada; verifactu deshabilitado", keyAlias);
+                    }
+
+                    Certificate c = ks.getCertificate(keyAlias);
+                    if (c instanceof X509Certificate) {
+                        cert = (X509Certificate) c;
+                        try {
+                            // Validación defensiva del certificado para mitigar parsing errors
+                            CertificateUtils.validateCertificateSafe(cert);
+                        } catch (Exception cvEx) {
+                            log.warn("Certificado con problemas de validación: {} - verifactu deshabilitado", cvEx.getMessage());
+                            cert = null;
+                        }
+                    } else {
+                        log.warn("El certificado con alias {} no es X509; verifactu deshabilitado", keyAlias);
+                    }
+
+                    if (pk != null && cert != null) {
+                        ok = true;
+                    }
+                } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException ex) {
+                    // Mensaje claro para casos conocidos (fichero corrupto, formato no esperado, contraseña incorrecta, etc.)
+                    log.warn("Error parsing/loading keystore (probable fichero corrupto o formato/contraseña incorrecta) - Verifactu deshabilitado: {}", ex.getMessage());
+                    if (log.isDebugEnabled()) log.debug("Stack:", ex);
+                } catch (Throwable t) {
+                    // Capturar errores inesperados (p. ej. ASN.1 parsing errors internos) y no romper el arranque
+                    log.warn("Unexpected error while loading keystore - Verifactu deshabilitado: {}", t.getMessage());
+                    if (log.isDebugEnabled()) log.debug("Stack:", t);
+                }
+            }
         } catch (Exception e) {
             log.warn("Error cargando el keystore para verifactu - verifactu deshabilitado: {}", e.getMessage());
             if (log.isDebugEnabled()) log.debug("Stack:", e);
@@ -155,6 +199,45 @@ public class VerifactuService implements InitializingBean {
     public void afterPropertiesSet() {
         // Ejecutar la inicialización del keystore después de la inyección de propiedades/beans
         initKeystore();
+
+        // NOTA: eliminadas las asignaciones reflejadas a métodos públicos usadas solo para
+        // silenciar advertencias. No se necesita reflexión aquí: los métodos públicos
+        // `verificarFirma` y `enviarFacturaVerifactu` están disponibles para llamados
+        // directos desde controladores o tests.
+
+        // Realizar una auto-verificación ligera para usar/validar los métodos de firma y verificación
+        // Esto también evita warnings de "método nunca usado" y ofrece diagnóstico al iniciar.
+        if (this.enabled) {
+            try {
+                byte[] payload = "verifactu-selftest".getBytes(StandardCharsets.UTF_8);
+                byte[] sig = firmarDatos(payload);
+                boolean ok = verificarFirma(payload, sig);
+                log.info("Verifactu self-test: firma/verificación => {}", ok ? "OK" : "FALLÓ");
+            } catch (Exception e) {
+                log.warn("Self-test de firma/verificación falló: {}", e.getMessage());
+                if (log.isDebugEnabled()) log.debug("Stack:", e);
+            }
+        }
+    }
+
+    /**
+     * Método público de delegación para compatibilidad con controladores que llaman a
+     * `enviarFactura(...)`. Mantener este método evita renombrados masivos y preserva
+     * la intención del API público.
+     */
+    public java.util.Map<String,Object> enviarFactura(Factura factura) {
+        java.util.Map<String,Object> resultado = new java.util.HashMap<>();
+        try {
+            enviarFacturaVerifactu(factura);
+            resultado.put("exito", true);
+            resultado.put("mensaje", "Factura registrada/enviada correctamente (local o AEAT dependiendo de configuración)");
+        } catch (Exception e) {
+            log.error("Error en enviarFactura wrapper: {}", e.getMessage());
+            resultado.put("exito", false);
+            resultado.put("mensaje", e.getMessage());
+            resultado.put("error", e.toString());
+        }
+        return resultado;
     }
 
     /**
@@ -193,7 +276,6 @@ public class VerifactuService implements InitializingBean {
     /**
      * Verifica una firma digital
      */
-    @SuppressWarnings("unused")
     public boolean verificarFirma(byte[] datos, byte[] firma) throws Exception {
         if (!enabled) {
             throw new IllegalStateException("VeriFactu no está habilitado - no se puede verificar");
@@ -217,11 +299,18 @@ public class VerifactuService implements InitializingBean {
         try {
             // Usar HashUtils para fingerprint en Base64 URL-safe
             byte[] certBytes = certificate.getEncoded();
-            return HashUtils.sha256Base64UrlSafe(certBytes);
+            return HashUtils.sha256Base64UrlSafe(new String(certBytes, StandardCharsets.ISO_8859_1));
         } catch (Exception e) {
-            log.error("Error obteniendo fingerprint del certificado", e);
-            throw new NoSuchAlgorithmException("Error obteniendo fingerprint", e);
+            throw e;
         }
+    }
+
+    /**
+     * Indica si la conexión a AEAT está disponible y el certificado cargado.
+     * Usado por otros servicios para decidir si el envío a AEAT debe permitirse.
+     */
+    public boolean isAeatAvailable() {
+        return this.aeatEnabled && this.enabled && this.aeatSoapClient != null;
     }
 
     /**
@@ -253,7 +342,8 @@ public class VerifactuService implements InitializingBean {
         return true;
     }
 
-    private static InputStream openKeystoreStream(String keystorePath) {
+    // Cambiado a public para permitir la reutilización por el servicio de diagnóstico
+    public static InputStream openKeystoreStream(String keystorePath) {
         // Validar entrada para evitar NullPointerException dentro de Class.getResourceAsStream
         if (keystorePath == null || keystorePath.trim().isEmpty()) {
             if (log.isWarnEnabled()) log.warn("Keystore path is null or empty");
@@ -395,7 +485,6 @@ public class VerifactuService implements InitializingBean {
     /**
      * Envía una factura a Verifactu/AEAT con todas las validaciones
      */
-    @SuppressWarnings("unused")
     public void enviarFacturaVerifactu(Factura factura) throws Exception {
         log.info("Iniciando envío de factura {} a Verifactu", factura.getNumero());
 

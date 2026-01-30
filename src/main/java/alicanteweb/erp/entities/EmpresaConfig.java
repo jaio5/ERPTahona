@@ -55,7 +55,7 @@ public class EmpresaConfig {
     private String provincia;
 
     @Size(max = 100)
-    @ColumnDefault("'Espña'")
+    @ColumnDefault("'España'")
     @Column(name = "pais", length = 100)
     private String pais;
 
@@ -127,5 +127,3 @@ public class EmpresaConfig {
         fechaModificacion = LocalDateTime.now();
     }
 }
-
-

@@ -2,14 +2,13 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fitToWidth="true" fx:controller="alicanteweb.erp.controller.formcontroller.AlbaranFormController">
-    <content>
-        <VBox styleClass="main-container" spacing="15" style="-fx-padding:12; -fx-pref-width:800;">
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fitToWidth="true" fitToHeight="true" fx:controller="alicanteweb.erp.controller.formcontroller.AlbaranFormController">
+        <VBox styleClass="main-container" spacing="15" style="-fx-padding:12;">
 
             <Label text="📦 FORMULARIO DE ALBARÁN" styleClass="title-panel"/>
 
             <!-- Reemplazado ScrollPane anidado por VBox para evitar doble scroll y permitir VGrow -->
-            <VBox spacing="15" style="-fx-padding: 15; -fx-pref-width:780;" maxWidth="Infinity">
+            <VBox spacing="15"  style="-fx-padding: 15;" maxWidth="Infinity">
 
                 <!-- DATOS DE ALBARÁN -->
                 <TitledPane text="📋 Datos de Albarán" collapsible="false" style="-fx-font-weight: bold;">
@@ -35,8 +34,8 @@
 
                 <!-- LÍNEAS DE ALBARÁN -->
                 <TitledPane text="📦 Líneas de Albarán" collapsible="false" style="-fx-font-weight: bold;">
-                    <VBox spacing="10" style="-fx-padding: 15;">
-                        <TableView fx:id="tableLineas" VBox.vgrow="ALWAYS" prefHeight="200" maxHeight="Infinity">
+                    <VBox spacing="10" style="-fx-padding: 15;" >
+                        <TableView fx:id="tableLineas" VBox.vgrow="ALWAYS" prefHeight="200" maxHeight="Infinity" prefWidth="Infinity">
                             <columns>
                                 <TableColumn fx:id="colArticulo" text="Artículo" prefWidth="150" />
                                 <TableColumn fx:id="colCantidad" text="Cantidad" />
@@ -77,5 +76,4 @@
                 <Button fx:id="btnCancelarAlbaran" text="❌ Cancelar" styleClass="button-neutral" onAction="#onCancelar" />
             </HBox>
         </VBox>
-    </content>
 </ScrollPane>
