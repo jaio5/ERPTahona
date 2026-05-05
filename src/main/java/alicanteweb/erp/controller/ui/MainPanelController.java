@@ -1,270 +1,186 @@
 package alicanteweb.erp.controller.ui;
 
+import alicanteweb.erp.service.AutenticacionService;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.layout.StackPane;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Controller;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Controller;
 
+/**
+ * Controlador principal del panel de navegación del ERP.
+ * Gestiona la carga dinámica de vistas FXML en el área de contenido central.
+ */
 @Controller
 public class MainPanelController {
+
     private static final Logger log = LoggerFactory.getLogger(MainPanelController.class);
 
     private final ApplicationContext springContext;
+    private final AutenticacionService autenticacionService;
 
     @FXML private StackPane contentArea;
-    @FXML private javafx.scene.control.Label lblUsuario;
-    @FXML private javafx.scene.control.Label lblEstado;
-    @FXML private javafx.scene.control.Label lblFecha;
-    @FXML private javafx.scene.control.Label lblHora;
+    @FXML private Label lblUsuario;
+    @FXML private Label lblEstado;
+    @FXML private Label lblFecha;
+    @FXML private Label lblHora;
 
-    public MainPanelController(ApplicationContext springContext) {
+    // Controles de menú con visibilidad controlada por rol
+    @FXML private Button   btnBackups;      // Button (en barra superior)
+    @FXML private MenuItem btnUsuarios;     // MenuItem (en desplegable)
+    @FXML private MenuItem btnAuditoria;
+    @FXML private MenuItem btnPlanContable;
+    @FXML private MenuItem btnAsientos;
+    @FXML private MenuItem btnModelo347;
+
+    public MainPanelController(ApplicationContext springContext, AutenticacionService autenticacionService) {
         this.springContext = springContext;
+        this.autenticacionService = autenticacionService;
     }
 
     @FXML
     public void initialize() {
-        log.info("MainPanelController inicializado correctamente");
         if (contentArea != null) {
-            log.info("✅ contentArea cargado correctamente");
-            // Cargar dashboard por defecto
-            cargarVistaModulo("/ui/dashboard.fxml");
+            cargarVista("/ui/dashboard.fxml");
         } else {
-            log.warn("⚠️ contentArea es null");
+            log.warn("contentArea no fue inyectado por FXML");
+        }
+        aplicarVisibilidadPorRol();
+        actualizarInfoUsuario();
+    }
+
+    /**
+     * Oculta elementos del menú que el usuario actual no tiene permiso de ver.
+     * Los nodos de menú marcados como {@code @FXML} deben tener el mismo fx:id
+     * que el atributo del campo (btnUsuarios, btnAuditoria, etc.).
+     */
+    private void aplicarVisibilidadPorRol() {
+        boolean esAdmin = autenticacionService.esAdministrador();
+        boolean verContabilidad = esAdmin || autenticacionService.tienePermiso("contabilidad", "ver");
+        // Botones en barra superior (son Node — visible+managed)
+        setVisible(btnBackups, esAdmin);
+        // Elementos de menú desplegable (MenuItem — solo visible)
+        setMenuItemVisible(btnUsuarios,     esAdmin);
+        setMenuItemVisible(btnAuditoria,    esAdmin);
+        setMenuItemVisible(btnPlanContable, verContabilidad);
+        setMenuItemVisible(btnAsientos,     verContabilidad);
+        setMenuItemVisible(btnModelo347,    verContabilidad);
+    }
+
+    private void setVisible(Node nodo, boolean visible) {
+        if (nodo != null) {
+            nodo.setVisible(visible);
+            nodo.setManaged(visible);
         }
     }
 
-    private void cargarVistaModulo(String fxmlPath) {
+    private void setMenuItemVisible(MenuItem item, boolean visible) {
+        if (item != null) item.setVisible(visible);
+    }
+
+    private void actualizarInfoUsuario() {
+        if (lblUsuario != null) {
+            lblUsuario.setText(autenticacionService.getNombreUsuarioActual());
+        }
+    }
+
+    /**
+     * Carga una vista FXML en el área de contenido central.
+     *
+     * @param fxmlPath ruta al recurso FXML (p.ej. "/ui/clientes_panel.fxml")
+     */
+    public void cargarVista(String fxmlPath) {
+        log.debug("Cargando vista: {}", fxmlPath);
         try {
-            log.info("=====================================");
-            log.info("INTENTANDO CARGAR VISTA: {}", fxmlPath);
-            log.info("=====================================");
-
-            java.net.URL resourceUrl = getClass().getResource(fxmlPath);
-            if (resourceUrl == null) {
-                throw new IllegalArgumentException("No se encontró el archivo: " + fxmlPath);
+            var url = getClass().getResource(fxmlPath);
+            if (url == null) {
+                throw new IllegalArgumentException("Recurso FXML no encontrado: " + fxmlPath);
             }
-            log.info("Archivo encontrado en: {}", resourceUrl);
-
-            FXMLLoader loader = new FXMLLoader(resourceUrl);
+            FXMLLoader loader = new FXMLLoader(url);
             loader.setControllerFactory(springContext::getBean);
-
-            log.info("Cargando FXML...");
             Parent view = loader.load();
-            log.info("FXML cargado OK. Tipo de vista: {}", view.getClass().getSimpleName());
-
-            log.info("Reemplazando contenido de contentArea...");
             contentArea.getChildren().setAll(view);
-
-            log.info("=====================================");
-            log.info("VISTA CARGADA EXITOSAMENTE: {}", fxmlPath);
-            log.info("Elementos en contentArea: {}", contentArea.getChildren().size());
-            log.info("=====================================");
+            log.debug("Vista cargada: {}", fxmlPath);
         } catch (Exception e) {
-            log.error("=====================================");
-            log.error("ERROR CRÍTICO CARGANDO VISTA: {}", fxmlPath);
-            log.error("Tipo de error: {}", e.getClass().getName());
-            log.error("Mensaje: {}", e.getMessage());
-            log.error("=====================================", e);
-
-            // Mostrar alert al usuario
-            javafx.application.Platform.runLater(() -> {
-                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText("Error cargando vista");
-                alert.setContentText("No se pudo cargar la vista: " + fxmlPath + "\n" + e.getMessage());
+            log.error("Error cargando vista '{}': {}", fxmlPath, e.getMessage(), e);
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error de navegación");
+                alert.setHeaderText("No se pudo cargar la vista");
+                alert.setContentText(fxmlPath + "\n" + e.getMessage());
                 alert.showAndWait();
             });
         }
     }
 
-
-    @FXML
-    public void onClientes() {
-        log.info(">>> BOTÓN CLIENTES PRESIONADO <<<");
-        cargarVistaModulo("/ui/clientes_panel.fxml");
-    }
-
-    @FXML
-    public void onProveedores() {
-        log.info(">>> BOTÓN PROVEEDORES PRESIONADO <<<");
-        cargarVistaModulo("/ui/proveedores_panel.fxml");
-    }
-
-    @FXML
-    public void onArticulos() {
-        log.info(">>> BOTÓN ARTÍCULOS PRESIONADO <<<");
-        cargarVistaModulo("/ui/articulos_panel.fxml");
-    }
-
-    @FXML
-    public void onAlbaranes() {
-        log.info(">>> BOTÓN ALBARANES PRESIONADO <<<");
-        cargarVistaModulo("/ui/albaranes_panel.fxml");
-    }
-
-    @FXML
-    public void onFacturas() {
-        log.info(">>> BOTÓN FACTURAS PRESIONADO <<<");
-        cargarVistaModulo("/ui/facturas_panel.fxml");
-    }
-
-    @FXML
-    public void onAlmacenes() {
-        log.info(">>> BOTÓN ALMACENES PRESIONADO <<<");
-        cargarVistaModulo("/ui/almacenes_panel.fxml");
-    }
-
-    @FXML
-    public void onVerifactu() {
-        log.info(">>> BOTÓN VERIFACTU PRESIONADO <<<");
-        cargarVistaModulo("/ui/verifactu_panel.fxml");
-    }
-
-    @FXML
-    public void onFacturasCompra() {
-        log.info(">>> BOTÓN FACTURAS DE COMPRA PRESIONADO <<<");
-        cargarVistaModulo("/ui/facturas_compra_panel.fxml");
-    }
-
-    @FXML
-    public void onPedidosCompra() {
-        log.info(">>> BOTÓN PEDIDOS DE COMPRA PRESIONADO <<<");
-        cargarVistaModulo("/ui/pedidos_compra_panel.fxml");
-    }
-
-    @FXML
-    public void onUsuarios() {
-        log.info(">>> BOTÓN USUARIOS PRESIONADO <<<");
-        try {
-            cargarVista("/ui/usuarios_panel.fxml");
-        } catch (Exception e) {
-            log.error("Error cargando vista usuarios: {}", e.getMessage(), e);
+    private void cargarVistaAutorizada(String modulo, String fxmlPath) {
+        if (!autenticacionService.tienePermiso(modulo, "ver")) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Permiso denegado");
+            alert.setHeaderText(null);
+            alert.setContentText("No tiene permisos para acceder a este módulo.");
+            alert.showAndWait();
+            return;
         }
+        cargarVista(fxmlPath);
     }
 
-    @FXML
-    public void onAuditoria() {
-        log.info(">>> BOTÓN AUDITORÍA PRESIONADO <<<");
-        cargarVistaModulo("/ui/auditoria_panel.fxml");
-    }
+    // ── Handlers de navegación ──────────────────────────────────────────────
 
-    @FXML
-    public void onBackups() {
-        log.info(">>> BOTÓN BACKUPS PRESIONADO <<<");
-        cargarVistaModulo("/ui/backup_panel.fxml");
-    }
+    @FXML public void onDashboard()         { cargarVistaAutorizada("dashboard", "/ui/dashboard.fxml"); }
+    @FXML public void onClientes()          { cargarVistaAutorizada("clientes", "/ui/clientes_panel.fxml"); }
+    @FXML public void onProveedores()       { cargarVistaAutorizada("proveedores", "/ui/proveedores_panel.fxml"); }
+    @FXML public void onArticulos()         { cargarVistaAutorizada("articulos", "/ui/articulos_panel.fxml"); }
+    @FXML public void onAlbaranes()         { cargarVistaAutorizada("ventas", "/ui/albaranes_panel.fxml"); }
+    @FXML public void onFacturas()          { cargarVistaAutorizada("ventas", "/ui/facturas_panel.fxml"); }
+    @FXML public void onAlmacenes()         { cargarVistaAutorizada("almacen", "/ui/almacenes_panel.fxml"); }
+    @FXML public void onVerifactu()         { cargarVistaAutorizada("verifactu", "/ui/verifactu_panel.fxml"); }
+    @FXML public void onFacturasCompra()    { cargarVistaAutorizada("compras", "/ui/facturas_compra_panel.fxml"); }
+    @FXML public void onPedidosCompra()     { cargarVistaAutorizada("compras", "/ui/pedidos_compra_panel.fxml"); }
+    @FXML public void onPedidosVenta()      { cargarVistaAutorizada("ventas", "/ui/pedidos_venta_panel.fxml"); }
+    @FXML public void onPresupuestos()      { cargarVistaAutorizada("ventas", "/ui/presupuestos_panel.fxml"); }
+    @FXML public void onUsuarios()          { cargarVistaAutorizada("usuarios", "/ui/usuarios_panel.fxml"); }
+    @FXML public void onAuditoria()         { cargarVistaAutorizada("auditoria", "/ui/auditoria_panel.fxml"); }
+    @FXML public void onBackups()           { cargarVistaAutorizada("backup", "/ui/backup_panel.fxml"); }
+    @FXML public void onAsientos()          { cargarVistaAutorizada("contabilidad", "/ui/asientos_panel.fxml"); }
+    @FXML public void onPlanContable()      { cargarVistaAutorizada("contabilidad", "/ui/plan_contable_panel.fxml"); }
+    @FXML public void onModelo347()         { cargarVistaAutorizada("fiscal", "/ui/modelo347_panel.fxml"); }
+    @FXML public void onCaja()              { cargarVistaAutorizada("tesoreria", "/ui/caja_panel.fxml"); }
+    @FXML public void onMovimientosBanco()  { cargarVistaAutorizada("tesoreria", "/ui/movimientos_banco_panel.fxml"); }
+    @FXML public void onEmpresaConfig()     { cargarVistaAutorizada("configuracion", "/ui/empresa_config_panel.fxml"); }
+    @FXML public void onConfiguracion()     { cargarVistaAutorizada("configuracion", "/ui/empresa_config_panel.fxml"); }
 
-    @FXML
-    public void onAsientos() {
-        log.info(">>> BOTÓN ASIENTOS CONTABLES PRESIONADO <<<");
-        cargarVistaModulo("/ui/asientos_panel.fxml");
-    }
-
-    @FXML
-    public void onPlanContable() {
-        log.info(">>> BOTÓN PLAN CONTABLE PRESIONADO <<<");
-        cargarVistaModulo("/ui/plan_contable_panel.fxml");
-    }
-
-    @FXML
-    public void onModelo347() {
-        log.info(">>> BOTÓN MODELO 347 PRESIONADO <<<");
-        cargarVistaModulo("/ui/modelo347_panel.fxml");
-    }
-
-    @FXML
-    public void onPresupuestos() {
-        log.info(">>> BOTÓN PRESUPUESTOS PRESIONADO <<<");
-        cargarVistaModulo("/ui/presupuestos_panel.fxml");
-    }
-
-    @FXML
-    public void onPedidosVenta() {
-        log.info(">>> BOTÓN PEDIDOS DE VENTA PRESIONADO <<<");
-        cargarVistaModulo("/ui/pedidos_venta_panel.fxml");
-    }
-
-    @FXML
-    public void onCaja() {
-        log.info(">>> BOTÓN CAJA PRESIONADO <<<");
-        cargarVistaModulo("/ui/caja_panel.fxml");
-    }
-
-    @FXML
-    public void onMovimientosBanco() {
-        log.info(">>> BOTÓN MOVIMIENTOS BANCARIOS PRESIONADO <<<");
-        cargarVistaModulo("/ui/movimientos_banco_panel.fxml");
-    }
-
-    @FXML
-    public void onEmpresaConfig() {
-        log.info(">>> BOTÓN CONFIGURACIÓN DE EMPRESA PRESIONADO <<<");
-        cargarVistaModulo("/ui/empresa_config_panel.fxml");
-    }
-
-    // Métodos para accesos rápidos del dashboard
-    public void cargarVista(String vista) {
-        log.info("INTENTANDO CARGAR VISTA: {}", vista);
-        try {
-            var url = getClass().getResource(vista);
-            if (url == null) {
-                log.error("Vista no encontrada: {} (resource url null)", vista);
-                return;
-            }
-            log.info("Archivo encontrado en: {}", url);
-            FXMLLoader loader = new FXMLLoader(url);
-            loader.setControllerFactory(springContext::getBean);
-            var node = loader.load();
-            if (node instanceof javafx.scene.Parent) {
-                contentArea.getChildren().clear();
-                contentArea.getChildren().add((javafx.scene.Parent) node);
-                log.info("VISTA CARGADA EXITOSAMENTE: {}", vista);
-            } else {
-                log.warn("La vista cargada no es un Parent válido: {}", vista);
-            }
-        } catch (Throwable t) {
-            log.error("Error cargando FXML {}", vista, t);
-        }
-    }
-
-    @FXML
-    public void onDashboard() {
-        log.info(">>> BOTÓN DASHBOARD PRESIONADO <<<");
-        cargarVistaModulo("/ui/dashboard.fxml");
-    }
-
-    @FXML
-    public void onConfiguracion() {
-        log.info(">>> BOTÓN CONFIGURACIÓN PRESIONADO <<<");
-        cargarVistaModulo("/ui/empresa_config_panel.fxml");
-    }
+    // ── Sesión ──────────────────────────────────────────────────────────────
 
     @FXML
     public void onCerrarSesion() {
-        log.info(">>> CERRANDO SESIÓN <<<");
-        javafx.application.Platform.runLater(() -> {
-            javafx.scene.control.Alert confirmacion = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION);
-            confirmacion.setTitle("Cerrar Sesión");
-            confirmacion.setHeaderText("¿Desea cerrar sesión?");
-            confirmacion.setContentText("Se cerrará la aplicación");
-
-            confirmacion.showAndWait().ifPresent(response -> {
-                if (response == javafx.scene.control.ButtonType.OK) {
-                    javafx.stage.Stage stage = (javafx.stage.Stage) contentArea.getScene().getWindow();
-                    stage.close();
-                }
-            });
-        });
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Cerrar Sesión");
+        confirmacion.setHeaderText("¿Desea cerrar sesión?");
+        confirmacion.setContentText("Se cerrará la sesión actual.");
+        confirmacion.showAndWait()
+            .filter(r -> r == ButtonType.OK)
+            .ifPresent(r -> cerrarVentana());
     }
 
     @FXML
     public void onSalir() {
-        log.info(">>> BOTÓN SALIR PRESIONADO <<<");
-        javafx.stage.Stage stage = (javafx.stage.Stage) contentArea.getScene().getWindow();
+        cerrarVentana();
+    }
+
+    private void cerrarVentana() {
+        Stage stage = (Stage) contentArea.getScene().getWindow();
         stage.close();
     }
 }

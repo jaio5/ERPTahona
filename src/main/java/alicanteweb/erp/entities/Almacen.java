@@ -3,14 +3,23 @@ package alicanteweb.erp.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
-@Data
+/**
+ * Entidad de almacén.
+ * Nota: se usa @Getter/@Setter en lugar de @Data para evitar equals/hashCode
+ * inadecuado sobre colecciones lazy en entidades JPA.
+ */
+@Getter
+@Setter
 @Entity
 @Table(name = "almacenes")
 public class Almacen {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -28,7 +37,6 @@ public class Almacen {
     @Column(name = "activo")
     private Boolean activo = true;
 
-    // Nuevos campos persistentes añadidos
     @Column(name = "descripcion", length = 1000)
     private String descripcion;
 
@@ -44,5 +52,17 @@ public class Almacen {
     @Column(name = "responsable", length = 255)
     private String responsable;
 
-    // Lombok @Data generará getters/setters
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Almacen)) return false;
+        Almacen that = (Almacen) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hashCode(id); }
+
+    @Override
+    public String toString() { return "Almacen{id=" + id + ", codigo='" + codigo + "', nombre='" + nombre + "'}"; }
 }

@@ -4,6 +4,7 @@ import alicanteweb.erp.entities.AlbaranVenta;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.service.AlbaranService;
 import alicanteweb.erp.service.AlbaranVentaService;
+import alicanteweb.erp.service.ImpresionService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -43,11 +44,14 @@ public class AlbaranController {
     private final AlbaranVentaService albaranVentaService;
     private final AlbaranService albaranService;
     private final ApplicationContext applicationContext;
+    private final ImpresionService impresionService;
 
-    public AlbaranController(AlbaranVentaService albaranVentaService, AlbaranService albaranService, ApplicationContext applicationContext) {
+    public AlbaranController(AlbaranVentaService albaranVentaService, AlbaranService albaranService,
+                             ApplicationContext applicationContext, ImpresionService impresionService) {
         this.albaranVentaService = albaranVentaService;
         this.albaranService = albaranService;
         this.applicationContext = applicationContext;
+        this.impresionService = impresionService;
     }
 
     @FXML
@@ -279,7 +283,7 @@ public class AlbaranController {
             return;
         }
         log.info("Ver albarán: {}", albaran.getNumero());
-        mostrarAlerta("Función en desarrollo: Ver albarán");
+        mostrarDetalleAlbaran(albaran);
     }
 
     @FXML
@@ -290,7 +294,7 @@ public class AlbaranController {
             return;
         }
         log.info("Editar albarán: {}", albaran.getNumero());
-        mostrarAlerta("Función en desarrollo: Editar albarán");
+        abrirFormularioAlbaran(albaran);
     }
 
     @FXML
@@ -301,7 +305,13 @@ public class AlbaranController {
             return;
         }
         log.info("Imprimir albarán: {}", albaran.getNumero());
-        mostrarAlerta("Función en desarrollo: Imprimir albarán");
+        try {
+            impresionService.imprimirAlbaran(albaran, true);
+            mostrarInfo("Albarán generado correctamente en:\n" + impresionService.getDirectorioImpresiones());
+        } catch (Exception e) {
+            log.error("Error imprimiendo albarán {}", albaran.getNumero(), e);
+            mostrarError("Error al imprimir albarán: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -392,4 +402,60 @@ public class AlbaranController {
         alert.showAndWait();
     }
 
+    private void mostrarInfo(String msg) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Información");
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
+    }
+
+    private void mostrarDetalleAlbaran(AlbaranVenta albaran) {
+        String cliente = albaran.getCliente() != null ? albaran.getCliente().getNombre() : "Sin cliente";
+        int lineas = albaran.getLineas() != null ? albaran.getLineas().size() : 0;
+        String detalle = "Número: " + valor(albaran.getNumero()) + "\n"
+            + "Fecha: " + valor(albaran.getFecha()) + "\n"
+            + "Cliente: " + cliente + "\n"
+            + "Total: " + valor(albaran.getTotal()) + "\n"
+            + "Líneas: " + lineas + "\n"
+            + "Observaciones: " + valor(albaran.getObservaciones());
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Detalle de albarán");
+        alert.setHeaderText(albaran.getNumero());
+        alert.setContentText(detalle);
+        alert.showAndWait();
+    }
+
+    private void abrirFormularioAlbaran(AlbaranVenta albaran) {
+        try {
+            java.net.URL resource = getClass().getResource("/ui/albaran_form.fxml");
+            if (resource == null) {
+                mostrarAlerta("No se encuentra el formulario de albarán");
+                return;
+            }
+
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(resource);
+            loader.setControllerFactory(applicationContext::getBean);
+            javafx.scene.Parent root = loader.load();
+            Object ctrl = loader.getController();
+            if (ctrl instanceof alicanteweb.erp.controller.formcontroller.AlbaranFormController formController) {
+                formController.setAlbaran(albaran);
+            }
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Editar Albarán");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario de albarán {}", albaran.getNumero(), e);
+            mostrarError("Error al abrir formulario: " + e.getMessage());
+        }
+    }
+
+    private String valor(Object value) {
+        return value != null ? value.toString() : "";
+    }
 }

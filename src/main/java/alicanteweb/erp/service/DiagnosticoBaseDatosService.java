@@ -8,126 +8,82 @@ import alicanteweb.erp.repository.ClienteRepository;
 import alicanteweb.erp.repository.ArticuloRepository;
 import alicanteweb.erp.repository.ProveedorRepository;
 import alicanteweb.erp.repository.UsuarioRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 /**
- * Servicio de diagnóstico que verifica el estado de los datos al iniciar
+ * Servicio de diagnóstico que verifica el estado de los datos al iniciar.
+ * Usa conteos y muestras limitadas en lugar de cargar todos los registros.
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class DiagnosticoBaseDatosService {
+
+    private static final int MUESTRA_LIMITE = 5;
 
     private final ClienteRepository clienteRepository;
     private final ArticuloRepository articuloRepository;
     private final ProveedorRepository proveedorRepository;
     private final UsuarioRepository usuarioRepository;
 
-    public DiagnosticoBaseDatosService(
-            ClienteRepository clienteRepository,
-            ArticuloRepository articuloRepository,
-            ProveedorRepository proveedorRepository,
-            UsuarioRepository usuarioRepository) {
-        this.clienteRepository = clienteRepository;
-        this.articuloRepository = articuloRepository;
-        this.proveedorRepository = proveedorRepository;
-        this.usuarioRepository = usuarioRepository;
-    }
-
     @EventListener(ApplicationReadyEvent.class)
     public void diagnosticarBaseDatos() {
-        log.info("╔══════════════════════════════════════════════════════════╗");
-        log.info("║                                                          ║");
-        log.info("║        DIAGNÓSTICO DE BASE DE DATOS                     ║");
-        log.info("║                                                          ║");
-        log.info("╚══════════════════════════════════════════════════════════╝");
-
+        log.info("--- DIAGNÓSTICO DE BASE DE DATOS ---");
         try {
-            // Verificar usuarios
-            long totalUsuarios = usuarioRepository.count();
-            log.info("📊 USUARIOS:");
-            log.info("   Total: {}", totalUsuarios);
-            if (totalUsuarios > 0) {
-                List<Usuario> usuarios = usuarioRepository.findAll();
-                usuarios.forEach(u -> log.info("   - {} ({})",
-                    u.getUsername(),
-                    (u.getEnabled() != null && u.getEnabled()) ? "activo" : "inactivo"));
+            diagnosticarEntidad("USUARIOS",    usuarioRepository.count(),    this::logUsuarios);
+            diagnosticarEntidad("CLIENTES",    clienteRepository.count(),    this::logClientes);
+            diagnosticarEntidad("ARTÍCULOS",   articuloRepository.count(),   this::logArticulos);
+            diagnosticarEntidad("PROVEEDORES", proveedorRepository.count(),  this::logProveedores);
+
+            log.info("--- FIN DIAGNÓSTICO ---");
+
+            boolean sinDatos = clienteRepository.count() == 0
+                    && articuloRepository.count() == 0
+                    && proveedorRepository.count() == 0;
+
+            if (sinDatos) {
+                log.warn("No hay datos en las tablas principales. Usa los botones 'Nuevo' en cada módulo para crear registros.");
             } else {
-                log.warn("   ⚠️ No hay usuarios en la base de datos");
+                log.info("Datos disponibles en la base de datos: OK");
             }
-
-            // Verificar clientes
-            long totalClientes = clienteRepository.count();
-            log.info("📊 CLIENTES:");
-            log.info("   Total: {}", totalClientes);
-            if (totalClientes > 0) {
-                List<Cliente> clientes = clienteRepository.findAll();
-                log.info("   Primeros 5 clientes:");
-                clientes.stream().limit(5).forEach(c ->
-                    log.info("   - {} - {} ({})",
-                        c.getCodigo(),
-                        c.getNombre(),
-                        (c.getActivo() != null && c.getActivo()) ? "activo" : "inactivo"));
-            } else {
-                log.warn("   ⚠️ No hay clientes en la base de datos");
-                log.warn("   💡 Consejo: Crea algunos clientes de prueba");
-            }
-
-            // Verificar artículos
-            long totalArticulos = articuloRepository.count();
-            log.info("📊 ARTÍCULOS:");
-            log.info("   Total: {}", totalArticulos);
-            if (totalArticulos > 0) {
-                List<Articulo> articulos = articuloRepository.findAll();
-                log.info("   Primeros 5 artículos:");
-                articulos.stream().limit(5).forEach(a ->
-                    log.info("   - {} - {} - PVP: {}", a.getCodigo(), a.getDescripcion(), a.getPvp()));
-            } else {
-                log.warn("   ⚠️ No hay artículos en la base de datos");
-                log.warn("   💡 Consejo: Crea algunos artículos de prueba");
-            }
-
-            // Verificar proveedores
-            long totalProveedores = proveedorRepository.count();
-            log.info("📊 PROVEEDORES:");
-            log.info("   Total: {}", totalProveedores);
-            if (totalProveedores > 0) {
-                List<Proveedor> proveedores = proveedorRepository.findAll();
-                log.info("   Primeros 5 proveedores:");
-                proveedores.stream().limit(5).forEach(p ->
-                    log.info("   - {} - {} ({})",
-                        p.getId(),
-                        p.getNombre(),
-                        (p.getActivo() != null && p.getActivo()) ? "activo" : "inactivo"));
-            } else {
-                log.warn("   ⚠️ No hay proveedores en la base de datos");
-                log.warn("   💡 Consejo: Crea algunos proveedores de prueba");
-            }
-
-            log.info("╔══════════════════════════════════════════════════════════╗");
-            log.info("║                                                          ║");
-            log.info("║        DIAGNÓSTICO COMPLETADO                            ║");
-            log.info("║                                                          ║");
-            log.info("╚══════════════════════════════════════════════════════════╝");
-
-            // Resumen
-            if (totalClientes == 0 && totalArticulos == 0 && totalProveedores == 0) {
-                log.warn("⚠️⚠️⚠️ IMPORTANTE ⚠️⚠️⚠️");
-                log.warn("No hay datos en las tablas principales.");
-                log.warn("Las tablas estarán vacías hasta que crees registros.");
-                log.warn("Usa los botones 'Nuevo' en cada módulo para crear datos.");
-            } else {
-                log.info("✅ Hay datos disponibles en la base de datos");
-                log.info("✅ Las tablas deberían cargarse correctamente");
-            }
-
         } catch (Exception e) {
-            log.error("❌ ERROR en diagnóstico de base de datos", e);
+            log.error("ERROR en diagnóstico de base de datos", e);
         }
     }
-}
 
+    private void diagnosticarEntidad(String nombre, long total, Runnable logMuestra) {
+        log.info("{}: {} registros", nombre, total);
+        if (total > 0) {
+            logMuestra.run();
+        } else {
+            log.warn("  No hay {}. Crea algunos desde la aplicación.", nombre.toLowerCase());
+        }
+    }
+
+    private void logUsuarios() {
+        usuarioRepository.findAll(PageRequest.of(0, MUESTRA_LIMITE)).forEach(u ->
+            log.info("  - {} ({})", u.getUsername(), Boolean.TRUE.equals(u.getEnabled()) ? "activo" : "inactivo"));
+    }
+
+    private void logClientes() {
+        clienteRepository.findAll(PageRequest.of(0, MUESTRA_LIMITE)).forEach(c ->
+            log.info("  - {} - {} ({})", c.getCodigo(), c.getNombre(),
+                Boolean.TRUE.equals(c.getActivo()) ? "activo" : "inactivo"));
+    }
+
+    private void logArticulos() {
+        articuloRepository.findAll(PageRequest.of(0, MUESTRA_LIMITE)).forEach(a ->
+            log.info("  - {} - {} - PVP: {}", a.getCodigo(), a.getDescripcion(), a.getPvp()));
+    }
+
+    private void logProveedores() {
+        proveedorRepository.findAll(PageRequest.of(0, MUESTRA_LIMITE)).forEach(p ->
+            log.info("  - {} - {} ({})", p.getId(), p.getNombre(),
+                Boolean.TRUE.equals(p.getActivo()) ? "activo" : "inactivo"));
+    }
+}

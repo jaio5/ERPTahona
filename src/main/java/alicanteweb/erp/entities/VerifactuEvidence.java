@@ -74,4 +74,26 @@ public class VerifactuEvidence {
     @Column(name = "codigo_respuesta_aeat", length = 100)
     private String codigoRespuestaAEAT;
 
+    @Size(max = 20)
+    @Column(name = "tipo_registro", length = 20)
+    private String tipoRegistro;
+
+    @Lob
+    @Column(name = "xml_generado")
+    private String xmlGenerado;
+
+    @Column(name = "fecha_generacion_registro")
+    private Instant fechaGeneracionRegistro;
+
+    @Size(max = 128)
+    @Column(name = "huella_registro", length = 128)
+    private String huellaRegistro;
+
+    @Size(max = 20)
+    @Column(name = "nif_emisor", length = 20)
+    private String nifEmisor;
+
+    @Column(name = "fecha_expedicion_factura")
+    private java.time.LocalDate fechaExpedicionFactura;
+
 }

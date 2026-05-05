@@ -342,6 +342,7 @@ public class PresupuestoFormController {
             presupuestoActual.setNumero(txtNumero.getText());
             presupuestoActual.setFecha(dpFecha.getValue());
             presupuestoActual.setFechaValidez(dpValidez.getValue());
+            presupuestoActual.setCliente(cbCliente.getValue());
             presupuestoActual.setEstado(cbEstado.getValue());
             presupuestoActual.setObservaciones(txtCondiciones.getText());
 
@@ -384,12 +385,37 @@ public class PresupuestoFormController {
 
     @FXML
     public void onConvertirFactura() {
-        DialogUtils.showInfo("Funcionalidad de conversion a factura en desarrollo");
+        try {
+            if (presupuestoActual == null || presupuestoActual.getId() == null) {
+                if (!validarFormulario()) return;
+                onGuardar();
+                return;
+            }
+
+            var factura = presupuestoService.convertirAFactura(presupuestoActual.getId(), null);
+            DialogUtils.showSuccess("Presupuesto convertido a factura: " + (factura != null ? factura.getNumero() : ""));
+            cerrarVentana();
+        } catch (Exception e) {
+            log.error("Error convirtiendo presupuesto a factura", e);
+            DialogUtils.showError("Error al convertir a factura: " + e.getMessage());
+        }
     }
 
     @FXML
     public void onEnviar() {
-        DialogUtils.showInfo("Funcionalidad de envio en desarrollo");
+        try {
+            if (presupuestoActual == null || presupuestoActual.getId() == null) {
+                DialogUtils.showWarning("Guarda el presupuesto antes de marcarlo como enviado");
+                return;
+            }
+            presupuestoActual = presupuestoService.cambiarEstado(presupuestoActual.getId(), "ENVIADO");
+            cbEstado.setValue("ENVIADO");
+            lblEstado.setText("ENVIADO");
+            DialogUtils.showSuccess("Presupuesto marcado como enviado");
+        } catch (Exception e) {
+            log.error("Error marcando presupuesto como enviado", e);
+            DialogUtils.showError("Error al enviar presupuesto: " + e.getMessage());
+        }
     }
 
     @FXML

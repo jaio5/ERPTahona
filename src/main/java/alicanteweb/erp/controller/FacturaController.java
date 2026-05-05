@@ -10,7 +10,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,7 +20,7 @@ import javafx.concurrent.Task;
 import javafx.application.Platform;
 import java.util.Map;
 
-@Component
+@Controller
 public class FacturaController extends BaseController<Factura> {
     private static final Logger log = LoggerFactory.getLogger(FacturaController.class);
 
@@ -137,9 +137,7 @@ public class FacturaController extends BaseController<Factura> {
     @Override
     protected void eliminarItem(Factura item) {
         if (item != null && item.getId() != null) {
-            // Anular factura en lugar de eliminar
-            item.setEstado("ANULADA");
-            facturaService.save(item);
+            facturaService.anularFactura(item.getId(), "Anulacion solicitada desde el listado de facturas");
             log.info("✅ Factura anulada: {}", item.getNumero());
         }
     }
@@ -161,7 +159,7 @@ public class FacturaController extends BaseController<Factura> {
         Factura selected = table.getSelectionModel().getSelectedItem();
         if (selected != null) {
             log.info("Ver factura: {}", selected.getNumero());
-            mostrarInfo("Ver detalles de factura en desarrollo");
+            mostrarDetalleFactura(selected);
         } else {
             mostrarAdvertencia("Selecciona una factura primero");
         }
@@ -172,8 +170,15 @@ public class FacturaController extends BaseController<Factura> {
         Factura selected = table.getSelectionModel().getSelectedItem();
         if (selected != null) {
             if (mostrarConfirmacion("¿Está seguro de anular la factura " + selected.getNumero() + "?")) {
-                eliminarItem(selected);
-                cargarDatos();
+                try {
+                    eliminarItem(selected);
+                    cargarDatos();
+                } catch (IllegalStateException e) {
+                    mostrarAdvertencia(e.getMessage());
+                } catch (Exception e) {
+                    log.error("Error anulando factura {}", selected.getNumero(), e);
+                    mostrarError("Error al anular la factura: " + e.getMessage());
+                }
             }
         } else {
             mostrarAdvertencia("Selecciona una factura primero");
@@ -264,19 +269,12 @@ public class FacturaController extends BaseController<Factura> {
             stage.showAndWait();
 
             // Refrescar tabla después de cerrar
-            cargarFacturas();
+            cargarDatos();
 
         } catch (Exception e) {
             log.error("Error abriendo formulario de factura rectificativa", e);
             mostrarError("Error al abrir formulario: " + e.getMessage());
         }
-    }
-
-    /**
-     * Método auxiliar para recargar las facturas
-     */
-    private void cargarFacturas() {
-        cargarDatos();
     }
 
     // Sobrescribimos filtrar para aplicar fecha y estado además del texto
@@ -313,5 +311,29 @@ public class FacturaController extends BaseController<Factura> {
             .collect(Collectors.toList());
 
         actualizarTabla(filtradas);
+    }
+
+    private void mostrarDetalleFactura(Factura factura) {
+        String cliente = factura.getCliente() != null ? factura.getCliente().getNombre() : "Sin cliente";
+        int lineas = factura.getLineas() != null ? factura.getLineas().size() : 0;
+        String detalle = "Número: " + valor(factura.getNumero()) + "\n"
+            + "Fecha: " + valor(factura.getFecha()) + "\n"
+            + "Cliente: " + cliente + "\n"
+            + "Estado: " + valor(factura.getEstado()) + "\n"
+            + "Base imponible: " + valor(factura.getBaseImponible()) + "\n"
+            + "IVA: " + valor(factura.getTotalIva()) + "\n"
+            + "Total: " + valor(factura.getTotal()) + "\n"
+            + "Líneas: " + lineas + "\n"
+            + "VeriFactu: " + (Boolean.TRUE.equals(factura.getVerifactuEnviada()) ? "Enviada" : "Pendiente/no enviada");
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Detalle de factura");
+        alert.setHeaderText(factura.getNumero());
+        alert.setContentText(detalle);
+        alert.showAndWait();
+    }
+
+    private String valor(Object value) {
+        return value != null ? value.toString() : "";
     }
 }

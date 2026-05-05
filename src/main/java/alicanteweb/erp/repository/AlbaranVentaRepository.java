@@ -19,6 +19,12 @@ public interface AlbaranVentaRepository extends JpaRepository<AlbaranVenta, Long
     List<AlbaranVenta> findByCliente_Id(Long clienteId);
 
     /**
+     * Obtiene el número de secuencia máximo de albaranes del año dado (patrón 'ALB-YYYY-%')
+     */
+    @Query("SELECT MAX(CAST(SUBSTRING(a.numero, 10) AS int)) FROM AlbaranVenta a WHERE a.numero LIKE :patron")
+    Integer findMaxSecuenciaByYear(String patron);
+
+    /**
      * Alias para findByCliente_Id
      */
     default List<AlbaranVenta> findByClienteId(Long clienteId) {

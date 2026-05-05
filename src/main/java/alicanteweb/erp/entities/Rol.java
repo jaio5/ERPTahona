@@ -3,17 +3,22 @@ package alicanteweb.erp.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
- * Entidad Rol para sistema de autorización
+ * Entidad Rol para sistema de autorización.
+ * Nota: la relación con Usuario está pendiente de migración de BD (actualmente
+ * el rol está en la columna 'role' de la tabla 'users').
  */
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "roles")
 public class Rol {
@@ -76,13 +81,23 @@ public class Rol {
 
     @PrePersist
     protected void onCreate() {
-        if (activo == null) {
-            activo = true;
-        }
-        if (esSistema == null) {
-            esSistema = false;
-        }
+        if (activo == null) activo = true;
+        if (esSistema == null) esSistema = false;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Rol)) return false;
+        Rol that = (Rol) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hashCode(id); }
+
+    @Override
+    public String toString() { return "Rol{id=" + id + ", nombre='" + nombre + "'}"; }
 }
 
 

@@ -3,15 +3,23 @@ package alicanteweb.erp.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
-@Data
+/**
+ * Entidad de albarán de venta.
+ * Nota: se usa @Getter/@Setter en lugar de @Data para evitar equals/hashCode
+ * inadecuado sobre colecciones lazy en entidades JPA.
+ */
+@Getter
+@Setter
 @Entity
 @Table(name = "albaranes_venta")
 public class AlbaranVenta {
@@ -47,11 +55,23 @@ public class AlbaranVenta {
     @OneToMany(mappedBy = "albaran", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AlbaranVentaLinea> albaranVentaLineas = new LinkedHashSet<>();
 
-
-    /**
-     * Alias para compatibilidad - getLineas() retorna albaranVentaLineas
-     */
+    /** @deprecated Usar {@link #getAlbaranVentaLineas()} directamente. */
+    @Deprecated(since = "1.0", forRemoval = true)
     public Set<AlbaranVentaLinea> getLineas() {
         return this.albaranVentaLineas;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AlbaranVenta)) return false;
+        AlbaranVenta that = (AlbaranVenta) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hashCode(id); }
+
+    @Override
+    public String toString() { return "AlbaranVenta{id=" + id + ", numero='" + numero + "'}"; }
 }

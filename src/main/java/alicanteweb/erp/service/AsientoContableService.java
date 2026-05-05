@@ -1,8 +1,11 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.AsientoContable;
+import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.repository.AsientoContableRepository;
+import alicanteweb.erp.repository.FacturaRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +23,15 @@ import java.util.Optional;
 public class AsientoContableService {
 
     private final AsientoContableRepository repository;
+    private final FacturaRepository facturaRepository;
+    private final ContabilidadService contabilidadService;
 
-    public AsientoContableService(AsientoContableRepository repository) {
+    public AsientoContableService(AsientoContableRepository repository,
+                                  FacturaRepository facturaRepository,
+                                  @Lazy ContabilidadService contabilidadService) {
         this.repository = repository;
+        this.facturaRepository = facturaRepository;
+        this.contabilidadService = contabilidadService;
     }
 
     /**
@@ -146,13 +155,14 @@ public class AsientoContableService {
     }
 
     /**
-     * Crear asiento desde factura
+     * Crear asiento desde factura delegando en ContabilidadService
      */
     @Transactional
     public AsientoContable crearAsientoDesdeFactura(Long facturaId) {
         log.info("Creando asiento contable desde factura ID: {}", facturaId);
-        // TODO: Implementar lógica de generación de asiento desde factura
-        throw new UnsupportedOperationException("Función pendiente de implementar");
+        Factura factura = facturaRepository.findById(facturaId)
+                .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada con ID: " + facturaId));
+        return contabilidadService.generarAsientoFactura(factura, null);
     }
 }
 

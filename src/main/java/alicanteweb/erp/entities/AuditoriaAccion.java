@@ -3,18 +3,23 @@ package alicanteweb.erp.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Objects;
 
 /**
- * Entidad para auditoría de todas las acciones en el sistema
- * Cumplimiento RGPD y trazabilidad completa
+ * Entidad para auditoría de todas las acciones en el sistema.
+ * Cumplimiento RGPD y trazabilidad completa.
+ * Nota: se usa @Getter/@Setter en lugar de @Data para evitar equals/hashCode
+ * inadecuado en entidades JPA.
  */
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "auditoria_acciones", indexes = {
     @Index(name = "idx_auditoria_fecha", columnList = "fecha"),
@@ -137,6 +142,24 @@ public class AuditoriaAccion {
         if (fecha == null) {
             fecha = LocalDateTime.now();
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AuditoriaAccion)) return false;
+        AuditoriaAccion that = (AuditoriaAccion) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "AuditoriaAccion{id=" + id + ", tipoAccion='" + tipoAccion + "', fecha=" + fecha + "}";
     }
 }
 

@@ -313,15 +313,35 @@ public class ContabilidadService {
     }
 
     /**
-     * Obtener balance de sumas y saldos
+     * Obtener balance de sumas y saldos hasta la fecha indicada.
+     * Agrupa todos los movimientos por cuenta y calcula debe, haber y saldo.
      */
     @Transactional(readOnly = true)
     public List<BalanceCuenta> obtenerBalance(LocalDate fecha) {
+        Objects.requireNonNull(fecha, "Fecha no puede ser null");
         log.info("⚖️ Calculando balance a fecha: {}", fecha);
 
-        // Aquí iría la lógica compleja de cálculo de saldos por cuenta
-        // Por ahora retornamos lista vacía como placeholder
-        return new ArrayList<>();
+        List<Object[]> filas = asientoRepository.calcularBalanceHasta(fecha);
+        List<BalanceCuenta> balance = new ArrayList<>(filas.size());
+
+        for (Object[] fila : filas) {
+            String codigo  = (String) fila[0];
+            String nombre  = (String) fila[1];
+            String tipo    = (String) fila[2];
+            BigDecimal debe   = fila[3] != null ? new BigDecimal(fila[3].toString()) : BigDecimal.ZERO;
+            BigDecimal haber  = fila[4] != null ? new BigDecimal(fila[4].toString()) : BigDecimal.ZERO;
+            // El saldo depende del tipo de cuenta (cuentas de activo/gasto: saldo = debe - haber; pasivo/ingreso/patrimonio: haber - debe)
+            BigDecimal saldo;
+            if ("ACTIVO".equalsIgnoreCase(tipo) || "GASTO".equalsIgnoreCase(tipo)) {
+                saldo = debe.subtract(haber);
+            } else {
+                saldo = haber.subtract(debe);
+            }
+            balance.add(new BalanceCuenta(codigo, nombre, debe, haber, saldo));
+        }
+
+        log.info("⚖️ Balance calculado: {} cuentas", balance.size());
+        return balance;
     }
 
     /**
@@ -342,30 +362,14 @@ public class ContabilidadService {
         return true;
     }
 
-    // Ejecutar comprobaciones ligeras al iniciar la aplicación para validar integridad
+    // Comprueba la integridad contable al iniciar
     @EventListener(ApplicationReadyEvent.class)
     public void comprobarIntegridadContableOnStartup() {
         try {
-            // Validar cuadre y registrar estado (este llamado también evita advertencias 'never used')
             boolean cuadrados = validarCuadreContable();
-            log.info("🧾 Estado contable inicial - todos los asientos cuadrados: {}", cuadrados);
-
-            // Llamadas ligeras para evitar advertencias estáticas: obtener balance y libro diario recientes
-            try {
-                obtenerBalance(LocalDate.now());
-            } catch (Exception ignored) {
-                log.debug("No se pudo calcular balance inicial (entorno de test o BD vacía)");
-            }
-
-            try {
-                LocalDate hasta = LocalDate.now();
-                LocalDate desde = hasta.minusDays(7);
-                obtenerLibroDiario(desde, hasta);
-            } catch (Exception ignored) {
-                log.debug("No se pudo obtener libro diario inicial (entorno de test o BD vacía)");
-            }
+            log.info("Integridad contable al inicio: todos los asientos cuadrados = {}", cuadrados);
         } catch (Exception e) {
-            log.warn("⚠️ Error comprobando integridad contable al inicio: {}", e.getMessage());
+            log.warn("No se pudo verificar integridad contable al inicio: {}", e.getMessage());
         }
     }
 

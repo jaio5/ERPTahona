@@ -306,41 +306,37 @@ public class PedidoService {
         return true;
     }
 
-    // ==========================================
-    // MÉTODOS ALIAS PARA COMPATIBILIDAD
-    // ==========================================
+    // ── Métodos alias — @deprecated, usar métodos primarios ─────────────────
 
+    /** @deprecated Usar {@link #obtenerTodos()} */
+    @Deprecated(since = "1.0", forRemoval = true)
     @Transactional(readOnly = true)
-    public List<Pedido> findAll() {
-        return obtenerTodos();
-    }
+    public List<Pedido> findAll() { return obtenerTodos(); }
 
+    /** @deprecated Usar {@link #obtenerPorId(Long)} */
+    @Deprecated(since = "1.0", forRemoval = true)
     @Transactional(readOnly = true)
-    public Optional<Pedido> findById(Long id) {
-        return obtenerPorId(id);
-    }
+    public Optional<Pedido> findById(Long id) { return obtenerPorId(id); }
 
-    public Pedido save(Pedido pedido) {
-        return guardar(pedido);
-    }
+    /** @deprecated Usar {@link #guardar(Pedido)} */
+    @Deprecated(since = "1.0", forRemoval = true)
+    public Pedido save(Pedido pedido) { return guardar(pedido); }
 
-    public void deleteById(Long id) {
-        eliminar(id);
-    }
+    /** @deprecated Usar {@link #eliminar(Long)} */
+    @Deprecated(since = "1.0", forRemoval = true)
+    public void deleteById(Long id) { eliminar(id); }
 
+    /** @deprecated Usar {@link #buscarPorCliente(Long)} */
+    @Deprecated(since = "1.0", forRemoval = true)
     @Transactional(readOnly = true)
-    public List<Pedido> findByCliente(Long clienteId) {
-        return buscarPorCliente(clienteId);
-    }
+    public List<Pedido> findByCliente(Long clienteId) { return buscarPorCliente(clienteId); }
 
+    /** @deprecated Usar {@link #buscarPorEstado(String)} con "PENDIENTE" */
+    @Deprecated(since = "1.0", forRemoval = true)
     @Transactional(readOnly = true)
-    public List<Pedido> findPendientes() {
-        return buscarPorEstado("PENDIENTE");
-    }
+    public List<Pedido> findPendientes() { return buscarPorEstado("PENDIENTE"); }
 
-    /**
-     * Record para entregas parciales
-     */
+    /** Record para entregas parciales */
     public record EntregaParcial(Long lineaPedidoId, BigDecimal cantidad) {}
 }
 

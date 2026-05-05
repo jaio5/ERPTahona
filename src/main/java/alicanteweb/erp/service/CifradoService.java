@@ -81,7 +81,12 @@ public class CifradoService {
                 }
             } else {
                 if (aesKeyString == null || aesKeyString.isBlank() || aesKeyString.equals("DEFAULT_KEY_32_CHARACTERS_MIN!!")) {
-                    log.warn("⚠️ Clave AES no configurada (entorno no productivo). Para producción, configure 'cifrado.aes.key' con una clave Base64 segura.");
+                    log.warn("╔══════════════════════════════════════════════════════════════╗");
+                    log.warn("║  ⚠️  ADVERTENCIA DE SEGURIDAD - CLAVE AES POR DEFECTO       ║");
+                    log.warn("║  La clave 'cifrado.aes.key' no está configurada.             ║");
+                    log.warn("║  Los datos cifrados en dev NO son seguros en producción.     ║");
+                    log.warn("║  Configure 'cifrado.aes.key' en application-prod.properties  ║");
+                    log.warn("╚══════════════════════════════════════════════════════════════╝");
 
                     // Generar una clave de ejemplo para desarrolladores y setearla localmente
                     try {
@@ -230,20 +235,12 @@ public class CifradoService {
             return false;
         }
 
-        // PRIORIDAD 1: Comparación directa (texto plano) - permitimos temporalmente para compatibilidad,
-        // pero no se debe usar en nuevas implementaciones.
-        if (password.equals(hash)) {
-            log.warn("MATCH DIRECTO - Contraseña en texto plano (compatibilidad)");
-            return true;
-        }
-
-        // PRIORIDAD 2: Verificación usando el PasswordEncoder configurado
+        // Verificación usando el PasswordEncoder configurado (BCrypt / PBKDF2)
+        // NO se permite comparación directa en texto plano por seguridad.
         try {
             boolean match = passwordEncoder.matches(password, hash);
-            if (match) {
-                log.info("MATCH encoder");
-            } else {
-                log.warn("NO MATCH - Ni texto plano ni encoder coinciden");
+            if (!match) {
+                log.warn("NO MATCH - Las credenciales no coinciden");
             }
             return match;
         } catch (Exception e) {

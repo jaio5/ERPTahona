@@ -228,8 +228,11 @@ public class FacturaRectificativaFormController {
             rectificativa.setTipoFactura("RECTIFICATIVA");
             rectificativa.setEstado("EMITIDA");
 
-            // Generar número (R- prefijo para rectificativas)
-            String numeroRectificativa = generarNumeroRectificativa();
+            String numeroRectificativa = facturaService.generarSiguienteNumero(
+                facturaOriginal.getSerie(),
+                rectificativa.getFecha(),
+                true
+            );
             rectificativa.setNumero(numeroRectificativa);
 
             // Datos de rectificación
@@ -269,8 +272,11 @@ public class FacturaRectificativaFormController {
 
             // Actualizar estado de factura original
             if ("SUSTITUCION".equals(cbTipoRectificacion.getValue())) {
-                facturaOriginal.setEstado("ANULADA");
-                facturaService.save(facturaOriginal);
+                facturaService.anularPorRectificativa(
+                    facturaOriginal.getId(),
+                    guardada.getNumero(),
+                    txtMotivo.getText()
+                );
                 log.info("✅ Factura original anulada: {}", facturaOriginal.getNumero());
             }
 
@@ -287,35 +293,6 @@ public class FacturaRectificativaFormController {
             log.error("❌ Error creando factura rectificativa", e);
             mostrarError("Error al crear factura rectificativa: " + e.getMessage());
         }
-    }
-
-    private String generarNumeroRectificativa() {
-        LocalDate hoy = LocalDate.now();
-        int año = hoy.getYear();
-
-        // Obtener el último número de rectificativa del año
-        List<Factura> rectificativas = facturaService.findAll().stream()
-            .filter(f -> "RECTIFICATIVA".equals(f.getTipoFactura()))
-            .filter(f -> f.getNumero() != null && f.getNumero().startsWith("R-" + año))
-            .toList();
-
-        long numeroMaximo = rectificativas.stream()
-            .map(f -> {
-                try {
-                    String[] partes = f.getNumero().split("-");
-                    if (partes.length == 3) {
-                        return Long.parseLong(partes[2]);
-                    }
-                } catch (Exception e) {
-                    // Ignorar
-                }
-                return 0L;
-            })
-            .max(Long::compareTo)
-            .orElse(0L);
-
-        long siguienteNumero = numeroMaximo + 1;
-        return String.format("R-%d-%04d", año, siguienteNumero);
     }
 
     private boolean validarFormulario() {

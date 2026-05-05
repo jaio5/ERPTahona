@@ -360,30 +360,30 @@ public class AlbaranService {
     }
 
     // ==========================================
-    // MÉTODOS ALIAS PARA COMPATIBILIDAD
+    // MÉTODOS ALIAS — @deprecated, usar métodos primarios
     // ==========================================
 
+    /** @deprecated Usar {@link #obtenerTodos()} */
+    @Deprecated(since = "1.0", forRemoval = true)
     @Transactional(readOnly = true)
-    public List<AlbaranVenta> findAll() {
-        return obtenerTodos();
-    }
+    public List<AlbaranVenta> findAll() { return obtenerTodos(); }
 
+    /** @deprecated Usar {@link #obtenerPorId(Long)} */
+    @Deprecated(since = "1.0", forRemoval = true)
     @Transactional(readOnly = true)
-    public Optional<AlbaranVenta> findById(Long id) {
-        return obtenerPorId(id);
-    }
+    public Optional<AlbaranVenta> findById(Long id) { return obtenerPorId(id); }
 
-    public AlbaranVenta save(AlbaranVenta albaran) {
-        return guardar(albaran);
-    }
+    /** @deprecated Usar {@link #guardar(AlbaranVenta)} */
+    @Deprecated(since = "1.0", forRemoval = true)
+    public AlbaranVenta save(AlbaranVenta albaran) { return guardar(albaran); }
 
-    public void deleteById(Long id) {
-        eliminar(id);
-    }
+    /** @deprecated Usar {@link #eliminar(Long)} */
+    @Deprecated(since = "1.0", forRemoval = true)
+    public void deleteById(Long id) { eliminar(id); }
 
+    /** @deprecated Usar {@link #buscarPorCliente(Long)} */
+    @Deprecated(since = "1.0", forRemoval = true)
     @Transactional(readOnly = true)
-    public List<AlbaranVenta> findByCliente(Long clienteId) {
-        return buscarPorCliente(clienteId);
-    }
+    public List<AlbaranVenta> findByCliente(Long clienteId) { return buscarPorCliente(clienteId); }
 }
 

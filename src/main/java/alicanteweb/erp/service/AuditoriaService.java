@@ -44,8 +44,6 @@ public class AuditoriaService {
                                 Map<String, Object> valoresAnteriores, Map<String, Object> valoresNuevos) {
         try {
             AuditoriaAccion auditoria = new AuditoriaAccion();
-            // Temporalmente comentado hasta que Lombok compile correctamente
-            /*
             auditoria.setUsuario(usuario);
             auditoria.setUsuarioNombre(usuario != null ? usuario.getUsername() : "SISTEMA");
             auditoria.setTipoAccion(tipoAccion);
@@ -58,11 +56,7 @@ public class AuditoriaService {
             auditoria.setValoresNuevos(valoresNuevos);
             auditoria.setResultado("EXITO");
 
-            // IP y User Agent se pueden obtener del contexto web si existe
-            // Por ahora lo dejamos null para aplicación de escritorio
-
             auditoriaRepository.save(auditoria);
-            */
             log.debug("Acción auditada: {} - {} - {}", tipoAccion, entidadTipo, descripcion);
         } catch (Exception e) {
             log.error("Error registrando auditoría", e);
@@ -71,13 +65,25 @@ public class AuditoriaService {
     }
 
     /**
-     * Registra un login exitoso
+     * Registra un login exitoso o fallido
      */
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void registrarLogin(Usuario usuario, String ip, boolean exitoso) {
         try {
-            // Temporalmente deshabilitado hasta que Lombok compile
-            log.info("Login auditado: {} - {}", usuario != null ? "usuario" : "DESCONOCIDO", exitoso ? "EXITOSO" : "FALLIDO");
+            AuditoriaAccion auditoria = new AuditoriaAccion();
+            auditoria.setUsuario(usuario);
+            auditoria.setUsuarioNombre(usuario != null ? usuario.getUsername() : "DESCONOCIDO");
+            auditoria.setTipoAccion(exitoso ? "LOGIN" : "LOGIN_FALLIDO");
+            auditoria.setFecha(LocalDateTime.now());
+            auditoria.setEntidadTipo("Usuario");
+            auditoria.setEntidadId(usuario != null ? String.valueOf(usuario.getId()) : null);
+            auditoria.setDescripcion(exitoso ? "Login exitoso" : "Login fallido");
+            auditoria.setModulo("AUTENTICACION");
+            auditoria.setIp(ip);
+            auditoria.setResultado(exitoso ? "EXITO" : "ERROR");
+
+            auditoriaRepository.save(auditoria);
+            log.info("Login auditado: {} - {}", usuario != null ? usuario.getUsername() : "DESCONOCIDO", exitoso ? "EXITOSO" : "FALLIDO");
         } catch (Exception e) {
             log.error("Error registrando auditoría de login", e);
         }
@@ -98,7 +104,17 @@ public class AuditoriaService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void registrarAccesoDenegado(Usuario usuario, String modulo, String accion) {
         try {
-            log.warn("Acceso denegado: {} - {} - {}", usuario != null ? "usuario" : "ANONIMO", modulo, accion);
+            AuditoriaAccion auditoria = new AuditoriaAccion();
+            auditoria.setUsuario(usuario);
+            auditoria.setUsuarioNombre(usuario != null ? usuario.getUsername() : "ANONIMO");
+            auditoria.setTipoAccion("ACCESO_DENEGADO");
+            auditoria.setFecha(LocalDateTime.now());
+            auditoria.setModulo(modulo);
+            auditoria.setDescripcion("Acceso denegado a: " + accion);
+            auditoria.setResultado("DENEGADO");
+
+            auditoriaRepository.save(auditoria);
+            log.warn("Acceso denegado: {} - {} - {}", usuario != null ? usuario.getUsername() : "ANONIMO", modulo, accion);
         } catch (Exception e) {
             log.error("Error registrando acceso denegado", e);
         }
@@ -144,6 +160,17 @@ public class AuditoriaService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void registrarError(Usuario usuario, String entidadTipo, String entidadId, String descripcion) {
         try {
+            AuditoriaAccion auditoria = new AuditoriaAccion();
+            auditoria.setUsuario(usuario);
+            auditoria.setUsuarioNombre(usuario != null ? usuario.getUsername() : "SISTEMA");
+            auditoria.setTipoAccion("ERROR");
+            auditoria.setFecha(LocalDateTime.now());
+            auditoria.setEntidadTipo(entidadTipo);
+            auditoria.setEntidadId(entidadId);
+            auditoria.setDescripcion(descripcion);
+            auditoria.setResultado("ERROR");
+
+            auditoriaRepository.save(auditoria);
             log.error("Error auditado: {}", descripcion);
         } catch (Exception e) {
             log.error("Error registrando auditoría de error", e);

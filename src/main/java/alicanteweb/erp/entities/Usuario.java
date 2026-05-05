@@ -4,14 +4,22 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
-@Data
+/**
+ * Entidad que representa un usuario del sistema.
+ * Nota: se usa @Getter/@Setter en lugar de @Data para evitar que Lombok genere
+ * equals/hashCode sobre colecciones lazy, lo que puede causar LazyInitializationException.
+ */
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 public class Usuario {
@@ -147,5 +155,23 @@ public class Usuario {
     @PreUpdate
     protected void onUpdate() {
         fechaModificacion = LocalDateTime.now();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Usuario)) return false;
+        Usuario that = (Usuario) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Usuario{id=" + id + ", username='" + username + "', role='" + role + "'}";
     }
 }

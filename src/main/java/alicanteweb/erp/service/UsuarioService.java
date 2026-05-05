@@ -1,6 +1,7 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Usuario;
+import alicanteweb.erp.repository.RolRepository;
 import alicanteweb.erp.repository.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,13 +22,16 @@ public class UsuarioService {
     private static final int MAX_INTENTOS_FALLIDOS = 5;
 
     private final UsuarioRepository usuarioRepository;
+    private final RolRepository rolRepository;
     private final CifradoService cifradoService;
     private final AuditoriaService auditoriaService;
 
     public UsuarioService(UsuarioRepository usuarioRepository,
+                         RolRepository rolRepository,
                          CifradoService cifradoService,
                          AuditoriaService auditoriaService) {
         this.usuarioRepository = usuarioRepository;
+        this.rolRepository = rolRepository;
         this.cifradoService = cifradoService;
         this.auditoriaService = auditoriaService;
     }
@@ -57,6 +61,7 @@ public class UsuarioService {
         usuario.setIntentosFallidos(0);
         usuario.setEnabled(true);
         usuario.setBloqueado(false);
+        sincronizarRol(usuario);
 
         Usuario guardado = usuarioRepository.save(usuario);
 
@@ -95,6 +100,7 @@ public class UsuarioService {
         // No permitir cambio de contraseña aquí (usar cambiarPassword)
         usuario.setPassword(existente.getPassword());
         usuario.setFechaCreacion(existente.getFechaCreacion());
+        sincronizarRol(usuario);
 
         Usuario actualizado = usuarioRepository.save(usuario);
 
@@ -205,7 +211,7 @@ public class UsuarioService {
      * Buscar usuario por username
      */
     public Optional<Usuario> buscarPorUsername(String username) {
-        return usuarioRepository.findByUsername(username);
+        return usuarioRepository.findByUsernameWithRol(username);
     }
 
     /**
@@ -226,7 +232,7 @@ public class UsuarioService {
      * Listar todos los usuarios
      */
     public List<Usuario> listarTodos() {
-        return usuarioRepository.findAll();
+        return usuarioRepository.findAllWithRol();
     }
 
     /**
@@ -371,5 +377,13 @@ public class UsuarioService {
         auditoriaService.registrarAccion(usuario, "LOGIN", "Usuario", usuarioId.toString(),
                 "Usuario inició sesión");
         log.info("Último acceso actualizado para usuario: {}", usuario.getUsername());
+    }
+    private void sincronizarRol(Usuario usuario) {
+        if (usuario.getRole() == null && usuario.getRol() != null) {
+            usuario.setRole(usuario.getRol().getNombre());
+        }
+        if (usuario.getRole() != null && !usuario.getRole().isBlank()) {
+            rolRepository.findByNombre(usuario.getRole().trim()).ifPresent(usuario::setRol);
+        }
     }
 }

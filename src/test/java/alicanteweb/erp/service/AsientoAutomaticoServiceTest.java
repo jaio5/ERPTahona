@@ -34,8 +34,8 @@ class AsientoAutomaticoServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(planCuentasRepository.findByCodigo(anyString())).thenReturn(Optional.of(new PlanCuentas()));
-        when(asientoRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(planCuentasRepository.findByCodigo(anyString())).thenReturn(Optional.of(new PlanCuentas()));
+        lenient().when(asientoRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test

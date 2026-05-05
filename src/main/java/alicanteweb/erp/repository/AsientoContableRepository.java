@@ -54,6 +54,21 @@ public interface AsientoContableRepository extends JpaRepository<AsientoContable
     List<AsientoContable> findByConcepto(String concepto);
 
     /**
+     * Balance de sumas y saldos hasta una fecha dada.
+     * Devuelve: [codigo_cuenta, nombre_cuenta, tipo_cuenta, suma_debe, suma_haber]
+     */
+    @Query("""
+        SELECT l.cuenta.codigo, l.cuenta.nombre, l.cuenta.tipo,
+               COALESCE(SUM(l.debe), 0), COALESCE(SUM(l.haber), 0)
+        FROM LineaAsiento l
+        JOIN l.asiento a
+        WHERE a.fecha <= :hasta
+        GROUP BY l.cuenta.codigo, l.cuenta.nombre, l.cuenta.tipo
+        ORDER BY l.cuenta.codigo
+        """)
+    List<Object[]> calcularBalanceHasta(java.time.LocalDate hasta);
+
+    /**
      * Buscar asientos de apertura
      */
     @Query("SELECT a FROM AsientoContable a WHERE a.tipo = 'APERTURA' ORDER BY a.fecha DESC")

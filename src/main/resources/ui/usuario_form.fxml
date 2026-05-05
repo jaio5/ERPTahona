@@ -6,6 +6,9 @@
     <content>
         <VBox xmlns="http://javafx.com/javafx/21" spacing="12" style="-fx-padding:20;">
 
+            <Label fx:id="lblTitulo" text="Nuevo Usuario"
+                   style="-fx-font-size: 20; -fx-font-weight: 700; -fx-text-fill: #1e3a5f;"/>
+
             <VBox spacing="15" style="-fx-padding: 20;">
 
                 <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
@@ -75,6 +78,14 @@
                 </VBox>
 
             </VBox>
+
+            <HBox spacing="12" alignment="CENTER_RIGHT" style="-fx-padding: 8 0 4 0;">
+                <Button text="Cancelar" onAction="#handleCancel"
+                        style="-fx-padding: 10 24; -fx-font-size: 13; -fx-cursor: hand;"/>
+                <Button text="💾 Guardar" onAction="#handleOk"
+                        style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: 700; -fx-background-color: #1e3a5f; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 6;"/>
+            </HBox>
+
         </VBox>
     </content>
 </ScrollPane>

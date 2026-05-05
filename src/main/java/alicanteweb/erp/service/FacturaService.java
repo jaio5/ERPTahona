@@ -1,31 +1,47 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Factura;
+import alicanteweb.erp.entities.FacturaSerieSequence;
 import alicanteweb.erp.repository.FacturaRepository;
+import alicanteweb.erp.repository.FacturaSerieSequenceRepository;
+import jakarta.persistence.EntityManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-/**
- * Servicio de negocio para manejar facturas.
- */
 @Service
 @Transactional(readOnly = true)
 public class FacturaService {
+    private static final Logger log = LoggerFactory.getLogger(FacturaService.class);
+    private static final int MAX_REINTENTOS_SECUENCIA = 3;
 
-    // Repositorio JPA que maneja la persistencia de Factura.
     private final FacturaRepository repository;
+    private final FacturaSerieSequenceRepository sequenceRepository;
     private final VerifactuService verifactuService;
+    private final FacturacionEventoService facturacionEventoService;
+    private final EntityManager entityManager;
 
-    // Inyección por constructor: la forma recomendada (evita @Autowired).
-    public FacturaService(FacturaRepository repository, VerifactuService verifactuService) {
+    public FacturaService(FacturaRepository repository,
+                          FacturaSerieSequenceRepository sequenceRepository,
+                          VerifactuService verifactuService,
+                          FacturacionEventoService facturacionEventoService,
+                          EntityManager entityManager) {
         this.repository = repository;
+        this.sequenceRepository = sequenceRepository;
         this.verifactuService = verifactuService;
+        this.facturacionEventoService = facturacionEventoService;
+        this.entityManager = entityManager;
     }
 
-    // Consultas de solo lectura (no necesitan transacción de escritura).
     public List<Factura> findAll() {
         return repository.findAllWithCliente();
     }
@@ -38,10 +54,12 @@ public class FacturaService {
         return repository.findByNumero(numero);
     }
 
-    // Operación que modifica datos: anotada con @Transactional para permitir commit.
+    public Optional<Factura> findBySerieAndNumero(String serie, String numero) {
+        return repository.findBySerieAndNumero(normalizarSerie(serie), numero);
+    }
+
     @Transactional
     public Factura save(Factura factura) {
-        // Guardamos la factura usando JPA.
         return repository.save(factura);
     }
 
@@ -50,10 +68,32 @@ public class FacturaService {
         repository.deleteById(id);
     }
 
-    /**
-     * Aprueba y emite una factura: exige el envío a AEAT mediante Verifactu.
-     * Si el envío falla o AEAT no está disponible, se lanza excepción y se revierte la transacción.
-     */
+    @Transactional
+    public String generarSiguienteNumero(String serie, LocalDate fecha, boolean rectificativa) {
+        String serieNormalizada = normalizarSerie(serie);
+        int ejercicio = fecha != null ? fecha.getYear() : LocalDate.now().getYear();
+        String prefijo = rectificativa ? "R" : "F";
+
+        for (int intento = 1; intento <= MAX_REINTENTOS_SECUENCIA; intento++) {
+            try {
+                FacturaSerieSequence sequence = sequenceRepository.findBySerieAndEjercicio(serieNormalizada, ejercicio)
+                    .orElseGet(() -> crearSecuenciaFactura(serieNormalizada, ejercicio, prefijo));
+
+                long siguienteNumero = sequence.getUltimoNumero() + 1L;
+                sequence.setUltimoNumero(siguienteNumero);
+                sequenceRepository.saveAndFlush(sequence);
+
+                return String.format("%s-%s-%d-%04d", prefijo, serieNormalizada, ejercicio, siguienteNumero);
+            } catch (DataIntegrityViolationException ex) {
+                entityManager.clear();
+                log.warn("Conflicto inicializando secuencia de factura {}/{} en intento {}",
+                    serieNormalizada, ejercicio, intento);
+            }
+        }
+
+        throw new IllegalStateException("No se pudo reservar un numero de factura para la serie " + serieNormalizada);
+    }
+
     @Transactional
     public Factura aprobarYEmitir(Long facturaId) throws Exception {
         Factura factura = repository.findById(facturaId)
@@ -63,17 +103,103 @@ public class FacturaService {
             throw new IllegalStateException("Solo se pueden emitir facturas en estado REVISION");
         }
 
-        // Exigir que AEAT esté disponible (keystore + cliente SOAP + propiedad)
         if (!verifactuService.isAeatAvailable()) {
             throw new IllegalStateException("Imposible emitir: AEAT no está disponible. Configure verifactu.aeat.enabled, el keystore y el cliente SOAP.");
         }
 
-        // Delegar al servicio Verifactu para realizar todas las validaciones y el envío.
-        // Este método lanzará excepción si algo falla (por ejemplo, error de conexión a AEAT).
         verifactuService.enviarFacturaVerifactu(factura);
+        Factura guardada = repository.save(factura);
 
-        // Si llegamos aquí, el envío fue correcto; guardar la factura con estado actualizado por VerifactuService
-        return repository.save(factura);
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("facturaId", guardada.getId());
+        metadata.put("numero", guardada.getNumero());
+        metadata.put("serie", guardada.getSerie());
+        metadata.put("estado", guardada.getEstado());
+        metadata.put("fechaEmisionVerifactu", guardada.getFechaEmisionVerifactu() != null ? guardada.getFechaEmisionVerifactu().toString() : null);
+        facturacionEventoService.registrarEvento(FacturacionEventoService.AMBITO_FACTURAS, "EMISION_FACTURA", guardada.getNumero(), metadata);
+
+        return guardada;
     }
 
+    @Transactional
+    public Factura anularFactura(Long facturaId, String motivo) {
+        Factura factura = repository.findById(facturaId)
+                .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
+
+        if ("ANULADA".equalsIgnoreCase(factura.getEstado())) {
+            return factura;
+        }
+
+        if (Boolean.TRUE.equals(factura.getVerifactuEnviada()) || "EMITIDA".equalsIgnoreCase(factura.getEstado())) {
+            throw new IllegalStateException("Las facturas emitidas no se anulan directamente. Cree una factura rectificativa.");
+        }
+
+        factura.setEstado("ANULADA");
+        factura.setObservacionesRevision(concatObservacion(factura.getObservacionesRevision(), motivo));
+        Factura guardada = repository.save(factura);
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("facturaId", guardada.getId());
+        metadata.put("numero", guardada.getNumero());
+        metadata.put("serie", guardada.getSerie());
+        metadata.put("motivo", motivo);
+        facturacionEventoService.registrarEvento(FacturacionEventoService.AMBITO_FACTURAS, "ANULACION_PRE_EMISION", guardada.getNumero(), metadata);
+        return guardada;
+    }
+
+    @Transactional
+    public Factura anularPorRectificativa(Long facturaId, String numeroRectificativa, String motivo) {
+        Factura factura = repository.findById(facturaId)
+                .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
+
+        factura.setEstado("ANULADA");
+        factura.setObservacionesRevision(concatObservacion(
+                factura.getObservacionesRevision(),
+                "Anulada por rectificativa " + numeroRectificativa + (motivo != null && !motivo.isBlank() ? " - " + motivo : "")
+        ));
+        Factura guardada = repository.save(factura);
+        verifactuService.registrarAnulacionLocal(guardada, motivo);
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("facturaId", guardada.getId());
+        metadata.put("numero", guardada.getNumero());
+        metadata.put("serie", guardada.getSerie());
+        metadata.put("rectificativa", numeroRectificativa);
+        metadata.put("motivo", motivo);
+        metadata.put("fecha", LocalDateTime.now().toString());
+        facturacionEventoService.registrarEvento(FacturacionEventoService.AMBITO_FACTURAS, "ANULACION_POR_RECTIFICATIVA", guardada.getNumero(), metadata);
+        return guardada;
+    }
+
+    public String normalizarSerie(String serie) {
+        if (serie == null || serie.isBlank()) {
+            return "GEN";
+        }
+
+        String normalizada = serie.trim().toUpperCase().replaceAll("[^A-Z0-9_-]", "");
+        return normalizada.isBlank() ? "GEN" : normalizada;
+    }
+
+    private String concatObservacion(String observacionActual, String motivo) {
+        if (motivo == null || motivo.isBlank()) {
+            return observacionActual;
+        }
+        if (observacionActual == null || observacionActual.isBlank()) {
+            return motivo.trim();
+        }
+        return observacionActual + "\n" + motivo.trim();
+    }
+
+    private FacturaSerieSequence crearSecuenciaFactura(String serie, int ejercicio, String prefijo) {
+        FacturaSerieSequence nueva = new FacturaSerieSequence();
+        nueva.setSerie(serie);
+        nueva.setEjercicio(ejercicio);
+        nueva.setUltimoNumero(obtenerUltimoNumeroExistente(serie, ejercicio, prefijo));
+        return nueva;
+    }
+
+    private long obtenerUltimoNumeroExistente(String serie, int ejercicio, String prefijo) {
+        String numeroPrefix = prefijo + "-" + serie + "-" + ejercicio + "-";
+        return repository.findMaxNumeroSecuencialBySerieAndPrefijo(serie, numeroPrefix + "%", numeroPrefix.length());
+    }
 }

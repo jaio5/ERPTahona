@@ -5,6 +5,7 @@ import alicanteweb.erp.service.MovimientoCajaService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
 import javafx.collections.FXCollections;
 import javafx.beans.property.SimpleStringProperty;
 import org.springframework.stereotype.Controller;
@@ -12,7 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Comparator;
 import alicanteweb.erp.ui.DialogUtils;
 
 /**
@@ -28,7 +31,7 @@ public class CajaController {
     @FXML private TableColumn<MovimientoCaja, String> colConcepto;
     @FXML private TableColumn<MovimientoCaja, String> colTipo;
     @FXML private TableColumn<MovimientoCaja, BigDecimal> colImporte;
-    @FXML private final TableColumn<MovimientoCaja, String> colSaldo = new TableColumn<>("Saldo");
+    private final TableColumn<MovimientoCaja, String> colSaldo = new TableColumn<>("Saldo");
 
     // Campos añadidos para resolver unresolved fx:id
     @FXML private TableColumn<MovimientoCaja, String> colCategoria;
@@ -122,13 +125,33 @@ public class CajaController {
             colDocumento.setCellValueFactory(new PropertyValueFactory<>("documento"));
         }
 
-        // Columna calculada de saldo acumulado (placeholder)
-        colSaldo.setCellValueFactory(cellData -> new SimpleStringProperty("-"));
+        colSaldo.setCellValueFactory(cellData -> new SimpleStringProperty(""));
+        colSaldo.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getIndex() < 0 || tableMovimientos == null || getIndex() >= tableMovimientos.getItems().size()) {
+                    setText(null);
+                    return;
+                }
+                BigDecimal saldo = calcularSaldoAcumulado(getIndex());
+                setText(formatoImporte(saldo));
+            }
+        });
+        colSaldo.setPrefWidth(90);
+
+        // Añadir colSaldo a la tabla si aún no está incluida
+        if (tableMovimientos != null && !tableMovimientos.getColumns().contains(colSaldo)) {
+            tableMovimientos.getColumns().add(colSaldo);
+        }
     }
 
     private void cargarDatos() {
         try {
-            var movimientos = movimientoCajaService.findAll();
+            var movimientos = movimientoCajaService.findAll().stream()
+                .sorted(Comparator.comparing(MovimientoCaja::getFecha, Comparator.nullsLast(LocalDate::compareTo))
+                    .thenComparing(MovimientoCaja::getId, Comparator.nullsLast(Long::compareTo)))
+                .toList();
             if (tableMovimientos != null) {
                 tableMovimientos.setItems(FXCollections.observableArrayList(movimientos));
             }
@@ -248,7 +271,7 @@ public class CajaController {
     @FXML
     public void onNuevo() {
         log.info("Crear nuevo movimiento de caja");
-        mostrarAlerta("Función en desarrollo: Crear nuevo movimiento");
+        abrirDialogoMovimiento(null);
     }
 
     @FXML
@@ -259,7 +282,7 @@ public class CajaController {
             return;
         }
         log.info("Ver movimiento: {}", movimiento.getConcepto());
-        mostrarAlerta("Funcion en desarrollo: Ver detalle del movimiento");
+        DialogUtils.showInfo(detalleMovimiento(movimiento));
     }
 
     @FXML
@@ -270,7 +293,7 @@ public class CajaController {
             return;
         }
         log.info("Editar movimiento: {}", movimiento.getConcepto());
-        mostrarAlerta("Funcion en desarrollo: Editar movimiento");
+        abrirDialogoMovimiento(movimiento);
     }
 
     @FXML
@@ -306,4 +329,94 @@ public class CajaController {
     private void mostrarError(String msg) { DialogUtils.showError(msg); }
     private void mostrarExito() { DialogUtils.showSuccess("Movimiento eliminado correctamente"); }
     private boolean mostrarConfirmacion(String msg) { return DialogUtils.showConfirm(msg); }
+
+    private void abrirDialogoMovimiento(MovimientoCaja movimiento) {
+        Dialog<MovimientoCaja> dialog = new Dialog<>();
+        dialog.setTitle(movimiento == null ? "Nuevo movimiento de caja" : "Editar movimiento de caja");
+        dialog.setHeaderText(null);
+
+        ButtonType guardar = new ButtonType("Guardar", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(guardar, ButtonType.CANCEL);
+
+        DatePicker fecha = new DatePicker(movimiento != null ? movimiento.getFecha() : LocalDate.now());
+        ComboBox<String> tipo = new ComboBox<>(FXCollections.observableArrayList("INGRESO", "GASTO"));
+        tipo.setValue(movimiento != null ? movimiento.getTipo() : "INGRESO");
+        TextField importe = new TextField(movimiento != null ? valorDecimal(movimiento.getImporte()) : "0.00");
+        TextField concepto = new TextField(movimiento != null ? movimiento.getConcepto() : "");
+        TextField categoria = new TextField(movimiento != null ? movimiento.getCategoria() : "");
+        TextField documento = new TextField(movimiento != null ? movimiento.getDocumento() : "");
+        TextArea observaciones = new TextArea(movimiento != null ? movimiento.getObservaciones() : "");
+        observaciones.setPrefRowCount(3);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.addRow(0, new Label("Fecha"), fecha);
+        grid.addRow(1, new Label("Tipo"), tipo);
+        grid.addRow(2, new Label("Importe"), importe);
+        grid.addRow(3, new Label("Concepto"), concepto);
+        grid.addRow(4, new Label("Categoría"), categoria);
+        grid.addRow(5, new Label("Documento"), documento);
+        grid.addRow(6, new Label("Observaciones"), observaciones);
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(button -> {
+            if (button != guardar) return null;
+            MovimientoCaja resultado = movimiento != null ? movimiento : new MovimientoCaja();
+            resultado.setFecha(fecha.getValue());
+            resultado.setTipo(tipo.getValue());
+            resultado.setImporte(parseImporte(importe.getText()));
+            resultado.setConcepto(concepto.getText());
+            resultado.setCategoria(categoria.getText());
+            resultado.setDocumento(documento.getText());
+            resultado.setObservaciones(observaciones.getText());
+            return resultado;
+        });
+
+        dialog.showAndWait().ifPresent(resultado -> {
+            if (resultado.getFecha() == null || resultado.getTipo() == null || resultado.getConcepto() == null || resultado.getConcepto().isBlank()) {
+                DialogUtils.showWarning("Fecha, tipo y concepto son obligatorios");
+                return;
+            }
+            movimientoCajaService.save(resultado);
+            cargarDatos();
+            DialogUtils.showSuccess("Movimiento guardado correctamente");
+        });
+    }
+
+    private BigDecimal calcularSaldoAcumulado(int index) {
+        BigDecimal saldo = BigDecimal.ZERO;
+        for (int i = 0; i <= index; i++) {
+            MovimientoCaja movimiento = tableMovimientos.getItems().get(i);
+            BigDecimal importe = movimiento.getImporte() != null ? movimiento.getImporte() : BigDecimal.ZERO;
+            saldo = "GASTO".equals(movimiento.getTipo()) ? saldo.subtract(importe) : saldo.add(importe);
+        }
+        return saldo;
+    }
+
+    private String detalleMovimiento(MovimientoCaja movimiento) {
+        return "Fecha: " + movimiento.getFecha() + "\n"
+            + "Tipo: " + movimiento.getTipo() + "\n"
+            + "Importe: " + formatoImporte(movimiento.getImporte()) + "\n"
+            + "Concepto: " + movimiento.getConcepto() + "\n"
+            + "Categoría: " + valor(movimiento.getCategoria()) + "\n"
+            + "Documento: " + valor(movimiento.getDocumento()) + "\n"
+            + "Observaciones: " + valor(movimiento.getObservaciones());
+    }
+
+    private BigDecimal parseImporte(String value) {
+        return new BigDecimal(value.replace(",", ".")).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private String valorDecimal(BigDecimal value) {
+        return (value != null ? value : BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP).toPlainString();
+    }
+
+    private String formatoImporte(BigDecimal value) {
+        return valorDecimal(value) + " EUR";
+    }
+
+    private String valor(String value) {
+        return value != null ? value : "";
+    }
 }

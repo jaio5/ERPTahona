@@ -3,14 +3,22 @@ package alicanteweb.erp.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
-@Data
+/**
+ * Entidad de artículo/producto del catálogo.
+ * Nota: se usa @Getter/@Setter en lugar de @Data para evitar equals/hashCode
+ * inadecuado sobre colecciones lazy en entidades JPA.
+ */
+@Getter
+@Setter
 @Entity
 @Table(name = "articulos")
 public class Articulo {
@@ -86,5 +94,17 @@ public class Articulo {
     @OneToMany(mappedBy = "articulo")
     private Set<PedidoLinea> pedidoLineas = new LinkedHashSet<>();
 
-    // Lombok @Data genera getters/setters automáticamente
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Articulo)) return false;
+        Articulo that = (Articulo) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hashCode(id); }
+
+    @Override
+    public String toString() { return "Articulo{id=" + id + ", codigo='" + codigo + "', descripcion='" + descripcion + "'}"; }
 }

@@ -2,6 +2,7 @@ package alicanteweb.erp.repository;
 
 import alicanteweb.erp.entities.MovimientoBanco;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -27,5 +28,10 @@ public interface MovimientoBancoRepository extends JpaRepository<MovimientoBanco
      * Encontrar movimientos por concepto
      */
     List<MovimientoBanco> findByConceptoContainingIgnoreCase(String concepto);
+
+    @Query("SELECT m FROM MovimientoBanco m LEFT JOIN FETCH m.banco ORDER BY m.fecha ASC, m.id ASC")
+    List<MovimientoBanco> findAllWithBanco();
+
+    List<MovimientoBanco> findByBancoIdOrderByFechaAscIdAsc(Long bancoId);
 }
 

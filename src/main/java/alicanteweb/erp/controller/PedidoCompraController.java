@@ -1,21 +1,26 @@
 package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.PedidoCompra;
-import alicanteweb.erp.service.PedidoService;
+import alicanteweb.erp.controller.formcontroller.PedidoCompraFormController;
+import alicanteweb.erp.service.PedidoCompraService;
+import alicanteweb.erp.ui.DialogUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import alicanteweb.erp.ui.DialogUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Controller;
 
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Controlador para la gestión de Pedidos de Compra.
+ */
 @Slf4j
-@Component
+@Controller
 public class PedidoCompraController {
 
     @FXML private TableView<PedidoCompra> tablePedidos;
@@ -28,32 +33,27 @@ public class PedidoCompraController {
     @FXML private ComboBox<String> cmbEstado;
     @FXML private Label lblTotal;
 
-    private final PedidoService pedidoService;
+    private final PedidoCompraService pedidoCompraService;
+    private final ApplicationContext applicationContext;
     private ObservableList<PedidoCompra> pedidos;
 
-    public PedidoCompraController(PedidoService pedidoService) {
-        this.pedidoService = pedidoService;
+    public PedidoCompraController(PedidoCompraService pedidoCompraService, ApplicationContext applicationContext) {
+        this.pedidoCompraService = pedidoCompraService;
+        this.applicationContext = applicationContext;
     }
 
     @FXML
     public void initialize() {
-        log.info("Inicializando PedidoCompraController");
-
-        // pequeño uso de pedidoService para evitar warning de campo no usado
-        log.debug("Servicio de pedidos inyectado: {}", pedidoService != null);
-
-        // Configurar columnas
-        if (colNumero != null) colNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
-        if (colFecha != null) colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-        if (colProveedor != null) colProveedor.setCellValueFactory(new PropertyValueFactory<>("proveedor"));
-        if (colTotal != null) colTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
-        if (colEstado != null) colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        if (colNumero   != null) colNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
+        if (colFecha    != null) colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+        if (colProveedor!= null) colProveedor.setCellValueFactory(new PropertyValueFactory<>("proveedor"));
+        if (colTotal    != null) colTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
+        if (colEstado   != null) colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
         if (cmbEstado != null) {
-            cmbEstado.setItems(FXCollections.observableArrayList("PENDIENTE", "RECIBIDO", "ANULADO"));
+            cmbEstado.setItems(FXCollections.observableArrayList("TODOS", "PENDIENTE", "RECIBIDO", "ANULADO"));
+            cmbEstado.setValue("TODOS");
         }
-
-        if (tablePedidos != null) tablePedidos.setStyle("-fx-background-color: white; -fx-text-fill: black;");
 
         cargarPedidos();
 
@@ -64,12 +64,11 @@ public class PedidoCompraController {
 
     private void cargarPedidos() {
         try {
-            // TODO: Agregar método findAllCompras() al servicio si es necesario
-            List<PedidoCompra> lista = new java.util.ArrayList<>();
+            List<PedidoCompra> lista = pedidoCompraService.findAll();
             pedidos = FXCollections.observableArrayList(lista);
             if (tablePedidos != null) tablePedidos.setItems(pedidos);
-            if (lblTotal != null) lblTotal.setText(pedidos.size() + " pedidos");
-            log.info("Pedidos de compra cargados: {}", pedidos.size());
+            if (lblTotal != null) lblTotal.setText(lista.size() + " pedidos");
+            log.info("Pedidos de compra cargados: {}", lista.size());
         } catch (Exception e) {
             log.error("Error cargando pedidos de compra", e);
             DialogUtils.showError("No se pudieron cargar los pedidos: " + e.getMessage());
@@ -77,51 +76,75 @@ public class PedidoCompraController {
     }
 
     private void filtrarPedidos(String q) {
+        if (pedidos == null) return;
         if (q == null || q.isEmpty()) {
-            if (pedidos != null) tablePedidos.setItems(pedidos);
+            tablePedidos.setItems(pedidos);
             return;
         }
         String search = q.toLowerCase();
-        var filtered = pedidos.filtered(p ->
+        tablePedidos.setItems(pedidos.filtered(p ->
             Optional.ofNullable(p.getProveedor())
                 .map(prov -> prov.getNombre() != null && prov.getNombre().toLowerCase().contains(search))
                 .orElse(false)
             || (p.getNumero() != null && p.getNumero().toLowerCase().contains(search))
-        );
-        tablePedidos.setItems(filtered);
+        ));
     }
 
-    @FXML
-    public void onRefresh() {
-        log.info("Refrescando pedidos de compra");
-        cargarPedidos();
+    @FXML public void onRefresh()  { cargarPedidos(); }
+    @FXML public void onNuevo()    { onCreate(); }
+    @FXML public void onBuscar()   { filtrarPedidos(txtBuscar != null ? txtBuscar.getText() : null); }
+    @FXML public void onEditar()   { onEdit(); }
+    @FXML public void onRecibir()  {
+        if (tablePedidos == null) return;
+        PedidoCompra seleccionado = tablePedidos.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            DialogUtils.showWarning("Selecciona un pedido para recibir.");
+            return;
+        }
+        try {
+            pedidoCompraService.cambiarEstado(seleccionado.getId(), "RECIBIDO");
+            cargarPedidos();
+            DialogUtils.showInfo("Pedido recibido correctamente.");
+        } catch (Exception e) {
+            log.error("Error recibiendo pedido de compra {}", seleccionado.getNumero(), e);
+            DialogUtils.showError("Error al recibir pedido: " + e.getMessage());
+        }
     }
-
-    // Wrappers para nombres usados en FXML
-    @FXML
-    public void onNuevo() { onCreate(); }
-
-    @FXML
-    public void onBuscar() { filtrarPedidos(txtBuscar != null ? txtBuscar.getText() : null); }
-
-    @FXML
-    public void onEditar() { onEdit(); }
-
-    @FXML
-    public void onRecibir() { DialogUtils.showInfo("Recibir pedido (stub)"); }
 
     public void onCreate() {
-        DialogUtils.showInfo("Crear nuevo pedido (stub)");
+        abrirFormulario(null);
     }
 
     @FXML
     public void onEdit() {
+        if (tablePedidos == null) return;
         PedidoCompra seleccionado = tablePedidos.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
-            DialogUtils.showWarning("Por favor, selecciona un pedido para editar.");
+            DialogUtils.showWarning("Selecciona un pedido para editar.");
             return;
         }
-        log.info("Editando pedido: {}", seleccionado.getNumero());
-        DialogUtils.showInfo("Funcionalidad de edición en desarrollo");
+        log.info("Editando pedido de compra: {}", seleccionado.getNumero());
+        abrirFormulario(seleccionado);
+    }
+
+    private void abrirFormulario(PedidoCompra pedido) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/ui/pedido_compra_form.fxml"));
+            loader.setControllerFactory(applicationContext::getBean);
+            javafx.scene.Parent root = loader.load();
+            if (loader.getController() instanceof PedidoCompraFormController controller) {
+                controller.setPedido(pedido);
+            }
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle(pedido == null ? "Nuevo Pedido de Compra" : "Editar Pedido de Compra");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+            cargarPedidos();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario de pedido de compra", e);
+            DialogUtils.showError("Error al abrir formulario: " + e.getMessage());
+        }
     }
 }

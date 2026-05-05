@@ -28,7 +28,7 @@
         <flyway.version>10.21.0</flyway.version>
         <hikaricp.version>5.1.0</hikaricp.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <lombok.version>1.18.34</lombok.version>
+        <lombok.version>1.18.36</lombok.version>
         <!-- OWASP Dependency-Check plugin version (declared para resolver problemas de resolución de plugin) -->
         <dependency-check.version>8.0.2</dependency-check.version>
     </properties>
@@ -123,11 +123,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- H2 para tests en memoria -->
+        <!-- H2 para tests en memoria (scope test: no se incluye en el JAR de producción) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>${h2.version}</version>
+            <scope>runtime</scope>
         </dependency>
         <!-- Spring Web (RestTemplate, clientes HTTP) -->
         <dependency>
@@ -249,8 +250,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <release>${java.version}</release>
                     <encoding>${project.build.sourceEncoding}</encoding>
                     <annotationProcessorPaths>
                         <path>
@@ -265,6 +265,28 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-java-version</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[17,24)</version>
+                                    <message>Este proyecto debe construirse con JDK 17 a JDK 23. JDK 25 rompe la compilacion actual con Lombok.</message>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>

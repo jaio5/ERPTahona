@@ -16,6 +16,7 @@ import alicanteweb.erp.util.CertificateUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -23,12 +24,19 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
 import lombok.Getter;
 import org.springframework.beans.factory.ObjectProvider;
+import org.xml.sax.SAXException;
 
 @Service
 public class VerifactuService implements InitializingBean {
@@ -36,6 +44,8 @@ public class VerifactuService implements InitializingBean {
     private static final Logger log = LoggerFactory.getLogger(VerifactuService.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+    private static final DateTimeFormatter RECORD_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+    private static final String VERIFACTU_XSD_CLASSPATH = "xsd/verifactu-registro-facturacion.xsd";
 
     @Value("${verifactu.keystore.path:}")
     private String keystorePath;
@@ -60,6 +70,7 @@ public class VerifactuService implements InitializingBean {
     private final FacturaLineaService facturaLineaService;
     private final QrCodeService qrCodeService;
     private final VerifactuAeatSoapClient aeatSoapClient;
+    private final FacturacionEventoService facturacionEventoService;
     private PrivateKey privateKey;
     private X509Certificate certificate;
 
@@ -73,11 +84,13 @@ public class VerifactuService implements InitializingBean {
                            EmpresaConfigService empresaConfigService,
                            FacturaLineaService facturaLineaService,
                            QrCodeService qrCodeService,
-                           ObjectProvider<VerifactuAeatSoapClient> aeatSoapClientProvider) {
+                           ObjectProvider<VerifactuAeatSoapClient> aeatSoapClientProvider,
+                           FacturacionEventoService facturacionEventoService) {
         this.evidenceRepository = evidenceRepository;
         this.empresaConfigService = empresaConfigService;
         this.facturaLineaService = facturaLineaService;
         this.qrCodeService = qrCodeService;
+        this.facturacionEventoService = facturacionEventoService;
         // Obtener el bean si está disponible (el cliente SOAP puede estar deshabilitado por properties)
         this.aeatSoapClient = aeatSoapClientProvider.getIfAvailable();
         // Inicialización provisional; la carga real del keystore se hace en @PostConstruct
@@ -317,8 +330,11 @@ public class VerifactuService implements InitializingBean {
      * Obtiene el hash anterior de la cadena (último registro guardado)
      */
     public String obtenerHashAnterior(String serie) {
-        Optional<VerifactuEvidence> ultimaEvidencia = evidenceRepository.findFirstBySerieOrderByFechaEmisionDesc(serie);
-        return ultimaEvidencia.map(VerifactuEvidence::getHash).orElse(null);
+        Optional<VerifactuEvidence> ultimaEvidencia = evidenceRepository.findFirstBySerieOrderByFechaGeneracionRegistroDescIdDesc(serie)
+            .or(() -> evidenceRepository.findFirstBySerieOrderByFechaEmisionDesc(serie));
+        return ultimaEvidencia
+            .map(e -> e.getHuellaRegistro() != null && !e.getHuellaRegistro().isBlank() ? e.getHuellaRegistro() : e.getHash())
+            .orElse(null);
     }
 
     /**
@@ -465,7 +481,8 @@ public class VerifactuService implements InitializingBean {
 
         // Hash encadenado
         try {
-            String hashAnterior = obtenerHashAnterior(factura.getNumero().substring(0, Math.min(4, factura.getNumero().length())));
+            String serie = resolverSerie(factura);
+            String hashAnterior = obtenerHashAnterior(serie);
             String datosFactura = factura.getNumero() + "|" + factura.getFecha() + "|" + factura.getTotal();
             String hash = generarHashEncadenado(datosFactura, hashAnterior);
             xml.append("    <Hash>").append(hash).append("</Hash>\n");
@@ -480,6 +497,109 @@ public class VerifactuService implements InitializingBean {
         xml.append("</RegistroFacturaVerifactu>\n");
 
         return xml.toString();
+    }
+
+    public String generarRegistroAltaXml(Factura factura, List<FacturaLinea> lineas) {
+        EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
+        String serie = resolverSerie(factura);
+        String hashAnterior = obtenerHashAnterior(serie);
+        String fechaHoraGeneracion = fechaHoraRegistro();
+        BigDecimal cuotaTotal = factura.getTotalIva() != null ? factura.getTotalIva() : BigDecimal.ZERO;
+        BigDecimal importeTotal = factura.getTotal() != null ? factura.getTotal() : BigDecimal.ZERO;
+
+        try {
+            String hash = generarHuellaRegistroAlta(empresa, factura, cuotaTotal, importeTotal, hashAnterior, fechaHoraGeneracion);
+
+            StringBuilder xml = new StringBuilder();
+            xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+            xml.append("<RegistroFacturaVerifactu xmlns=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/RegistroFacturaVerifactu.xsd\">\n");
+            appendCabecera(xml, empresa);
+            xml.append("  <RegistroAlta>\n");
+            xml.append("    <NumFactura>").append(escapeXml(factura.getNumero())).append("</NumFactura>\n");
+            xml.append("    <SerieFactura>").append(escapeXml(serie)).append("</SerieFactura>\n");
+            xml.append("    <FechaExpedicion>").append(factura.getFecha() != null ? factura.getFecha().format(DATE_FORMATTER) : "").append("</FechaExpedicion>\n");
+            xml.append("    <FechaHoraGeneracion>").append(escapeXml(fechaHoraGeneracion)).append("</FechaHoraGeneracion>\n");
+            xml.append("    <TipoFactura>").append(escapeXml(factura.getTipoFactura() != null ? factura.getTipoFactura() : "ORDINARIA")).append("</TipoFactura>\n");
+
+            if (factura.getCliente() != null) {
+                xml.append("    <Destinatario>\n");
+                if (factura.getCliente().getCif() != null && !factura.getCliente().getCif().isEmpty()) {
+                    xml.append("      <NIF>").append(escapeXml(factura.getCliente().getCif())).append("</NIF>\n");
+                }
+                xml.append("      <NombreRazonSocial>").append(escapeXml(factura.getCliente().getNombre())).append("</NombreRazonSocial>\n");
+                xml.append("    </Destinatario>\n");
+            }
+
+            if (lineas != null && !lineas.isEmpty()) {
+                xml.append("    <Desglose>\n");
+                BigDecimal baseImponible = BigDecimal.ZERO;
+                BigDecimal totalIva = BigDecimal.ZERO;
+
+                for (FacturaLinea linea : lineas) {
+                    BigDecimal subtotal = linea.getCantidad().multiply(linea.getPrecio());
+                    baseImponible = baseImponible.add(subtotal);
+                    if (linea.getIva() != null && linea.getIva().compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal importeIva = subtotal.multiply(linea.getIva()).divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
+                        totalIva = totalIva.add(importeIva);
+                    }
+                }
+
+                xml.append("      <BaseImponible>").append(baseImponible.setScale(2, java.math.RoundingMode.HALF_UP)).append("</BaseImponible>\n");
+                xml.append("      <CuotaIVA>").append(totalIva.setScale(2, java.math.RoundingMode.HALF_UP)).append("</CuotaIVA>\n");
+                xml.append("    </Desglose>\n");
+            }
+
+            xml.append("    <CuotaTotal>").append(cuotaTotal.setScale(2, java.math.RoundingMode.HALF_UP)).append("</CuotaTotal>\n");
+            xml.append("    <ImporteTotal>").append(importeTotal.setScale(2, java.math.RoundingMode.HALF_UP)).append("</ImporteTotal>\n");
+            xml.append("    <Hash>").append(hash).append("</Hash>\n");
+            if (hashAnterior != null) {
+                xml.append("    <HashAnterior>").append(hashAnterior).append("</HashAnterior>\n");
+            }
+            xml.append("  </RegistroAlta>\n");
+            xml.append("</RegistroFacturaVerifactu>\n");
+
+            String xmlGenerado = xml.toString();
+            validarXmlRegistroFacturacion(xmlGenerado);
+            return xmlGenerado;
+        } catch (Exception e) {
+            throw new IllegalStateException("No se pudo generar el registro de alta VeriFactu", e);
+        }
+    }
+
+    public String generarRegistroAnulacionXml(Factura factura, String motivo) {
+        EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
+        String serie = resolverSerie(factura);
+        String hashAnterior = obtenerHashAnterior(serie);
+        String fechaHoraGeneracion = fechaHoraRegistro();
+
+        try {
+            String hash = generarHuellaRegistroAnulacion(empresa, factura, hashAnterior, fechaHoraGeneracion);
+
+            StringBuilder xml = new StringBuilder();
+            xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+            xml.append("<RegistroFacturaVerifactu xmlns=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/RegistroFacturaVerifactu.xsd\">\n");
+            appendCabecera(xml, empresa);
+            xml.append("  <RegistroAnulacion>\n");
+            xml.append("    <NumFactura>").append(escapeXml(factura.getNumero())).append("</NumFactura>\n");
+            xml.append("    <SerieFactura>").append(escapeXml(serie)).append("</SerieFactura>\n");
+            xml.append("    <FechaExpedicion>").append(factura.getFecha() != null ? factura.getFecha().format(DATE_FORMATTER) : "").append("</FechaExpedicion>\n");
+            xml.append("    <FechaHoraGeneracion>").append(escapeXml(fechaHoraGeneracion)).append("</FechaHoraGeneracion>\n");
+            if (motivo != null && !motivo.isBlank()) {
+                xml.append("    <MotivoAnulacion>").append(escapeXml(motivo)).append("</MotivoAnulacion>\n");
+            }
+            xml.append("    <Hash>").append(hash).append("</Hash>\n");
+            if (hashAnterior != null) {
+                xml.append("    <HashAnterior>").append(hashAnterior).append("</HashAnterior>\n");
+            }
+            xml.append("  </RegistroAnulacion>\n");
+            xml.append("</RegistroFacturaVerifactu>\n");
+
+            String xmlGenerado = xml.toString();
+            validarXmlRegistroFacturacion(xmlGenerado);
+            return xmlGenerado;
+        } catch (Exception e) {
+            throw new IllegalStateException("No se pudo generar el registro de anulacion VeriFactu", e);
+        }
     }
 
     /**
@@ -523,7 +643,7 @@ public class VerifactuService implements InitializingBean {
         }
 
         // 7. Generar XML con datos de GRUPO BABO
-        String xml = generarXMLFactura(factura, lineas);
+        String xml = generarRegistroAltaXml(factura, lineas);
         log.info("XML generado para factura {}: {} caracteres", factura.getNumero(), xml.length());
 
         // 8. Generar hash y firmar (si está habilitado)
@@ -545,7 +665,7 @@ public class VerifactuService implements InitializingBean {
         log.info("QR generado para factura {} ({} bytes)", factura.getNumero(), qrCodeService.obtenerTamanoQR(qrBase64));
 
         // 8.6 Actualizar factura con hash y QR
-        String hashAnterior = obtenerHashAnterior(factura.getNumero().substring(0, Math.min(4, factura.getNumero().length())));
+        String hashAnterior = obtenerHashAnterior(resolverSerie(factura));
         factura.setVerifactuHash(hash);
         factura.setVerifactuHashAnterior(hashAnterior);
         factura.setVerifactuQr(qrBase64);
@@ -556,14 +676,21 @@ public class VerifactuService implements InitializingBean {
 
         // 9. Guardar evidencia en BD
         VerifactuEvidence evidencia = new VerifactuEvidence();
-        evidencia.setSerie(factura.getNumero().substring(0, Math.min(4, factura.getNumero().length())));
+        evidencia.setSerie(resolverSerie(factura));
         evidencia.setNumero(factura.getNumero());
         evidencia.setFacturaId(factura.getId().toString());
+        evidencia.setCreatedAt(java.time.Instant.now());
         evidencia.setFechaEmision(factura.getFecha() != null ?
             factura.getFecha().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant() :
             java.time.Instant.now());
         evidencia.setHash(hash);
         evidencia.setHashAnterior(obtenerHashAnterior(evidencia.getSerie()));
+        evidencia.setTipoRegistro("ALTA");
+        evidencia.setXmlGenerado(xml);
+        evidencia.setFechaGeneracionRegistro(java.time.Instant.now());
+        evidencia.setHuellaRegistro(extraerValorXml(xml, "Hash"));
+        evidencia.setNifEmisor(empresa.getVerifactuNifEmisor());
+        evidencia.setFechaExpedicionFactura(factura.getFecha());
         if (firma != null) {
             evidencia.setSignature(firma);
         }
@@ -579,6 +706,11 @@ public class VerifactuService implements InitializingBean {
 
         evidenceRepository.save(evidencia);
         log.info("Evidencia guardada para factura {} con ID {}", factura.getNumero(), evidencia.getId());
+        registrarEventoVerifactu("REGISTRO_VERIFACTU_LOCAL", factura, java.util.Map.of(
+            "evidenciaId", evidencia.getId(),
+            "serie", evidencia.getSerie(),
+            "hash", hash
+        ));
 
         // 10. Envío real a la AEAT (si está habilitado)
         if (aeatEnabled && this.enabled) {
@@ -594,6 +726,11 @@ public class VerifactuService implements InitializingBean {
                     evidencia.setMetadata(metadata);
                 }
                 evidenceRepository.save(evidencia);
+                registrarEventoVerifactu("ENVIO_AEAT_OK", factura, java.util.Map.of(
+                    "evidenciaId", evidencia.getId(),
+                    "codigoRespuesta", evidencia.getCodigoRespuestaAEAT(),
+                    "endpoint", aeatEndpoint
+                ));
 
                 log.info("âœ… Factura {} enviada y registrada correctamente en AEAT", factura.getNumero());
             } catch (Exception e) {
@@ -602,6 +739,11 @@ public class VerifactuService implements InitializingBean {
                 evidencia.setErrorMessage("Error al enviar a AEAT: " + e.getMessage());
                 evidencia.setCodigoRespuestaAEAT("ERROR");
                 evidenceRepository.save(evidencia);
+                registrarEventoVerifactu("ENVIO_AEAT_ERROR", factura, java.util.Map.of(
+                    "evidenciaId", evidencia.getId(),
+                    "mensajeError", e.getMessage(),
+                    "endpoint", aeatEndpoint
+                ));
                 throw new Exception("Error al enviar factura a AEAT: " + e.getMessage(), e);
             }
         } else {
@@ -611,6 +753,10 @@ public class VerifactuService implements InitializingBean {
             if (!this.enabled) {
                 log.info("â„¹ï¸ Certificado no disponible. Evidencia guardada localmente sin firma digital.");
             }
+            registrarEventoVerifactu("ENVIO_AEAT_OMITIDO", factura, java.util.Map.of(
+                "aeatEnabled", aeatEnabled,
+                "certificadoDisponible", this.enabled
+            ));
             log.info("âœ… Factura {} registrada localmente (modo de pruebas)", factura.getNumero());
         }
     }
@@ -653,6 +799,154 @@ public class VerifactuService implements InitializingBean {
     }
 
 
+    public void registrarAnulacionLocal(Factura factura, String motivo) {
+        if (factura == null || factura.getId() == null) {
+            return;
+        }
+
+        EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
+        String xml = generarRegistroAnulacionXml(factura, motivo);
+        String hashDocumento;
+        try {
+            hashDocumento = generarHash(xml);
+        } catch (Exception e) {
+            throw new IllegalStateException("No se pudo generar la huella del registro de anulacion", e);
+        }
+
+        VerifactuEvidence evidencia = new VerifactuEvidence();
+        evidencia.setSerie(resolverSerie(factura));
+        evidencia.setNumero(factura.getNumero());
+        evidencia.setFacturaId(factura.getId().toString());
+        evidencia.setCreatedAt(java.time.Instant.now());
+        evidencia.setFechaEmision(factura.getFecha() != null
+            ? factura.getFecha().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()
+            : java.time.Instant.now());
+        evidencia.setHash(hashDocumento);
+        evidencia.setHashAnterior(obtenerHashAnterior(evidencia.getSerie()));
+        evidencia.setTipoRegistro("ANULACION");
+        evidencia.setXmlGenerado(xml);
+        evidencia.setFechaGeneracionRegistro(java.time.Instant.now());
+        evidencia.setHuellaRegistro(extraerValorXml(xml, "Hash"));
+        evidencia.setNifEmisor(empresa.getVerifactuNifEmisor());
+        evidencia.setFechaExpedicionFactura(factura.getFecha());
+        evidencia.setEstado("ANULADO");
+
+        java.util.Map<String, Object> metadata = evidencia.getMetadata() != null
+            ? new java.util.HashMap<>(evidencia.getMetadata())
+            : new java.util.HashMap<>();
+        metadata.put("motivoAnulacion", motivo);
+        metadata.put("tipoRegistro", "ANULACION");
+        evidencia.setMetadata(metadata);
+
+        VerifactuEvidence saved = evidenceRepository.save(evidencia);
+        registrarEventoVerifactu("REGISTRO_ANULACION_LOCAL", factura, java.util.Map.of(
+            "evidenciaId", saved.getId(),
+            "motivo", motivo != null ? motivo : "",
+            "tipoRegistro", "ANULACION"
+        ));
+    }
+
+    private void appendCabecera(StringBuilder xml, EmpresaConfig empresa) {
+        xml.append("  <Cabecera>\n");
+        xml.append("    <Emisor>\n");
+        xml.append("      <NIF>").append(escapeXml(empresa.getVerifactuNifEmisor())).append("</NIF>\n");
+        xml.append("      <NombreRazonSocial>").append(escapeXml(empresa.getNombreEmpresa())).append("</NombreRazonSocial>\n");
+        xml.append("    </Emisor>\n");
+        xml.append("    <SistemaInformatico>\n");
+        xml.append("      <NombreSistema>").append(escapeXml(empresa.getVerifactuNombreSistema())).append("</NombreSistema>\n");
+        xml.append("      <Version>").append(escapeXml(empresa.getVerifactuVersionSistema())).append("</Version>\n");
+        if (empresa.getVerifactuIdDispositivo() != null && !empresa.getVerifactuIdDispositivo().isEmpty()) {
+            xml.append("      <IdDispositivo>").append(escapeXml(empresa.getVerifactuIdDispositivo())).append("</IdDispositivo>\n");
+        }
+        xml.append("    </SistemaInformatico>\n");
+        xml.append("  </Cabecera>\n");
+    }
+
+    private String fechaHoraRegistro() {
+        return java.time.ZonedDateTime.now(ZoneId.systemDefault()).format(RECORD_DATETIME_FORMATTER);
+    }
+
+    private String generarHuellaRegistroAlta(EmpresaConfig empresa,
+                                             Factura factura,
+                                             BigDecimal cuotaTotal,
+                                             BigDecimal importeTotal,
+                                             String hashAnterior,
+                                             String fechaHoraGeneracion) throws Exception {
+        return HashUtils.sha256Hex(String.join("|",
+            valorSeguro(empresa.getVerifactuNifEmisor()),
+            valorSeguro(resolverSerie(factura)),
+            valorSeguro(factura.getNumero()),
+            factura.getFecha() != null ? factura.getFecha().format(DATE_FORMATTER) : "",
+            valorSeguro(factura.getTipoFactura()),
+            normalizarImporte(cuotaTotal),
+            normalizarImporte(importeTotal),
+            valorSeguro(hashAnterior),
+            valorSeguro(fechaHoraGeneracion)
+        ));
+    }
+
+    private String generarHuellaRegistroAnulacion(EmpresaConfig empresa,
+                                                  Factura factura,
+                                                  String hashAnterior,
+                                                  String fechaHoraGeneracion) throws Exception {
+        return HashUtils.sha256Hex(String.join("|",
+            valorSeguro(empresa.getVerifactuNifEmisor()),
+            valorSeguro(resolverSerie(factura)),
+            valorSeguro(factura.getNumero()),
+            factura.getFecha() != null ? factura.getFecha().format(DATE_FORMATTER) : "",
+            valorSeguro(hashAnterior),
+            valorSeguro(fechaHoraGeneracion)
+        ));
+    }
+
+    private void validarXmlRegistroFacturacion(String xml) {
+        try (InputStream xsdStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(VERIFACTU_XSD_CLASSPATH)) {
+            if (xsdStream == null) {
+                throw new IllegalStateException("No se encontro el esquema XSD interno de VeriFactu");
+            }
+
+            SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Schema schema = factory.newSchema(new StreamSource(xsdStream));
+            Source source = new StreamSource(new StringReader(xml));
+            schema.newValidator().validate(source);
+        } catch (SAXException | IOException e) {
+            throw new IllegalStateException("El XML de registro de facturacion no supera la validacion estructural: " + e.getMessage(), e);
+        }
+    }
+
+    private String extraerValorXml(String xml, String tag) {
+        String startTag = "<" + tag + ">";
+        String endTag = "</" + tag + ">";
+        int start = xml.indexOf(startTag);
+        int end = xml.indexOf(endTag);
+        if (start < 0 || end < 0 || end <= start) {
+            return null;
+        }
+        return xml.substring(start + startTag.length(), end).trim();
+    }
+
+    private String valorSeguro(String valor) {
+        return valor != null ? valor : "";
+    }
+
+    private String normalizarImporte(BigDecimal importe) {
+        return (importe != null ? importe : BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
+    }
+
+    /**
+     * Resuelve la serie de una factura para Verifactu.
+     * Usa el campo {@code serie} de la entidad si está relleno; si no, extrae
+     * los primeros 4 caracteres del número de factura como fallback.
+     */
+    private String resolverSerie(Factura factura) {
+        if (factura.getSerie() != null && !factura.getSerie().isBlank()) {
+            return factura.getSerie();
+        }
+        String num = factura.getNumero();
+        if (num == null || num.isBlank()) return "GEN";
+        return num.substring(0, Math.min(4, num.length()));
+    }
+
     /**
      * Escapa caracteres especiales XML
      */
@@ -664,6 +958,22 @@ public class VerifactuService implements InitializingBean {
             .replace(">", "&gt;")
             .replace("\"", "&quot;")
             .replace("'", "&apos;");
+    }
+
+    private void registrarEventoVerifactu(String tipoEvento, Factura factura, java.util.Map<String, Object> metadata) {
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        if (metadata != null) {
+            payload.putAll(metadata);
+        }
+        payload.put("facturaId", factura.getId());
+        payload.put("numero", factura.getNumero());
+        payload.put("serie", resolverSerie(factura));
+        facturacionEventoService.registrarEvento(
+            FacturacionEventoService.AMBITO_FACTURAS,
+            tipoEvento,
+            factura.getNumero(),
+            payload
+        );
     }
 }
 

@@ -50,14 +50,16 @@ public class AlbaranVentaService {
     }
 
     /**
-     * Genera un numero de albaran automatico basado en el año y secuencia
+     * Genera un número de albarán automático basado en el año y secuencia.
+     * Usa MAX en BD para evitar duplicados bajo concurrencia.
      */
     public String generarNumeroAlbaran() {
         int year = LocalDate.now().getYear();
-        String prefijo = "ALB-" + year + "-";
+        String patron = "ALB-" + year + "-%";
 
-        // Buscar el ultimo albaran del año actual
-        long count = repository.count() + 1;
-        return prefijo + String.format("%06d", count);
+        Integer maxSecuencia = repository.findMaxSecuenciaByYear(patron);
+        int siguiente = (maxSecuencia != null ? maxSecuencia : 0) + 1;
+
+        return "ALB-" + year + "-" + String.format("%06d", siguiente);
     }
 }

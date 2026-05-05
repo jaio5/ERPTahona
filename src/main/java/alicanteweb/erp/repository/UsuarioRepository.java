@@ -17,10 +17,16 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByUsername(String username);
 
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.rol WHERE u.username = :username")
+    Optional<Usuario> findByUsernameWithRol(@Param("username") String username);
+
     Optional<Usuario> findByEmail(String email);
 
     @Query("SELECT u FROM Usuario u WHERE u.username = :login OR u.email = :login")
     Optional<Usuario> findByUsernameOrEmail(@Param("login") String login);
+
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.rol ORDER BY u.username")
+    List<Usuario> findAllWithRol();
 
     List<Usuario> findByEnabledTrue();
 

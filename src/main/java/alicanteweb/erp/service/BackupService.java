@@ -46,6 +46,7 @@ public class BackupService {
     private boolean backupEnabled;
 
     private static final String DB_NAME = "tahona";
+    private final FacturacionEventoService facturacionEventoService;
 
     /**
      * Backup automático diario a las 2:00 AM
@@ -68,6 +69,9 @@ public class BackupService {
         try {
             String archivoBackup = realizarBackup();
             log.info("✅ Backup completado exitosamente: {}", archivoBackup);
+            registrarEventoBackup("BACKUP_AUTOMATICO", archivoBackup, java.util.Map.of(
+                "baseDatos", DB_NAME
+            ));
 
             // Limpiar backups antiguos
             limpiarBackupsAntiguos();
@@ -135,6 +139,11 @@ public class BackupService {
                 if (backupFile.exists() && backupFile.length() > 0) {
                     long sizeMB = backupFile.length() / (1024 * 1024);
                     log.info("✅ Backup creado exitosamente: {} ({} MB)", nombreArchivo, sizeMB);
+                    registrarEventoBackup("BACKUP_GENERADO", rutaCompleta, java.util.Map.of(
+                        "nombreArchivo", nombreArchivo,
+                        "tamanoBytes", backupFile.length(),
+                        "baseDatos", DB_NAME
+                    ));
                     return rutaCompleta;
                 } else {
                     throw new IOException("El archivo de backup está vacío o no se creó");
@@ -186,6 +195,10 @@ public class BackupService {
 
             if (exitCode == 0) {
                 log.info("✅ Backup restaurado exitosamente");
+                registrarEventoBackup("RESTAURACION_BACKUP", rutaArchivo, java.util.Map.of(
+                    "usuario", restoringUser,
+                    "baseDatos", DB_NAME
+                ));
             } else {
                 throw new IOException("Error restaurando backup. Código de salida: " + exitCode);
             }
@@ -253,6 +266,10 @@ public class BackupService {
                     File file = new File(backup.rutaCompleta());
                     if (file.delete()) {
                         log.info("Backup eliminado: {}", backup.nombre());
+                        registrarEventoBackup("ELIMINACION_BACKUP_RETENCION", backup.rutaCompleta(), java.util.Map.of(
+                            "nombreArchivo", backup.nombre(),
+                            "fechaBackup", backup.fecha().toString()
+                        ));
                         eliminados++;
                     }
                 }
@@ -314,6 +331,9 @@ public class BackupService {
                 boolean deleted = file.delete();
                 if (deleted) {
                     log.info("Backup eliminado: {}", rutaCompleta);
+                    registrarEventoBackup("ELIMINACION_BACKUP_MANUAL", rutaCompleta, java.util.Map.of(
+                        "ruta", rutaCompleta
+                    ));
                 } else {
                     log.warn("No se pudo eliminar backup: {}", rutaCompleta);
                 }
@@ -369,5 +389,14 @@ public class BackupService {
         }
 
         return tempFile;
+    }
+
+    private void registrarEventoBackup(String tipoEvento, String referencia, java.util.Map<String, Object> metadata) {
+        facturacionEventoService.registrarEvento(
+            FacturacionEventoService.AMBITO_BACKUP,
+            tipoEvento,
+            referencia,
+            metadata
+        );
     }
 }

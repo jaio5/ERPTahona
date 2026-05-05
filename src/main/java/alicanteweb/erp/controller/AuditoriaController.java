@@ -10,11 +10,17 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 import alicanteweb.erp.ui.DialogUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -26,7 +32,7 @@ import java.util.stream.Collectors;
  * Controlador para la vista de Auditoría del Sistema
  * Muestra y permite filtrar todos los registros de auditoría
  */
-@Component
+@Controller
 public class AuditoriaController {
     private static final Logger log = LoggerFactory.getLogger(AuditoriaController.class);
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
@@ -504,14 +510,59 @@ public class AuditoriaController {
 
     @FXML
     public void onExportar() {
-        String mensaje = """
-            Funcionalidad de exportación en desarrollo
-            
-            Próximamente podrá exportar los registros de auditoría a:
-            • Excel (.xlsx)
-            • CSV (.csv)
-            • PDF (.pdf)
-            """;
-        DialogUtils.showWarning(mensaje);
+        if (auditoriaFilteredList.isEmpty()) {
+            DialogUtils.showWarning("No hay registros de auditoria para exportar");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Exportar auditoria");
+        fileChooser.setInitialFileName("auditoria_" + LocalDate.now() + ".csv");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
+
+        Window owner = tableAuditoria != null && tableAuditoria.getScene() != null
+            ? tableAuditoria.getScene().getWindow()
+            : null;
+        var file = fileChooser.showSaveDialog(owner);
+        if (file == null) {
+            return;
+        }
+
+        try {
+            Path destino = file.toPath();
+            Files.writeString(destino, construirCsvAuditoria(auditoriaFilteredList), StandardCharsets.UTF_8);
+            DialogUtils.showSuccess("Auditoria exportada correctamente:\n" + destino);
+        } catch (IOException e) {
+            log.error("Error exportando auditoria", e);
+            DialogUtils.showError("No se pudo exportar la auditoria: " + e.getMessage());
+        }
+    }
+
+    private String construirCsvAuditoria(List<AuditoriaAccion> registros) {
+        StringBuilder csv = new StringBuilder();
+        csv.append('\ufeff');
+        csv.append("ID;Fecha;Usuario;Accion;Modulo;Entidad;Entidad ID;Descripcion;Resultado;IP;Error\n");
+        for (AuditoriaAccion accion : registros) {
+            csv.append(csv(accion.getId())).append(';');
+            csv.append(csv(accion.getFecha() != null ? accion.getFecha().format(DATE_TIME_FORMATTER) : "")).append(';');
+            csv.append(csv(accion.getUsuarioNombre())).append(';');
+            csv.append(csv(accion.getTipoAccion())).append(';');
+            csv.append(csv(accion.getModulo())).append(';');
+            csv.append(csv(accion.getEntidadTipo())).append(';');
+            csv.append(csv(accion.getEntidadId())).append(';');
+            csv.append(csv(accion.getDescripcion())).append(';');
+            csv.append(csv(accion.getResultado())).append(';');
+            csv.append(csv(accion.getIp())).append(';');
+            csv.append(csv(accion.getMensajeError())).append('\n');
+        }
+        return csv.toString();
+    }
+
+    private String csv(Object value) {
+        if (value == null) {
+            return "";
+        }
+        String text = String.valueOf(value).replace("\"", "\"\"");
+        return "\"" + text + "\"";
     }
 }

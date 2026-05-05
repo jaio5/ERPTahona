@@ -285,26 +285,23 @@ public class Factura {
     private LocalDateTime verifactuFechaRegistro;
 
     // ============================================
-    // Métodos de conveniencia para tests
+    // Aliases de compatibilidad (deprecados)
     // ============================================
 
-    /**
-     * Alias de getTotalIva para compatibilidad con tests
-     */
+    /** @deprecated Usar {@link #getTotalIva()} directamente. */
+    @Deprecated(since = "1.0", forRemoval = true)
     public BigDecimal getIva() {
         return this.totalIva;
     }
 
-    /**
-     * Alias de setTotalIva para compatibilidad con tests
-     */
+    /** @deprecated Usar {@link #setTotalIva(BigDecimal)} directamente. */
+    @Deprecated(since = "1.0", forRemoval = true)
     public void setIva(BigDecimal iva) {
         this.totalIva = iva;
     }
 
-    /**
-     * Alias de getFacturaLineas() para compatibilidad con ReportesPDFService
-     */
+    /** @deprecated Usar {@link #getFacturaLineas()} directamente. */
+    @Deprecated(since = "1.0", forRemoval = true)
     public Set<FacturaLinea> getLineas() {
         return this.facturaLineas;
     }

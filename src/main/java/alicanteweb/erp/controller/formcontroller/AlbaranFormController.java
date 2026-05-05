@@ -50,6 +50,7 @@ public class AlbaranFormController {
     @FXML private TextArea txtObservaciones;
 
     private final AlbaranVentaService albaranService;
+    private final AlbaranService albaranConversionService;
     private final ClienteService clienteService;
     private final ArticuloService articuloService;
 
@@ -58,9 +59,11 @@ public class AlbaranFormController {
     private final ObservableList<LineaAlbaranTemp> lineasTemp = FXCollections.observableArrayList();
 
     public AlbaranFormController(AlbaranVentaService albaranService,
+                                 AlbaranService albaranConversionService,
                                  ClienteService clienteService,
                                  ArticuloService articuloService) {
         this.albaranService = albaranService;
+        this.albaranConversionService = albaranConversionService;
         this.clienteService = clienteService;
         this.articuloService = articuloService;
     }
@@ -348,7 +351,23 @@ public class AlbaranFormController {
 
     @FXML
     public void onConvertirFactura() {
-        mostrarInfo();
+        try {
+            if (albaranActual == null || albaranActual.getId() == null) {
+                mostrarAdvertencia("Guarda el albaran antes de convertirlo a factura");
+                return;
+            }
+
+            if (!DialogUtils.showConfirm("Convertir este albaran en factura?")) {
+                return;
+            }
+
+            Factura factura = albaranConversionService.convertirAFactura(albaranActual.getId(), null);
+            DialogUtils.showSuccess("Factura creada correctamente: " + factura.getNumero());
+            cerrarVentana();
+        } catch (Exception e) {
+            log.error("Error convirtiendo albaran a factura", e);
+            mostrarError("Error al convertir a factura: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -389,7 +408,6 @@ public class AlbaranFormController {
     private void mostrarError(String mensaje) { DialogUtils.showError(mensaje); }
     private void mostrarAdvertencia(String mensaje) { DialogUtils.showWarning(mensaje); }
     private void mostrarExito() { DialogUtils.showSuccess("Albaran guardado correctamente"); }
-    private void mostrarInfo() { DialogUtils.showInfo("Funcionalidad de conversion a factura en desarrollo"); }
 
     /**
      * Clase temporal para las lineas de albaran en la tabla

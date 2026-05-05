@@ -7,11 +7,11 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 
 import java.util.List;
 
-@Component
+@Controller
 public class ProveedorController extends BaseController<Proveedor> {
     private static final Logger log = LoggerFactory.getLogger(ProveedorController.class);
 

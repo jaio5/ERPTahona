@@ -29,18 +29,24 @@
                 <Button text="🏢 Proveedores" onAction="#onProveedores" styleClass="menu-button"/>
                 <Button text="📝 Facturas" onAction="#onFacturas" styleClass="menu-button"/>
                 <Button text="📋 Albaranes" onAction="#onAlbaranes" styleClass="menu-button"/>
-                <Button text="💾 Backups" onAction="#onBackups" styleClass="menu-button"/>
+                <Button fx:id="btnBackups" text="💾 Backups" onAction="#onBackups" styleClass="menu-button"/>
 
                 <MenuButton text="💼 Más" styleClass="menu-button">
                     <items>
                         <MenuItem text="💰 Caja" onAction="#onCaja"/>
-                        <MenuItem text="📊 Contabilidad" onAction="#onAsientos"/>
+                        <MenuItem fx:id="btnAsientos" text="📊 Contabilidad" onAction="#onAsientos"/>
+                        <MenuItem fx:id="btnPlanContable" text="📒 Plan Contable" onAction="#onPlanContable"/>
+                        <MenuItem fx:id="btnModelo347" text="📊 Modelo 347" onAction="#onModelo347"/>
                         <MenuItem text="🏪 Almacenes" onAction="#onAlmacenes"/>
                         <MenuItem text="💵 Presupuestos" onAction="#onPresupuestos"/>
                         <SeparatorMenuItem/>
                         <MenuItem text="📑 Facturas Compra" onAction="#onFacturasCompra"/>
-                        <MenuItem text="👤 Usuarios" onAction="#onUsuarios"/>
-                        <MenuItem text="📋 Auditoría" onAction="#onAuditoria"/>
+                        <MenuItem text="🛒 Pedidos Compra" onAction="#onPedidosCompra"/>
+                        <MenuItem text="📦 Pedidos Venta" onAction="#onPedidosVenta"/>
+                        <MenuItem text="🏦 Movimientos Banco" onAction="#onMovimientosBanco"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem fx:id="btnUsuarios" text="👤 Usuarios" onAction="#onUsuarios"/>
+                        <MenuItem fx:id="btnAuditoria" text="📋 Auditoría" onAction="#onAuditoria"/>
                         <SeparatorMenuItem/>
                         <MenuItem text="✅ VeriFacTur" onAction="#onVerifactu"/>
                         <MenuItem text="⚙️ Configuración" onAction="#onConfiguracion"/>

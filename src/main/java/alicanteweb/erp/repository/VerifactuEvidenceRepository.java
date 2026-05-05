@@ -10,11 +10,14 @@ import java.util.List;
 @Repository
 public interface VerifactuEvidenceRepository extends JpaRepository<VerifactuEvidence, Long> {
     Optional<VerifactuEvidence> findByFacturaId(String facturaId);
+    Optional<VerifactuEvidence> findFirstByFacturaIdOrderByFechaGeneracionRegistroDescIdDesc(String facturaId);
+    List<VerifactuEvidence> findAllByFacturaIdOrderByFechaGeneracionRegistroAscIdAsc(String facturaId);
     Optional<VerifactuEvidence> findByHash(String hash);
     List<VerifactuEvidence> findBySerieContainingIgnoreCase(String serie);
 
     // Métodos para la cadena de bloques
     Optional<VerifactuEvidence> findFirstBySerieOrderByFechaEmisionDesc(String serie);
+    Optional<VerifactuEvidence> findFirstBySerieOrderByFechaGeneracionRegistroDescIdDesc(String serie);
     List<VerifactuEvidence> findAllBySerieOrderByFechaEmisionAsc(String serie);
 
     // Métodos para estados

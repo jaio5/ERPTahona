@@ -1,6 +1,7 @@
 package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Presupuesto;
+import alicanteweb.erp.controller.formcontroller.PresupuestoFormController;
 import alicanteweb.erp.service.PresupuestoService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -11,6 +12,7 @@ import javafx.beans.property.SimpleStringProperty;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -42,9 +44,11 @@ public class PresupuestoController {
     @FXML private DatePicker dpFechaHasta;
 
     private final PresupuestoService presupuestoService;
+    private final ApplicationContext applicationContext;
 
-    public PresupuestoController(PresupuestoService presupuestoService) {
+    public PresupuestoController(PresupuestoService presupuestoService, ApplicationContext applicationContext) {
         this.presupuestoService = presupuestoService;
+        this.applicationContext = applicationContext;
     }
 
     @FXML
@@ -357,7 +361,7 @@ public class PresupuestoController {
     @FXML
     public void onNuevo() {
         log.info("Crear nuevo presupuesto");
-        mostrarAlerta("Función en desarrollo: Crear nuevo presupuesto");
+        abrirFormulario(null);
     }
 
     @FXML
@@ -397,7 +401,7 @@ public class PresupuestoController {
             return;
         }
         log.info("Editar presupuesto: {}", presupuesto.getNumero());
-        mostrarAlerta("Funcion en desarrollo: Editar presupuesto");
+        abrirFormulario(presupuesto);
     }
 
     @FXML
@@ -525,5 +529,27 @@ public class PresupuestoController {
         alert.setContentText(msg);
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
+    }
+
+    private void abrirFormulario(Presupuesto presupuesto) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/ui/presupuesto_form.fxml"));
+            loader.setControllerFactory(applicationContext::getBean);
+            javafx.scene.Parent root = loader.load();
+
+            if (loader.getController() instanceof PresupuestoFormController controller) {
+                controller.setPresupuesto(presupuesto);
+            }
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle(presupuesto == null ? "Nuevo Presupuesto" : "Editar Presupuesto");
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+            cargarDatos();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario de presupuesto", e);
+            mostrarError("Error al abrir el formulario: " + e.getMessage());
+        }
     }
 }

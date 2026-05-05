@@ -2,15 +2,20 @@ package alicanteweb.erp.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 /**
- * Línea de asiento contable (apunte contable)
+ * Línea de asiento contable (apunte contable).
+ * Nota: se usa @Getter/@Setter en lugar de @Data para evitar equals/hashCode
+ * inadecuado en entidades JPA con relaciones lazy.
  */
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "asientos_contables_lineas")
 public class AsientoContableLinea {
@@ -62,8 +67,19 @@ public class AsientoContableLinea {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AsientoContableLinea)) return false;
+        AsientoContableLinea that = (AsientoContableLinea) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hashCode(id); }
+
+    @Override
     public String toString() {
-        return cuenta.getCodigo() + " - " + concepto + " - D:" + debe + " H:" + haber;
+        return (cuenta != null ? cuenta.getCodigo() : "?") + " - " + concepto + " - D:" + debe + " H:" + haber;
     }
 }
 

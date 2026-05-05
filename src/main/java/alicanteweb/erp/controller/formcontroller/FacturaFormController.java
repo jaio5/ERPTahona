@@ -641,6 +641,7 @@ public class FacturaFormController {
             if (dpFechaVencimiento != null) facturaActual.setFechaVencimiento(dpFechaVencimiento.getValue());
             if (txtObservaciones != null) facturaActual.setObservaciones(txtObservaciones.getText());
             facturaActual.setEstado(estado);
+            facturaActual.setSerie(resolverSerieFactura());
 
             // Forma de pago
             if (cbFormaPago != null && cbFormaPago.getValue() != null) {
@@ -667,7 +668,11 @@ public class FacturaFormController {
 
             // Generar número de factura si es nueva
             if (facturaActual.getNumero() == null || facturaActual.getNumero().isEmpty()) {
-                String numeroFactura = generarNumeroFactura();
+                String numeroFactura = facturaService.generarSiguienteNumero(
+                    facturaActual.getSerie(),
+                    facturaActual.getFecha(),
+                    "RECTIFICATIVA".equalsIgnoreCase(facturaActual.getTipoFactura())
+                );
                 facturaActual.setNumero(numeroFactura);
             }
 
@@ -720,31 +725,15 @@ public class FacturaFormController {
         }
     }
 
-    private String generarNumeroFactura() {
-        // Generar número de factura basado en el año y un contador
-        LocalDate hoy = LocalDate.now();
-        int anio = hoy.getYear();
+    private String resolverSerieFactura() {
+        Cliente cliente = cbCliente != null ? cbCliente.getValue() : null;
+        String serieBase = "GEN";
 
-        // Obtener el último número de factura del año actual
-        List<Factura> facturas = facturaService.findAll();
-        long numeroMaximo = facturas.stream()
-            .filter(f -> f.getNumero() != null && f.getNumero().startsWith("F-" + anio))
-            .map(f -> {
-                try {
-                    String[] partes = f.getNumero().split("-");
-                    if (partes.length == 3) {
-                        return Long.parseLong(partes[2]);
-                    }
-                } catch (Exception e) {
-                    // Ignorar errores de parseo
-                }
-                return 0L;
-            })
-            .max(Long::compareTo)
-            .orElse(0L);
+        if (cliente != null && cliente.getCodigo() != null && !cliente.getCodigo().isBlank()) {
+            serieBase = cliente.getCodigo().trim();
+        }
 
-        long siguienteNumero = numeroMaximo + 1;
-        return String.format("F-%d-%04d", anio, siguienteNumero);
+        return facturaService.normalizarSerie(serieBase);
     }
 
     @FXML

@@ -16,7 +16,10 @@ public class AutenticacionService {
     private final UsuarioService usuarioService;
     private final AuditoriaService auditoriaService;
 
-    // Usuario actualmente autenticado (sesión)
+    // Usuario actualmente autenticado (sesión).
+    // NOTA: Al ser un bean @Service singleton, este campo es compartido entre hilos.
+    // En una aplicación de escritorio monousuario esto es aceptable, pero en un entorno
+    // multi-hilo o web debería migrarse a un ThreadLocal o Spring Security SecurityContext.
     private Usuario usuarioActual;
 
     public AutenticacionService(UsuarioService usuarioService, AuditoriaService auditoriaService) {
@@ -107,7 +110,14 @@ public class AutenticacionService {
     }
 
     /**
-     * Verifica si el usuario actual tiene un permiso específico
+     * Verifica si el usuario actual tiene un permiso específico.
+     * <ol>
+     *   <li>ROLE_ADMIN tiene acceso total.</li>
+     *   <li>Si el usuario tiene un {@link alicanteweb.erp.entities.Rol} asignado con
+     *       permisos JSON, se consulta la estructura {@code { modulo: { accion: bool } }}.</li>
+     *   <li>En ausencia de rol/permisos configurados, se deniega el acceso.</li>
+     * </ol>
+     *
      * @param modulo Módulo a verificar (ej: "clientes", "facturas")
      * @param accion Acción a verificar (ej: "ver", "crear", "editar", "eliminar")
      * @return true si tiene el permiso
@@ -116,12 +126,19 @@ public class AutenticacionService {
         if (usuarioActual == null) {
             return false;
         }
+        if (esAdministrador()) {
+            return true;
+        }
 
-        // Si es ROLE_ADMIN, tiene todos los permisos
-        return "ROLE_ADMIN".equals(usuarioActual.getRole());
+        alicanteweb.erp.entities.Rol rol = usuarioActual.getRol();
+        if (rol != null && rol.getPermisos() != null) {
+            java.util.Map<String, Boolean> permisosModulo = rol.getPermisos().get(modulo);
+            if (permisosModulo != null) {
+                return Boolean.TRUE.equals(permisosModulo.get(accion));
+            }
+        }
 
-        // Por ahora, si no es admin, no tiene permisos
-        // TODO: implementar sistema de roles más complejo
+        return tienePermisoLegacy(modulo, accion);
     }
 
     /**
@@ -132,7 +149,9 @@ public class AutenticacionService {
         if (usuarioActual == null) {
             return false;
         }
-        return "ROLE_ADMIN".equals(usuarioActual.getRole());
+        String role = usuarioActual.getRole();
+        String rolNombre = usuarioActual.getRol() != null ? usuarioActual.getRol().getNombre() : null;
+        return esAdminRole(role) || esAdminRole(rolNombre);
     }
 
     /**
@@ -182,13 +201,34 @@ public class AutenticacionService {
         this.usuarioActual = usuario;
     }
 
-    // ============================================
-    // Métodos alias para compatibilidad con tests
-    // ============================================
+    private boolean tienePermisoLegacy(String modulo, String accion) {
+        String role = usuarioActual.getRole();
+        if (role == null) {
+            return false;
+        }
+        return switch (role.toUpperCase()) {
+            case "MANAGER", "GERENTE", "GESTOR" -> !"usuarios".equals(modulo) || !"eliminar".equals(accion);
+            case "VENDEDOR", "USER", "USUARIO" -> switch (modulo) {
+                case "dashboard", "clientes", "articulos", "ventas", "almacen" -> "ver".equals(accion);
+                default -> false;
+            };
+            case "CONTABLE" -> switch (modulo) {
+                case "dashboard", "compras", "tesoreria", "contabilidad", "fiscal" -> true;
+                default -> false;
+            };
+            default -> false;
+        };
+    }
+
+    private boolean esAdminRole(String role) {
+        return role != null && ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role));
+    }
 
     /**
-     * Autenticar usuario (alias de login)
+     * Alias de {@link #login(String, String)} para compatibilidad con tests existentes.
+     * @deprecated Usar {@link #login(String, String)} directamente.
      */
+    @Deprecated(since = "1.0", forRemoval = true)
     public Usuario autenticar(String username, String password) {
         return login(username, password);
     }

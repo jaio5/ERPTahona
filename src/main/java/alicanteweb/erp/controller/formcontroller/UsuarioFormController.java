@@ -1,6 +1,7 @@
 package alicanteweb.erp.controller.formcontroller;
 
 import alicanteweb.erp.entities.Usuario;
+import alicanteweb.erp.service.RolService;
 import alicanteweb.erp.service.UsuarioService;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -17,6 +18,7 @@ import alicanteweb.erp.ui.DialogUtils;
 public class UsuarioFormController extends BaseFormController<Usuario> {
 
     private final UsuarioService usuarioService;
+    private final RolService rolService;
 
     @FXML private TextField txtUsername = null;
     @FXML private Label lblTitulo = null;
@@ -28,8 +30,9 @@ public class UsuarioFormController extends BaseFormController<Usuario> {
     @FXML private CheckBox chkEnabled = null;
     @FXML private CheckBox chkBloqueado = null;
 
-    public UsuarioFormController(UsuarioService usuarioService) {
+    public UsuarioFormController(UsuarioService usuarioService, RolService rolService) {
         this.usuarioService = usuarioService;
+        this.rolService = rolService;
     }
 
     @FXML
@@ -37,7 +40,12 @@ public class UsuarioFormController extends BaseFormController<Usuario> {
         // Marcar campos como usados y preparar controles para evitar warnings estáticos
         try {
             if (cbRole != null) {
-                cbRole.setItems(FXCollections.observableArrayList("ADMIN", "MANAGER", "USER"));
+                cbRole.setItems(FXCollections.observableArrayList(
+                    rolService.listarActivos().stream().map(rol -> rol.getNombre()).toList()
+                ));
+                if (cbRole.getItems().isEmpty()) {
+                    cbRole.setItems(FXCollections.observableArrayList("ADMIN", "USUARIO"));
+                }
                 cbRole.setValue(cbRole.getItems().isEmpty() ? null : cbRole.getItems().get(0));
             }
             if (chkEnabled != null) {
@@ -58,12 +66,6 @@ public class UsuarioFormController extends BaseFormController<Usuario> {
 
         log.info("Inicializando UsuarioFormController");
         
-        // Configurar roles
-        if (cbRole != null) {
-            cbRole.getItems().addAll("ADMIN", "USUARIO", "GESTOR", "VENDEDOR");
-            cbRole.setValue("USUARIO");
-        }
-
         // Por defecto habilitado
         if (chkEnabled != null) {
             chkEnabled.setSelected(true);
