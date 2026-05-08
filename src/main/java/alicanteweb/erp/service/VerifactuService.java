@@ -732,9 +732,9 @@ public class VerifactuService implements InitializingBean {
                     "endpoint", aeatEndpoint
                 ));
 
-                log.info("âœ… Factura {} enviada y registrada correctamente en AEAT", factura.getNumero());
+                log.info("Factura {} enviada y registrada correctamente en AEAT", factura.getNumero());
             } catch (Exception e) {
-                log.error("âŒ Error enviando factura {} a AEAT: {}", factura.getNumero(), e.getMessage());
+                log.error("Error enviando factura {} a AEAT: {}", factura.getNumero(), e.getMessage());
                 evidencia.setEstado("ERROR");
                 evidencia.setErrorMessage("Error al enviar a AEAT: " + e.getMessage());
                 evidencia.setCodigoRespuestaAEAT("ERROR");
@@ -748,16 +748,16 @@ public class VerifactuService implements InitializingBean {
             }
         } else {
             if (!aeatEnabled) {
-                log.info("â„¹ï¸ Envío a AEAT deshabilitado (verifactu.aeat.enabled=false). Evidencia guardada localmente.");
+                log.info("Envio a AEAT deshabilitado (verifactu.aeat.enabled=false). Evidencia guardada localmente.");
             }
             if (!this.enabled) {
-                log.info("â„¹ï¸ Certificado no disponible. Evidencia guardada localmente sin firma digital.");
+                log.info("Certificado no disponible. Evidencia guardada localmente sin firma digital.");
             }
             registrarEventoVerifactu("ENVIO_AEAT_OMITIDO", factura, java.util.Map.of(
                 "aeatEnabled", aeatEnabled,
                 "certificadoDisponible", this.enabled
             ));
-            log.info("âœ… Factura {} registrada localmente (modo de pruebas)", factura.getNumero());
+            log.info("Factura {} registrada localmente (modo de pruebas)", factura.getNumero());
         }
     }
 

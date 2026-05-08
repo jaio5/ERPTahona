@@ -5,41 +5,43 @@
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.ClienteController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      styleClass="screen"
       VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
-    <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="CLIENTES" styleClass="title"/>
+    <HBox styleClass="screen-header">
+        <VBox spacing="2">
+            <Label text="Clientes" styleClass="title"/>
+            <Label text="Ficha fiscal, contacto y condiciones de venta." styleClass="subtitle"/>
+        </VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Refrescar" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 14;"/>
-        <Button text="+ Nuevo Cliente" onAction="#onNuevo" styleClass="button-success"/>
+        <Button text="Refrescar" onAction="#onRefresh" styleClass="button"/>
+        <Button text="Nuevo cliente" onAction="#onNuevo" styleClass="button-success"/>
     </HBox>
 
-    <HBox spacing="12" alignment="CENTER_LEFT">
-        <TextField fx:id="txtBuscar" promptText="Buscar cliente..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
-        <ComboBox fx:id="cmbActivo" promptText="Estado" minWidth="100" maxWidth="140"/>
+    <HBox styleClass="screen-toolbar">
+        <TextField fx:id="txtBuscar" promptText="Buscar cliente..." HBox.hgrow="ALWAYS"/>
+        <ComboBox fx:id="cmbActivo" promptText="Estado" minWidth="120" maxWidth="150"/>
         <Button text="Buscar" onAction="#onBuscarCliente" styleClass="button-primary"/>
     </HBox>
 
-    <TableView fx:id="tableClientes" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
+    <TableView fx:id="tableClientes" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colCodigo" text="Código" minWidth="70" maxWidth="100"/>
+            <TableColumn fx:id="colCodigo" text="Codigo" minWidth="70" maxWidth="100"/>
             <TableColumn fx:id="colNombre" text="Nombre" minWidth="150"/>
             <TableColumn fx:id="colCIF" text="CIF/NIF" minWidth="80" maxWidth="120"/>
-            <TableColumn fx:id="colDireccion" text="Dirección" minWidth="150"/>
-            <TableColumn fx:id="colPoblacion" text="Población" minWidth="100"/>
+            <TableColumn fx:id="colDireccion" text="Direccion" minWidth="150"/>
+            <TableColumn fx:id="colPoblacion" text="Poblacion" minWidth="100"/>
             <TableColumn fx:id="colProvincia" text="Provincia" minWidth="100"/>
             <TableColumn fx:id="colActivo" text="Activo" minWidth="60" maxWidth="80"/>
         </columns>
     </TableView>
 
-    <HBox spacing="12" alignment="CENTER_LEFT">
+    <HBox styleClass="screen-footer">
         <Button text="Ver" onAction="#onVerCliente" styleClass="button"/>
         <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
-        <Button text="Dar de Baja" onAction="#onDarBajaCliente" styleClass="button-danger"/>
+        <Button text="Dar de baja" onAction="#onDarBajaCliente" styleClass="button-danger"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblTotal" text="0 clientes" style="-fx-text-fill: #6c757d;"/>
+        <Label fx:id="lblTotal" text="0 clientes" styleClass="muted"/>
     </HBox>
 
 </VBox>
-

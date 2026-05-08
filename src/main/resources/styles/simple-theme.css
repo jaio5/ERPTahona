@@ -1,480 +1,413 @@
-/* ============================================
-   🎨 ERP TAHONA - DISEÑO SIMPLE Y LIMPIO
-   Minimalista, Intuitivo y Profesional
-   ============================================ */
+/* ERP Tahona - tema operativo minimalista */
 
 .root {
-    -fx-font-family: "Segoe UI", system-ui, sans-serif;
-    -fx-font-size: 14px;
-    -fx-background-color: #f8f9fa;
+    -fx-font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: #f6f7f9;
+    -fx-text-base-color: #1f2933;
 }
 
-/* ============================================
-   📋 TIPOGRAFÍA SIMPLE
-   ============================================ */
+.app-shell {
+    -fx-background-color: #f6f7f9;
+}
+
+.sidebar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent #e4e7ec transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 18 14;
+}
+
+.brand-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #141a21;
+}
+
+.brand-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #667085;
+}
+
+.nav-section {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #8a94a6;
+    -fx-padding: 18 10 4 10;
+}
+
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-radius: 6;
+    -fx-text-fill: #344054;
+    -fx-font-size: 13px;
+    -fx-font-weight: 500;
+    -fx-alignment: center-left;
+    -fx-padding: 9 10;
+    -fx-cursor: hand;
+    -fx-min-height: 34px;
+    -fx-pref-width: 208px;
+}
+
+.sidebar-button:hover {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #0f62fe;
+}
+
+.sidebar-button:pressed {
+    -fx-background-color: #e8f0ff;
+    -fx-text-fill: #0f62fe;
+}
+
+.content-surface {
+    -fx-background-color: #f6f7f9;
+}
+
+.topbar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent transparent #e4e7ec transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 12 22;
+}
+
+.status-bar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e4e7ec transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 8 22;
+}
+
+.status-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #667085;
+}
 
 .title {
-    -fx-font-size: 28px;
-    -fx-font-weight: 600;
-    -fx-text-fill: #1a1a1a;
+    -fx-font-size: 24px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #141a21;
 }
 
-.subtitle {
-    -fx-font-size: 16px;
-    -fx-font-weight: 500;
-    -fx-text-fill: #4a4a4a;
+.subtitle,
+.muted {
+    -fx-font-size: 13px;
+    -fx-text-fill: #667085;
 }
 
-Label {
-    -fx-text-fill: #2c2c2c;
-    -fx-font-size: 14px;
+.section-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1f2933;
 }
 
-/* ============================================
-   🎯 BOTONES SIMPLES Y CLAROS
-   ============================================ */
-
-.button {
-    -fx-background-color: white;
-    -fx-text-fill: #2c2c2c;
-    -fx-font-size: 14px;
-    -fx-font-weight: 500;
-    -fx-padding: 12 24;
+.card,
+.stat-card,
+.panel {
+    -fx-background-color: #ffffff;
     -fx-background-radius: 8;
-    -fx-border-color: #dee2e6;
+    -fx-border-color: #e4e7ec;
     -fx-border-width: 1;
     -fx-border-radius: 8;
+    -fx-padding: 18;
+}
+
+.stat-value {
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #141a21;
+}
+
+.stat-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #667085;
+}
+
+.button {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d5dd;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-text-fill: #344054;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-padding: 8 14;
     -fx-cursor: hand;
 }
 
 .button:hover {
-    -fx-background-color: #f8f9fa;
-    -fx-border-color: #adb5bd;
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #98a2b3;
 }
 
-.button:pressed {
-    -fx-background-color: #e9ecef;
-}
-
-/* Botón primario - Azul simple */
 .button-primary {
-    -fx-background-color: #0d6efd;
-    -fx-text-fill: white;
-    -fx-border-width: 0;
+    -fx-background-color: #155eef;
+    -fx-border-color: #155eef;
+    -fx-text-fill: #ffffff;
 }
 
 .button-primary:hover {
-    -fx-background-color: #0b5ed7;
+    -fx-background-color: #0f4bd8;
+    -fx-border-color: #0f4bd8;
 }
 
-/* Botón success - Verde simple */
 .button-success {
-    -fx-background-color: #198754;
-    -fx-text-fill: white;
-    -fx-border-width: 0;
+    -fx-background-color: #147d64;
+    -fx-border-color: #147d64;
+    -fx-text-fill: #ffffff;
 }
 
-.button-success:hover {
-    -fx-background-color: #157347;
-}
-
-/* Botón danger - Rojo simple */
 .button-danger {
-    -fx-background-color: #dc3545;
-    -fx-text-fill: white;
-    -fx-border-width: 0;
+    -fx-background-color: #d92d20;
+    -fx-border-color: #d92d20;
+    -fx-text-fill: #ffffff;
 }
 
-.button-danger:hover {
-    -fx-background-color: #bb2d3b;
+.quick-action {
+    -fx-min-height: 46px;
+    -fx-alignment: center-left;
+    -fx-font-size: 14px;
 }
 
-/* Botones más grandes para dashboard */
-.button-large {
-    -fx-font-size: 15px;
-    -fx-padding: 16 32;
-    -fx-min-width: 160px;
+.text-field,
+.text-area,
+.password-field,
+.combo-box,
+.date-picker {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d5dd;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 8 10;
+    -fx-text-fill: #1f2933;
+    -fx-prompt-text-fill: #98a2b3;
 }
 
-/* ============================================
-   📋 TABLAS SIMPLES Y LIMPIAS
-   ============================================ */
+.text-field:focused,
+.text-area:focused,
+.password-field:focused,
+.combo-box:focused,
+.date-picker:focused {
+    -fx-border-color: #155eef;
+}
 
 .table-view {
-    -fx-background-color: white;
-    -fx-border-color: #dee2e6;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e4e7ec;
     -fx-border-width: 1;
     -fx-border-radius: 8;
     -fx-background-radius: 8;
 }
 
 .table-view .column-header-background {
-    -fx-background-color: #f8f9fa;
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8 8 0 0;
 }
 
 .table-view .column-header {
     -fx-background-color: transparent;
-    -fx-border-color: transparent transparent #dee2e6 transparent;
-    -fx-border-width: 0 0 2 0;
-    -fx-padding: 12 8;
+    -fx-border-color: transparent transparent #e4e7ec transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 10 8;
 }
 
 .table-view .column-header .label {
-    -fx-text-fill: #495057;
-    -fx-font-weight: 600;
-    -fx-font-size: 13px;
-}
-
-.table-view .table-cell {
-    -fx-padding: 12 8;
-    -fx-border-color: transparent transparent #f1f3f5 transparent;
-    -fx-border-width: 0 0 1 0;
-    -fx-text-fill: #212529;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #667085;
 }
 
 .table-row-cell {
-    -fx-background-color: white;
-}
-
-.table-row-cell:odd {
-    -fx-background-color: #f8f9fa;
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent transparent #f0f2f5 transparent;
+    -fx-border-width: 0 0 1 0;
 }
 
 .table-row-cell:hover {
-    -fx-background-color: #e7f5ff;
+    -fx-background-color: #f8fafc;
 }
 
 .table-row-cell:selected {
-    -fx-background-color: #d0ebff;
+    -fx-background-color: #e8f0ff;
 }
 
-/* ============================================
-   📝 CAMPOS DE TEXTO SIMPLES
-   ============================================ */
-
-.text-field {
-    -fx-background-color: white;
-    -fx-background-radius: 8;
-    -fx-border-color: #ced4da;
-    -fx-border-radius: 8;
-    -fx-border-width: 1;
-    -fx-padding: 10 12;
-    -fx-font-size: 14px;
-    -fx-text-fill: #212529;
+.table-view .table-cell {
+    -fx-padding: 9 8;
+    -fx-text-fill: #1f2933;
 }
-
-.text-field:focused {
-    -fx-border-color: #0d6efd;
-    -fx-border-width: 2;
-}
-
-.text-area {
-    -fx-background-color: white;
-    -fx-background-radius: 8;
-    -fx-border-color: #ced4da;
-    -fx-border-radius: 8;
-    -fx-border-width: 1;
-    -fx-padding: 10 12;
-    -fx-font-size: 14px;
-    -fx-text-fill: #212529;
-}
-
-.text-area:focused {
-    -fx-border-color: #0d6efd;
-    -fx-border-width: 2;
-}
-
-.combo-box {
-    -fx-background-color: white;
-    -fx-background-radius: 8;
-    -fx-border-color: #ced4da;
-    -fx-border-radius: 8;
-    -fx-border-width: 1;
-    -fx-padding: 8 12;
-}
-
-.combo-box:focused {
-    -fx-border-color: #0d6efd;
-}
-
-.date-picker {
-    -fx-background-color: white;
-    -fx-background-radius: 8;
-    -fx-border-color: #ced4da;
-    -fx-border-radius: 8;
-    -fx-border-width: 1;
-}
-
-.date-picker:focused {
-    -fx-border-color: #0d6efd;
-}
-
-/* ============================================
-   📦 CONTENEDORES SIMPLES
-   ============================================ */
-
-.card {
-    -fx-background-color: white;
-    -fx-background-radius: 12;
-    -fx-padding: 24;
-    -fx-border-color: #e9ecef;
-    -fx-border-width: 1;
-    -fx-border-radius: 12;
-}
-
-.panel {
-    -fx-background-color: white;
-    -fx-padding: 20;
-    -fx-spacing: 20;
-}
-
-/* ============================================
-   🎨 HEADER SIMPLE
-   ============================================ */
-
-.header {
-    -fx-background-color: white;
-    -fx-border-color: transparent transparent #e9ecef transparent;
-    -fx-border-width: 0 0 1 0;
-    -fx-padding: 16 24;
-}
-
-/* ============================================
-   🎨 SIDEBAR MINIMALISTA
-   ============================================ */
-
-.sidebar {
-    -fx-background-color: white;
-    -fx-border-color: transparent #e9ecef transparent transparent;
-    -fx-border-width: 0 1 0 0;
-    -fx-padding: 16;
-}
-
-.sidebar-button {
-    -fx-background-color: transparent;
-    -fx-text-fill: #495057;
-    -fx-font-size: 14px;
-    -fx-font-weight: 400;
-    -fx-padding: 12 16;
-    -fx-background-radius: 8;
-    -fx-alignment: center-left;
-    -fx-border-width: 0;
-}
-
-.sidebar-button:hover {
-    -fx-background-color: #f8f9fa;
-    -fx-text-fill: #0d6efd;
-}
-
-.sidebar-button:pressed,
-.sidebar-button:selected {
-    -fx-background-color: #e7f5ff;
-    -fx-text-fill: #0d6efd;
-}
-
-.sidebar-section {
-    -fx-font-size: 11px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #868e96;
-    -fx-padding: 16 16 8 16;
-}
-
-/* ============================================
-   📊 BARRA DE ESTADO
-   ============================================ */
-
-.status-bar {
-    -fx-background-color: white;
-    -fx-padding: 12 24;
-    -fx-border-color: #e9ecef;
-    -fx-border-width: 1 0 0 0;
-}
-
-.status-label {
-    -fx-text-fill: #6c757d;
-    -fx-font-size: 13px;
-}
-
-/* ============================================
-   🎯 BADGES SIMPLES
-   ============================================ */
 
 .badge {
-    -fx-background-radius: 12;
-    -fx-padding: 4 12;
+    -fx-background-radius: 999;
+    -fx-padding: 3 9;
     -fx-font-size: 12px;
-    -fx-font-weight: 600;
+    -fx-font-weight: 700;
 }
 
 .badge-success {
-    -fx-background-color: #d1e7dd;
-    -fx-text-fill: #0f5132;
-}
-
-.badge-danger {
-    -fx-background-color: #f8d7da;
-    -fx-text-fill: #842029;
+    -fx-background-color: #dcfae6;
+    -fx-text-fill: #067647;
 }
 
 .badge-warning {
-    -fx-background-color: #fff3cd;
-    -fx-text-fill: #664d03;
+    -fx-background-color: #fef0c7;
+    -fx-text-fill: #b54708;
 }
 
 .badge-info {
-    -fx-background-color: #cfe2ff;
-    -fx-text-fill: #084298;
+    -fx-background-color: #e8f0ff;
+    -fx-text-fill: #155eef;
 }
 
-/* ============================================
-   🔍 SCROLL BARS MINIMALISTAS
-   ============================================ */
+.separator .line {
+    -fx-border-color: #e4e7ec;
+    -fx-border-width: 1 0 0 0;
+}
+
+.scroll-pane,
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
 
 .scroll-bar {
     -fx-background-color: transparent;
 }
 
 .scroll-bar .thumb {
-    -fx-background-color: #ced4da;
-    -fx-background-radius: 4;
-}
-
-.scroll-bar .thumb:hover {
-    -fx-background-color: #adb5bd;
-}
-
-.scroll-bar .track {
-    -fx-background-color: transparent;
-}
-
-.scroll-bar .increment-button,
-.scroll-bar .decrement-button {
-    -fx-background-color: transparent;
-}
-
-/* ============================================
-   🎯 TOOLTIPS SIMPLES
-   ============================================ */
-
-.tooltip {
-    -fx-background-color: #212529;
-    -fx-text-fill: white;
+    -fx-background-color: #cbd5e1;
     -fx-background-radius: 6;
-    -fx-padding: 6 10;
-    -fx-font-size: 12px;
 }
 
-/* ============================================
-   📋 SEPARADORES
-   ============================================ */
-
-.separator {
-    -fx-background-color: #e9ecef;
+.login-background {
+    -fx-background-color: #f6f7f9;
 }
 
-/* ============================================
-   🎨 COLORES DE ESTADO
-   ============================================ */
-
-.text-success {
-    -fx-text-fill: #198754;
+.login-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8;
+    -fx-border-color: #e4e7ec;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 38 36;
 }
 
-.text-danger {
-    -fx-text-fill: #dc3545;
+.login-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #141a21;
 }
 
-.text-warning {
-    -fx-text-fill: #ffc107;
+.login-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #667085;
 }
 
-.text-info {
-    -fx-text-fill: #0dcaf0;
+.login-error {
+    -fx-background-color: #fef3f2;
+    -fx-border-color: #fecdca;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 10 12;
 }
 
-.text-muted {
-    -fx-text-fill: #6c757d;
-}
-
-/* ============================================
-   📦 ESPACIADO CONSISTENTE
-   ============================================ */
-
-.spacing-small {
-    -fx-spacing: 8;
-}
-
-.spacing-medium {
+.screen {
+    -fx-background-color: #f6f7f9;
+    -fx-padding: 24;
     -fx-spacing: 16;
 }
 
-.spacing-large {
-    -fx-spacing: 24;
+.screen-header {
+    -fx-spacing: 12;
+    -fx-alignment: center-left;
 }
 
-/* ============================================
-   🎯 FORMULARIOS SIMPLES
-   ============================================ */
+.screen-toolbar {
+    -fx-spacing: 10;
+    -fx-alignment: center-left;
+}
+
+.screen-footer {
+    -fx-spacing: 10;
+    -fx-alignment: center-left;
+}
+
+.form-root {
+    -fx-background-color: #f6f7f9;
+}
+
+.form-header {
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent transparent #e4e7ec transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 14 18;
+    -fx-spacing: 12;
+    -fx-alignment: center-left;
+}
+
+.form-body {
+    -fx-padding: 18;
+    -fx-spacing: 14;
+}
+
+.form-footer {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e4e7ec transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 12 18;
+    -fx-spacing: 10;
+    -fx-alignment: center-right;
+}
+
+.form-section {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8;
+    -fx-border-color: #e4e7ec;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 16;
+    -fx-spacing: 12;
+}
+
+.form-grid {
+    -fx-hgap: 14;
+    -fx-vgap: 12;
+}
+
+.form-field {
+    -fx-spacing: 5;
+}
 
 .form-label {
-    -fx-font-size: 13px;
-    -fx-font-weight: 500;
-    -fx-text-fill: #495057;
-}
-
-.form-group {
-    -fx-spacing: 8;
-}
-
-/* ============================================
-   📊 DASHBOARD CARDS
-   ============================================ */
-
-.stat-card {
-    -fx-background-color: white;
-    -fx-background-radius: 12;
-    -fx-padding: 20;
-    -fx-border-color: #e9ecef;
-    -fx-border-width: 1;
-    -fx-border-radius: 12;
-}
-
-.stat-value {
-    -fx-font-size: 32px;
+    -fx-font-size: 12px;
     -fx-font-weight: 700;
+    -fx-text-fill: #475467;
 }
 
-.stat-label {
-    -fx-font-size: 13px;
-    -fx-text-fill: #6c757d;
+.form-help {
+    -fx-font-size: 11px;
+    -fx-text-fill: #98a2b3;
 }
 
-/* ============================================
-   🔘 BOTONES DEL MENÚ DE NAVEGACIÓN
-   ============================================ */
-
-.menu-button {
-    -fx-background-color: transparent;
-    -fx-text-fill: rgba(255, 255, 255, 0.9);
-    -fx-font-size: 14px;
-    -fx-font-weight: 500;
-    -fx-padding: 10 16;
-    -fx-background-radius: 6;
-    -fx-border-width: 0;
-    -fx-cursor: hand;
+.form-error {
+    -fx-font-size: 11px;
+    -fx-text-fill: #d92d20;
 }
 
-.menu-button:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.15);
-    -fx-text-fill: white;
+.readonly-field {
+    -fx-background-color: #f8fafc;
 }
 
-.menu-button:pressed {
-    -fx-background-color: rgba(255, 255, 255, 0.25);
+.total-label {
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #141a21;
 }
 
-.menu-button .label {
-    -fx-text-fill: inherit;
+.money-total {
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #147d64;
 }
-
-

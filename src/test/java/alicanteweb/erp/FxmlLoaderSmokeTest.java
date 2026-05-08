@@ -2,6 +2,7 @@ package alicanteweb.erp;
 
 import alicanteweb.erp.controller.formcontroller.PresupuestoFormController;
 import alicanteweb.erp.service.ArticuloService;
+import alicanteweb.erp.service.ClienteDatosExternosService;
 import alicanteweb.erp.service.ClienteService;
 import alicanteweb.erp.service.PresupuestoService;
 import javafx.application.Platform;
@@ -41,6 +42,29 @@ public class FxmlLoaderSmokeTest {
                     when(clienteService.findAll()).thenReturn(List.of());
                     when(articuloService.findAll()).thenReturn(List.of());
                     return new PresupuestoFormController(presupuestoService, clienteService, articuloService);
+                }
+                try {
+                    return type.getDeclaredConstructor().newInstance();
+                } catch (ReflectiveOperationException ex) {
+                    throw new IllegalStateException("No se pudo instanciar controlador FXML: " + type.getName(), ex);
+                }
+            });
+            loader.load(is);
+        }
+    }
+
+    @Test
+    public void loadClienteForm() throws Exception {
+        try (InputStream is = getClass().getResourceAsStream("/ui/cliente_form.fxml")) {
+            if (is == null) throw new RuntimeException("FXML not found");
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/ui/cliente_form.fxml"));
+            loader.setControllerFactory(type -> {
+                if (type == alicanteweb.erp.controller.formcontroller.ClienteFormController.class) {
+                    ClienteService clienteService = mock(ClienteService.class);
+                    ClienteDatosExternosService datosExternosService = mock(ClienteDatosExternosService.class);
+                    when(clienteService.findAll()).thenReturn(List.of());
+                    return new alicanteweb.erp.controller.formcontroller.ClienteFormController(clienteService, datosExternosService);
                 }
                 try {
                     return type.getDeclaredConstructor().newInstance();

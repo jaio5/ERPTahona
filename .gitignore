@@ -5,6 +5,7 @@ target/
 # Log files
 *.log
 logs/
+backups/
 
 # Package Files
 *.jar
@@ -40,6 +41,7 @@ desktop.ini
 
 # Application specific
 data/
+impresiones/
 *.mv.db
 *.trace.db
 app_output.log

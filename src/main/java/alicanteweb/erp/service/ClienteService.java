@@ -31,8 +31,22 @@ public class ClienteService {
         return repository.findByCodigo(codigo);
     }
 
+    public Optional<Cliente> findByCif(String cif) {
+        if (cif == null || cif.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return repository.findByCifIgnoreCase(cif.trim());
+    }
+
     public List<Cliente> searchByNombre(String texto) {
         return repository.findByNombreContainingIgnoreCase(texto);
+    }
+
+    public Optional<Cliente> findByNombreExacto(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return repository.findFirstByNombreIgnoreCase(nombre.trim());
     }
 
     public boolean existsByCodigo(String codigo) {

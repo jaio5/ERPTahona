@@ -1,5 +1,7 @@
 target/
 logs/
+backups/
+impresiones/
 *.log
 *.p12
 *.keystore

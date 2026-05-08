@@ -18,8 +18,8 @@
     </HBox>
 
     <HBox spacing="16">
-        <Button text="+ Ingreso" onAction="#onNuevo" styleClass="button-success" style="-fx-min-width: 120;"/>
-        <Button text="- Gasto" onAction="#onNuevo" styleClass="button-danger" style="-fx-min-width: 120;"/>
+        <Button text="+ Ingreso" onAction="#onNuevoIngreso" styleClass="button-success" style="-fx-min-width: 120;"/>
+        <Button text="- Gasto" onAction="#onNuevoGasto" styleClass="button-danger" style="-fx-min-width: 120;"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="Refrescar" onAction="#onRefresh" styleClass="button"/>
     </HBox>

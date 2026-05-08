@@ -289,7 +289,7 @@ public class AlbaranService {
         duplicado.setFecha(LocalDate.now());
         duplicado.setCliente(original.getCliente());
         duplicado.setAlmacen(original.getAlmacen());
-        duplicado.setObservaciones("Duplicado de " + original.getNumero());
+        duplicado.setObservaciones(original.getObservaciones());
 
         // Copiar líneas
         for (AlbaranVentaLinea lineaOriginal : original.getLineas()) {
@@ -322,8 +322,10 @@ public class AlbaranService {
      */
     private String generarNumeroAlbaran() {
         int year = LocalDate.now().getYear();
-        long count = albaranRepository.count() + 1;
-        return String.format("ALB-%d-%05d", year, count);
+        String patron = "ALB-" + year + "-%";
+        Integer maxSecuencia = albaranRepository.findMaxSecuenciaByYear(patron);
+        int siguiente = (maxSecuencia != null ? maxSecuencia : 0) + 1;
+        return "ALB-" + year + "-" + String.format("%06d", siguiente);
     }
 
     /**

@@ -271,7 +271,19 @@ public class CajaController {
     @FXML
     public void onNuevo() {
         log.info("Crear nuevo movimiento de caja");
-        abrirDialogoMovimiento(null);
+        abrirDialogoMovimiento(null, "INGRESO");
+    }
+
+    @FXML
+    public void onNuevoIngreso() {
+        log.info("Crear nuevo ingreso de caja");
+        abrirDialogoMovimiento(null, "INGRESO");
+    }
+
+    @FXML
+    public void onNuevoGasto() {
+        log.info("Crear nuevo gasto de caja");
+        abrirDialogoMovimiento(null, "GASTO");
     }
 
     @FXML
@@ -293,7 +305,7 @@ public class CajaController {
             return;
         }
         log.info("Editar movimiento: {}", movimiento.getConcepto());
-        abrirDialogoMovimiento(movimiento);
+        abrirDialogoMovimiento(movimiento, null);
     }
 
     @FXML
@@ -330,7 +342,7 @@ public class CajaController {
     private void mostrarExito() { DialogUtils.showSuccess("Movimiento eliminado correctamente"); }
     private boolean mostrarConfirmacion(String msg) { return DialogUtils.showConfirm(msg); }
 
-    private void abrirDialogoMovimiento(MovimientoCaja movimiento) {
+    private void abrirDialogoMovimiento(MovimientoCaja movimiento, String tipoInicial) {
         Dialog<MovimientoCaja> dialog = new Dialog<>();
         dialog.setTitle(movimiento == null ? "Nuevo movimiento de caja" : "Editar movimiento de caja");
         dialog.setHeaderText(null);
@@ -340,7 +352,7 @@ public class CajaController {
 
         DatePicker fecha = new DatePicker(movimiento != null ? movimiento.getFecha() : LocalDate.now());
         ComboBox<String> tipo = new ComboBox<>(FXCollections.observableArrayList("INGRESO", "GASTO"));
-        tipo.setValue(movimiento != null ? movimiento.getTipo() : "INGRESO");
+        tipo.setValue(movimiento != null ? movimiento.getTipo() : tipoInicial != null ? tipoInicial : "INGRESO");
         TextField importe = new TextField(movimiento != null ? valorDecimal(movimiento.getImporte()) : "0.00");
         TextField concepto = new TextField(movimiento != null ? movimiento.getConcepto() : "");
         TextField categoria = new TextField(movimiento != null ? movimiento.getCategoria() : "");

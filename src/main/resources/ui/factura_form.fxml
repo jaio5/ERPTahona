@@ -2,167 +2,151 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.formcontroller.FacturaFormController" fitToWidth="true" fitToHeight="true">
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.formcontroller.FacturaFormController"
+            stylesheets="@/styles/simple-theme.css"
+            fitToWidth="true" fitToHeight="true">
     <content>
-        <VBox xmlns="http://javafx.com/javafx/21" spacing="12" style="-fx-padding:20;">
+        <BorderPane styleClass="form-root">
+            <top>
+                <HBox styleClass="form-header">
+                    <VBox spacing="2">
+                        <Label fx:id="lblTitulo" text="Nueva factura" styleClass="title"/>
+                        <Label fx:id="lblNumeroFactura" text="Numero: pendiente" styleClass="subtitle"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <VBox alignment="CENTER_RIGHT" spacing="2">
+                        <Label fx:id="lblEstado" text="BORRADOR" styleClass="badge badge-info"/>
+                        <Label fx:id="lblTotal" text="Total: 0.00 EUR" styleClass="total-label"/>
+                    </VBox>
+                </HBox>
+            </top>
 
-            <BorderPane stylesheets="@/styles/modern-theme.css"
-                        style="-fx-background-color: #f8fafc;">
+            <center>
+                <ScrollPane fitToWidth="true">
+                    <VBox styleClass="form-body">
+                        <VBox styleClass="form-section">
+                            <Label text="Datos de factura" styleClass="section-title"/>
+                            <GridPane styleClass="form-grid">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="50"/>
+                                    <ColumnConstraints percentWidth="25"/>
+                                    <ColumnConstraints percentWidth="25"/>
+                                </columnConstraints>
 
-                <top>
-                    <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
-                        <Label text="Factura" style="-fx-font-size: 24;"/>
-                        <VBox spacing="2">
-                            <Label fx:id="lblTitulo" text="Nueva Factura" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                            <Label fx:id="lblNumeroFactura" text="Número: Pendiente" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <Label text="Cliente *" styleClass="form-label"/>
+                                    <ComboBox fx:id="cbCliente" promptText="Seleccionar cliente..." maxWidth="Infinity"/>
+                                </VBox>
+
+                                <VBox styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <Label text="Fecha emision *" styleClass="form-label"/>
+                                    <DatePicker fx:id="dpFechaEmision" maxWidth="Infinity"/>
+                                </VBox>
+
+                                <VBox styleClass="form-field" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                    <Label text="Vencimiento" styleClass="form-label"/>
+                                    <DatePicker fx:id="dpFechaVencimiento" maxWidth="Infinity"/>
+                                </VBox>
+
+                                <VBox styleClass="form-field" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                    <Label text="Forma de pago" styleClass="form-label"/>
+                                    <ComboBox fx:id="cbFormaPago" promptText="Seleccionar" maxWidth="Infinity"/>
+                                </VBox>
+
+                                <VBox styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="2">
+                                    <Label text="Observaciones" styleClass="form-label"/>
+                                    <TextField fx:id="txtObservaciones" promptText="Notas adicionales..."/>
+                                </VBox>
+                            </GridPane>
                         </VBox>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <VBox alignment="CENTER_RIGHT" spacing="2">
-                            <Label fx:id="lblEstado" text="BORRADOR" style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #94a3b8;"/>
-                            <Label fx:id="lblTotal" text="Total: 0.00 EUR" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+
+                        <VBox styleClass="form-section">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="Lineas" styleClass="section-title"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="Agregar articulo" onAction="#onAgregarLinea" styleClass="button-success"/>
+                            </HBox>
+
+                            <TableView fx:id="tableLineas" VBox.vgrow="ALWAYS" prefHeight="220">
+                                <columns>
+                                    <TableColumn fx:id="colArticulo" text="Articulo" minWidth="120"/>
+                                    <TableColumn fx:id="colDescripcion" text="Descripcion" minWidth="150"/>
+                                    <TableColumn fx:id="colCantidad" text="Cantidad" minWidth="70" maxWidth="100"/>
+                                    <TableColumn fx:id="colPrecio" text="Precio" minWidth="70" maxWidth="100"/>
+                                    <TableColumn fx:id="colIVA" text="IVA %" minWidth="60" maxWidth="80"/>
+                                    <TableColumn fx:id="colSubtotal" text="Subtotal" minWidth="80" maxWidth="100"/>
+                                </columns>
+                            </TableView>
+
+                            <HBox spacing="10">
+                                <Button text="Eliminar linea" onAction="#onEliminarLinea" styleClass="button-danger"/>
+                            </HBox>
                         </VBox>
-                    </HBox>
-                </top>
 
-                <center>
-                    <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
-                        <VBox spacing="15" style="-fx-padding: 20;">
-
-                            <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                                <Label text="Datos de la Factura" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                                <Separator/>
-
-                                <GridPane hgap="15" vgap="15">
-                                    <columnConstraints>
-                                        <ColumnConstraints percentWidth="50"/>
-                                        <ColumnConstraints percentWidth="25"/>
-                                        <ColumnConstraints percentWidth="25"/>
-                                    </columnConstraints>
-
-                                    <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                        <Label text="Cliente *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                        <ComboBox fx:id="cbCliente" promptText="Seleccionar cliente..." maxWidth="Infinity"/>
-                                    </VBox>
-
-                                    <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                        <Label text="Fecha Emisión *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                        <DatePicker fx:id="dpFechaEmision" maxWidth="Infinity"/>
-                                    </VBox>
-
-                                    <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                        <Label text="Fecha Vencimiento" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                        <DatePicker fx:id="dpFechaVencimiento" maxWidth="Infinity"/>
-                                    </VBox>
-
-                                    <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                                        <Label text="Forma de Pago" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                        <ComboBox fx:id="cbFormaPago" promptText="Seleccionar" maxWidth="Infinity"/>
-                                    </VBox>
-
-                                    <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="2">
-                                        <Label text="Observaciones" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                        <TextField fx:id="txtObservaciones" promptText="Notas adicionales..." style="-fx-padding: 10;"/>
-                                    </VBox>
-                                </GridPane>
-                            </VBox>
-
-                            <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                                <HBox alignment="CENTER_LEFT" spacing="15">
-                                    <Label text="Líneas de Factura" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                                    <Region HBox.hgrow="ALWAYS"/>
-                                    <Button text="+ Agregar Artículo" onAction="#onAgregarLinea" styleClass="button-success"/>
-                                </HBox>
-                                <Separator/>
-
-                                <TableView fx:id="tableLineas" VBox.vgrow="ALWAYS" style="-fx-background-color: white;" prefHeight="200">
-                                    <columns>
-                                        <TableColumn fx:id="colArticulo" text="Artículo" minWidth="120"/>
-                                        <TableColumn fx:id="colDescripcion" text="Descripción" minWidth="150"/>
-                                        <TableColumn fx:id="colCantidad" text="Cantidad" minWidth="70" maxWidth="100"/>
-                                        <TableColumn fx:id="colPrecio" text="Precio" minWidth="70" maxWidth="100"/>
-                                        <TableColumn fx:id="colIVA" text="IVA %" minWidth="60" maxWidth="80"/>
-                                        <TableColumn fx:id="colSubtotal" text="Subtotal" minWidth="80" maxWidth="100"/>
-                                    </columns>
-                                </TableView>
-
-                                <HBox spacing="10">
-                                    <Button text="Eliminar Línea" onAction="#onEliminarLinea" styleClass="button-danger"/>
-                                </HBox>
-                            </VBox>
-
-                            <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                                <Label text="Totales" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                                <Separator/>
-
-                                <GridPane hgap="30" vgap="12" style="-fx-padding: 10 0 0 0;">
-                                    <columnConstraints>
-                                        <ColumnConstraints percentWidth="70"/>
-                                        <ColumnConstraints percentWidth="30"/>
-                                    </columnConstraints>
-
-                                    <Label text="Base Imponible:" GridPane.columnIndex="0" GridPane.rowIndex="0"
-                                           style="-fx-font-size: 14; -fx-text-fill: #475569; -fx-alignment: CENTER_RIGHT;"/>
-                                    <Label fx:id="lblBaseImponible" text="0.00 EUR" GridPane.columnIndex="1" GridPane.rowIndex="0"
-                                           style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-alignment: CENTER_RIGHT;"/>
-
-                                    <Label text="IVA:" GridPane.columnIndex="0" GridPane.rowIndex="1"
-                                           style="-fx-font-size: 14; -fx-text-fill: #475569; -fx-alignment: CENTER_RIGHT;"/>
-                                    <Label fx:id="lblIVA" text="0.00 EUR" GridPane.columnIndex="1" GridPane.rowIndex="1"
-                                           style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-alignment: CENTER_RIGHT;"/>
-
-                                    <Separator GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2"/>
-
-                                    <Label text="TOTAL:" GridPane.columnIndex="0" GridPane.rowIndex="3"
-                                           style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b; -fx-alignment: CENTER_RIGHT;"/>
-                                    <Label fx:id="lblTotalFactura" text="0.00 EUR" GridPane.columnIndex="1" GridPane.rowIndex="3"
-                                           style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #10b981; -fx-alignment: CENTER_RIGHT;"/>
-                                </GridPane>
-                            </VBox>
-
-                            <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                                <Label text="Albaranes relacionados" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                                <Separator/>
+                        <HBox spacing="14" alignment="TOP_LEFT">
+                            <VBox styleClass="form-section" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                                <Label text="Albaranes relacionados" styleClass="section-title"/>
                                 <HBox spacing="10" alignment="CENTER_LEFT">
-                                    <TextField fx:id="txtBuscarAlbaran" promptText="Buscar albarán por número..." HBox.hgrow="ALWAYS"/>
+                                    <TextField fx:id="txtBuscarAlbaran" promptText="Buscar albaran por numero..." HBox.hgrow="ALWAYS"/>
                                     <Button text="Buscar" onAction="#onBuscarAlbaran" styleClass="button"/>
                                 </HBox>
-                                <Label text="Albaranes disponibles" style="-fx-font-weight: bold;"/>
-                                <TableView fx:id="tableAlbaranesDisponibles" prefHeight="140">
+
+                                <Label text="Disponibles" styleClass="form-label"/>
+                                <TableView fx:id="tableAlbaranesDisponibles" prefHeight="130">
                                     <columns>
-                                        <TableColumn fx:id="colAlbNumero" text="Número"/>
+                                        <TableColumn fx:id="colAlbNumero" text="Numero"/>
                                         <TableColumn fx:id="colAlbFecha" text="Fecha"/>
                                         <TableColumn fx:id="colAlbTotal" text="Total"/>
                                     </columns>
                                 </TableView>
+
                                 <HBox spacing="10">
-                                    <Button text="Vincular →" onAction="#onVincularAlbaran" styleClass="button-primary"/>
-                                    <Button text="← Desvincular" onAction="#onDesvincularAlbaran" styleClass="button-danger"/>
+                                    <Button text="Vincular" onAction="#onVincularAlbaran" styleClass="button-primary"/>
+                                    <Button text="Desvincular" onAction="#onDesvincularAlbaran" styleClass="button-danger"/>
                                 </HBox>
-                                <Label text="Albaranes vinculados" style="-fx-font-weight: bold;"/>
-                                <TableView fx:id="tableAlbaranesVinculados" prefHeight="120">
+
+                                <Label text="Vinculados" styleClass="form-label"/>
+                                <TableView fx:id="tableAlbaranesVinculados" prefHeight="110">
                                     <columns>
-                                        <TableColumn fx:id="colVincNumero" text="Número"/>
+                                        <TableColumn fx:id="colVincNumero" text="Numero"/>
                                         <TableColumn fx:id="colVincFecha" text="Fecha"/>
                                     </columns>
                                 </TableView>
                             </VBox>
-                         </VBox>
-                     </ScrollPane>
-                 </center>
 
-                <bottom>
-                    <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
-                        <Button text="Cancelar" onAction="#onCancelar"
-                                style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13; -fx-cursor: hand;"/>
-                        <Button text="Guardar Borrador" onAction="#onGuardarBorrador" styleClass="button"
-                                style="-fx-padding: 10 24; -fx-font-size: 13;"/>
-                        <Button text="Emitir Factura" onAction="#onEmitir" styleClass="button-success"
-                                style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
-                    </HBox>
-                </bottom>
+                            <VBox styleClass="form-section" prefWidth="320">
+                                <Label text="Totales" styleClass="section-title"/>
+                                <GridPane styleClass="form-grid">
+                                    <columnConstraints>
+                                        <ColumnConstraints percentWidth="55"/>
+                                        <ColumnConstraints percentWidth="45"/>
+                                    </columnConstraints>
 
-            </BorderPane>
+                                    <Label text="Base imponible" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="form-label"/>
+                                    <Label fx:id="lblBaseImponible" text="0.00 EUR" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="total-label"/>
 
-        </VBox>
+                                    <Label text="IVA" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="form-label"/>
+                                    <Label fx:id="lblIVA" text="0.00 EUR" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="total-label"/>
+
+                                    <Separator GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2"/>
+
+                                    <Label text="TOTAL" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="total-label"/>
+                                    <Label fx:id="lblTotalFactura" text="0.00 EUR" GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="money-total"/>
+                                </GridPane>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </ScrollPane>
+            </center>
+
+            <bottom>
+                <HBox styleClass="form-footer">
+                    <Button text="Cancelar" onAction="#onCancelar" styleClass="button"/>
+                    <Button text="Guardar borrador" onAction="#onGuardarBorrador" styleClass="button"/>
+                    <Button text="Emitir factura" onAction="#onEmitir" styleClass="button-success"/>
+                </HBox>
+            </bottom>
+        </BorderPane>
     </content>
 </ScrollPane>

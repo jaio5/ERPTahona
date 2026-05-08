@@ -1,7 +1,9 @@
 package alicanteweb.erp.controller.ui;
 
 import alicanteweb.erp.service.AutenticacionService;
+import alicanteweb.erp.service.GitUpdateService;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -10,7 +12,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -29,24 +30,28 @@ public class MainPanelController {
 
     private final ApplicationContext springContext;
     private final AutenticacionService autenticacionService;
+    private final GitUpdateService gitUpdateService;
 
     @FXML private StackPane contentArea;
     @FXML private Label lblUsuario;
     @FXML private Label lblEstado;
     @FXML private Label lblFecha;
     @FXML private Label lblHora;
+    @FXML private Button btnActualizarApp;
 
     // Controles de menú con visibilidad controlada por rol
-    @FXML private Button   btnBackups;      // Button (en barra superior)
-    @FXML private MenuItem btnUsuarios;     // MenuItem (en desplegable)
-    @FXML private MenuItem btnAuditoria;
-    @FXML private MenuItem btnPlanContable;
-    @FXML private MenuItem btnAsientos;
-    @FXML private MenuItem btnModelo347;
+    @FXML private Button btnBackups;
+    @FXML private Button btnUsuarios;
+    @FXML private Button btnAuditoria;
+    @FXML private Button btnAsientos;
+    @FXML private Button btnModelo347;
 
-    public MainPanelController(ApplicationContext springContext, AutenticacionService autenticacionService) {
+    public MainPanelController(ApplicationContext springContext,
+                               AutenticacionService autenticacionService,
+                               GitUpdateService gitUpdateService) {
         this.springContext = springContext;
         this.autenticacionService = autenticacionService;
+        this.gitUpdateService = gitUpdateService;
     }
 
     @FXML
@@ -58,6 +63,7 @@ public class MainPanelController {
         }
         aplicarVisibilidadPorRol();
         actualizarInfoUsuario();
+        comprobarActualizacionEnSegundoPlano();
     }
 
     /**
@@ -70,12 +76,12 @@ public class MainPanelController {
         boolean verContabilidad = esAdmin || autenticacionService.tienePermiso("contabilidad", "ver");
         // Botones en barra superior (son Node — visible+managed)
         setVisible(btnBackups, esAdmin);
+        setVisible(btnActualizarApp, esAdmin && btnActualizarApp != null && btnActualizarApp.isVisible());
         // Elementos de menú desplegable (MenuItem — solo visible)
-        setMenuItemVisible(btnUsuarios,     esAdmin);
-        setMenuItemVisible(btnAuditoria,    esAdmin);
-        setMenuItemVisible(btnPlanContable, verContabilidad);
-        setMenuItemVisible(btnAsientos,     verContabilidad);
-        setMenuItemVisible(btnModelo347,    verContabilidad);
+        setVisible(btnUsuarios, esAdmin);
+        setVisible(btnAuditoria, esAdmin);
+        setVisible(btnAsientos, verContabilidad);
+        setVisible(btnModelo347, verContabilidad);
     }
 
     private void setVisible(Node nodo, boolean visible) {
@@ -83,10 +89,6 @@ public class MainPanelController {
             nodo.setVisible(visible);
             nodo.setManaged(visible);
         }
-    }
-
-    private void setMenuItemVisible(MenuItem item, boolean visible) {
-        if (item != null) item.setVisible(visible);
     }
 
     private void actualizarInfoUsuario() {
@@ -161,6 +163,17 @@ public class MainPanelController {
     @FXML public void onEmpresaConfig()     { cargarVistaAutorizada("configuracion", "/ui/empresa_config_panel.fxml"); }
     @FXML public void onConfiguracion()     { cargarVistaAutorizada("configuracion", "/ui/empresa_config_panel.fxml"); }
 
+    @FXML
+    public void onActualizarApp() {
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Actualizar aplicación");
+        confirmacion.setHeaderText("Se descargarán los últimos cambios de producción.");
+        confirmacion.setContentText("La aplicación deberá reiniciarse para cargar la versión actualizada.");
+        confirmacion.showAndWait()
+            .filter(r -> r == ButtonType.OK)
+            .ifPresent(r -> ejecutarActualizacionEnSegundoPlano());
+    }
+
     // ── Sesión ──────────────────────────────────────────────────────────────
 
     @FXML
@@ -182,5 +195,87 @@ public class MainPanelController {
     private void cerrarVentana() {
         Stage stage = (Stage) contentArea.getScene().getWindow();
         stage.close();
+    }
+
+    private void comprobarActualizacionEnSegundoPlano() {
+        if (btnActualizarApp != null) {
+            btnActualizarApp.setVisible(false);
+            btnActualizarApp.setManaged(false);
+        }
+
+        Task<GitUpdateService.UpdateStatus> task = new Task<>() {
+            @Override
+            protected GitUpdateService.UpdateStatus call() {
+                return gitUpdateService.checkForUpdates();
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            GitUpdateService.UpdateStatus status = task.getValue();
+            boolean visible = autenticacionService.esAdministrador() && status.isAvailable();
+            if (btnActualizarApp != null) {
+                btnActualizarApp.setVisible(visible);
+                btnActualizarApp.setManaged(visible);
+                if (visible) {
+                    btnActualizarApp.setText("Actualizar (" + status.getCommitsBehind() + ")");
+                }
+            }
+            if (visible && lblEstado != null) {
+                lblEstado.setText(status.getMessage());
+                lblEstado.getStyleClass().removeAll("badge-success");
+                if (!lblEstado.getStyleClass().contains("badge-warning")) {
+                    lblEstado.getStyleClass().add("badge-warning");
+                }
+            }
+        });
+
+        task.setOnFailed(e -> log.debug("No se pudo comprobar actualización", task.getException()));
+        Thread thread = new Thread(task, "git-update-check");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void ejecutarActualizacionEnSegundoPlano() {
+        if (btnActualizarApp != null) {
+            btnActualizarApp.setDisable(true);
+            btnActualizarApp.setText("Actualizando...");
+        }
+
+        Task<GitUpdateService.UpdateResult> task = new Task<>() {
+            @Override
+            protected GitUpdateService.UpdateResult call() {
+                return gitUpdateService.update();
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            GitUpdateService.UpdateResult result = task.getValue();
+            if (btnActualizarApp != null) {
+                btnActualizarApp.setDisable(false);
+            }
+            Alert alert = new Alert(result.isUpdated() ? Alert.AlertType.INFORMATION : Alert.AlertType.WARNING);
+            alert.setTitle("Actualización");
+            alert.setHeaderText(result.isUpdated() ? "Actualización aplicada" : "No se pudo actualizar");
+            alert.setContentText(result.getMessage()
+                + (result.isUpdated() ? "\n\nCierra y vuelve a abrir la aplicación para usar la nueva versión." : ""));
+            alert.showAndWait();
+            comprobarActualizacionEnSegundoPlano();
+        });
+
+        task.setOnFailed(e -> {
+            if (btnActualizarApp != null) {
+                btnActualizarApp.setDisable(false);
+            }
+            Throwable ex = task.getException();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error de actualización");
+            alert.setHeaderText("No se pudo actualizar la aplicación");
+            alert.setContentText(ex != null ? ex.getMessage() : "Error desconocido");
+            alert.showAndWait();
+        });
+
+        Thread thread = new Thread(task, "git-update-pull");
+        thread.setDaemon(true);
+        thread.start();
     }
 }

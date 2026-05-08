@@ -10,9 +10,11 @@ import java.util.Optional;
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Optional<Cliente> findByCif(String cif);
+    Optional<Cliente> findByCifIgnoreCase(String cif);
     boolean existsByCif(String cif);
     Optional<Cliente> findByCodigo(String codigo);
     boolean existsByCodigo(String codigo);
     List<Cliente> findByNombreContainingIgnoreCase(String texto);
+    Optional<Cliente> findFirstByNombreIgnoreCase(String nombre);
     List<Cliente> findByActivoTrue();
 }

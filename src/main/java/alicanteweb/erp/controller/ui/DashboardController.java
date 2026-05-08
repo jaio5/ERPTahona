@@ -134,6 +134,11 @@ public class DashboardController {
     }
 
     @FXML
+    public void onPresupuestos() {
+        mainPanelController.onPresupuestos();
+    }
+
+    @FXML
     public void onConfiguracion() {
         mainPanelController.onEmpresaConfig();
     }

@@ -126,16 +126,6 @@ public class ErpLauncher extends Application {
     }
 
     private boolean permitirFallbackH2() {
-        String fallbackEnabled = firstNonBlank(
-                System.getProperty("erp.fallback-h2.enabled"),
-                System.getenv("ERP_FALLBACK_H2_ENABLED"),
-                "false"
-        );
-        if (!Boolean.parseBoolean(fallbackEnabled)) {
-            log.error("Fallback H2 deshabilitado. Configura MySQL o activa ERP_FALLBACK_H2_ENABLED=true para diagnostico local.");
-            return false;
-        }
-
         String profiles = firstNonBlank(
                 System.getProperty("spring.profiles.active"),
                 System.getenv("SPRING_PROFILES_ACTIVE"),
@@ -150,6 +140,17 @@ public class ErpLauncher extends Application {
             log.error("Fallback H2 deshabilitado porque el perfil activo es de produccion: {}", profiles);
             return false;
         }
+
+        String fallbackEnabled = firstNonBlank(
+                System.getProperty("erp.fallback-h2.enabled"),
+                System.getenv("ERP_FALLBACK_H2_ENABLED")
+        );
+        if (!fallbackEnabled.isBlank() && !Boolean.parseBoolean(fallbackEnabled)) {
+            log.error("Fallback H2 deshabilitado por configuracion. Configura MySQL o elimina ERP_FALLBACK_H2_ENABLED=false.");
+            return false;
+        }
+
+        log.warn("Fallback H2 permitido para perfil no productivo: {}", profiles);
         return true;
     }
 

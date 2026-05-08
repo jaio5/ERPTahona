@@ -5,103 +5,101 @@
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="alicanteweb.erp.controller.ui.DashboardController"
       stylesheets="@/styles/simple-theme.css"
-      spacing="24" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      spacing="18" style="-fx-padding: 24;"
       VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
-    <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="Dashboard - Panel Principal" styleClass="title"/>
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <VBox spacing="2">
+            <Label text="Panel de trabajo" styleClass="title"/>
+            <Label text="Lo importante del dia, sin ruido." styleClass="subtitle"/>
+        </VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Refrescar" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 14;"/>
+        <Button text="Refrescar" onAction="#onRefresh" styleClass="button"/>
     </HBox>
 
-    <HBox spacing="20" alignment="CENTER" HBox.hgrow="ALWAYS">
-        <VBox styleClass="dashboard-card" spacing="8" HBox.hgrow="ALWAYS"
-              style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-            <Label text="Ventas del Dia" style="-fx-font-size: 14; -fx-text-fill: #6c757d;"/>
-            <Label fx:id="lblVentasDia" text="0.00 EUR" style="-fx-font-size: 28; -fx-font-weight: 700; -fx-text-fill: #0d6efd;"/>
-            <Label fx:id="lblFacturasHoy" text="0 facturas" style="-fx-font-size: 12; -fx-text-fill: #6c757d;"/>
+    <GridPane hgap="12" vgap="12">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <VBox styleClass="stat-card" spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label text="Hoy" styleClass="stat-label"/>
+            <Label fx:id="lblVentasDia" text="0.00 EUR" styleClass="stat-value"/>
+            <Label fx:id="lblFacturasHoy" text="0 facturas" styleClass="muted"/>
         </VBox>
 
-        <VBox styleClass="dashboard-card" spacing="8" HBox.hgrow="ALWAYS"
-              style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-            <Label text="Ventas del Mes" style="-fx-font-size: 14; -fx-text-fill: #6c757d;"/>
-            <Label fx:id="lblVentasMes" text="0.00 EUR" style="-fx-font-size: 28; -fx-font-weight: 700; -fx-text-fill: #198754;"/>
-            <Label fx:id="lblFacturasMes" text="0 facturas" style="-fx-font-size: 12; -fx-text-fill: #6c757d;"/>
+        <VBox styleClass="stat-card" spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <Label text="Mes" styleClass="stat-label"/>
+            <Label fx:id="lblVentasMes" text="0.00 EUR" styleClass="stat-value"/>
+            <Label fx:id="lblFacturasMes" text="0 facturas" styleClass="muted"/>
         </VBox>
 
-        <VBox styleClass="dashboard-card" spacing="8" HBox.hgrow="ALWAYS"
-              style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-            <Label text="Clientes" style="-fx-font-size: 14; -fx-text-fill: #6c757d;"/>
-            <Label fx:id="lblClientes" text="0" style="-fx-font-size: 28; -fx-font-weight: 700; -fx-text-fill: #6610f2;"/>
-            <Label text="Total de clientes" style="-fx-font-size: 12; -fx-text-fill: #6c757d;"/>
+        <VBox styleClass="stat-card" spacing="5" GridPane.columnIndex="2" GridPane.rowIndex="0">
+            <Label text="Clientes" styleClass="stat-label"/>
+            <Label fx:id="lblClientes" text="0" styleClass="stat-value"/>
+            <Label text="Activos en la base" styleClass="muted"/>
         </VBox>
 
-        <VBox styleClass="dashboard-card" spacing="8" HBox.hgrow="ALWAYS"
-              style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-            <Label text="Articulos" style="-fx-font-size: 14; -fx-text-fill: #6c757d;"/>
-            <Label fx:id="lblArticulos" text="0" style="-fx-font-size: 28; -fx-font-weight: 700; -fx-text-fill: #fd7e14;"/>
-            <Label text="Productos activos" style="-fx-font-size: 12; -fx-text-fill: #6c757d;"/>
+        <VBox styleClass="stat-card" spacing="5" GridPane.columnIndex="3" GridPane.rowIndex="0">
+            <Label text="Articulos" styleClass="stat-label"/>
+            <Label fx:id="lblArticulos" text="0" styleClass="stat-value"/>
+            <Label text="Catalogo operativo" styleClass="muted"/>
         </VBox>
+    </GridPane>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Button text="Nueva factura" onAction="#onNuevaFactura" styleClass="button-primary quick-action" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+        <Button text="Nuevo albaran" onAction="#onNuevoAlbaran" styleClass="button quick-action" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+        <Button text="Nuevo cliente" onAction="#onNuevoCliente" styleClass="button quick-action" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+        <Button text="Nuevo articulo" onAction="#onNuevoArticulo" styleClass="button quick-action" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
     </HBox>
 
-    <VBox spacing="16" style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-        <Label text="Accesos Rapidos" style="-fx-font-size: 18; -fx-font-weight: 600;"/>
+    <GridPane hgap="12" vgap="12">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
+        </columnConstraints>
 
-        <GridPane hgap="16" vgap="16">
-            <columnConstraints>
-                <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
-                <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
-                <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
-                <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
-            </columnConstraints>
+        <VBox styleClass="card" spacing="10" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label text="Atajos de venta" styleClass="section-title"/>
+            <Button text="Facturas" onAction="#onNuevaFactura" styleClass="sidebar-button" maxWidth="Infinity"/>
+            <Button text="Albaranes" onAction="#onNuevoAlbaran" styleClass="sidebar-button" maxWidth="Infinity"/>
+            <Button text="Presupuestos" onAction="#onPresupuestos" styleClass="sidebar-button" maxWidth="Infinity"/>
+        </VBox>
 
-            <Button text="Nueva Factura" onAction="#onNuevaFactura" styleClass="button-success"
-                    maxWidth="Infinity" style="-fx-min-height: 60; -fx-font-size: 13;"
-                    GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <VBox styleClass="card" spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <Label text="Gestion diaria" styleClass="section-title"/>
+            <Button text="Caja" onAction="#onCaja" styleClass="sidebar-button" maxWidth="Infinity"/>
+            <Button text="Proveedores" onAction="#onProveedores" styleClass="sidebar-button" maxWidth="Infinity"/>
+            <Button text="Articulos" onAction="#onNuevoArticulo" styleClass="sidebar-button" maxWidth="Infinity"/>
+        </VBox>
 
-            <Button text="Nuevo Albarán" onAction="#onNuevoAlbaran" styleClass="button-primary"
-                    maxWidth="Infinity" style="-fx-min-height: 60; -fx-font-size: 13;"
-                    GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+        <VBox styleClass="card" spacing="10" GridPane.columnIndex="2" GridPane.rowIndex="0">
+            <Label text="Control" styleClass="section-title"/>
+            <Button text="Contabilidad" onAction="#onContabilidad" styleClass="sidebar-button" maxWidth="Infinity"/>
+            <Button text="Configuracion" onAction="#onConfiguracion" styleClass="sidebar-button" maxWidth="Infinity"/>
+        </VBox>
+    </GridPane>
 
-            <Button text="Nuevo Cliente" onAction="#onNuevoCliente" styleClass="button-primary"
-                    maxWidth="Infinity" style="-fx-min-height: 60; -fx-font-size: 13;"
-                    GridPane.columnIndex="2" GridPane.rowIndex="0"/>
-
-            <Button text="Nuevo Artículo" onAction="#onNuevoArticulo" styleClass="button-primary"
-                    maxWidth="Infinity" style="-fx-min-height: 60; -fx-font-size: 13;"
-                    GridPane.columnIndex="3" GridPane.rowIndex="0"/>
-
-            <Button text="Proveedores" onAction="#onProveedores" styleClass="button"
-                    maxWidth="Infinity" style="-fx-min-height: 60; -fx-font-size: 13;"
-                    GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-
-            <Button text="Caja" onAction="#onCaja" styleClass="button"
-                    maxWidth="Infinity" style="-fx-min-height: 60; -fx-font-size: 13;"
-                    GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-
-            <Button text="Contabilidad" onAction="#onContabilidad" styleClass="button"
-                    maxWidth="Infinity" style="-fx-min-height: 60; -fx-font-size: 13;"
-                    GridPane.columnIndex="2" GridPane.rowIndex="1"/>
-
-            <Button text="Configuración" onAction="#onConfiguracion" styleClass="button"
-                    maxWidth="Infinity" style="-fx-min-height: 60; -fx-font-size: 13;"
-                    GridPane.columnIndex="3" GridPane.rowIndex="1"/>
-        </GridPane>
-    </VBox>
-
-    <VBox VBox.vgrow="ALWAYS" spacing="16" style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-        <Label text="Últimas Facturas" style="-fx-font-size: 18; -fx-font-weight: 600;"/>
-
-        <TableView fx:id="tableUltimasFacturas" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
+    <VBox VBox.vgrow="ALWAYS" spacing="10" styleClass="card">
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Ultimas facturas" styleClass="section-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Seguimiento rapido" styleClass="muted"/>
+        </HBox>
+        <TableView fx:id="tableUltimasFacturas" VBox.vgrow="ALWAYS">
             <columns>
-                <TableColumn fx:id="colNumero" text="Número" minWidth="80" maxWidth="120"/>
-                <TableColumn fx:id="colFecha" text="Fecha" minWidth="80" maxWidth="100"/>
-                <TableColumn fx:id="colCliente" text="Cliente" minWidth="150"/>
-                <TableColumn fx:id="colTotal" text="Total" minWidth="80" maxWidth="120"/>
-                <TableColumn fx:id="colEstado" text="Estado" minWidth="70" maxWidth="100"/>
+                <TableColumn fx:id="colNumero" text="Numero" minWidth="90" prefWidth="120"/>
+                <TableColumn fx:id="colFecha" text="Fecha" minWidth="90" prefWidth="110"/>
+                <TableColumn fx:id="colCliente" text="Cliente" minWidth="180" prefWidth="260"/>
+                <TableColumn fx:id="colTotal" text="Total" minWidth="90" prefWidth="120"/>
+                <TableColumn fx:id="colEstado" text="Estado" minWidth="90" prefWidth="120"/>
             </columns>
         </TableView>
     </VBox>
 
 </VBox>
-

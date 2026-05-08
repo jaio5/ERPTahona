@@ -2,94 +2,88 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="alicanteweb.erp.controller.formcontroller.ArticuloFormController" fitToWidth="true" fitToHeight="true">
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="alicanteweb.erp.controller.formcontroller.ArticuloFormController"
+            stylesheets="@/styles/simple-theme.css"
+            fitToWidth="true" fitToHeight="true">
     <content>
-        <BorderPane xmlns="http://javafx.com/javafx/21"
-                    stylesheets="@/styles/modern-theme.css"
-                    style="-fx-background-color: #f8fafc;">
-
+        <BorderPane styleClass="form-root">
             <top>
-                <HBox spacing="15" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 0 0 1 0; -fx-border-color: #e2e8f0;">
-                    <Label text="Articulo" style="-fx-font-size: 24;"/>
-                    <Label fx:id="lblTitulo" text="Nuevo Articulo" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                <HBox styleClass="form-header">
+                    <VBox spacing="2">
+                        <Label fx:id="lblTitulo" text="Nuevo articulo" styleClass="title"/>
+                        <Label text="Producto, precio, impuestos y stock." styleClass="subtitle"/>
+                    </VBox>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Label text="* Campos obligatorios" style="-fx-text-fill: #64748b; -fx-font-size: 12;"/>
+                    <Label text="* obligatorio" styleClass="muted"/>
                 </HBox>
             </top>
 
             <center>
-                <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
-                    <VBox spacing="15" style="-fx-padding: 20;">
-
-                        <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                            <Label text="Datos Principales" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                            <Separator/>
-
-                            <GridPane hgap="15" vgap="15">
+                <ScrollPane fitToWidth="true">
+                    <VBox styleClass="form-body">
+                        <VBox styleClass="form-section">
+                            <Label text="Datos principales" styleClass="section-title"/>
+                            <GridPane styleClass="form-grid">
                                 <columnConstraints>
                                     <ColumnConstraints percentWidth="25"/>
                                     <ColumnConstraints percentWidth="50"/>
                                     <ColumnConstraints percentWidth="25"/>
                                 </columnConstraints>
 
-                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                    <Label text="Codigo *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextField fx:id="txtCodigo" promptText="ART001" style="-fx-padding: 10;"/>
-                                    <Label fx:id="lblErrCodigo" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <Label text="Codigo *" styleClass="form-label"/>
+                                    <TextField fx:id="txtCodigo" promptText="ART001"/>
+                                    <Label fx:id="lblErrCodigo" styleClass="form-error"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                    <Label text="Nombre *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextField fx:id="txtNombre" promptText="Nombre del articulo" style="-fx-padding: 10;"/>
-                                    <Label fx:id="lblErrNombre" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <Label text="Nombre *" styleClass="form-label"/>
+                                    <TextField fx:id="txtNombre" promptText="Nombre del articulo"/>
+                                    <Label fx:id="lblErrNombre" styleClass="form-error"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                    <Label text="Codigo de Barras" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextField fx:id="txtCodigoBarras" promptText="EAN13" style="-fx-padding: 10;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                    <Label text="Codigo de barras" styleClass="form-label"/>
+                                    <TextField fx:id="txtCodigoBarras" promptText="EAN13"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="3">
-                                    <Label text="Descripcion" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextArea fx:id="txtDescripcion" promptText="Descripcion detallada del articulo..."
-                                              prefRowCount="2" wrapText="true" style="-fx-padding: 10;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="3">
+                                    <Label text="Descripcion" styleClass="form-label"/>
+                                    <TextArea fx:id="txtDescripcion" promptText="Descripcion detallada del articulo..." prefRowCount="2" wrapText="true"/>
                                 </VBox>
                             </GridPane>
                         </VBox>
 
-                        <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                            <Label text="Clasificacion" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                            <Separator/>
-
-                            <GridPane hgap="15" vgap="15">
+                        <VBox styleClass="form-section">
+                            <Label text="Clasificacion" styleClass="section-title"/>
+                            <GridPane styleClass="form-grid">
                                 <columnConstraints>
                                     <ColumnConstraints percentWidth="33.33"/>
                                     <ColumnConstraints percentWidth="33.33"/>
                                     <ColumnConstraints percentWidth="33.33"/>
                                 </columnConstraints>
 
-                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                    <Label text="Categoria" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <Label text="Categoria" styleClass="form-label"/>
                                     <ComboBox fx:id="cbCategoria" promptText="Seleccionar" maxWidth="Infinity"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                    <Label text="Familia" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <Label text="Familia" styleClass="form-label"/>
                                     <ComboBox fx:id="cbFamilia" promptText="Seleccionar" maxWidth="Infinity"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                    <Label text="Unidad de Medida" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                    <Label text="Unidad de medida" styleClass="form-label"/>
                                     <ComboBox fx:id="cbUnidadMedida" promptText="Unidad" maxWidth="Infinity"/>
                                 </VBox>
                             </GridPane>
                         </VBox>
 
-                        <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                            <Label text="Precios e Impuestos" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                            <Separator/>
-
-                            <GridPane hgap="15" vgap="15">
+                        <VBox styleClass="form-section">
+                            <Label text="Precios e impuestos" styleClass="section-title"/>
+                            <GridPane styleClass="form-grid">
                                 <columnConstraints>
                                     <ColumnConstraints percentWidth="25"/>
                                     <ColumnConstraints percentWidth="25"/>
@@ -97,35 +91,32 @@
                                     <ColumnConstraints percentWidth="25"/>
                                 </columnConstraints>
 
-                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                    <Label text="Precio Compra" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextField fx:id="txtPrecioCompra" text="0.00" promptText="0.00" style="-fx-padding: 10;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <Label text="Precio compra" styleClass="form-label"/>
+                                    <TextField fx:id="txtPrecioCompra" text="0.00" promptText="0.00"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                    <Label text="Precio Venta *" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextField fx:id="txtPrecioVenta" text="0.00" promptText="0.00" style="-fx-padding: 10;"/>
-                                    <Label fx:id="lblErrPrecioVenta" style="-fx-text-fill: #e55353; -fx-font-size: 11;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <Label text="Precio venta *" styleClass="form-label"/>
+                                    <TextField fx:id="txtPrecioVenta" text="0.00" promptText="0.00"/>
+                                    <Label fx:id="lblErrPrecioVenta" styleClass="form-error"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                    <Label text="IVA (%)" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                    <Label text="IVA (%)" styleClass="form-label"/>
                                     <ComboBox fx:id="cbIva" promptText="21%" maxWidth="Infinity"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="3" GridPane.rowIndex="0">
-                                    <Label text="Margen (%)" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextField fx:id="txtMargen" text="0.00" editable="false"
-                                               style="-fx-padding: 10; -fx-background-color: #f1f5f9;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                                    <Label text="Margen (%)" styleClass="form-label"/>
+                                    <TextField fx:id="txtMargen" text="0.00" editable="false" styleClass="readonly-field"/>
                                 </VBox>
                             </GridPane>
                         </VBox>
 
-                        <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 12; -fx-background-radius: 12;">
-                            <Label text="Stock e Inventario" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
-                            <Separator/>
-
-                            <GridPane hgap="15" vgap="15">
+                        <VBox styleClass="form-section">
+                            <Label text="Stock e inventario" styleClass="section-title"/>
+                            <GridPane styleClass="form-grid">
                                 <columnConstraints>
                                     <ColumnConstraints percentWidth="25"/>
                                     <ColumnConstraints percentWidth="25"/>
@@ -133,44 +124,42 @@
                                     <ColumnConstraints percentWidth="25"/>
                                 </columnConstraints>
 
-                                <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
-                                    <Label text="Stock Actual" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextField fx:id="txtStockActual" text="0" style="-fx-padding: 10;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <Label text="Stock actual" styleClass="form-label"/>
+                                    <TextField fx:id="txtStockActual" text="0"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                    <Label text="Stock Minimo" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextField fx:id="txtStockMinimo" text="0" style="-fx-padding: 10;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <Label text="Stock minimo" styleClass="form-label"/>
+                                    <TextField fx:id="txtStockMinimo" text="0"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                                    <Label text="Stock Maximo" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextField fx:id="txtStockMaximo" text="0" style="-fx-padding: 10;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                    <Label text="Stock maximo" styleClass="form-label"/>
+                                    <TextField fx:id="txtStockMaximo" text="0"/>
                                 </VBox>
 
-                                <VBox spacing="6" GridPane.columnIndex="3" GridPane.rowIndex="0">
-                                    <Label text="Punto Pedido" style="-fx-font-size: 12; -fx-font-weight: 600; -fx-text-fill: #475569;"/>
-                                    <TextField fx:id="txtPuntoPedido" text="0" style="-fx-padding: 10;"/>
+                                <VBox styleClass="form-field" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                                    <Label text="Punto pedido" styleClass="form-label"/>
+                                    <TextField fx:id="txtPuntoPedido" text="0"/>
                                 </VBox>
                             </GridPane>
 
-                            <HBox spacing="20">
-                                <CheckBox fx:id="chkControlStock" text="Controlar stock" selected="true" style="-fx-font-size: 13;"/>
-                                <CheckBox fx:id="chkActivo" text="Articulo activo" selected="true" style="-fx-font-size: 13;"/>
+                            <HBox spacing="18">
+                                <CheckBox fx:id="chkControlStock" text="Controlar stock" selected="true"/>
+                                <CheckBox fx:id="chkActivo" text="Articulo activo" selected="true"/>
                             </HBox>
                         </VBox>
-
                     </VBox>
                 </ScrollPane>
             </center>
 
             <bottom>
-                    <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
-                    <Button text="Cancelar" onAction="#onCancelar" style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13;"/>
-                    <Button fx:id="btnGuardarArticulo" text="Guardar Articulo" onAction="#onGuardar" styleClass="button-success" style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
+                <HBox styleClass="form-footer">
+                    <Button text="Cancelar" onAction="#onCancelar" styleClass="button"/>
+                    <Button fx:id="btnGuardarArticulo" text="Guardar articulo" onAction="#onGuardar" styleClass="button-success"/>
                 </HBox>
             </bottom>
-
         </BorderPane>
     </content>
 </ScrollPane>
