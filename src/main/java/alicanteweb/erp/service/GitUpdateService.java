@@ -1,6 +1,7 @@
 package alicanteweb.erp.service;
 
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +21,23 @@ public class GitUpdateService {
     private final String branch;
     private final Duration timeout;
     private final File workDir;
+    private final GitCommandRunner commandRunner;
 
+    @Autowired
     public GitUpdateService(@Value("${app.update.enabled:true}") boolean enabled,
                             @Value("${app.update.remote:origin}") String remote,
                             @Value("${app.update.branch:produccion}") String branch,
                             @Value("${app.update.timeout-seconds:60}") int timeoutSeconds,
                             @Value("${app.update.workdir:}") String configuredWorkDir) {
+        this(enabled, remote, branch, timeoutSeconds, configuredWorkDir, new ProcessGitCommandRunner());
+    }
+
+    GitUpdateService(boolean enabled,
+                     String remote,
+                     String branch,
+                     int timeoutSeconds,
+                     String configuredWorkDir,
+                     GitCommandRunner commandRunner) {
         this.enabled = enabled;
         this.remote = remote;
         this.branch = branch;
@@ -33,6 +45,7 @@ public class GitUpdateService {
         this.workDir = configuredWorkDir == null || configuredWorkDir.isBlank()
             ? new File(System.getProperty("user.dir"))
             : new File(configuredWorkDir);
+        this.commandRunner = commandRunner;
     }
 
     public UpdateStatus checkForUpdates() {
@@ -48,10 +61,10 @@ public class GitUpdateService {
             return UpdateStatus.unavailable("La aplicación está en la rama '" + currentBranch + "', no en '" + branch + "'.");
         }
 
-        runGit("fetch", "--quiet", remote, branch);
+        String remoteRef = remote + "/" + branch;
+        runGit("fetch", "--quiet", remote, branch + ":refs/remotes/" + remoteRef);
 
         String local = runGit("rev-parse", "HEAD").stdout().trim();
-        String remoteRef = remote + "/" + branch;
         String remoteHead = runGit("rev-parse", remoteRef).stdout().trim();
         if (local.equals(remoteHead)) {
             return UpdateStatus.upToDate(currentBranch);
@@ -66,8 +79,11 @@ public class GitUpdateService {
 
     public UpdateResult update() {
         UpdateStatus status = checkForUpdates();
-        if (!status.available()) {
-            return UpdateResult.notUpdated(status.message());
+        if (!status.isAvailable()) {
+            return UpdateResult.notUpdated(status.getMessage());
+        }
+        if (!runGit("status", "--porcelain").stdout().isBlank()) {
+            return UpdateResult.notUpdated("Hay cambios locales en la carpeta de la aplicación. Revisa el repositorio antes de actualizar.");
         }
 
         CommandResult result = runGit("pull", "--ff-only", remote, branch);
@@ -83,34 +99,45 @@ public class GitUpdateService {
     }
 
     private CommandResult runGit(String... args) {
-        List<String> command = new ArrayList<>();
-        command.add("git");
-        command.addAll(List.of(args));
+        return commandRunner.run(workDir, timeout, args);
+    }
 
-        ProcessBuilder builder = new ProcessBuilder(command);
-        builder.directory(workDir);
-        builder.redirectErrorStream(false);
+    interface GitCommandRunner {
+        CommandResult run(File workDir, Duration timeout, String... args);
+    }
 
-        try {
-            Process process = builder.start();
-            boolean finished = process.waitFor(timeout.toSeconds(), TimeUnit.SECONDS);
-            if (!finished) {
-                process.destroyForcibly();
-                throw new IllegalStateException("Tiempo agotado ejecutando: " + String.join(" ", command));
+    private static class ProcessGitCommandRunner implements GitCommandRunner {
+        @Override
+        public CommandResult run(File workDir, Duration timeout, String... args) {
+            List<String> command = new ArrayList<>();
+            command.add("git");
+            command.addAll(List.of(args));
+
+            ProcessBuilder builder = new ProcessBuilder(command);
+            builder.directory(workDir);
+            builder.redirectErrorStream(false);
+
+            try {
+                Process process = builder.start();
+                boolean finished = process.waitFor(timeout.toSeconds(), TimeUnit.SECONDS);
+                if (!finished) {
+                    process.destroyForcibly();
+                    throw new IllegalStateException("Tiempo agotado ejecutando: " + String.join(" ", command));
+                }
+
+                String stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+                if (process.exitValue() != 0) {
+                    throw new IllegalStateException("Error ejecutando '" + String.join(" ", command) + "': "
+                        + (stderr.isBlank() ? stdout : stderr).trim());
+                }
+                return new CommandResult(stdout, stderr);
+            } catch (IOException e) {
+                throw new IllegalStateException("No se pudo ejecutar Git. Comprueba que Git esté instalado y en el PATH.", e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Actualización interrumpida.", e);
             }
-
-            String stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-            if (process.exitValue() != 0) {
-                throw new IllegalStateException("Error ejecutando '" + String.join(" ", command) + "': "
-                    + (stderr.isBlank() ? stdout : stderr).trim());
-            }
-            return new CommandResult(stdout, stderr);
-        } catch (IOException e) {
-            throw new IllegalStateException("No se pudo ejecutar Git. Comprueba que Git esté instalado y en el PATH.", e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Actualización interrumpida.", e);
         }
     }
 
@@ -122,7 +149,7 @@ public class GitUpdateService {
         }
     }
 
-    private record CommandResult(String stdout, String stderr) {
+    record CommandResult(String stdout, String stderr) {
     }
 
     @Getter

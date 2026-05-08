@@ -1,15 +1,18 @@
 package alicanteweb.erp;
 
+import alicanteweb.erp.controller.CajaController;
 import alicanteweb.erp.controller.formcontroller.PresupuestoFormController;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.ClienteDatosExternosService;
 import alicanteweb.erp.service.ClienteService;
+import alicanteweb.erp.service.MovimientoCajaService;
 import alicanteweb.erp.service.PresupuestoService;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.io.InputStream;
 import java.util.List;
 
@@ -65,6 +68,29 @@ public class FxmlLoaderSmokeTest {
                     ClienteDatosExternosService datosExternosService = mock(ClienteDatosExternosService.class);
                     when(clienteService.findAll()).thenReturn(List.of());
                     return new alicanteweb.erp.controller.formcontroller.ClienteFormController(clienteService, datosExternosService);
+                }
+                try {
+                    return type.getDeclaredConstructor().newInstance();
+                } catch (ReflectiveOperationException ex) {
+                    throw new IllegalStateException("No se pudo instanciar controlador FXML: " + type.getName(), ex);
+                }
+            });
+            loader.load(is);
+        }
+    }
+
+    @Test
+    public void loadCajaPanel() throws Exception {
+        try (InputStream is = getClass().getResourceAsStream("/ui/caja_panel.fxml")) {
+            if (is == null) throw new RuntimeException("FXML not found");
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/ui/caja_panel.fxml"));
+            loader.setControllerFactory(type -> {
+                if (type == CajaController.class) {
+                    MovimientoCajaService movimientoCajaService = mock(MovimientoCajaService.class);
+                    when(movimientoCajaService.findAll()).thenReturn(List.of());
+                    when(movimientoCajaService.calcularSaldoActual()).thenReturn(BigDecimal.ZERO);
+                    return new CajaController(movimientoCajaService);
                 }
                 try {
                     return type.getDeclaredConstructor().newInstance();
