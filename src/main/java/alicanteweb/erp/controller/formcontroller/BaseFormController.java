@@ -3,6 +3,8 @@ package alicanteweb.erp.controller.formcontroller;
 import javafx.fxml.FXML;
 import javafx.stage.Stage;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import alicanteweb.erp.ui.DialogUtils;
 
@@ -11,7 +13,8 @@ import alicanteweb.erp.ui.DialogUtils;
  */
 @Controller
 public abstract class BaseFormController<T> {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(BaseFormController.class);
     protected T item;
     @Setter
     protected Runnable callback;
@@ -98,7 +101,7 @@ public abstract class BaseFormController<T> {
                 ((Stage) maybeWindow.get()).close();
             }
         } catch (Exception e) {
-            // Si todo falla, no bloquear la UI
+            log.debug("No se pudo cerrar la ventana del formulario: {}", e.getMessage());
         }
     }
     

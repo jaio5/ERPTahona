@@ -45,6 +45,7 @@
                                 <VBox styleClass="form-field" GridPane.columnIndex="2" GridPane.rowIndex="0">
                                     <Label text="CIF / NIF *" styleClass="form-label"/>
                                     <TextField fx:id="txtCIF" promptText="B12345678"/>
+                                    <Button fx:id="btnBuscarDatosEmpresa" text="Buscar datos" onAction="#onBuscarDatosEmpresa" styleClass="button-primary"/>
                                     <Label fx:id="lblErrCIF" styleClass="form-error"/>
                                 </VBox>
 
@@ -62,6 +63,11 @@
                                 <VBox styleClass="form-field" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                     <Label text="Estado" styleClass="form-label"/>
                                     <CheckBox fx:id="chkActivo" text="Proveedor activo" selected="true"/>
+                                </VBox>
+
+                                <VBox styleClass="form-field" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="3">
+                                    <Label text="Coincidencias existentes" styleClass="form-label"/>
+                                    <ComboBox fx:id="cbCoincidenciasProveedor" promptText="Selecciona una ficha existente para cargarla" maxWidth="Infinity"/>
                                 </VBox>
                             </GridPane>
                         </VBox>

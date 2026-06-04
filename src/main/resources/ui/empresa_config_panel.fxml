@@ -81,6 +81,21 @@
                             <TextField fx:id="txtIRPF"/>
                         </VBox>
                     </HBox>
+
+                    <VBox spacing="8">
+                        <Label text="Registro Sanitario (RGSEAA)" styleClass="form-label"/>
+                        <TextField fx:id="txtRegistroSanitario" promptText="Nº de Registro General Sanitario de Empresas Alimentarias"/>
+                    </VBox>
+
+                    <VBox spacing="8">
+                        <Label text="Registro Mercantil" styleClass="form-label"/>
+                        <TextField fx:id="txtRegistroMercantil" promptText="Inscripción en el Registro Mercantil"/>
+                    </VBox>
+
+                    <VBox spacing="8">
+                        <Label text="Web" styleClass="form-label"/>
+                        <TextField fx:id="txtWeb" promptText="https://www.tupanderia.es"/>
+                    </VBox>
                 </VBox>
 
                 <VBox styleClass="card" spacing="12">

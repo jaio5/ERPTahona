@@ -85,6 +85,10 @@ public class Articulo {
     @Column(name = "punto_pedido", precision = 10, scale = 2)
     private BigDecimal puntoPedido;
 
+    @Size(max = 500)
+    @Column(name = "alergenos", length = 500)
+    private String alergenos;
+
     @OneToMany(mappedBy = "articulo")
     private Set<AlbaranVentaLinea> albaranVentaLineas = new LinkedHashSet<>();
 

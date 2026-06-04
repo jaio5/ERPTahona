@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.AppccController"
+      stylesheets="@/styles/simple-theme.css"
+      spacing="20" style="-fx-background-color: #f8f9fa; -fx-padding: 32;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label text="CONTROLES APPCC" styleClass="title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Refrescar" onAction="#onRefresh" styleClass="button"/>
+        <Button text="+ Nuevo Control" onAction="#onNuevo" styleClass="button-success"/>
+    </HBox>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <TextField fx:id="txtBuscar" promptText="Buscar control..." HBox.hgrow="ALWAYS" style="-fx-min-height: 40px;"/>
+        <Button text="Buscar" onAction="#onBuscar" styleClass="button-primary"/>
+    </HBox>
+
+    <TableView fx:id="tableControles" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
+        <columns>
+            <TableColumn fx:id="colFecha" text="Fecha" minWidth="80" maxWidth="110"/>
+            <TableColumn fx:id="colPuntoCritico" text="Punto Crítico" minWidth="150"/>
+            <TableColumn fx:id="colTemperatura" text="Temp" minWidth="60" maxWidth="80"/>
+            <TableColumn fx:id="colResultado" text="Resultado" minWidth="90" maxWidth="120"/>
+            <TableColumn fx:id="colResponsable" text="Responsable" minWidth="100" maxWidth="150"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Button text="Editar" onAction="#onEditar" styleClass="button-primary"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblTotal" text="0 controles" style="-fx-text-fill: #6c757d;"/>
+    </HBox>
+</VBox>

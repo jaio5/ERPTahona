@@ -1,0 +1,58 @@
+<div th:fragment="content">
+    <div class="topbar">
+        <h4>Facturas</h4>
+        <a th:href="@{/web/facturas/nueva}" class="btn btn-success btn-sm">+ Nueva factura</a>
+    </div>
+
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-md-5">
+            <form class="d-flex gap-2">
+                <input type="search" name="q" class="form-control form-control-sm" placeholder="Buscar por número o cliente..." th:value="${q}">
+                <select name="estado" class="form-select form-select-sm" style="width:140px;">
+                    <option value="">Todos</option>
+                    <option value="BORRADOR" th:selected="${estado == 'BORRADOR'}">Borrador</option>
+                    <option value="EMITIDA" th:selected="${estado == 'EMITIDA'}">Emitida</option>
+                    <option value="ANULADA" th:selected="${estado == 'ANULADA'}">Anulada</option>
+                </select>
+                <button class="btn btn-outline-primary btn-sm">Filtrar</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Número</th><th>Fecha</th><th>Cliente</th>
+                    <th class="text-end">Total</th><th>Estado</th><th style="width:180px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="f : ${facturas}">
+                    <td th:text="${f.numero}"></td>
+                    <td th:text="${f.fecha != null ? #temporals.format(f.fecha, 'dd/MM/yyyy') : '-'}"></td>
+                    <td th:text="${f.cliente?.nombre}"></td>
+                    <td class="text-end" th:text="${f.total != null ? #numbers.formatCurrency(f.total) : '0,00 €'}"></td>
+                    <td>
+                        <span class="badge-status" th:classappend="${f.estado == 'EMITIDA' ? 'bg-emitted' : f.estado == 'ANULADA' ? 'bg-cancelled' : 'bg-draft'}" th:text="${f.estado}"></span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a th:href="@{/web/facturas/{id}(id=${f.id})}" class="btn btn-outline-secondary btn-sm">Ver</a>
+                            <form th:if="${f.estado == 'REVISION'}" th:action="@{/web/facturas/{id}/emitir(id=${f.id})}" method="post" class="d-inline">
+                                <button class="btn btn-outline-success btn-sm">Emitir</button>
+                            </form>
+                            <form th:if="${f.estado != 'ANULADA'}" th:action="@{/web/facturas/{id}/anular(id=${f.id})}" method="post" class="d-inline"
+                                  onsubmit="return confirm('¿Anular esta factura?')">
+                                <button class="btn btn-outline-danger btn-sm">Anular</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

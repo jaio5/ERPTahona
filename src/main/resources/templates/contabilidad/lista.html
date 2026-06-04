@@ -1,0 +1,7 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Contabilidad</h4></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Fecha</th><th>Numero</th><th>Concepto</th><th>Debe</th><th>Haber</th></tr></thead>
+        <tbody><tr th:each="a : ${asientos}"><td th:text="${a.fecha}"></td><td th:text="${a.numero}"></td><td th:text="${a.concepto}"></td><td th:text="${a.debe}"></td><td th:text="${a.haber}"></td></tr></tbody>
+    </table>
+</section>

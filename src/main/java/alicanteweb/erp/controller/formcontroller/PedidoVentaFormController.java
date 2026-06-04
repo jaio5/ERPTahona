@@ -342,7 +342,7 @@ public class PedidoVentaFormController {
                 pedidoActual.getLineas().add(linea);
             }
 
-            pedidoService.save(pedidoActual);
+            pedidoService.guardar(pedidoActual);
             mostrarExito("Pedido guardado correctamente");
             cerrarVentana();
 

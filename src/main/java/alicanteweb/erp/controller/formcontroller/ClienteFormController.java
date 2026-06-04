@@ -1,11 +1,9 @@
 package alicanteweb.erp.controller.formcontroller;
 
 import alicanteweb.erp.entities.Cliente;
-import alicanteweb.erp.service.ClienteDatosExternosService;
 import alicanteweb.erp.service.ClienteService;
-import alicanteweb.erp.service.dto.ClienteDatosExternos;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -15,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import alicanteweb.erp.ui.DialogUtils;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,7 +31,7 @@ public class ClienteFormController {
     @FXML private TextField txtTelefono;
     @FXML private TextField txtEmail;
     @FXML private javafx.scene.control.Button btnGuardar;
-    @FXML private javafx.scene.control.Button btnBuscarDatosEmpresa;
+    @FXML private ComboBox<Cliente> cbCoincidenciasCliente;
     @FXML private Label lblErrNombre;
     @FXML private Label lblErrCIF;
     @FXML private Label lblErrEmail;
@@ -52,14 +51,11 @@ public class ClienteFormController {
     @FXML private CheckBox chkActivo;
 
     private final ClienteService clienteService;
-    private final ClienteDatosExternosService clienteDatosExternosService;
     private Cliente clienteActual;
     private boolean modoEdicion = false;
 
-    public ClienteFormController(ClienteService clienteService,
-                                 ClienteDatosExternosService clienteDatosExternosService) {
+    public ClienteFormController(ClienteService clienteService) {
         this.clienteService = clienteService;
-        this.clienteDatosExternosService = clienteDatosExternosService;
     }
 
     @FXML
@@ -74,6 +70,7 @@ public class ClienteFormController {
 
         // Configurar validaciones
         configurarValidaciones();
+        configurarCoincidencias();
 
         // Habilitar/deshabilitar botón Guardar según campos obligatorios
         try {
@@ -238,6 +235,67 @@ public class ClienteFormController {
         }
     }
 
+    private void configurarCoincidencias() {
+        if (cbCoincidenciasCliente == null) {
+            return;
+        }
+        cbCoincidenciasCliente.setVisible(false);
+        cbCoincidenciasCliente.setManaged(false);
+        cbCoincidenciasCliente.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(Cliente item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : textoCoincidencia(item));
+            }
+        });
+        cbCoincidenciasCliente.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(Cliente item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : textoCoincidencia(item));
+            }
+        });
+        cbCoincidenciasCliente.valueProperty().addListener((obs, anterior, seleccionado) -> {
+            if (seleccionado != null && (clienteActual == null || clienteActual.getId() == null
+                || !seleccionado.getId().equals(clienteActual.getId()))) {
+                cargarClienteExistente(seleccionado);
+            }
+        });
+
+        if (txtNombre != null) {
+            txtNombre.textProperty().addListener((obs, oldV, newV) -> actualizarCoincidenciasLocales());
+        }
+        if (txtCIF != null) {
+            txtCIF.textProperty().addListener((obs, oldV, newV) -> actualizarCoincidenciasLocales());
+        }
+    }
+
+    private void actualizarCoincidenciasLocales() {
+        if (cbCoincidenciasCliente == null) {
+            return;
+        }
+        String cif = txtCIF != null && txtCIF.getText() != null ? txtCIF.getText().trim() : "";
+        String nombre = txtNombre != null && txtNombre.getText() != null ? txtNombre.getText().trim() : "";
+        try {
+            List<Cliente> coincidencias = !cif.isBlank()
+                ? clienteService.findByCif(cif).stream().toList()
+                : nombre.length() >= 3 ? clienteService.searchByNombre(nombre) : List.of();
+            if (clienteActual != null && clienteActual.getId() != null) {
+                coincidencias = coincidencias.stream()
+                    .filter(c -> c.getId() == null || !c.getId().equals(clienteActual.getId()))
+                    .toList();
+            }
+            cbCoincidenciasCliente.setItems(FXCollections.observableArrayList(coincidencias.stream().limit(8).toList()));
+            boolean mostrar = !coincidencias.isEmpty();
+            cbCoincidenciasCliente.setVisible(mostrar);
+            cbCoincidenciasCliente.setManaged(mostrar);
+            if (mostrar && cbCoincidenciasCliente.getScene() != null && !cbCoincidenciasCliente.isShowing()) {
+                cbCoincidenciasCliente.show();
+            }
+        } catch (Exception e) {
+            log.debug("No se pudieron cargar coincidencias de clientes: {}", e.getMessage());
+        }
+    }
     @FXML
     public void onBuscarDatosEmpresa() {
         String cif = txtCIF != null ? txtCIF.getText().trim().toUpperCase().replace(" ", "") : "";
@@ -263,91 +321,21 @@ public class ClienteFormController {
             return;
         }
 
-        Task<Optional<ClienteDatosExternos>> task = new Task<>() {
-            @Override
-            protected Optional<ClienteDatosExternos> call() {
-                return buscarPorCif
-                    ? clienteDatosExternosService.buscarPorCif(cif)
-                    : clienteDatosExternosService.buscarPorNombre(nombre);
-            }
-        };
-
-        task.setOnRunning(e -> {
-            if (btnBuscarDatosEmpresa != null) {
-                btnBuscarDatosEmpresa.setDisable(true);
-                btnBuscarDatosEmpresa.setText("Buscando...");
-            }
-        });
-        task.setOnSucceeded(e -> {
-            restaurarBotonBusqueda();
-            Optional<ClienteDatosExternos> datos = task.getValue();
-            if (datos.isEmpty()) {
-                DialogUtils.showInfo("No se encontraron datos para ese CIF/NIF.");
-                return;
-            }
-            ClienteDatosExternos datosExternos = datos.get();
-            if (datosExternos.getCif() != null) {
-                Optional<Cliente> existentePorCif = clienteService.findByCif(datosExternos.getCif());
-                if (existentePorCif.isPresent() && (clienteActual == null || clienteActual.getId() == null
-                    || !existentePorCif.get().getId().equals(clienteActual.getId()))) {
-                    cargarClienteExistente(existentePorCif.get());
-                    return;
-                }
-            }
-            aplicarDatosExternos(datosExternos);
-            DialogUtils.showInfo("Datos del cliente cargados desde la API. Revisa la ficha antes de guardar.");
-        });
-        task.setOnFailed(e -> {
-            restaurarBotonBusqueda();
-            Throwable ex = task.getException();
-            log.warn("No se pudieron cargar datos externos del cliente", ex);
-            DialogUtils.showError(ex != null ? ex.getMessage() : "No se pudo consultar la API de empresas");
-        });
-
-        Thread thread = new Thread(task, "cliente-datos-externos");
-        thread.setDaemon(true);
-        thread.start();
+        DialogUtils.showInfo("No hay coincidencias locales para esos datos.");
     }
 
     private void cargarClienteExistente(Cliente existente) {
         clienteActual = existente;
         modoEdicion = true;
+        if (cbCoincidenciasCliente != null) {
+            cbCoincidenciasCliente.hide();
+            cbCoincidenciasCliente.setVisible(false);
+            cbCoincidenciasCliente.setManaged(false);
+            cbCoincidenciasCliente.getSelectionModel().clearSelection();
+        }
         if (lblTitulo != null) lblTitulo.setText("Editar Cliente");
         cargarDatosCliente(existente);
         DialogUtils.showInfo("Este CIF/NIF ya existe en la base de datos. Se ha cargado la ficha existente para evitar duplicados.");
-    }
-
-    private void aplicarDatosExternos(ClienteDatosExternos datos) {
-        if (datos.getCif() != null && txtCIF != null) txtCIF.setText(datos.getCif().trim().toUpperCase());
-        if (datos.getNombre() != null && txtNombre != null) txtNombre.setText(datos.getNombre());
-        if (datos.getDireccion() != null && txtDireccion != null) txtDireccion.setText(datos.getDireccion());
-        if (datos.getCodigoPostal() != null && txtCodigoPostal != null) txtCodigoPostal.setText(datos.getCodigoPostal());
-        if (datos.getPoblacion() != null && txtPoblacion != null) txtPoblacion.setText(datos.getPoblacion());
-        if (datos.getProvincia() != null && cbProvincia != null) {
-            seleccionarProvincia(datos.getProvincia());
-        }
-        if (datos.getTelefono() != null && txtTelefono != null) txtTelefono.setText(datos.getTelefono());
-        if (datos.getEmail() != null && txtEmail != null) txtEmail.setText(datos.getEmail());
-        if (datos.getEstado() != null && chkActivo != null) {
-            chkActivo.setSelected(!datos.getEstado().equalsIgnoreCase("INACTIVA")
-                && !datos.getEstado().equalsIgnoreCase("EXTINGUIDA")
-                && !datos.getEstado().equalsIgnoreCase("DISUELTA"));
-        }
-    }
-
-    private void seleccionarProvincia(String provincia) {
-        String normalizada = provincia.trim();
-        cbProvincia.getItems().stream()
-            .filter(p -> p.equalsIgnoreCase(normalizada))
-            .findFirst()
-            .ifPresentOrElse(cbProvincia::setValue, () -> cbProvincia.setValue(normalizada));
-    }
-
-    private void restaurarBotonBusqueda() {
-        if (btnBuscarDatosEmpresa != null) {
-            btnBuscarDatosEmpresa.setDisable(false);
-            btnBuscarDatosEmpresa.setText("Buscar datos");
-        }
     }
 
     @FXML
@@ -644,6 +632,12 @@ public class ClienteFormController {
         } catch (Exception e) {
             log.warn("No se pudo cerrar la ventana correctamente", e);
         }
+    }
+
+    private String textoCoincidencia(Cliente cliente) {
+        String cif = cliente.getCif() == null || cliente.getCif().isBlank() ? "" : " (" + cliente.getCif() + ")";
+        String poblacion = cliente.getPoblacion() == null || cliente.getPoblacion().isBlank() ? "" : " - " + cliente.getPoblacion();
+        return cliente.getNombre() + cif + poblacion;
     }
 
 }

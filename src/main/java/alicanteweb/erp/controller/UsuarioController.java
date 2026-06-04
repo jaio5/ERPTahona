@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import alicanteweb.erp.controller.formcontroller.UsuarioFormController;
 import alicanteweb.erp.entities.Usuario;
+import alicanteweb.erp.service.AutenticacionService;
 import alicanteweb.erp.service.UsuarioService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -49,14 +50,18 @@ public class UsuarioController {
     @FXML private Label lblSeleccion;
 
     private final UsuarioService usuarioService;
+    private final AutenticacionService autenticacionService;
     private final ApplicationContext context;
 
     private final ObservableList<Usuario> usuariosList = FXCollections.observableArrayList();
     private final ObservableList<Usuario> usuariosFilteredList = FXCollections.observableArrayList();
 
     @Autowired
-    public UsuarioController(UsuarioService usuarioService, ApplicationContext context) {
+    public UsuarioController(UsuarioService usuarioService,
+                             AutenticacionService autenticacionService,
+                             ApplicationContext context) {
         this.usuarioService = usuarioService;
+        this.autenticacionService = autenticacionService;
         this.context = context;
     }
 
@@ -273,6 +278,9 @@ public class UsuarioController {
 
     @FXML
     public void onNuevo() {
+        if (!verificarPermiso("crear")) {
+            return;
+        }
         try {
             log.info("🆕 Abriendo formulario de nuevo usuario");
             abrirFormulario(null);
@@ -292,6 +300,9 @@ public class UsuarioController {
 
     @FXML
     public void onEditar() {
+        if (!verificarPermiso("editar")) {
+            return;
+        }
         Usuario usuario = tableUsuarios.getSelectionModel().getSelectedItem();
         if (usuario == null) {
             mostrarAlerta("Por favor, seleccione un usuario para editar");
@@ -312,6 +323,9 @@ public class UsuarioController {
 
     @FXML
     public void onCambiarPassword() {
+        if (!verificarPermiso("editar")) {
+            return;
+        }
         Usuario usuario = tableUsuarios.getSelectionModel().getSelectedItem();
         if (usuario == null) {
             mostrarAlerta("Por favor, seleccione un usuario");
@@ -362,6 +376,9 @@ public class UsuarioController {
 
     @FXML
     public void onDesbloquear() {
+        if (!verificarPermiso("editar")) {
+            return;
+        }
         Usuario usuario = tableUsuarios.getSelectionModel().getSelectedItem();
         if (usuario == null) {
             mostrarAlerta("Por favor, seleccione un usuario");
@@ -391,6 +408,9 @@ public class UsuarioController {
 
     @FXML
     public void onDesactivar() {
+        if (!verificarPermiso("editar")) {
+            return;
+        }
         Usuario usuario = tableUsuarios.getSelectionModel().getSelectedItem();
         if (usuario == null) {
             mostrarAlerta("Por favor, seleccione un usuario");
@@ -414,6 +434,9 @@ public class UsuarioController {
 
     @FXML
     public void onEliminar() {
+        if (!verificarPermiso("eliminar")) {
+            return;
+        }
         Usuario usuario = tableUsuarios.getSelectionModel().getSelectedItem();
         if (usuario == null) {
             mostrarAlerta("Por favor, seleccione un usuario para eliminar");
@@ -462,6 +485,9 @@ public class UsuarioController {
      */
     @FXML
     public void onBloquear() {
+        if (!verificarPermiso("editar")) {
+            return;
+        }
         Usuario usuario = tableUsuarios.getSelectionModel().getSelectedItem();
         if (usuario == null) {
             mostrarAlerta("Por favor, seleccione un usuario para bloquear");
@@ -595,6 +621,14 @@ public class UsuarioController {
         alert.setContentText(msg);
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
+    }
+
+    private boolean verificarPermiso(String accion) {
+        if (autenticacionService.tienePermiso("usuarios", accion)) {
+            return true;
+        }
+        mostrarAlerta("No tiene permisos para " + accion + " usuarios.");
+        return false;
     }
 }
 

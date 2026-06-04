@@ -34,4 +34,7 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
 
     @Query("SELECT DISTINCT f FROM Factura f LEFT JOIN FETCH f.cliente")
     List<Factura> findAllWithCliente();
+
+    @Query("SELECT DISTINCT f FROM Factura f LEFT JOIN FETCH f.cliente LEFT JOIN FETCH f.facturaLineas l LEFT JOIN FETCH l.articulo WHERE f.id = :id")
+    Optional<Factura> findByIdWithPdfData(Long id);
 }

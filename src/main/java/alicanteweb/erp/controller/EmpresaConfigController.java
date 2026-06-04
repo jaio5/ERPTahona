@@ -8,10 +8,6 @@ import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Controlador para la Configuración de Empresa
- * Datos fiscales y administrativos de la empresa
- */
 @Controller
 public class EmpresaConfigController {
     private static final Logger log = LoggerFactory.getLogger(EmpresaConfigController.class);
@@ -25,11 +21,12 @@ public class EmpresaConfigController {
     @FXML private TextField txtCodigoPostal;
     @FXML private TextField txtEmail;
     @FXML private TextField txtTelefono;
+    @FXML private TextField txtRegistroSanitario;
+    @FXML private TextField txtRegistroMercantil;
+    @FXML private TextField txtWeb;
     @FXML private TextArea txtNotas;
     @FXML private Button btnGuardar;
     @FXML private Button btnCancelar;
-
-    // Campos adicionales definidos en el FXML
     @FXML private ComboBox<String> cmbRegimenIVA;
     @FXML private TextField txtIRPF;
     @FXML private TextField txtIBAN;
@@ -37,51 +34,34 @@ public class EmpresaConfigController {
     @FXML private TextField txtSwift;
 
     private EmpresaConfig empresaActual;
-
     private final EmpresaConfigService empresaConfigService;
 
-    // Spring injecta el servicio
     public EmpresaConfigController(EmpresaConfigService empresaConfigService) {
         this.empresaConfigService = empresaConfigService;
     }
 
     @FXML
     public void initialize() {
-        log.info("=== INICIALIZANDO EmpresaConfigController ===");
-        // Inicializar valores por defecto de controles que pueden ser nulos en diseño
+        log.info("Inicializando EmpresaConfigController");
         if (cmbRegimenIVA != null) {
             cmbRegimenIVA.getItems().addAll("General", "Recargo", "Exento");
             cmbRegimenIVA.setValue("General");
         }
-        // Asegurarnos de que los botones estén habilitados por defecto
         if (btnGuardar != null) btnGuardar.setDisable(false);
         if (btnCancelar != null) btnCancelar.setDisable(false);
-
         cargarConfiguracion();
-        log.info("=== FINALIZÓ INICIALIZACIÓN EmpresaConfigController ===");
     }
 
     private void cargarConfiguracion() {
         try {
-            log.info("Cargando configuración de empresa...");
-            // Intentar cargar configuración activa desde servicio
             empresaActual = empresaConfigService.getConfiguracionActiva().orElse(null);
-
-            // Si no hay configuración en BD, inicializamos con valores por defecto
             if (empresaActual == null) {
                 empresaActual = new EmpresaConfig();
                 empresaActual.setNombreEmpresa("Mi Empresa");
                 empresaActual.setCif("X0000000X");
-                empresaActual.setDireccion("");
-                empresaActual.setCodigoPostal("");
-                empresaActual.setCiudad("");
-                empresaActual.setProvincia("");
-                empresaActual.setTelefono("");
-                empresaActual.setEmail("");
                 empresaActual.setActivo(true);
             }
 
-            // Rellenar controles si existen
             if (txtNombre != null) txtNombre.setText(empresaActual.getNombreEmpresa());
             if (txtCif != null) txtCif.setText(empresaActual.getCif());
             if (txtDireccion != null) txtDireccion.setText(empresaActual.getDireccion());
@@ -91,15 +71,16 @@ public class EmpresaConfigController {
             if (txtProvincia != null) txtProvincia.setText(empresaActual.getProvincia());
             if (txtTelefono != null) txtTelefono.setText(empresaActual.getTelefono());
             if (txtEmail != null) txtEmail.setText(empresaActual.getEmail());
-
-            // Campos bancarios/fiscales opcionales: si vienen de BD, mostrarlos
-            if (txtIRPF != null) txtIRPF.setText(empresaActual.getRegistroSanitario() != null ? empresaActual.getRegistroSanitario() : "");
-            if (txtIBAN != null) txtIBAN.setText(empresaActual.getWeb() != null ? empresaActual.getWeb() : "");
+            if (txtWeb != null) txtWeb.setText(empresaActual.getWeb());
+            if (txtRegistroSanitario != null) txtRegistroSanitario.setText(empresaActual.getRegistroSanitario());
+            if (txtRegistroMercantil != null) txtRegistroMercantil.setText(empresaActual.getRegistroMercantil());
+            if (txtNotas != null) txtNotas.setText("");
+            if (txtIRPF != null) txtIRPF.setText("");
+            if (txtIBAN != null) txtIBAN.setText("");
             if (txtBanco != null) txtBanco.setText("");
             if (txtSwift != null) txtSwift.setText("");
-            if (txtNotas != null) txtNotas.setText("");
 
-            log.info("Configuración cargada");
+            log.info("Configuración cargada: {}", empresaActual.getNombreEmpresa());
         } catch (Exception e) {
             log.error("Error cargando configuración", e);
             mostrarError("Error cargando configuración: " + e.getMessage());
@@ -109,9 +90,6 @@ public class EmpresaConfigController {
     @FXML
     public void onGuardar() {
         try {
-            log.info("Guardando configuración de empresa...");
-
-            // Crear o actualizar empresaActual desde controles
             if (empresaActual == null) empresaActual = new EmpresaConfig();
             if (txtNombre != null) empresaActual.setNombreEmpresa(txtNombre.getText());
             if (txtCif != null) empresaActual.setCif(txtCif.getText());
@@ -121,22 +99,13 @@ public class EmpresaConfigController {
             if (txtProvincia != null) empresaActual.setProvincia(txtProvincia.getText());
             if (txtTelefono != null) empresaActual.setTelefono(txtTelefono.getText());
             if (txtEmail != null) empresaActual.setEmail(txtEmail.getText());
-            if (txtCodigo != null) log.info("Código visible: {}", txtCodigo.getText());
+            if (txtWeb != null) empresaActual.setWeb(txtWeb.getText());
+            if (txtRegistroSanitario != null) empresaActual.setRegistroSanitario(txtRegistroSanitario.getText());
+            if (txtRegistroMercantil != null) empresaActual.setRegistroMercantil(txtRegistroMercantil.getText());
 
-            // Registrar valores de campos opcionales
-            if (txtNotas != null) empresaActual.setRegistroMercantil(txtNotas.getText());
-            if (cmbRegimenIVA != null) log.info("Régimen IVA seleccionado: {}", cmbRegimenIVA.getValue());
-            if (txtIRPF != null) log.info("IRPF: {}", txtIRPF.getText());
-            if (txtIBAN != null) log.info("IBAN: {}", txtIBAN.getText());
-            if (txtBanco != null) log.info("Banco: {}", txtBanco.getText());
-            if (txtSwift != null) log.info("SWIFT: {}", txtSwift.getText());
-
-            // Persistir empresaActual usando EmpresaConfigService
             EmpresaConfig saved = empresaConfigService.save(empresaActual);
-            empresaActual = saved; // actualizar referencia
-
+            empresaActual = saved;
             log.info("Empresa guardada con id: {}", saved.getId());
-
             mostrarInfo("Configuración guardada exitosamente");
         } catch (Exception e) {
             log.error("Error guardando configuración", e);

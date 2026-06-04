@@ -1,0 +1,24 @@
+<div th:fragment="content">
+    <div class="topbar">
+        <h4 th:text="${titulo}">Artículos</h4>
+        <a th:href="@{/web/articulos/nuevo}" class="btn btn-success btn-sm">+ Nuevo</a>
+    </div>
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+    <div class="row g-2 mb-3"><div class="col-md-5"><form class="d-flex gap-2"><input type="search" name="q" class="form-control form-control-sm" placeholder="Buscar..." th:value="${q}"><button class="btn btn-outline-primary btn-sm">Filtrar</button></form></div></div>
+    <div class="table-card">
+        <table class="table table-hover">
+            <thead><tr><th>Código</th><th>Nombre</th><th>IVA</th><th class="text-end">PVP</th><th class="text-end">Stock</th><th>Alérgenos</th><th style="width:100px;"></th></tr></thead>
+            <tbody>
+                <tr th:each="a : ${articulos}">
+                    <td th:text="${a.codigo}"></td><td th:text="${a.nombre}"></td>
+                    <td th:text="${a.iva} + '%'"></td>
+                    <td class="text-end" th:text="${a.pvp != null ? #numbers.formatCurrency(a.pvp) : ''}"></td>
+                    <td class="text-end" th:text="${a.stock}"></td>
+                    <td th:text="${a.alergenos}"></td>
+                    <td><a th:href="@{/web/articulos/{id}(id=${a.id})}" class="btn btn-outline-secondary btn-sm">Ver</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

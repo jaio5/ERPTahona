@@ -1,0 +1,16 @@
+<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/proveedores}" class="btn btn-outline-secondary btn-sm">Volver</a></div>
+    <div class="form-card" style="max-width:600px;">
+        <form th:action="@{/web/proveedores}" method="post">
+            <input type="hidden" name="id" th:value="${proveedor?.id}">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Código *</label><input type="text" name="codigo" class="form-control" th:value="${proveedor?.codigo}" required></div>
+                <div class="col-md-6"><label class="form-label">Nombre *</label><input type="text" name="nombre" class="form-control" th:value="${proveedor?.nombre}" required></div>
+                <div class="col-md-6"><label class="form-label">CIF</label><input type="text" name="cif" class="form-control" th:value="${proveedor?.cif}"></div>
+                <div class="col-md-6"><label class="form-label">Teléfono</label><input type="text" name="telefono" class="form-control" th:value="${proveedor?.telefono}"></div>
+                <div class="col-12"><label class="form-label">Email</label><input type="email" name="email" class="form-control" th:value="${proveedor?.email}"></div>
+            </div>
+            <div class="mt-4"><button type="submit" class="btn btn-primary">Guardar</button><a th:href="@{/web/proveedores}" class="btn btn-outline-secondary ms-2">Cancelar</a></div>
+        </form>
+    </div>
+</div>

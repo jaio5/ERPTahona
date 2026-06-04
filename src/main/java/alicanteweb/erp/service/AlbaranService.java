@@ -49,6 +49,12 @@ public class AlbaranService {
         return albaranRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<AlbaranVenta> obtenerPorIdParaPdf(Long id) {
+        log.debug("Obteniendo albaran con datos de impresion: {}", id);
+        return albaranRepository.findByIdWithPdfData(id);
+    }
+
     /**
      * Obtiene un albarán por número
      */

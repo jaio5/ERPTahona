@@ -1,0 +1,8 @@
+<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/reportes}" class="btn btn-outline-secondary btn-sm">Volver</a></div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="stat-card"><div class="stat-label">Total lotes</div><div class="stat-value" th:text="${totalLotes}">0</div></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="stat-label">Caducados</div><div class="stat-value" style="color:#dc2626;" th:text="${caducados}">0</div></div></div>
+        <div class="col-md-4"><div class="stat-card"><div class="stat-label">Por caducar (7d)</div><div class="stat-value" style="color:#d97706;" th:text="${porCaducar}">0</div></div></div>
+    </div>
+</div>

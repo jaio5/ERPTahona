@@ -2,11 +2,13 @@ package alicanteweb.erp;
 
 import alicanteweb.erp.controller.CajaController;
 import alicanteweb.erp.controller.formcontroller.PresupuestoFormController;
+import alicanteweb.erp.controller.formcontroller.ProveedorFormController;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.ClienteDatosExternosService;
 import alicanteweb.erp.service.ClienteService;
 import alicanteweb.erp.service.MovimientoCajaService;
 import alicanteweb.erp.service.PresupuestoService;
+import alicanteweb.erp.service.ProveedorService;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import org.junit.jupiter.api.BeforeAll;
@@ -65,9 +67,8 @@ public class FxmlLoaderSmokeTest {
             loader.setControllerFactory(type -> {
                 if (type == alicanteweb.erp.controller.formcontroller.ClienteFormController.class) {
                     ClienteService clienteService = mock(ClienteService.class);
-                    ClienteDatosExternosService datosExternosService = mock(ClienteDatosExternosService.class);
                     when(clienteService.findAll()).thenReturn(List.of());
-                    return new alicanteweb.erp.controller.formcontroller.ClienteFormController(clienteService, datosExternosService);
+                    return new alicanteweb.erp.controller.formcontroller.ClienteFormController(clienteService);
                 }
                 try {
                     return type.getDeclaredConstructor().newInstance();
@@ -91,6 +92,29 @@ public class FxmlLoaderSmokeTest {
                     when(movimientoCajaService.findAll()).thenReturn(List.of());
                     when(movimientoCajaService.calcularSaldoActual()).thenReturn(BigDecimal.ZERO);
                     return new CajaController(movimientoCajaService);
+                }
+                try {
+                    return type.getDeclaredConstructor().newInstance();
+                } catch (ReflectiveOperationException ex) {
+                    throw new IllegalStateException("No se pudo instanciar controlador FXML: " + type.getName(), ex);
+                }
+            });
+            loader.load(is);
+        }
+    }
+
+    @Test
+    public void loadProveedorForm() throws Exception {
+        try (InputStream is = getClass().getResourceAsStream("/ui/proveedor_form.fxml")) {
+            if (is == null) throw new RuntimeException("FXML not found");
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/ui/proveedor_form.fxml"));
+            loader.setControllerFactory(type -> {
+                if (type == ProveedorFormController.class) {
+                    ProveedorService proveedorService = mock(ProveedorService.class);
+                    ClienteDatosExternosService datosExternosService = mock(ClienteDatosExternosService.class);
+                    when(proveedorService.findAll()).thenReturn(List.of());
+                    return new ProveedorFormController(proveedorService, datosExternosService);
                 }
                 try {
                     return type.getDeclaredConstructor().newInstance();

@@ -53,6 +53,27 @@ public class ProveedorService {
         return proveedorRepository.findByCodigo(codigo);
     }
 
+    public Optional<Proveedor> findByCif(String cif) {
+        if (cif == null || cif.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return proveedorRepository.findByCifIgnoreCase(cif.trim());
+    }
+
+    public Optional<Proveedor> findByNombreExacto(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return proveedorRepository.findFirstByNombreIgnoreCase(nombre.trim());
+    }
+
+    public List<Proveedor> searchByNombre(String texto) {
+        if (texto == null || texto.trim().isEmpty()) {
+            return List.of();
+        }
+        return proveedorRepository.findByNombreContainingIgnoreCase(texto.trim());
+    }
+
     /**
      * Guarda o actualiza un proveedor
      */

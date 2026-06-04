@@ -18,6 +18,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.stream.Collectors;
 import alicanteweb.erp.ui.DialogUtils;
+import alicanteweb.erp.service.AutenticacionService;
 
 /**
  * Controlador base para todos los módulos de la aplicación
@@ -102,11 +103,17 @@ public abstract class BaseController<T> {
      */
     @FXML
     public void onNuevo() {
+        if (!verificarPermisoAccion("crear")) {
+            return;
+        }
         abrirFormulario(null);
     }
 
     @FXML
     public void onEditar() {
+        if (!verificarPermisoAccion("editar")) {
+            return;
+        }
         T seleccionado = table.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAdvertencia("Selecciona un elemento para editar");
@@ -117,6 +124,9 @@ public abstract class BaseController<T> {
 
     @FXML
     public void onEliminar() {
+        if (!verificarPermisoAccion("eliminar")) {
+            return;
+        }
         T seleccionado = table.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAdvertencia("Selecciona un elemento para eliminar");
@@ -310,4 +320,29 @@ public abstract class BaseController<T> {
     protected void mostrarExito(String mensaje) { DialogUtils.showSuccess(mensaje); }
     protected void mostrarInfo(String mensaje) { DialogUtils.showInfo(mensaje); }
     protected boolean mostrarConfirmacion(String mensaje) { return DialogUtils.showConfirm(mensaje); }
+
+    protected String getModuloPermisos() {
+        return switch (getNombreModulo()) {
+            case "Cliente" -> "clientes";
+            case "Proveedor" -> "proveedores";
+            case "ArtÃ­culo", "Articulo" -> "articulos";
+            case "Factura" -> "ventas";
+            default -> getNombreModulo().toLowerCase();
+        };
+    }
+
+    protected boolean verificarPermisoAccion(String accion) {
+        try {
+            AutenticacionService auth = ErpLauncher.getSpringContext().getBean(AutenticacionService.class);
+            if (auth.tienePermiso(getModuloPermisos(), accion)) {
+                return true;
+            }
+            mostrarAdvertencia("No tiene permisos para " + accion + " en este modulo.");
+            return false;
+        } catch (Exception e) {
+            log.warn("No se pudo verificar permiso {} en {}", accion, getModuloPermisos(), e);
+            mostrarAdvertencia("No se pudo verificar la autorizacion de la accion.");
+            return false;
+        }
+    }
 }

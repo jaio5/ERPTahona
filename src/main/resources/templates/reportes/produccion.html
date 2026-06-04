@@ -1,0 +1,14 @@
+<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/reportes}" class="btn btn-outline-secondary btn-sm">Volver</a></div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="stat-card"><div class="stat-label">Órdenes totales</div><div class="stat-value" th:text="${totalOrdenes}">0</div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="stat-label">Finalizadas</div><div class="stat-value" style="color:#059669;" th:text="${finalizadas}">0</div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="stat-label">En curso</div><div class="stat-value" style="color:#2563eb;" th:text="${enCurso}">0</div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="stat-label">Canceladas</div><div class="stat-value" style="color:#dc2626;" th:text="${canceladas}">0</div></div></div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6"><div class="stat-card text-center py-4"><div class="stat-label">Cantidad planificada</div><div class="stat-value" th:text="${totalPlanificado}"></div></div></div>
+        <div class="col-md-6"><div class="stat-card text-center py-4"><div class="stat-label">Cantidad producida</div><div class="stat-value" th:text="${totalProducido}"></div></div></div>
+    </div>
+    <div class="text-center mt-3"><h5 th:text="'Eficiencia: ' + ${eficiencia} + '%'" class="fw-bold"></h5></div>
+</div>

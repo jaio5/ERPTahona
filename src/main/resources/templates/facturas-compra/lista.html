@@ -1,0 +1,14 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Facturas de compra</h4><a th:href="@{/web/facturas-compra/nuevo}" class="btn btn-success btn-sm">+ Nueva</a></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Numero</th><th>Fecha</th><th>Proveedor</th><th>Total</th></tr></thead>
+        <tbody>
+        <tr th:each="f : ${facturas}">
+            <td th:text="${f.numero} ?: ${f.id}"></td>
+            <td th:text="${f.fecha}"></td>
+            <td th:text="${f.proveedor != null ? f.proveedor.nombre : ''}"></td>
+            <td th:text="${f.total}"></td>
+        </tr>
+        </tbody>
+    </table>
+</section>

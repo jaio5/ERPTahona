@@ -35,6 +35,8 @@ public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
      * Busca proveedores por CIF
      */
     Optional<Proveedor> findByCif(String cif);
+    Optional<Proveedor> findByCifIgnoreCase(String cif);
+    Optional<Proveedor> findFirstByNombreIgnoreCase(String nombre);
 
     /**
      * Busca proveedores por múltiples criterios

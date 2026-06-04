@@ -1,0 +1,17 @@
+<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/recetas}" class="btn btn-outline-secondary btn-sm">Volver</a></div>
+    <div class="form-card" style="max-width:600px;">
+        <form th:action="@{/web/recetas}" method="post"><input type="hidden" name="id" th:value="${receta?.id}">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Código *</label><input type="text" name="codigo" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Nombre *</label><input type="text" name="nombre" class="form-control" required></div>
+                <div class="col-md-4"><label class="form-label">T. Prep (min)</label><input type="number" name="tiempoPrep" class="form-control"></div>
+                <div class="col-md-4"><label class="form-label">T. Horneado (min)</label><input type="number" name="tiempoHorneado" class="form-control"></div>
+                <div class="col-md-4"><label class="form-label">Temperatura (°C)</label><input type="number" name="temperatura" class="form-control"></div>
+                <div class="col-12"><label class="form-label">Alérgenos</label><input type="text" name="alergenos" class="form-control" placeholder="Gluten, Leche, Huevos..."></div>
+                <div class="col-12"><label class="form-label">Descripción</label><textarea name="descripcion" class="form-control" rows="3"></textarea></div>
+            </div>
+            <div class="mt-4"><button type="submit" class="btn btn-primary">Guardar</button><a th:href="@{/web/recetas}" class="btn btn-outline-secondary ms-2">Cancelar</a></div>
+        </form>
+    </div>
+</div>

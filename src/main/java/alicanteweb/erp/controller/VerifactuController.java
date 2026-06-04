@@ -1,6 +1,5 @@
 package alicanteweb.erp.controller;
 
-import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.service.EmpresaConfigService;
@@ -16,7 +15,6 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableColumn;
@@ -47,13 +45,17 @@ public class VerifactuController {
     private static final DateTimeFormatter EXPORT_TIMESTAMP = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").withZone(ZoneId.systemDefault());
 
     @FXML private Label lblEstado;
-    @FXML private CheckBox chkHabilitado;
     @FXML private TextField txtNif;
     @FXML private Label lblInfo;
+    @FXML private Label lblModoLegal;
+    @FXML private Label lblFechaInicio;
+    @FXML private Label lblFechaRenuncia;
 
     @FXML private Button btnEnviar;
     @FXML private Button btnGuardar;
     @FXML private Button btnProbar;
+    @FXML private Button btnIniciar;
+    @FXML private Button btnRenuncia;
     @FXML private ProgressIndicator progressIndicator;
 
     @FXML private TableView<VerifactuEvidence> tableEnvios;
@@ -74,7 +76,7 @@ public class VerifactuController {
     private final VerifactuEvidenceService evidenceService;
     private final FacturacionEventoService facturacionEventoService;
     private final ObservableList<VerifactuEvidence> listaEnvios = FXCollections.observableArrayList();
-    private boolean verifactuHabilitado = false;
+    private boolean verifactuOperativo = false;
 
     public VerifactuController(VerifactuService verifactuService,
                                FacturaService facturaService,
@@ -126,7 +128,8 @@ public class VerifactuController {
                 if (factura.isPresent() && factura.get().getCliente() != null) {
                     cliente = factura.get().getCliente().getNombre();
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                log.debug("No se pudo resolver cliente de evidencia {}: {}", evidencia.getFacturaId(), e.getMessage());
             }
             return new SimpleStringProperty(cliente);
         });
@@ -140,7 +143,8 @@ public class VerifactuController {
                 if (factura.isPresent() && factura.get().getTotal() != null) {
                     importe = String.format("%.2f EUR", factura.get().getTotal());
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                log.debug("No se pudo resolver importe de evidencia {}: {}", evidencia.getFacturaId(), e.getMessage());
             }
             return new SimpleStringProperty(importe);
         });
@@ -165,12 +169,15 @@ public class VerifactuController {
     private void cargarConfiguracion() {
         try {
             empresaConfigService.getConfiguracionActiva().ifPresent(cfg -> {
-                verifactuHabilitado = Boolean.TRUE.equals(cfg.getVerifactuHabilitado());
-                if (chkHabilitado != null) {
-                    chkHabilitado.setSelected(verifactuHabilitado);
-                }
+                verifactuOperativo = empresaConfigService.isFuncionamientoVerifactuVigente(cfg);
                 if (txtNif != null && cfg.getVerifactuNifEmisor() != null) {
                     txtNif.setText(cfg.getVerifactuNifEmisor());
+                }
+                if (lblFechaInicio != null) {
+                    lblFechaInicio.setText(cfg.getVerifactuFechaInicio() != null ? cfg.getVerifactuFechaInicio().toString() : "-");
+                }
+                if (lblFechaRenuncia != null) {
+                    lblFechaRenuncia.setText(cfg.getVerifactuFechaRenuncia() != null ? cfg.getVerifactuFechaRenuncia().toString() : "-");
                 }
             });
         } catch (Exception e) {
@@ -183,12 +190,21 @@ public class VerifactuController {
         if (lblEstado == null) {
             return;
         }
-        if (verifactuHabilitado) {
+        if (verifactuOperativo) {
             lblEstado.setText(verifactuService.isAeatAvailable() ? "Activo y listo" : "Configurado sin AEAT disponible");
             lblEstado.setStyle("-fx-text-fill: #198754; -fx-font-weight: bold;");
         } else {
-            lblEstado.setText("Deshabilitado");
+            lblEstado.setText("NO VERI*FACTU");
             lblEstado.setStyle("-fx-text-fill: #dc3545; -fx-font-weight: bold;");
+        }
+        if (lblModoLegal != null) {
+            lblModoLegal.setText(verifactuOperativo ? "VERI*FACTU" : "NO VERI*FACTU");
+        }
+        if (btnIniciar != null) {
+            btnIniciar.setDisable(verifactuOperativo);
+        }
+        if (btnRenuncia != null) {
+            btnRenuncia.setDisable(!verifactuOperativo);
         }
     }
 
@@ -236,27 +252,26 @@ public class VerifactuController {
 
     @FXML
     public void onCambiarEstado() {
-        verifactuHabilitado = chkHabilitado.isSelected();
+        DialogUtils.showWarning("El modo VERI*FACTU no se cambia con un interruptor. Usa iniciar funcionamiento o programar renuncia.");
         actualizarEstado();
     }
 
     @FXML
     public void onGuardar() {
+        if (!verificarPermiso("enviar")) {
+            return;
+        }
         String nif = txtNif != null ? txtNif.getText() : "";
-        if (verifactuHabilitado && (nif == null || nif.isBlank())) {
+        if (verifactuOperativo && (nif == null || nif.isBlank())) {
             DialogUtils.showWarning("Por favor, introduce el NIF del emisor.");
             return;
         }
 
         try {
-            EmpresaConfig cfg = empresaConfigService.getConfiguracionActiva().orElseGet(EmpresaConfig::new);
-            cfg.setVerifactuHabilitado(verifactuHabilitado);
-            if (nif != null && !nif.isBlank()) {
-                cfg.setVerifactuNifEmisor(nif);
-            }
-            empresaConfigService.save(cfg);
+            empresaConfigService.guardarDatosVerifactu(nif);
+            cargarConfiguracion();
             actualizarEstado();
-            DialogUtils.showSuccess("Configuracion guardada.\nLa ruta y password del certificado se gestionan por properties o variables de entorno.");
+            DialogUtils.showSuccess("Datos VERI*FACTU guardados.\nLa ruta y password del certificado se gestionan por properties o variables de entorno.");
         } catch (Exception e) {
             log.error("Error guardando configuracion de Verifactu", e);
             DialogUtils.showError("Error al guardar: " + e.getMessage());
@@ -264,12 +279,58 @@ public class VerifactuController {
     }
 
     @FXML
-    public void onProbar() {
-        if (!verifactuHabilitado) {
-            DialogUtils.showWarning("Verifactu esta deshabilitado.");
+    public void onIniciarVerifactu() {
+        if (!verificarPermiso("enviar")) {
+            return;
+        }
+        String nif = txtNif != null ? txtNif.getText() : "";
+        if (nif == null || nif.isBlank()) {
+            DialogUtils.showWarning("Introduce el NIF del emisor antes de iniciar VERI*FACTU.");
+            return;
+        }
+        if (!verifactuService.isAeatAvailable()) {
+            DialogUtils.showWarning("No se puede iniciar VERI*FACTU sin AEAT y certificado disponibles. Revisa keystore, alias, password y verifactu.aeat.enabled.");
+            return;
+        }
+        if (!DialogUtils.showConfirm("Iniciar funcionamiento VERI*FACTU para esta empresa?\n\nDesde este momento se remitiran los registros de facturacion a la AEAT y debera mantenerse, como minimo, hasta el 31 de diciembre del anio en curso.")) {
             return;
         }
 
+        try {
+            empresaConfigService.iniciarFuncionamientoVerifactu(nif);
+            cargarConfiguracion();
+            DialogUtils.showSuccess("Funcionamiento VERI*FACTU iniciado para esta empresa.");
+        } catch (Exception e) {
+            log.error("Error iniciando VERI*FACTU", e);
+            DialogUtils.showError("No se pudo iniciar VERI*FACTU: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onProgramarRenuncia() {
+        if (!verificarPermiso("enviar")) {
+            return;
+        }
+        if (!verifactuOperativo) {
+            DialogUtils.showWarning("La empresa no esta funcionando actualmente como VERI*FACTU.");
+            return;
+        }
+        if (!DialogUtils.showConfirm("Programar renuncia a VERI*FACTU para el 31 de diciembre del anio en curso?\n\nHasta esa fecha el sistema seguira funcionando como VERI*FACTU.")) {
+            return;
+        }
+
+        try {
+            empresaConfigService.programarRenunciaVerifactuFinDeAnio();
+            cargarConfiguracion();
+            DialogUtils.showSuccess("Renuncia VERI*FACTU programada para fin de anio.");
+        } catch (Exception e) {
+            log.error("Error programando renuncia VERI*FACTU", e);
+            DialogUtils.showError("No se pudo programar la renuncia: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onProbar() {
         if (verifactuService.isAeatAvailable()) {
             DialogUtils.showSuccess("AEAT y certificado estan disponibles para emitir.");
         } else {
@@ -280,8 +341,11 @@ public class VerifactuController {
 
     @FXML
     public void onEnviar() {
-        if (!verifactuHabilitado) {
-            DialogUtils.showWarning("Verifactu esta deshabilitado. Activalo primero.");
+        if (!verificarPermiso("enviar")) {
+            return;
+        }
+        if (!verifactuOperativo) {
+            DialogUtils.showWarning("La empresa no esta en funcionamiento VERI*FACTU. Inicia el funcionamiento antes de emitir.");
             return;
         }
 
@@ -385,6 +449,9 @@ public class VerifactuController {
 
     @FXML
     public void onReenviar() {
+        if (!verificarPermiso("enviar")) {
+            return;
+        }
         VerifactuEvidence selected = tableEnvios.getSelectionModel().getSelectedItem();
         if (selected == null) {
             DialogUtils.showWarning("Selecciona un registro.");
@@ -397,6 +464,9 @@ public class VerifactuController {
 
     @FXML
     public void onExportar() {
+        if (!verificarPermiso("exportar")) {
+            return;
+        }
         List<VerifactuEvidence> registros = new ArrayList<>(tableEnvios.getItems());
         if (registros.isEmpty()) {
             DialogUtils.showWarning("No hay registros VeriFactu para exportar.");
@@ -472,6 +542,8 @@ public class VerifactuController {
         if (btnEnviar != null) btnEnviar.setDisable(busy);
         if (btnGuardar != null) btnGuardar.setDisable(busy);
         if (btnProbar != null) btnProbar.setDisable(busy);
+        if (btnIniciar != null) btnIniciar.setDisable(busy || verifactuOperativo);
+        if (btnRenuncia != null) btnRenuncia.setDisable(busy || !verifactuOperativo);
         if (progressIndicator != null) {
             if (!busy) {
                 progressIndicator.progressProperty().unbind();
@@ -482,5 +554,21 @@ public class VerifactuController {
         if (lblInfo != null) {
             lblInfo.setText(infoText);
         }
+    }
+
+    private boolean verificarPermiso(String accion) {
+        if (empresaConfigService == null || accion == null) {
+            return false;
+        }
+        try {
+            var auth = alicanteweb.erp.ErpLauncher.getSpringContext().getBean(alicanteweb.erp.service.AutenticacionService.class);
+            if (auth.tienePermiso("verifactu", accion)) {
+                return true;
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo verificar permiso VERI*FACTU {}", accion, e);
+        }
+        DialogUtils.showWarning("No tiene permisos para esta accion de VERI*FACTU.");
+        return false;
     }
 }

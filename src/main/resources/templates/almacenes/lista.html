@@ -1,0 +1,8 @@
+﻿<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/almacenes/nuevo}" class="btn btn-success btn-sm">+ Nuevo</a></div>
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div class="table-card"><table class="table table-hover">
+        <thead><tr><th>Código</th><th>Nombre</th><th>Capacidad</th><th>Localidad</th><th>Responsable</th></tr></thead>
+        <tbody><tr th:each="a : ${almacenes}"><td th:text="${a.codigo}"></td><td th:text="${a.nombre}"></td><td th:text="${a.capacidad}"></td><td th:text="${a.localidad}"></td><td th:text="${a.responsable}"></td></tr></tbody>
+    </table></div>
+</div>

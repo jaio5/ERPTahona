@@ -1,0 +1,7 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Controles APPCC</h4><a th:href="@{/web/appcc/nuevo}" class="btn btn-success btn-sm">+ Nuevo</a></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Fecha</th><th>Punto critico</th><th>Temperatura</th><th>Limite</th><th>Resultado</th><th>Responsable</th></tr></thead>
+        <tbody><tr th:each="c : ${controles}"><td th:text="${c.fecha}"></td><td th:text="${c.puntoCritico}"></td><td th:text="${c.temperatura}"></td><td th:text="${c.limiteCritico}"></td><td th:text="${c.resultado}"></td><td th:text="${c.responsable}"></td></tr></tbody>
+    </table>
+</section>

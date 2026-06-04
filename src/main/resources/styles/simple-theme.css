@@ -411,3 +411,35 @@
     -fx-font-weight: 700;
     -fx-text-fill: #147d64;
 }
+
+/* ScrollPane del sidebar: barra de scroll estilizada */
+.sidebar-scroll {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+
+.sidebar-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.sidebar-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 6px;
+    -fx-padding: 0;
+}
+
+.sidebar-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #d0d5dd;
+    -fx-background-radius: 3px;
+    -fx-pref-width: 6px;
+}
+
+.sidebar-scroll .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+
+.sidebar-scroll .scroll-bar .increment-button,
+.sidebar-scroll .scroll-bar .decrement-button {
+    -fx-padding: 0;
+    -fx-opacity: 0;
+}

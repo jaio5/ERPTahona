@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,6 +54,7 @@ public class EmpresaConfigService {
      */
     @Transactional
     public EmpresaConfig save(EmpresaConfig config) {
+        protegerEstadoVerifactu(config);
         // Si se marca como activa, desactivar las demás
         if (Boolean.TRUE.equals(config.getActivo())) {
             List<EmpresaConfig> todas = empresaConfigRepository.findAll();
@@ -66,6 +69,70 @@ public class EmpresaConfigService {
         EmpresaConfig saved = empresaConfigRepository.save(config);
         log.info("Configuración de empresa guardada: {}", saved.getNombreEmpresa());
         return saved;
+    }
+
+    @Transactional
+    public EmpresaConfig guardarDatosVerifactu(String nifEmisor) {
+        EmpresaConfig config = getConfiguracionActivaOrThrow();
+        if (nifEmisor != null && !nifEmisor.isBlank()) {
+            config.setVerifactuNifEmisor(nifEmisor.trim());
+        }
+        return empresaConfigRepository.save(config);
+    }
+
+    @Transactional
+    public EmpresaConfig iniciarFuncionamientoVerifactu(String nifEmisor) {
+        if (nifEmisor == null || nifEmisor.isBlank()) {
+            throw new IllegalArgumentException("El NIF del emisor es obligatorio para iniciar VERI*FACTU.");
+        }
+
+        EmpresaConfig config = getConfiguracionActivaOrThrow();
+        boolean yaEstabaVigente = isFuncionamientoVerifactuVigente(config);
+        config.setVerifactuHabilitado(true);
+        config.setVerifactuNifEmisor(nifEmisor.trim());
+        if (config.getVerifactuFechaInicio() == null || !yaEstabaVigente) {
+            config.setVerifactuFechaInicio(LocalDate.now());
+        }
+        config.setVerifactuFechaRenuncia(null);
+        EmpresaConfig saved = empresaConfigRepository.save(config);
+        log.info("Funcionamiento VERI*FACTU iniciado para {} desde {}", saved.getNombreEmpresa(), saved.getVerifactuFechaInicio());
+        return saved;
+    }
+
+    @Transactional
+    public EmpresaConfig programarRenunciaVerifactuFinDeAnio() {
+        EmpresaConfig config = getConfiguracionActivaOrThrow();
+        if (!isFuncionamientoVerifactuVigente(config)) {
+            throw new IllegalStateException("La empresa no esta funcionando actualmente como VERI*FACTU.");
+        }
+
+        LocalDate finDeAnio = LocalDate.of(LocalDate.now().getYear(), Month.DECEMBER, 31);
+        config.setVerifactuFechaRenuncia(finDeAnio);
+        EmpresaConfig saved = empresaConfigRepository.save(config);
+        log.info("Renuncia VERI*FACTU programada para {} en {}", saved.getNombreEmpresa(), finDeAnio);
+        return saved;
+    }
+
+    public boolean isFuncionamientoVerifactuVigente(EmpresaConfig config) {
+        if (config == null || !Boolean.TRUE.equals(config.getVerifactuHabilitado())) {
+            return false;
+        }
+        LocalDate renuncia = config.getVerifactuFechaRenuncia();
+        return renuncia == null || !LocalDate.now().isAfter(renuncia);
+    }
+
+    private void protegerEstadoVerifactu(EmpresaConfig config) {
+        if (config == null || config.getId() == null) {
+            return;
+        }
+
+        empresaConfigRepository.findById(config.getId()).ifPresent(actual -> {
+            boolean estabaVigente = isFuncionamientoVerifactuVigente(actual);
+            boolean quedaHabilitado = Boolean.TRUE.equals(config.getVerifactuHabilitado());
+            if (estabaVigente && !quedaHabilitado) {
+                throw new IllegalStateException("VERI*FACTU no puede desactivarse directamente. Debe programarse la renuncia para el 31 de diciembre del anio en curso.");
+            }
+        });
     }
 
     /**

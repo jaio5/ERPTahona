@@ -9,12 +9,8 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.WebApplicationType;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import alicanteweb.erp.config.VerifactuProperties;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -40,9 +36,6 @@ import java.util.Map;
  * @see SpringBootApplication
  * @see Application
  */
-@SpringBootApplication(scanBasePackages = "alicanteweb.erp")
-@EnableConfigurationProperties(VerifactuProperties.class)
-@EnableScheduling
 public class ErpLauncher extends Application {
 
     private static final Logger log = LoggerFactory.getLogger(ErpLauncher.class);
@@ -53,6 +46,18 @@ public class ErpLauncher extends Application {
     /** Expone el contexto de Spring para que los controladores JavaFX puedan obtener beans. */
     public static ConfigurableApplicationContext getSpringContext() {
         return springContext;
+    }
+
+    private static boolean isJavaFxMode(String[] args) {
+        if (args == null) {
+            return false;
+        }
+        for (String arg : args) {
+            if ("--javafx".equalsIgnoreCase(arg) || "--desktop".equalsIgnoreCase(arg)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -69,7 +74,7 @@ public class ErpLauncher extends Application {
     private ConfigurableApplicationContext crearContexto(boolean modoFallback) {
         Map<String, String> propiedadesPrevias = null;
         try {
-            SpringApplicationBuilder builder = new SpringApplicationBuilder(ErpLauncher.class)
+            SpringApplicationBuilder builder = new SpringApplicationBuilder(ErpWebApplication.class)
                     .headless(false)
                     .web(WebApplicationType.NONE);
 
@@ -195,7 +200,13 @@ public class ErpLauncher extends Application {
     }
 
     public static void main(String[] args) {
-        Application.launch(ErpLauncher.class, args);
+        if (isJavaFxMode(args)) {
+            Application.launch(ErpLauncher.class, args);
+            return;
+        }
+
+        log.info("Iniciando ERP Tahona en modo web...");
+        ErpWebApplication.main(args);
     }
 
     /** Guarda la traza del error en {@code run_error.log} para diagnóstico. */

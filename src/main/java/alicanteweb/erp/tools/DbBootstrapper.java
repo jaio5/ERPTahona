@@ -20,7 +20,8 @@ public class DbBootstrapper {
     public static void main(String[] args) {
         String url = "jdbc:mysql://localhost:3306/?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
         String user = "root";
-        String pass = "Iirne322*";
+        String pass = System.getenv("MYSQL_ROOT_PASSWORD");
+        if (pass == null || pass.isBlank()) pass = "";
         String dbName = "tahona";
         if (args.length >= 1) dbName = args[0];
         if (args.length >= 2) user = args[1];

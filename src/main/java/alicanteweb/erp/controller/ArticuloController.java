@@ -221,6 +221,9 @@ public class ArticuloController extends BaseController<Articulo> {
 
     @FXML
     public void onDarBajaArticulo() {
+        if (!verificarPermisoAccion("editar")) {
+            return;
+        }
         Articulo seleccionado = tableArticulos.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAdvertencia("Selecciona un artículo para dar de baja");

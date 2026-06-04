@@ -129,6 +129,7 @@ public class UsuarioService {
 
         // Actualizar contraseña
         usuario.setPassword(cifradoService.hashPassword(newPassword));
+        usuario.setRequiereCambioPassword(false);
         usuarioRepository.save(usuario);
 
         // Auditar
@@ -148,6 +149,7 @@ public class UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
         usuario.setPassword(cifradoService.hashPassword(newPassword));
+        usuario.setRequiereCambioPassword(false);
         usuarioRepository.save(usuario);
 
         auditoriaService.registrarAccion(null, "CAMBIO_PASSWORD_ADMIN", "Usuario", usuarioId.toString(),

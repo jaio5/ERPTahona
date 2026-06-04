@@ -168,6 +168,9 @@ public class ClienteController extends BaseController<Cliente> {
 
     @FXML
     public void onDesactivarCliente() {
+        if (!verificarPermisoAccion("editar")) {
+            return;
+        }
         var seleccionado = tableClientes.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAdvertencia("Selecciona un cliente para dar de baja");
@@ -185,6 +188,9 @@ public class ClienteController extends BaseController<Cliente> {
 
     @FXML
     public void onActivarCliente() {
+        if (!verificarPermisoAccion("editar")) {
+            return;
+        }
         var seleccionado = tableClientes.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarAdvertencia("Selecciona un cliente para activar");

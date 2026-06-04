@@ -76,10 +76,34 @@ class ClienteDatosExternosServiceTest {
     }
 
     @Test
+    void buscarCoincidenciasPorNombre_devuelveTodosLosResultadosUtiles() {
+        ClienteDatosExternosService service = crearServicio(true, "secret");
+        RestTemplate restTemplate = (RestTemplate) ReflectionTestUtils.getField(service, "restTemplate");
+        MockRestServiceServer server = MockRestServiceServer.createServer(restTemplate);
+
+        server.expect(requestTo("https://api.test/companies?q=Tahona"))
+            .andRespond(withSuccess("""
+                {"data":[
+                  {"razon_social":"Tahona Centro SL","nif":"B12345674","municipio":"Alicante"},
+                  {"razon_social":"Tahona Norte SL","nif":"B22222222","municipio":"San Vicente"},
+                  {}
+                ]}
+                """, MediaType.APPLICATION_JSON));
+
+        var res = service.buscarCoincidenciasPorNombre("Tahona");
+
+        assertEquals(2, res.size());
+        assertEquals("Tahona Centro SL", res.get(0).getNombre());
+        assertEquals("Tahona Norte SL", res.get(1).getNombre());
+        server.verify();
+    }
+
+    @Test
     void noConsultaSiEstaDeshabilitadoODatosVacios() {
         ClienteDatosExternosService service = crearServicio(false, "secret");
         assertTrue(service.buscarPorCif("B12345674").isEmpty());
         assertTrue(service.buscarPorNombre("Tahona").isEmpty());
+        assertTrue(service.buscarCoincidenciasPorNombre("Tahona").isEmpty());
     }
 
     @Test

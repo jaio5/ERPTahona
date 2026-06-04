@@ -1,0 +1,7 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Horneadas</h4><a th:href="@{/web/horneadas/nuevo}" class="btn btn-success btn-sm">+ Registrar</a></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Fecha</th><th>Tipo</th><th>Temp. inicial</th><th>Temp. final</th><th>Cantidad</th><th>Resultado</th></tr></thead>
+        <tbody><tr th:each="h : ${horneadas}"><td th:text="${h.fecha}"></td><td th:text="${h.tipoHorneada}"></td><td th:text="${h.temperaturaInicial}"></td><td th:text="${h.temperaturaFinal}"></td><td th:text="${h.cantidadProducida}"></td><td th:text="${h.resultado}"></td></tr></tbody>
+    </table>
+</section>

@@ -22,14 +22,28 @@ public class GitUpdateService {
     private final Duration timeout;
     private final File workDir;
     private final GitCommandRunner commandRunner;
+    private final boolean backupBeforeUpdate;
+    private final BackupService backupService;
 
     @Autowired
     public GitUpdateService(@Value("${app.update.enabled:true}") boolean enabled,
                             @Value("${app.update.remote:origin}") String remote,
                             @Value("${app.update.branch:produccion}") String branch,
                             @Value("${app.update.timeout-seconds:60}") int timeoutSeconds,
-                            @Value("${app.update.workdir:}") String configuredWorkDir) {
-        this(enabled, remote, branch, timeoutSeconds, configuredWorkDir, new ProcessGitCommandRunner());
+                            @Value("${app.update.workdir:}") String configuredWorkDir,
+                            @Value("${app.update.backup-before-update:true}") boolean backupBeforeUpdate,
+                            BackupService backupService) {
+        this(enabled, remote, branch, timeoutSeconds, configuredWorkDir, backupBeforeUpdate, backupService,
+            new ProcessGitCommandRunner());
+    }
+
+    GitUpdateService(boolean enabled,
+                     String remote,
+                      String branch,
+                      int timeoutSeconds,
+                      String configuredWorkDir,
+                      GitCommandRunner commandRunner) {
+        this(enabled, remote, branch, timeoutSeconds, configuredWorkDir, false, null, commandRunner);
     }
 
     GitUpdateService(boolean enabled,
@@ -37,6 +51,8 @@ public class GitUpdateService {
                      String branch,
                      int timeoutSeconds,
                      String configuredWorkDir,
+                     boolean backupBeforeUpdate,
+                     BackupService backupService,
                      GitCommandRunner commandRunner) {
         this.enabled = enabled;
         this.remote = remote;
@@ -46,6 +62,8 @@ public class GitUpdateService {
             ? new File(System.getProperty("user.dir"))
             : new File(configuredWorkDir);
         this.commandRunner = commandRunner;
+        this.backupBeforeUpdate = backupBeforeUpdate;
+        this.backupService = backupService;
     }
 
     public UpdateStatus checkForUpdates() {
@@ -86,8 +104,35 @@ public class GitUpdateService {
             return UpdateResult.notUpdated("Hay cambios locales en la carpeta de la aplicación. Revisa el repositorio antes de actualizar.");
         }
 
+        String backupPath = null;
+        if (backupBeforeUpdate) {
+            try {
+                backupPath = realizarBackupPrevio();
+            } catch (Exception e) {
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+                return UpdateResult.notUpdated("Actualizacion cancelada: no se pudo crear el backup previo. "
+                    + e.getMessage());
+            }
+        }
+
         CommandResult result = runGit("pull", "--ff-only", remote, branch);
+        if (backupPath != null && !backupPath.isBlank()) {
+            String message = result.stdout().isBlank() ? "Actualizacion aplicada." : result.stdout();
+            return UpdateResult.updated("Backup previo creado: " + backupPath + "\n\n" + message);
+        }
         return UpdateResult.updated(result.stdout().isBlank() ? "Actualización aplicada." : result.stdout());
+    }
+
+    private String realizarBackupPrevio() throws IOException, InterruptedException {
+        if (backupService == null) {
+            throw new IllegalStateException("servicio de backups no disponible");
+        }
+        if (!backupService.verificarDisponibilidad()) {
+            throw new IllegalStateException("mysqldump no esta disponible");
+        }
+        return backupService.realizarBackup();
     }
 
     private boolean isGitRepository() {

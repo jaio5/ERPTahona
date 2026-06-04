@@ -16,6 +16,9 @@ public interface AlbaranVentaRepository extends JpaRepository<AlbaranVenta, Long
     @Query("SELECT DISTINCT a FROM AlbaranVenta a LEFT JOIN FETCH a.cliente LEFT JOIN FETCH a.almacen")
     List<AlbaranVenta> findAllWithRelations();
 
+    @Query("SELECT DISTINCT a FROM AlbaranVenta a LEFT JOIN FETCH a.cliente LEFT JOIN FETCH a.almacen LEFT JOIN FETCH a.albaranVentaLineas l LEFT JOIN FETCH l.articulo WHERE a.id = :id")
+    Optional<AlbaranVenta> findByIdWithPdfData(Long id);
+
     List<AlbaranVenta> findByCliente_Id(Long clienteId);
 
     /**

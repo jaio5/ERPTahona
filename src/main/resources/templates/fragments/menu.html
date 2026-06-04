@@ -1,0 +1,112 @@
+<nav th:fragment="menu" class="sidebar">
+    <div class="sidebar-brand">
+        <h5>Tahona</h5>
+        <small>ERP de obrador</small>
+    </div>
+
+    <div class="sidebar-section">Hoy</div>
+    <a class="sidebar-link" th:href="@{/web/dashboard}" th:classappend="${moduloActivo == 'dashboard' ? 'active' : ''}">
+        <i class="bi bi-speedometer2"></i><span>Panel</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/reportes}" th:classappend="${moduloActivo == 'reportes' ? 'active' : ''}">
+        <i class="bi bi-bar-chart-line"></i><span>Informes</span>
+    </a>
+
+    <div class="sidebar-section">Ventas</div>
+    <a class="sidebar-link" th:href="@{/web/facturas}" th:classappend="${moduloActivo == 'facturas' ? 'active' : ''}">
+        <i class="bi bi-receipt"></i><span>Facturas</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/albaranes}" th:classappend="${moduloActivo == 'albaranes' ? 'active' : ''}">
+        <i class="bi bi-truck"></i><span>Albaranes</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/pedidos-venta}" th:classappend="${moduloActivo == 'pedidos-venta' ? 'active' : ''}">
+        <i class="bi bi-cart"></i><span>Pedidos venta</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/presupuestos}" th:classappend="${moduloActivo == 'presupuestos' ? 'active' : ''}">
+        <i class="bi bi-file-earmark-text"></i><span>Presupuestos</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/clientes}" th:classappend="${moduloActivo == 'clientes' ? 'active' : ''}">
+        <i class="bi bi-people"></i><span>Clientes</span>
+    </a>
+
+    <div class="sidebar-section">Operación</div>
+    <a class="sidebar-link" th:href="@{/web/articulos}" th:classappend="${moduloActivo == 'articulos' ? 'active' : ''}">
+        <i class="bi bi-box"></i><span>Artículos</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/almacenes}" th:classappend="${moduloActivo == 'almacenes' ? 'active' : ''}">
+        <i class="bi bi-building"></i><span>Almacenes</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/proveedores}" th:classappend="${moduloActivo == 'proveedores' ? 'active' : ''}">
+        <i class="bi bi-shop"></i><span>Proveedores</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/pedidos-compra}" th:classappend="${moduloActivo == 'pedidos-compra' ? 'active' : ''}">
+        <i class="bi bi-cart-check"></i><span>Pedidos compra</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/facturas-compra}" th:classappend="${moduloActivo == 'facturas-compra' ? 'active' : ''}">
+        <i class="bi bi-receipt-cutoff"></i><span>Facturas compra</span>
+    </a>
+
+    <div class="sidebar-section">Producción</div>
+    <a class="sidebar-link" th:href="@{/web/recetas}" th:classappend="${moduloActivo == 'recetas' ? 'active' : ''}">
+        <i class="bi bi-journal-code"></i><span>Recetas</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/ordenes-produccion}" th:classappend="${moduloActivo == 'ordenes-produccion' ? 'active' : ''}">
+        <i class="bi bi-gear"></i><span>Órdenes prod.</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/horneadas}" th:classappend="${moduloActivo == 'horneadas' ? 'active' : ''}">
+        <i class="bi bi-thermometer-half"></i><span>Horneadas</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/lotes}" th:classappend="${moduloActivo == 'lotes' ? 'active' : ''}">
+        <i class="bi bi-arrow-left-right"></i><span>Lotes / Trazab.</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/appcc}" th:classappend="${moduloActivo == 'appcc' ? 'active' : ''}">
+        <i class="bi bi-clipboard-check"></i><span>APPCC</span>
+    </a>
+
+    <div class="sidebar-section">Reparto</div>
+    <a class="sidebar-link" th:href="@{/web/vehiculos}" th:classappend="${moduloActivo == 'vehiculos' ? 'active' : ''}">
+        <i class="bi bi-car-front"></i><span>Vehículos</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/rutas}" th:classappend="${moduloActivo == 'rutas' ? 'active' : ''}">
+        <i class="bi bi-signpost-2"></i><span>Rutas</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/hojas-ruta}" th:classappend="${moduloActivo == 'hojas-ruta' ? 'active' : ''}">
+        <i class="bi bi-map"></i><span>Hojas de ruta</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/devoluciones}" th:classappend="${moduloActivo == 'devoluciones' ? 'active' : ''}">
+        <i class="bi bi-arrow-return-left"></i><span>Devoluciones</span>
+    </a>
+
+    <div class="sidebar-section">Control</div>
+    <a class="sidebar-link" th:href="@{/web/contabilidad}" th:classappend="${moduloActivo == 'contabilidad' ? 'active' : ''}">
+        <i class="bi bi-calculator"></i><span>Contabilidad</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/tesoreria}" th:classappend="${moduloActivo == 'tesoreria' ? 'active' : ''}">
+        <i class="bi bi-cash-stack"></i><span>Tesorería</span>
+    </a>
+
+    <div class="sidebar-section">Admin</div>
+    <a class="sidebar-link" th:href="@{/web/importar}" th:classappend="${moduloActivo == 'importar' ? 'active' : ''}">
+        <i class="bi bi-upload"></i><span>Importar datos</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/buscar}" th:classappend="${moduloActivo == 'buscar' ? 'active' : ''}">
+        <i class="bi bi-search"></i><span>Búsqueda global</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/usuarios}" th:classappend="${moduloActivo == 'usuarios' ? 'active' : ''}">
+        <i class="bi bi-person-badge"></i><span>Usuarios</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/backups}" th:classappend="${moduloActivo == 'backups' ? 'active' : ''}">
+        <i class="bi bi-cloud-download"></i><span>Backups</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/empresa}" th:classappend="${moduloActivo == 'empresa' ? 'active' : ''}">
+        <i class="bi bi-building-gear"></i><span>Empresa</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/auditoria}" th:classappend="${moduloActivo == 'auditoria' ? 'active' : ''}">
+        <i class="bi bi-clipboard-data"></i><span>AuditorÃ­a</span>
+    </a>
+
+    <div class="sidebar-footer">
+        <small th:text="${session.usuarioNombre} ?: 'No autenticado'"></small>
+        <br><a th:href="@{/web/logout}" class="text-white-50" style="font-size:12px;">Cerrar sesión</a>
+    </div>
+</nav>

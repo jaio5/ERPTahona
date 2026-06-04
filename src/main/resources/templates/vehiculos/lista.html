@@ -1,0 +1,7 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Vehiculos</h4><a th:href="@{/web/vehiculos/nuevo}" class="btn btn-success btn-sm">+ Nuevo</a></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Matricula</th><th>Marca</th><th>Modelo</th><th>Tipo</th><th>Capacidad kg</th></tr></thead>
+        <tbody><tr th:each="v : ${vehiculos}"><td th:text="${v.matricula}"></td><td th:text="${v.marca}"></td><td th:text="${v.modelo}"></td><td th:text="${v.tipo}"></td><td th:text="${v.capacidadKg}"></td></tr></tbody>
+    </table>
+</section>

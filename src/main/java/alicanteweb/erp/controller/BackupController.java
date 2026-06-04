@@ -1,6 +1,7 @@
 package alicanteweb.erp.controller;
 
 import alicanteweb.erp.service.BackupService;
+import alicanteweb.erp.service.AutenticacionService;
 import alicanteweb.erp.ui.DialogUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -30,10 +31,12 @@ public class BackupController {
     @FXML private Label lblInfo;
 
     private final BackupService backupService;
+    private final AutenticacionService autenticacionService;
     private final ObservableList<BackupService.BackupInfo> backups = FXCollections.observableArrayList();
 
-    public BackupController(BackupService backupService) {
+    public BackupController(BackupService backupService, AutenticacionService autenticacionService) {
         this.backupService = backupService;
+        this.autenticacionService = autenticacionService;
     }
 
     @FXML
@@ -134,6 +137,9 @@ public class BackupController {
     // ----------------------------------
     @FXML
     public void onCrearBackup() {
+        if (!verificarPermiso("crear")) {
+            return;
+        }
         Task<String> task = new Task<>() {
             @Override
             protected String call() throws Exception {
@@ -151,6 +157,9 @@ public class BackupController {
 
     @FXML
     public void onRestaurarBackup() {
+        if (!verificarPermiso("restaurar")) {
+            return;
+        }
         BackupService.BackupInfo selected = tableBackups.getSelectionModel().getSelectedItem();
         if (selected == null) { mostrarAlerta("Seleccione un backup para restaurar"); return; }
         confirmAndRestore(selected);
@@ -158,6 +167,9 @@ public class BackupController {
 
     @FXML
     public void onEliminarBackup() {
+        if (!verificarPermiso("eliminar")) {
+            return;
+        }
         BackupService.BackupInfo selected = tableBackups.getSelectionModel().getSelectedItem();
         if (selected == null) { mostrarAlerta("Seleccione un backup para eliminar"); return; }
         confirmAndDelete(selected);
@@ -184,6 +196,9 @@ public class BackupController {
     // Confirmaciones y helpers
     // ----------------------------------
     private void confirmAndDelete(BackupService.BackupInfo info) {
+        if (!verificarPermiso("eliminar")) {
+            return;
+        }
         Platform.runLater(() -> {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
             confirm.setTitle("Eliminar backup");
@@ -210,6 +225,9 @@ public class BackupController {
     }
 
     private void confirmAndRestore(BackupService.BackupInfo info) {
+        if (!verificarPermiso("restaurar")) {
+            return;
+        }
         Platform.runLater(() -> {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
             confirm.setTitle("Restaurar backup");
@@ -238,4 +256,11 @@ public class BackupController {
     // ----------------------------------
     private void mostrarAlerta(String msg) { DialogUtils.showInfo(msg); }
     private void mostrarError(String msg) { DialogUtils.showError(msg); }
+    private boolean verificarPermiso(String accion) {
+        if (autenticacionService.tienePermiso("backup", accion)) {
+            return true;
+        }
+        DialogUtils.showWarning("No tiene permisos para " + accion + " backups.");
+        return false;
+    }
 }

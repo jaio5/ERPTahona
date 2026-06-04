@@ -2,6 +2,7 @@ package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.Usuario;
 import alicanteweb.erp.service.AutenticacionService;
+import alicanteweb.erp.service.UsuarioService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -37,11 +38,14 @@ public class LoginController {
     private Button loginButton;
 
     private final AutenticacionService autenticacionService;
+    private final UsuarioService usuarioService;
     private final ConfigurableApplicationContext springContext;
 
     public LoginController(AutenticacionService autenticacionService,
+                          UsuarioService usuarioService,
                           ConfigurableApplicationContext springContext) {
         this.autenticacionService = autenticacionService;
+        this.usuarioService = usuarioService;
         this.springContext = springContext;
     }
 
@@ -105,6 +109,13 @@ public class LoginController {
             if (usuario != null) {
                 log.info("✅ Login exitoso: {}", username);
 
+                if (Boolean.TRUE.equals(usuario.getRequiereCambioPassword()) && !forzarCambioPassword(usuario)) {
+                    autenticacionService.logout();
+                    loginButton.setDisable(false);
+                    loginButton.setText("Iniciar SesiÃ³n");
+                    return;
+                }
+
                 // Login exitoso - abrir panel principal
                 Platform.runLater(() -> {
                     try {
@@ -153,6 +164,42 @@ public class LoginController {
         stage.centerOnScreen();
 
         log.info("✅ Panel principal cargado exitosamente");
+    }
+
+    private boolean forzarCambioPassword(Usuario usuario) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Cambio de contrasena obligatorio");
+        dialog.setHeaderText("Debe cambiar la contrasena temporal antes de entrar.");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        PasswordField nueva = new PasswordField();
+        nueva.setPromptText("Nueva contrasena");
+        PasswordField confirmar = new PasswordField();
+        confirmar.setPromptText("Confirmar contrasena");
+        dialog.getDialogPane().setContent(new javafx.scene.layout.VBox(8,
+                new Label("Nueva contrasena:"), nueva,
+                new Label("Confirmar contrasena:"), confirmar));
+
+        Button okButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
+        okButton.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            String password = nueva.getText() != null ? nueva.getText() : "";
+            if (password.length() < 12) {
+                showError("La nueva contrasena debe tener al menos 12 caracteres");
+                event.consume();
+                return;
+            }
+            if (!password.equals(confirmar.getText())) {
+                showError("Las contrasenas no coinciden");
+                event.consume();
+            }
+        });
+
+        var result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            usuarioService.cambiarPasswordAdmin(usuario.getId(), nueva.getText());
+            return true;
+        }
+        return false;
     }
 
     private void showError(String message) {

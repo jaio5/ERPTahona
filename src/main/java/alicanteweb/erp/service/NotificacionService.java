@@ -2,9 +2,13 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.entities.Factura;
+import alicanteweb.erp.entities.Lote;
+import alicanteweb.erp.entities.OrdenProduccion;
 import alicanteweb.erp.entities.Presupuesto;
 import alicanteweb.erp.repository.ArticuloRepository;
 import alicanteweb.erp.repository.FacturaRepository;
+import alicanteweb.erp.repository.LoteRepository;
+import alicanteweb.erp.repository.OrdenProduccionRepository;
 import alicanteweb.erp.repository.PresupuestoRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -27,6 +31,8 @@ public class NotificacionService {
     private final PresupuestoRepository presupuestoRepository;
     private final ArticuloRepository articuloRepository;
     private final FacturaRepository facturaRepository;
+    private final LoteRepository loteRepository;
+    private final OrdenProduccionRepository ordenProduccionRepository;
 
     /**
      * Verifica presupuestos por caducar (ejecuta diariamente a las 9:00 AM)
@@ -226,8 +232,41 @@ public class NotificacionService {
             presupuestosCaducar,
             stockBajo,
             facturasPendientes,
+            (int) loteRepository.findByFechaCaducidadBetween(LocalDate.now(), LocalDate.now().plusDays(3)).size(),
+            (int) ordenProduccionRepository.findByEstado("PLANIFICADA").size(),
             presupuestosCaducar + stockBajo + facturasPendientes
         );
+    }
+
+    /**
+     * Verifica lotes próximos a caducar (diario a las 7:00 AM)
+     */
+    @Scheduled(cron = "0 0 7 * * ?")
+    public void verificarLotesProximosACaducar() {
+        log.info("🔔 Verificando lotes próximos a caducar...");
+        LocalDate hoy = LocalDate.now();
+        LocalDate en3Dias = hoy.plusDays(3);
+        List<Lote> lotes = loteRepository.findByFechaCaducidadBetween(hoy, en3Dias);
+        if (!lotes.isEmpty()) {
+            log.warn("⚠ {} lote(s) caducan en los próximos 3 días", lotes.size());
+            for (Lote l : lotes) {
+                log.warn("  - Lote {} ({}) caduca el {}", l.getCodigo(),
+                    l.getArticulo() != null ? l.getArticulo().getNombre() : "sin artículo",
+                    l.getFechaCaducidad());
+            }
+        }
+    }
+
+    /**
+     * Verifica órdenes de producción pendientes (diario a las 8:00 AM)
+     */
+    @Scheduled(cron = "0 0 8 * * ?")
+    public void verificarOrdenesPendientes() {
+        log.info("🔔 Verificando órdenes de producción pendientes...");
+        List<OrdenProduccion> planificadas = ordenProduccionRepository.findByEstado("PLANIFICADA");
+        if (!planificadas.isEmpty()) {
+            log.info("📋 {} orden(es) de producción planificadas pendientes", planificadas.size());
+        }
     }
 
     /**
@@ -237,6 +276,8 @@ public class NotificacionService {
         int presupuestosPorCaducar,
         int articulosStockBajo,
         int facturasPendientes,
+        int lotesPorCaducar,
+        int ordenesPendientes,
         int totalNotificaciones
     ) {}
 }

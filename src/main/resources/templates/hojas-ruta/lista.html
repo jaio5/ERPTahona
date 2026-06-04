@@ -1,0 +1,12 @@
+﻿<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/hojas-ruta/nuevo}" class="btn btn-success btn-sm">+ Nueva</a></div>
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div class="table-card"><table class="table table-hover">
+        <thead><tr><th>Fecha</th><th>Conductor</th><th>Estado</th><th style="width:100px;"></th></tr></thead>
+        <tbody><tr th:each="h : ${hojas}">
+            <td th:text="${h.fecha}"></td><td th:text="${h.conductor}"></td>
+            <td><span class="badge-status" th:classappend="${h.estado == 'EN_CURSO' ? 'bg-progress' : h.estado == 'FINALIZADA' ? 'bg-completed' : 'bg-draft'}" th:text="${h.estado}"></span></td>
+            <td><a th:href="@{/web/hojas-ruta/{id}(id=${h.id})}" class="btn btn-outline-secondary btn-sm">Ver</a></td>
+        </tr></tbody>
+    </table></div>
+</div>

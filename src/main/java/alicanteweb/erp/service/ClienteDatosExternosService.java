@@ -15,6 +15,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -49,18 +51,26 @@ public class ClienteDatosExternosService {
     }
 
     public Optional<ClienteDatosExternos> buscarPorCif(String cif) {
-        String cifNormalizado = normalizar(cif);
-        return buscar(cifParam, cifNormalizado);
+        return buscarCoincidenciasPorCif(cif).stream().findFirst();
     }
 
     public Optional<ClienteDatosExternos> buscarPorNombre(String nombre) {
-        String nombreNormalizado = nombre == null ? "" : nombre.trim();
-        return buscar(nombreParam, nombreNormalizado);
+        return buscarCoincidenciasPorNombre(nombre).stream().findFirst();
     }
 
-    private Optional<ClienteDatosExternos> buscar(String parametro, String valor) {
+    public List<ClienteDatosExternos> buscarCoincidenciasPorCif(String cif) {
+        String cifNormalizado = normalizar(cif);
+        return buscarCoincidencias(cifParam, cifNormalizado);
+    }
+
+    public List<ClienteDatosExternos> buscarCoincidenciasPorNombre(String nombre) {
+        String nombreNormalizado = nombre == null ? "" : nombre.trim();
+        return buscarCoincidencias(nombreParam, nombreNormalizado);
+    }
+
+    private List<ClienteDatosExternos> buscarCoincidencias(String parametro, String valor) {
         if (!enabled || endpoint == null || endpoint.isBlank() || valor == null || valor.isBlank()) {
-            return Optional.empty();
+            return List.of();
         }
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("Configura CLIENTES_AUTOCOMPLETAR_API_KEY para consultar datos externos");
@@ -78,15 +88,25 @@ public class ClienteDatosExternosService {
         try {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null || response.getBody().isBlank()) {
-                return Optional.empty();
+                return List.of();
             }
             JsonNode root = objectMapper.readTree(response.getBody());
             JsonNode data = root.has("data") ? root.path("data") : root;
+            List<ClienteDatosExternos> resultados = new ArrayList<>();
             if (data.isArray()) {
-                data = data.isEmpty() ? objectMapper.createObjectNode() : data.get(0);
+                data.forEach(item -> {
+                    ClienteDatosExternos datos = mapear(item);
+                    if (datos.tieneDatosUtiles()) {
+                        resultados.add(datos);
+                    }
+                });
+            } else {
+                ClienteDatosExternos datos = mapear(data);
+                if (datos.tieneDatosUtiles()) {
+                    resultados.add(datos);
+                }
             }
-            ClienteDatosExternos datos = mapear(data);
-            return datos.tieneDatosUtiles() ? Optional.of(datos) : Optional.empty();
+            return resultados;
         } catch (RestClientException e) {
             throw new IllegalStateException("No se pudo consultar la API de empresas: " + e.getMessage(), e);
         } catch (Exception e) {

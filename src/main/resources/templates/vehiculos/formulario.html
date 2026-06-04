@@ -1,0 +1,13 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Nuevo vehiculo</h4><a th:href="@{/web/vehiculos}" class="btn btn-outline-secondary btn-sm">Volver</a></div>
+    <form th:action="@{/web/vehiculos}" method="post" class="card p-3">
+        <div class="row g-3">
+            <div class="col-md-4"><label class="form-label">Matricula</label><input name="matricula" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label">Marca</label><input name="marca" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">Modelo</label><input name="modelo" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">Tipo</label><input name="tipo" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">Capacidad kg</label><input name="capacidad" type="number" step="0.01" class="form-control"></div>
+        </div>
+        <div class="mt-4"><button class="btn btn-primary" type="submit">Guardar</button><a th:href="@{/web/vehiculos}" class="btn btn-outline-secondary ms-2">Cancelar</a></div>
+    </form>
+</section>

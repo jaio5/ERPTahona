@@ -1,0 +1,47 @@
+<div th:fragment="content">
+    <div class="topbar">
+        <h4 th:text="'Factura ' + ${factura.numero}"></h4>
+        <a th:href="@{/web/facturas}" class="btn btn-outline-secondary btn-sm">Volver</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="form-card mb-3">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <small class="text-muted">Cliente</small>
+                        <h6 th:text="${factura.cliente?.nombre}">-</h6>
+                        <small th:text="${factura.cliente?.cif}"></small>
+                    </div>
+                    <div class="col-6 text-end">
+                        <small class="text-muted">Estado</small>
+                        <span class="badge-status ms-2" th:classappend="${factura.estado == 'EMITIDA' ? 'bg-emitted' : factura.estado == 'ANULADA' ? 'bg-cancelled' : 'bg-draft'}" th:text="${factura.estado}"></span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-4"><small class="text-muted">Fecha</small><br><span th:text="${factura.fecha != null ? #temporals.format(factura.fecha, 'dd/MM/yyyy') : '-'}"></span></div>
+                    <div class="col-4"><small class="text-muted">Base imponible</small><br><span th:text="${factura.baseImponible != null ? #numbers.formatCurrency(factura.baseImponible) : '-'}"></span></div>
+                    <div class="col-4"><small class="text-muted">Total IVA</small><br><span th:text="${factura.totalIva != null ? #numbers.formatCurrency(factura.totalIva) : '-'}"></span></div>
+                </div>
+                <div class="text-end border-top pt-3">
+                    <h5 class="mb-0" th:text="'Total: ' + (${factura.total} != null ? #numbers.formatCurrency(factura.total) : '0,00 €')"></h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-card">
+                <h6 class="mb-3">Acciones</h6>
+                <div class="d-grid gap-2">
+                    <form th:if="${factura.estado == 'REVISION'}" th:action="@{/web/facturas/{id}/emitir(id=${factura.id})}" method="post">
+                        <button class="btn btn-success w-100">Emitir factura</button>
+                    </form>
+                    <form th:if="${factura.estado != 'ANULADA'}" th:action="@{/web/facturas/{id}/anular(id=${factura.id})}" method="post"
+                          onsubmit="return confirm('¿Anular esta factura?')">
+                        <button class="btn btn-outline-danger w-100">Anular factura</button>
+                    </form>
+                    <a th:href="@{/web/facturas/{id}/pdf(id=${factura.id})}" class="btn btn-outline-primary">Descargar PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

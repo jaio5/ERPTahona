@@ -1,16 +1,19 @@
 package alicanteweb.erp.controller.ui;
 
-import alicanteweb.erp.service.*;
-import javafx.fxml.FXML;
+import alicanteweb.erp.service.ArticuloService;
+import alicanteweb.erp.service.ClienteService;
+import alicanteweb.erp.service.FacturaService;
+import alicanteweb.erp.service.HojaRutaService;
+import alicanteweb.erp.service.LoteService;
+import alicanteweb.erp.service.OrdenProduccionService;
+import alicanteweb.erp.service.RecetaService;import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import org.springframework.stereotype.Controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 
-/**
- * Controlador para el Dashboard inicial
- */
 @Controller
 public class DashboardController {
     private static final Logger log = LoggerFactory.getLogger(DashboardController.class);
@@ -21,6 +24,13 @@ public class DashboardController {
     @FXML private Label lblArticulos;
     @FXML private Label lblFacturasHoy;
     @FXML private Label lblFacturasMes;
+
+    // KPIs nuevos
+    @FXML private Label lblOrdenesActivas;
+    @FXML private Label lblLotesCaducar;
+    @FXML private Label lblEntregasPendientes;
+    @FXML private Label lblRecetas;
+
     @FXML private javafx.scene.control.TableView<Object> tableUltimasFacturas;
     @FXML private javafx.scene.control.TableColumn<Object, String> colNumero;
     @FXML private javafx.scene.control.TableColumn<Object, String> colFecha;
@@ -31,13 +41,26 @@ public class DashboardController {
     private final ClienteService clienteService;
     private final ArticuloService articuloService;
     private final FacturaService facturaService;
+    private final OrdenProduccionService ordenProduccionService;
+    private final LoteService loteService;
+    private final HojaRutaService hojaRutaService;
+    private final RecetaService recetaService;
     private final MainPanelController mainPanelController;
 
     public DashboardController(ClienteService clienteService, ArticuloService articuloService,
-                              FacturaService facturaService, MainPanelController mainPanelController) {
+                               FacturaService facturaService,
+                               OrdenProduccionService ordenProduccionService,
+                               LoteService loteService,
+                               HojaRutaService hojaRutaService,
+                               RecetaService recetaService,
+                               MainPanelController mainPanelController) {
         this.clienteService = clienteService;
         this.articuloService = articuloService;
         this.facturaService = facturaService;
+        this.ordenProduccionService = ordenProduccionService;
+        this.loteService = loteService;
+        this.hojaRutaService = hojaRutaService;
+        this.recetaService = recetaService;
         this.mainPanelController = mainPanelController;
     }
 
@@ -55,26 +78,18 @@ public class DashboardController {
 
     private void cargarEstadisticas() {
         try {
-            // Cargar total de clientes
+            // KPIs originales
             long totalClientes = clienteService.findAll().size();
-            if (lblClientes != null) {
-                lblClientes.setText(String.valueOf(totalClientes));
-            }
+            if (lblClientes != null) lblClientes.setText(String.valueOf(totalClientes));
 
-            // Cargar total de artículos
             long totalArticulos = articuloService.findAll().size();
-            if (lblArticulos != null) {
-                lblArticulos.setText(String.valueOf(totalArticulos));
-            }
+            if (lblArticulos != null) lblArticulos.setText(String.valueOf(totalArticulos));
 
-            // Usar FacturaService para obtener facturas y poblar etiquetas/tabla
             try {
                 var facturas = facturaService.findAll();
                 int totalFacturas = facturas != null ? facturas.size() : 0;
                 if (lblFacturasHoy != null) lblFacturasHoy.setText(totalFacturas + " facturas");
                 if (lblFacturasMes != null) lblFacturasMes.setText(totalFacturas + " facturas");
-
-                // Asegurar que lblVentasDia/mes siempre se actualicen (evita warning de campo no usado)
                 if (lblVentasDia != null) lblVentasDia.setText("0.00 €");
                 if (lblVentasMes != null) lblVentasMes.setText("0.00 €");
 
@@ -91,56 +106,72 @@ public class DashboardController {
                 log.debug("No se pudieron cargar facturas para el dashboard: {}", e.getMessage());
             }
 
-            log.info("Estadísticas cargadas: {} clientes, {} artículos", totalClientes, totalArticulos);
+            // KPIs nuevos: Producción
+            try {
+                long ordenesActivas = ordenProduccionService.findByEstado("EN_CURSO").size()
+                        + ordenProduccionService.findByEstado("PLANIFICADA").size();
+                if (lblOrdenesActivas != null) lblOrdenesActivas.setText(String.valueOf(ordenesActivas));
+            } catch (Exception e) {
+                if (lblOrdenesActivas != null) lblOrdenesActivas.setText("-");
+            }
+
+            // KPIs nuevos: Trazabilidad
+            try {
+                long lotesCaducar = loteService.findByFechaCaducidadBetween(
+                        LocalDate.now(), LocalDate.now().plusDays(7)).size();
+                if (lblLotesCaducar != null) lblLotesCaducar.setText(String.valueOf(lotesCaducar));
+            } catch (Exception e) {
+                if (lblLotesCaducar != null) lblLotesCaducar.setText("-");
+            }
+
+            // KPIs nuevos: Reparto
+            try {
+                long entregasPendientes = hojaRutaService.findByEstado("EN_CURSO").size();
+                if (lblEntregasPendientes != null) lblEntregasPendientes.setText(String.valueOf(entregasPendientes));
+            } catch (Exception e) {
+                if (lblEntregasPendientes != null) lblEntregasPendientes.setText("-");
+            }
+
+            // KPIs nuevos: Recetas
+            try {
+                long totalRecetas = recetaService.findAll().size();
+                if (lblRecetas != null) lblRecetas.setText(String.valueOf(totalRecetas));
+            } catch (Exception e) {
+                if (lblRecetas != null) lblRecetas.setText("-");
+            }
+
+            log.info("Dashboard cargado: {} clientes, {} artículos, {} órdenes activas, {} recetas",
+                    totalClientes, totalArticulos,
+                    lblOrdenesActivas != null ? lblOrdenesActivas.getText() : "?",
+                    lblRecetas != null ? lblRecetas.getText() : "?");
         } catch (Exception e) {
             log.error("Error cargando estadísticas", e);
         }
     }
 
-    // Métodos de navegación usados por el dashboard FXML
+    // Métodos de navegación
     @FXML
-    public void onNuevaFactura() {
-        mainPanelController.onFacturas();
-    }
-
+    public void onNuevaFactura() { mainPanelController.onFacturas(); }
     @FXML
-    public void onNuevoAlbaran() {
-        mainPanelController.onAlbaranes();
-    }
-
+    public void onNuevoAlbaran() { mainPanelController.onAlbaranes(); }
     @FXML
-    public void onNuevoCliente() {
-        mainPanelController.onClientes();
-    }
-
+    public void onNuevoCliente() { mainPanelController.onClientes(); }
     @FXML
-    public void onNuevoArticulo() {
-        mainPanelController.onArticulos();
-    }
-
+    public void onNuevoArticulo() { mainPanelController.onArticulos(); }
     @FXML
-    public void onProveedores() {
-        mainPanelController.onProveedores();
-    }
-
+    public void onProveedores() { mainPanelController.onProveedores(); }
     @FXML
-    public void onCaja() {
-        mainPanelController.onCaja();
-    }
-
+    public void onCaja() { mainPanelController.onCaja(); }
     @FXML
-    public void onContabilidad() {
-        mainPanelController.onAsientos();
-    }
-
+    public void onContabilidad() { mainPanelController.onAsientos(); }
     @FXML
-    public void onPresupuestos() {
-        mainPanelController.onPresupuestos();
-    }
-
+    public void onPresupuestos() { mainPanelController.onPresupuestos(); }
     @FXML
-    public void onConfiguracion() {
-        mainPanelController.onEmpresaConfig();
-    }
-
+    public void onConfiguracion() { mainPanelController.onEmpresaConfig(); }
+    @FXML
+    public void onProduccion() { mainPanelController.onRecetas(); }
+    @FXML
+    public void onReparto() { mainPanelController.onHojasRuta(); }
+    @FXML
+    public void onTrazabilidad() { mainPanelController.onLotes(); }
 }

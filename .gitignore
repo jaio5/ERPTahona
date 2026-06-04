@@ -1,6 +1,7 @@
  # Compiled class files
 *.class
 target/
+dist/
 
 # Log files
 *.log
@@ -61,4 +62,5 @@ certs/*
 
 # Local config overrides
 application-local.properties
-
+.env.production.local
+.env.*.local

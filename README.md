@@ -1,12 +1,23 @@
 # ERP Tahona
 
-Aplicacion de escritorio JavaFX + Spring Boot para gestion ERP con soporte de facturacion, trazabilidad y adaptacion progresiva a VeriFactu.
+Aplicacion de escritorio JavaFX + Spring Boot para gestion ERP con soporte de facturacion, compras, ventas, clientes, proveedores, almacen, caja, auditoria, backups y preparacion VERI*FACTU.
 
 ## Requisitos
 
 - JDK 17 a JDK 23
 - Maven 3.9+
 - MySQL 8+ para uso normal
+
+## Documentacion
+
+- [Indice de documentacion](docs/index.md)
+- [Despliegue de produccion](docs/production-deployment.md)
+- [Checklist de produccion](docs/production-checklist.md)
+- [Operacion diaria](docs/operations.md)
+- [Configuracion](docs/configuration.md)
+- [Seguridad y autorizacion](docs/security-and-authorization.md)
+- [VERI*FACTU](docs/verifactu.md)
+- [Arquitectura](docs/architecture.md)
 
 ## Arranque local
 
@@ -44,7 +55,7 @@ $env:ERP_FALLBACK_H2_ENABLED="false"
 - Usa `SPRING_PROFILES_ACTIVE=prod`.
 - No se permite fallback automatico a H2.
 - Define siempre las variables obligatorias de `application-prod.properties`.
-- Mantén `spring.jpa.hibernate.ddl-auto=validate`; en produccion no se permite `update`.
+- Manten `spring.jpa.hibernate.ddl-auto=validate`; en produccion no se permite `update`.
 - Usa `.env.production.example` como plantilla, sin guardar secretos reales en Git.
 
 Ejemplo:

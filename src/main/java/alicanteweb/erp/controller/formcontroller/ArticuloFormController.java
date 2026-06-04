@@ -49,6 +49,7 @@ public class ArticuloFormController {
 
     // Estado
     @FXML private CheckBox chkActivo;
+    @FXML private TextField txtAlergenos;
     @FXML private Label lblErrCodigo;
     @FXML private Label lblErrNombre;
     @FXML private Label lblErrPrecioVenta;
@@ -314,6 +315,7 @@ public class ArticuloFormController {
 
         chkControlStock.setSelected(articulo.getControlStock() != null && articulo.getControlStock());
         chkActivo.setSelected(articulo.getActivo() != null ? articulo.getActivo() : true);
+        if (txtAlergenos != null) txtAlergenos.setText(articulo.getAlergenos() != null ? articulo.getAlergenos() : "");
 
         log.info("Datos cargados para artículo: {}", articulo.getId());
     }
@@ -395,6 +397,7 @@ public class ArticuloFormController {
 
             // Estado
             articuloActual.setActivo(chkActivo.isSelected());
+            if (txtAlergenos != null) articuloActual.setAlergenos(txtAlergenos.getText());
 
             // Guardar
             Articulo guardado = articuloService.save(articuloActual);

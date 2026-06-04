@@ -117,7 +117,7 @@ public class CifradoService {
                 try {
                     String token = generarTokenSeguro(16);
                     log.debug("Token seguro de diagnóstico generado: {}", token);
-                } catch (Exception ignored) {}
+                } catch (Exception e) { log.debug("Diagnóstico de generación de token fallido: {}", e.getMessage()); }
              }
         } catch (RuntimeException e) {
             // No encapsular; preferimos fallar rápido en caso de mala configuración en prod

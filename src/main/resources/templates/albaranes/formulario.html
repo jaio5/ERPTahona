@@ -1,0 +1,14 @@
+<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/albaranes}" class="btn btn-outline-secondary btn-sm">Volver</a></div>
+    <div class="form-card" style="max-width:600px;">
+        <form th:action="@{/web/albaranes}" method="post"><input type="hidden" name="id" th:value="${albaran?.id}">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Fecha *</label><input type="date" name="fecha" class="form-control" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required></div>
+                <div class="col-md-6"><label class="form-label">Almacén</label><select name="almacenId" class="form-select"><option value="">Seleccionar...</option><option th:each="a : ${almacenes}" th:value="${a.id}" th:text="${a.nombre}"></option></select></div>
+                <div class="col-12"><label class="form-label">Cliente *</label><select name="clienteId" class="form-select" required><option value="">Seleccionar cliente...</option><option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre}"></option></select></div>
+                <div class="col-12"><label class="form-label">Observaciones</label><textarea name="observaciones" class="form-control" rows="3"></textarea></div>
+            </div>
+            <div class="mt-4"><button type="submit" class="btn btn-primary">Guardar</button><a th:href="@{/web/albaranes}" class="btn btn-outline-secondary ms-2">Cancelar</a></div>
+        </form>
+    </div>
+</div>

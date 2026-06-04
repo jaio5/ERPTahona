@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class GitUpdateServiceTest {
 
@@ -91,6 +92,53 @@ class GitUpdateServiceTest {
 
         assertFalse(result.isUpdated());
         assertTrue(result.getMessage().contains("cambios locales"));
+        assertFalse(runner.commands.contains("pull --ff-only origin produccion"));
+    }
+
+    @Test
+    void update_creaBackupAntesDelPullSiEstaConfigurado() throws Exception {
+        FakeGitRunner runner = new FakeGitRunner()
+            .on("rev-parse --is-inside-work-tree", "true\n")
+            .on("branch --show-current", "produccion\n")
+            .on("fetch --quiet origin produccion:refs/remotes/origin/produccion", "")
+            .on("rev-parse HEAD", "local\n")
+            .on("rev-parse origin/produccion", "remote\n")
+            .on("rev-list --count HEAD..origin/produccion", "1\n")
+            .on("status --porcelain", "")
+            .on("pull --ff-only origin produccion", "Fast-forward\n");
+        BackupService backupService = mock(BackupService.class);
+        when(backupService.verificarDisponibilidad()).thenReturn(true);
+        when(backupService.realizarBackup()).thenReturn("backups/backup_previo.sql");
+        GitUpdateService service = new GitUpdateService(true, "origin", "produccion", 5, "",
+            true, backupService, runner);
+
+        GitUpdateService.UpdateResult result = service.update();
+
+        assertTrue(result.isUpdated());
+        assertTrue(result.getMessage().contains("backup_previo.sql"));
+        verify(backupService).realizarBackup();
+        assertTrue(runner.commands.contains("pull --ff-only origin produccion"));
+    }
+
+    @Test
+    void update_noHacePullSiNoPuedeCrearBackupPrevio() {
+        FakeGitRunner runner = new FakeGitRunner()
+            .on("rev-parse --is-inside-work-tree", "true\n")
+            .on("branch --show-current", "produccion\n")
+            .on("fetch --quiet origin produccion:refs/remotes/origin/produccion", "")
+            .on("rev-parse HEAD", "local\n")
+            .on("rev-parse origin/produccion", "remote\n")
+            .on("rev-list --count HEAD..origin/produccion", "1\n")
+            .on("status --porcelain", "");
+        BackupService backupService = mock(BackupService.class);
+        when(backupService.verificarDisponibilidad()).thenReturn(false);
+        GitUpdateService service = new GitUpdateService(true, "origin", "produccion", 5, "",
+            true, backupService, runner);
+
+        GitUpdateService.UpdateResult result = service.update();
+
+        assertFalse(result.isUpdated());
+        assertTrue(result.getMessage().contains("backup previo"));
         assertFalse(runner.commands.contains("pull --ff-only origin produccion"));
     }
 

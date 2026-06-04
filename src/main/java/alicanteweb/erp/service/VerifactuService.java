@@ -616,8 +616,8 @@ public class VerifactuService implements InitializingBean {
         EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
 
         // 2. Verificar que Verifactu está habilitado en la empresa
-        if (!Boolean.TRUE.equals(empresa.getVerifactuHabilitado())) {
-            throw new IllegalStateException("Verifactu está deshabilitado en la configuración de empresa");
+        if (!empresaConfigService.isFuncionamientoVerifactuVigente(empresa)) {
+            throw new IllegalStateException("La empresa no esta en funcionamiento VERI*FACTU vigente. Debe iniciarse desde la pantalla VERI*FACTU.");
         }
 
         // 3. Verificar estado de la factura

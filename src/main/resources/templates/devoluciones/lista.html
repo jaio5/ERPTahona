@@ -1,0 +1,7 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Devoluciones</h4><a th:href="@{/web/devoluciones/nuevo}" class="btn btn-success btn-sm">+ Nueva</a></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Numero</th><th>Fecha</th><th>Cliente</th><th>Motivo</th></tr></thead>
+        <tbody><tr th:each="d : ${devoluciones}"><td th:text="${d.numero}"></td><td th:text="${d.fecha}"></td><td th:text="${d.cliente != null ? d.cliente.nombre : ''}"></td><td th:text="${d.motivo}"></td></tr></tbody>
+    </table>
+</section>

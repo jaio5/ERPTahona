@@ -1,0 +1,7 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Rutas</h4><a th:href="@{/web/rutas/nuevo}" class="btn btn-success btn-sm">+ Nueva</a></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Codigo</th><th>Nombre</th><th>Conductor</th><th>Descripcion</th></tr></thead>
+        <tbody><tr th:each="r : ${rutas}"><td th:text="${r.codigo}"></td><td th:text="${r.nombre}"></td><td th:text="${r.conductor}"></td><td th:text="${r.descripcion}"></td></tr></tbody>
+    </table>
+</section>

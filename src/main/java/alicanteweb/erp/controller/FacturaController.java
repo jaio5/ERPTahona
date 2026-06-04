@@ -167,6 +167,9 @@ public class FacturaController extends BaseController<Factura> {
 
     @FXML
     public void onAnular() {
+        if (!verificarPermisoAccion("eliminar")) {
+            return;
+        }
         Factura selected = table.getSelectionModel().getSelectedItem();
         if (selected != null) {
             if (mostrarConfirmacion("¿Está seguro de anular la factura " + selected.getNumero() + "?")) {
@@ -196,7 +199,7 @@ public class FacturaController extends BaseController<Factura> {
         try {
             log.info("Imprimiendo factura: {}", selected.getNumero());
 
-            // Generar e imprimir PDF con VeriFacTu
+            // Generar e imprimir PDF con VeriFactu
             impresionService.imprimirFactura(selected, true);
 
             mostrarExito("Factura impresa correctamente.\nPDF generado en: " +
@@ -210,6 +213,9 @@ public class FacturaController extends BaseController<Factura> {
 
     @FXML
     public void onEnviarAeat() {
+        if (!verificarPermisoAccion("editar")) {
+            return;
+        }
         Factura selected = table.getSelectionModel().getSelectedItem();
         if (selected != null) {
             log.info("Enviar factura a AEAT: {}", selected.getNumero());

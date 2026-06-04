@@ -191,6 +191,9 @@ public class Factura {
     @Column(name = "total_iva", precision = 10, scale = 2)
     private BigDecimal totalIva;
 
+    @Column(name = "tipo_impositivo", precision = 5, scale = 2)
+    private BigDecimal tipoImpositivo;
+
     /**
      * Total Recargo de Equivalencia
      */

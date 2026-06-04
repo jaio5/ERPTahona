@@ -2,10 +2,16 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.AlbaranVenta;
 import alicanteweb.erp.entities.AlbaranVentaLinea;
+import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.entities.Cliente;
 import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
+import alicanteweb.erp.entities.HojaRuta;
+import alicanteweb.erp.entities.HojaRutaEntrega;
+import alicanteweb.erp.entities.Lote;
+import alicanteweb.erp.entities.Receta;
+import alicanteweb.erp.entities.RecetaIngrediente;
 import com.itextpdf.html2pdf.HtmlConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,11 +37,14 @@ public class ImpresionService {
 
     private final EmpresaConfigService empresaConfigService;
     private final FacturacionEventoService facturacionEventoService;
+    private final HojaRutaService hojaRutaService;
 
     public ImpresionService(EmpresaConfigService empresaConfigService,
-                            FacturacionEventoService facturacionEventoService) {
+                            FacturacionEventoService facturacionEventoService,
+                            HojaRutaService hojaRutaService) {
         this.empresaConfigService = empresaConfigService;
         this.facturacionEventoService = facturacionEventoService;
+        this.hojaRutaService = hojaRutaService;
         try {
             Files.createDirectories(Paths.get(OUTPUT_DIR));
         } catch (Exception e) {
@@ -390,6 +399,214 @@ public class ImpresionService {
         } catch (Exception e) {
             log.warn("No se pudo abrir automaticamente el PDF: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Imprime la hoja de ruta como PDF con todas las paradas y estado de entrega.
+     */
+    public void imprimirHojaRuta(HojaRuta hojaRuta, boolean abrirPdf) {
+        try {
+            log.info("Generando hoja de ruta PDF para: {}", hojaRuta.getFecha());
+            File pdfFile = generarHojaRutaPdf(hojaRuta);
+            registrarEventoDocumento("IMPRESION_HOJA_RUTA",
+                hojaRuta.getFecha().toString(), pdfFile);
+            imprimirPdf(pdfFile, abrirPdf);
+        } catch (Exception e) {
+            log.error("Error imprimiendo hoja de ruta", e);
+            throw new RuntimeException("Error al generar PDF de hoja de ruta: " + e.getMessage(), e);
+        }
+    }
+
+    private File generarHojaRutaPdf(HojaRuta hojaRuta) {
+        java.util.List<HojaRutaEntrega> entregas = hojaRutaService.getEntregas(hojaRuta.getId());
+        String conductor = hojaRuta.getConductor() != null ? escapeHtml(hojaRuta.getConductor()) : "No asignado";
+        String vehiculo = hojaRuta.getVehiculo() != null
+            ? escapeHtml(hojaRuta.getVehiculo().getMatricula())
+            : "No asignado";
+
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'><style>");
+        html.append("body { font-family: Arial, sans-serif; font-size: 12px; margin: 30px; }");
+        html.append("h1 { font-size: 18px; color: #333; }");
+        html.append("table { width: 100%; border-collapse: collapse; margin-top: 12px; }");
+        html.append("th { background-color: #f0f0f0; padding: 6px; text-align: left; border: 1px solid #ccc; }");
+        html.append("td { padding: 6px; border: 1px solid #ccc; }");
+        html.append(".header-info { margin-bottom: 16px; }");
+        html.append(".entregado { color: green; font-weight: bold; }");
+        html.append(".pendiente { color: #e67e22; }");
+        html.append(".incidencia { color: red; font-weight: bold; }");
+        html.append(".footer { margin-top: 30px; font-size: 10px; color: #888; }");
+        html.append("</style></head><body>");
+
+        html.append("<h1>HOJA DE RUTA</h1>");
+        html.append("<div class='header-info'>");
+        html.append("<table style='width: 50%;'>");
+        html.append("<tr><td><strong>Fecha:</strong></td><td>").append(hojaRuta.getFecha()).append("</td></tr>");
+        html.append("<tr><td><strong>Conductor:</strong></td><td>").append(conductor).append("</td></tr>");
+        html.append("<tr><td><strong>Vehículo:</strong></td><td>").append(vehiculo).append("</td></tr>");
+        html.append("<tr><td><strong>Estado:</strong></td><td>").append(escapeHtml(hojaRuta.getEstado())).append("</td></tr>");
+        if (hojaRuta.getHoraSalida() != null) {
+            html.append("<tr><td><strong>Salida:</strong></td><td>").append(hojaRuta.getHoraSalida().format(DATETIME_FORMATTER)).append("</td></tr>");
+        }
+        if (hojaRuta.getHoraLlegada() != null) {
+            html.append("<tr><td><strong>Llegada:</strong></td><td>").append(hojaRuta.getHoraLlegada().format(DATETIME_FORMATTER)).append("</td></tr>");
+        }
+        html.append("</table></div>");
+
+        html.append("<table><thead><tr>");
+        html.append("<th>#</th><th>Cliente</th><th>Dirección</th><th>Estado</th><th>Recibido por</th><th>Incidencia</th>");
+        html.append("</tr></thead><tbody>");
+
+        for (HojaRutaEntrega e : entregas) {
+            String estadoClass = Boolean.TRUE.equals(e.getEntregado()) ? "entregado" : "pendiente";
+            String estadoText = Boolean.TRUE.equals(e.getEntregado())
+                ? (e.getEstadoEntrega() != null ? e.getEstadoEntrega() : "ENTREGADO")
+                : "PENDIENTE";
+            if (e.getIncidencia() != null && !e.getIncidencia().isEmpty()) estadoClass = "incidencia";
+
+            html.append("<tr>");
+            html.append("<td>").append(e.getOrden() != null ? e.getOrden() : "-").append("</td>");
+            html.append("<td>").append(e.getCliente() != null ? escapeHtml(e.getCliente().getNombre()) : "-").append("</td>");
+            html.append("<td>").append(e.getCliente() != null && e.getCliente().getDireccion() != null ? escapeHtml(e.getCliente().getDireccion()) : "-").append("</td>");
+            html.append("<td class='").append(estadoClass).append("'>").append(estadoText).append("</td>");
+            html.append("<td>").append(e.getPersonaRecepcion() != null ? escapeHtml(e.getPersonaRecepcion()) : "-").append("</td>");
+            html.append("<td>").append(e.getIncidencia() != null ? escapeHtml(e.getIncidencia()) : "").append("</td>");
+            html.append("</tr>");
+        }
+
+        html.append("</tbody></table>");
+
+        if (hojaRuta.getIncidencias() != null && !hojaRuta.getIncidencias().isEmpty()) {
+            html.append("<div style='margin-top: 16px;'><strong>Incidencias generales:</strong><br>")
+                .append(escapeHtml(hojaRuta.getIncidencias())).append("</div>");
+        }
+
+        html.append("<div class='footer'>Generado: ").append(LocalDateTime.now().format(DATETIME_FORMATTER))
+            .append(" - ERP Tahona - Hoja de Ruta</div>");
+        html.append("</body></html>");
+
+        File outputFile = buildOutputFile("hoja_ruta", hojaRuta.getFecha() != null ? hojaRuta.getFecha().toString() : "sin-fecha");
+        try {
+            generarPdf(html.toString(), outputFile);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generando PDF de hoja de ruta", e);
+        }
+        return outputFile;
+    }
+
+    /**
+     * Genera etiqueta de producto alimentario (UE 1169/2011) con alérgenos, lote, caducidad e ingredientes.
+     */
+    public void imprimirEtiqueta(Articulo articulo, Lote lote, Receta receta, boolean abrirPdf) {
+        try {
+            String nombre = articulo.getNombre() != null ? articulo.getNombre() : articulo.getCodigo();
+            log.info("Generando etiqueta para: {}", nombre);
+            File pdfFile = generarEtiquetaPdf(articulo, lote, receta);
+            registrarEventoDocumento("IMPRESION_ETIQUETA", articulo.getCodigo(), pdfFile);
+            imprimirPdf(pdfFile, abrirPdf);
+        } catch (Exception e) {
+            log.error("Error imprimiendo etiqueta", e);
+            throw new RuntimeException("Error al generar PDF de etiqueta: " + e.getMessage(), e);
+        }
+    }
+
+    private File generarEtiquetaPdf(Articulo articulo, Lote lote, Receta receta) {
+        String nombre = escapeHtml(articulo.getNombre() != null ? articulo.getNombre() : articulo.getCodigo());
+        String codigo = escapeHtml(articulo.getCodigo());
+
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'><style>");
+        html.append("body { font-family: Arial, sans-serif; font-size: 10px; margin: 15px; width: 280px; }");
+        html.append("h2 { font-size: 14px; margin: 0 0 4px 0; }");
+        html.append(".section { margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px; }");
+        html.append(".label { color: #666; font-size: 8px; text-transform: uppercase; }");
+        html.append(".value { font-size: 11px; font-weight: bold; }");
+        html.append(".alergeno { color: #cc0000; font-weight: bold; }");
+        html.append("</style></head><body>");
+
+        // Cabecera: nombre del producto
+        html.append("<h2>").append(nombre).append("</h2>");
+        html.append("<div class='section'>");
+        html.append("<span class='label'>Código: </span><span class='value'>").append(codigo).append("</span><br>");
+        html.append("<span class='label'>Peso neto: </span><span class='value'>").append(articulo.getUnidad() != null ? articulo.getUnidad() : "-").append("</span>");
+        html.append("</div>");
+
+        // Lote y caducidad
+        if (lote != null) {
+            html.append("<div class='section'>");
+            html.append("<span class='label'>Lote: </span><span class='value'>").append(escapeHtml(lote.getCodigo())).append("</span><br>");
+            if (lote.getFechaCaducidad() != null) {
+                html.append("<span class='label'>Consumir preferentemente antes del: </span><span class='value'>")
+                    .append(lote.getFechaCaducidad().format(DATE_FORMATTER)).append("</span><br>");
+            }
+            if (lote.getFechaProduccion() != null) {
+                html.append("<span class='label'>Fecha de producción: </span>")
+                    .append(lote.getFechaProduccion().format(DATE_FORMATTER)).append("<br>");
+            }
+            if (lote.getNumeroRegistroSanitario() != null) {
+                html.append("<span class='label'>Reg. Sanitario: </span>")
+                    .append(escapeHtml(lote.getNumeroRegistroSanitario())).append("<br>");
+            }
+            html.append("</div>");
+        }
+
+        // Alérgenos (obligatorio UE 1169/2011)
+        html.append("<div class='section'>");
+        html.append("<span class='label'>Alérgenos: </span>");
+        if (articulo.getAlergenos() != null && !articulo.getAlergenos().isBlank()) {
+            html.append("<span class='alergeno'>").append(escapeHtml(articulo.getAlergenos())).append("</span>");
+        } else {
+            html.append("<span>Ninguno declarado</span>");
+        }
+        html.append("</div>");
+
+        // Ingredientes (de la receta)
+        if (receta != null && receta.getIngredientes() != null && !receta.getIngredientes().isEmpty()) {
+            html.append("<div class='section'>");
+            html.append("<span class='label'>Ingredientes: </span>");
+            java.util.List<String> ings = new java.util.ArrayList<>();
+            for (RecetaIngrediente ing : receta.getIngredientes()) {
+                if (ing.getArticulo() != null) {
+                    ings.add(escapeHtml(ing.getArticulo().getNombre()));
+                }
+            }
+            html.append("<span>").append(String.join(", ", ings)).append("</span>");
+            html.append("</div>");
+        }
+
+        // Conservación
+        html.append("<div class='section'>");
+        html.append("<span class='label'>Conservar en lugar fresco y seco. Proteger de la luz solar.</span>");
+        html.append("</div>");
+
+        // Datos de la empresa
+        try {
+            EmpresaConfig empresa = empresaConfigService.getConfiguracionActiva().orElse(null);
+            if (empresa != null) {
+                html.append("<div class='section'>");
+                html.append("<span style='font-size: 9px;'>").append(escapeHtml(empresa.getNombreEmpresa())).append("</span><br>");
+                html.append("<span style='font-size: 8px;'>").append(escapeHtml(empresa.getDireccion())).append(" ")
+                    .append(escapeHtml(empresa.getCodigoPostal())).append(" ")
+                    .append(escapeHtml(empresa.getCiudad())).append("</span><br>");
+                html.append("<span style='font-size: 8px;'>CIF: ").append(escapeHtml(empresa.getCif())).append("</span>");
+                if (empresa.getRegistroSanitario() != null) {
+                    html.append("<br><span style='font-size: 7px;'>RGSEAA: ").append(escapeHtml(empresa.getRegistroSanitario())).append("</span>");
+                }
+                html.append("</div>");
+            }
+        } catch (Exception e) {
+            log.debug("No se pudo cargar datos de empresa para etiqueta");
+        }
+
+        html.append("</body></html>");
+
+        File outputFile = buildOutputFile("etiqueta", articulo.getCodigo());
+        try {
+            generarPdf(html.toString(), outputFile);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generando PDF de etiqueta", e);
+        }
+        return outputFile;
     }
 
     private void registrarEventoDocumento(String tipoEvento, String referencia, File pdfFile) {

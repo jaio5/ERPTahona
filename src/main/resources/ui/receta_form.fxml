@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      spacing="12" style="-fx-padding: 24; -fx-background-color: #f8f9fa;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+
+    <Label text="NUEVA RECETA" styleClass="title"/>
+
+    <GridPane hgap="12" vgap="8">
+        <padding><Insets top="10" right="0" bottom="10" left="0"/></padding>
+        <Label text="Código:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtCodigo" promptText="Código de la receta" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtNombre" promptText="Nombre de la receta" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Descripción:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextArea fx:id="txtDescripcion" promptText="Descripción" prefRowCount="3" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="T. Preparación (min):" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtTiempoPrep" promptText="Minutos" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="T. Horneado (min):" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtTiempoHorneado" promptText="Minutos" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Temperatura (°C):" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtTemperatura" promptText="Temperatura del horno" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+        <Label text="Rendimiento:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtRendimiento" promptText="Cantidad resultante" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+        <Label text="Unidad:" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtUnidadRendimiento" promptText="kg, uds, litros..." GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+        <Label text="Alérgenos:" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtAlergenos" promptText="Gluten, Huevos, Leche..." GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Cancelar" onAction="#onCancelar" styleClass="button"/>
+        <Button text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
+    </HBox>
+</VBox>

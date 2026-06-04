@@ -36,6 +36,9 @@ public class BackupService {
     @Value("${spring.datasource.password}")
     private String dbPassword;
 
+    @Value("${spring.datasource.url:}")
+    private String dbUrl;
+
     @Value("${backup.directory:backups}")
     private String backupDirectory;
 
@@ -45,7 +48,6 @@ public class BackupService {
     @Value("${backup.enabled:true}")
     private boolean backupEnabled;
 
-    private static final String DB_NAME = "tahona";
     private final FacturacionEventoService facturacionEventoService;
 
     /**
@@ -70,7 +72,7 @@ public class BackupService {
             String archivoBackup = realizarBackup();
             log.info("✅ Backup completado exitosamente: {}", archivoBackup);
             registrarEventoBackup("BACKUP_AUTOMATICO", archivoBackup, java.util.Map.of(
-                "baseDatos", DB_NAME
+                "baseDatos", resolverNombreBaseDatos()
             ));
 
             // Limpiar backups antiguos
@@ -96,7 +98,8 @@ public class BackupService {
 
         // Generar nombre del archivo
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String nombreArchivo = String.format("backup_%s_%s.sql", DB_NAME, timestamp);
+        String dbName = resolverNombreBaseDatos();
+        String nombreArchivo = String.format("backup_%s_%s.sql", dbName, timestamp);
         String rutaCompleta = backupPath.resolve(nombreArchivo).toString();
 
         // Crear fichero temporal con credenciales para no pasarlas en la línea de comandos
@@ -122,10 +125,10 @@ public class BackupService {
             comando.add("--routines");
             comando.add("--triggers");
             comando.add("--add-drop-table");
-            comando.add(DB_NAME);
+            comando.add(dbName);
             comando.add("--result-file=" + rutaCompleta);
 
-            log.debug("Ejecutando comando mysqldump para DB {} usando defaults-file {}", DB_NAME, tempCredFile);
+            log.debug("Ejecutando comando mysqldump para DB {} usando defaults-file {}", dbName, tempCredFile);
 
             // Ejecutar comando
             ProcessBuilder pb = new ProcessBuilder(comando);
@@ -142,7 +145,7 @@ public class BackupService {
                     registrarEventoBackup("BACKUP_GENERADO", rutaCompleta, java.util.Map.of(
                         "nombreArchivo", nombreArchivo,
                         "tamanoBytes", backupFile.length(),
-                        "baseDatos", DB_NAME
+                        "baseDatos", dbName
                     ));
                     return rutaCompleta;
                 } else {
@@ -179,12 +182,13 @@ public class BackupService {
         // Usar fichero temporal con credenciales y --defaults-extra-file
         Path tempCredFile = null;
         try {
+            String dbName = resolverNombreBaseDatos();
             tempCredFile = createDefaultsFile(backupFile.toPath().getParent(), dbUsername, dbPassword);
 
             List<String> comando = new ArrayList<>();
             comando.add("mysql");
             comando.add("--defaults-extra-file=" + tempCredFile.toString());
-            comando.add(DB_NAME);
+            comando.add(dbName);
 
             ProcessBuilder pb = new ProcessBuilder(comando);
             pb.redirectErrorStream(true);
@@ -197,14 +201,14 @@ public class BackupService {
                 log.info("✅ Backup restaurado exitosamente");
                 registrarEventoBackup("RESTAURACION_BACKUP", rutaArchivo, java.util.Map.of(
                     "usuario", restoringUser,
-                    "baseDatos", DB_NAME
+                    "baseDatos", dbName
                 ));
             } else {
                 throw new IOException("Error restaurando backup. Código de salida: " + exitCode);
             }
         } finally {
             if (tempCredFile != null) {
-                try { Files.deleteIfExists(tempCredFile); } catch (Exception ignored) {}
+                try { Files.deleteIfExists(tempCredFile); } catch (Exception e) { log.debug("No se pudo eliminar archivo temporal de credenciales: {}", e.getMessage()); }
             }
         }
     }
@@ -389,6 +393,18 @@ public class BackupService {
         }
 
         return tempFile;
+    }
+
+    private String resolverNombreBaseDatos() {
+        if (dbUrl == null || dbUrl.isBlank()) {
+            return "tahona";
+        }
+        String sinParametros = dbUrl.split("\\?", 2)[0];
+        int slash = sinParametros.lastIndexOf('/');
+        if (slash >= 0 && slash < sinParametros.length() - 1) {
+            return sinParametros.substring(slash + 1);
+        }
+        return "tahona";
     }
 
     private void registrarEventoBackup(String tipoEvento, String referencia, java.util.Map<String, Object> metadata) {

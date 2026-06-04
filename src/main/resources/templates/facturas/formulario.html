@@ -1,0 +1,39 @@
+<div th:fragment="content">
+    <div class="topbar">
+        <h4>Nueva factura</h4>
+        <a th:href="@{/web/facturas}" class="btn btn-outline-secondary btn-sm">Volver</a>
+    </div>
+
+    <div class="form-card" style="max-width:700px;">
+        <form th:action="@{/web/facturas}" method="post">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Número</label>
+                    <input type="text" name="numero" class="form-control" th:value="${factura.numero}" placeholder="Auto-generado" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" name="fecha" class="form-control"
+                           th:value="${factura.fecha != null ? factura.fecha : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Cliente</label>
+                    <select name="clienteId" class="form-select" required>
+                        <option value="">Seleccionar cliente...</option>
+                        <option th:each="c : ${clientes}" th:value="${c.id}"
+                                th:text="${c.nombre + ' (' + c.cif + ')'}"
+                                th:selected="${factura.cliente?.id == c.id}"></option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Observaciones</label>
+                    <textarea name="observaciones" class="form-control" rows="3" th:text="${factura.observaciones}"></textarea>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Guardar borrador</button>
+                <a th:href="@{/web/facturas}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

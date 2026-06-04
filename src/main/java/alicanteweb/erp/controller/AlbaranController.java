@@ -236,7 +236,7 @@ public class AlbaranController {
         if (busqueda != null && busqueda.matches("^\\d+$")) {
             try {
                 Long clienteId = Long.parseLong(busqueda);
-                List<AlbaranVenta> porCliente = albaranService.findByCliente(clienteId);
+                List<AlbaranVenta> porCliente = albaranService.buscarPorCliente(clienteId);
                 tableAlbaranes.setItems(FXCollections.observableArrayList(porCliente));
                 if (lblTotal != null) lblTotal.setText(porCliente.size() + " albaranes");
                 return;

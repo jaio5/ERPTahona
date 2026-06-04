@@ -1,0 +1,18 @@
+<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/hojas-ruta}" class="btn btn-outline-secondary btn-sm">Volver</a></div>
+    <div class="row">
+        <div class="col-md-6"><div class="form-card mb-3">
+            <div class="row g-3"><div class="col-6"><small class="text-muted">Fecha</small><h6 th:text="${hoja.fecha}"></h6></div><div class="col-6"><small class="text-muted">Estado</small><h6 th:text="${hoja.estado}"></h6></div><div class="col-6"><small class="text-muted">Conductor</small><h6 th:text="${hoja.conductor} ?: '-'"></h6></div><div class="col-6"><small class="text-muted">Vehículo</small><h6 th:text="${hoja.vehiculo?.matricula} ?: '-'"></h6></div></div>
+        </div></div>
+        <div class="col-md-6"><div class="form-card mb-3">
+            <h6 class="mb-3">Entregas</h6>
+            <div class="table-responsive"><table class="table table-sm">
+                <thead><tr><th>#</th><th>Cliente</th><th>Estado</th></tr></thead>
+                <tbody><tr th:each="e : ${entregas}">
+                    <td th:text="${e.orden}"></td><td th:text="${e.cliente?.nombre}"></td>
+                    <td><span th:class="'badge-status ' + (${e.entregado} ? 'bg-emitted' : 'bg-draft')" th:text="${e.entregado} ? 'ENTREGADO' : 'PENDIENTE'"></span></td>
+                </tr></tbody>
+            </table></div>
+        </div></div>
+    </div>
+</div>

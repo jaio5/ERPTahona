@@ -48,6 +48,31 @@
             <Label fx:id="lblArticulos" text="0" styleClass="stat-value"/>
             <Label text="Catalogo operativo" styleClass="muted"/>
         </VBox>
+
+        <!-- Segunda fila: KPIs de produccion y reparto -->
+        <VBox styleClass="stat-card" spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="1">
+            <Label text="Ordenes activas" styleClass="stat-label"/>
+            <Label fx:id="lblOrdenesActivas" text="0" styleClass="stat-value"/>
+            <Label text="Produccion en curso" styleClass="muted"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <Label text="Lotes por caducar" styleClass="stat-label"/>
+            <Label fx:id="lblLotesCaducar" text="0" styleClass="stat-value"/>
+            <Label text="Proximos 7 dias" styleClass="muted"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" spacing="5" GridPane.columnIndex="2" GridPane.rowIndex="1">
+            <Label text="Rutas activas" styleClass="stat-label"/>
+            <Label fx:id="lblEntregasPendientes" text="0" styleClass="stat-value"/>
+            <Label text="Hojas en curso" styleClass="muted"/>
+        </VBox>
+
+        <VBox styleClass="stat-card" spacing="5" GridPane.columnIndex="3" GridPane.rowIndex="1">
+            <Label text="Recetas" styleClass="stat-label"/>
+            <Label fx:id="lblRecetas" text="0" styleClass="stat-value"/>
+            <Label text="Formulas activas" styleClass="muted"/>
+        </VBox>
     </GridPane>
 
     <HBox spacing="12" alignment="CENTER_LEFT">
@@ -59,9 +84,10 @@
 
     <GridPane hgap="12" vgap="12">
         <columnConstraints>
-            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
-            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
-            <ColumnConstraints percentWidth="33.33" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
+            <ColumnConstraints percentWidth="25" hgrow="ALWAYS"/>
         </columnConstraints>
 
         <VBox styleClass="card" spacing="10" GridPane.columnIndex="0" GridPane.rowIndex="0">
@@ -82,6 +108,13 @@
             <Label text="Control" styleClass="section-title"/>
             <Button text="Contabilidad" onAction="#onContabilidad" styleClass="sidebar-button" maxWidth="Infinity"/>
             <Button text="Configuracion" onAction="#onConfiguracion" styleClass="sidebar-button" maxWidth="Infinity"/>
+        </VBox>
+
+        <VBox styleClass="card" spacing="10" GridPane.columnIndex="3" GridPane.rowIndex="0">
+            <Label text="Produccion y Reparto" styleClass="section-title"/>
+            <Button text="Recetas" onAction="#onProduccion" styleClass="sidebar-button" maxWidth="Infinity"/>
+            <Button text="Trazabilidad" onAction="#onTrazabilidad" styleClass="sidebar-button" maxWidth="Infinity"/>
+            <Button text="Hojas de ruta" onAction="#onReparto" styleClass="sidebar-button" maxWidth="Infinity"/>
         </VBox>
     </GridPane>
 

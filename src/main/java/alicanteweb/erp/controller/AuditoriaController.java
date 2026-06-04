@@ -4,6 +4,7 @@ import alicanteweb.erp.entities.AuditoriaAccion;
 import alicanteweb.erp.entities.Usuario;
 import alicanteweb.erp.repository.AuditoriaAccionRepository;
 import alicanteweb.erp.repository.UsuarioRepository;
+import alicanteweb.erp.service.AutenticacionService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -61,14 +62,17 @@ public class AuditoriaController {
 
     private final AuditoriaAccionRepository auditoriaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AutenticacionService autenticacionService;
 
     private final ObservableList<AuditoriaAccion> auditoriaList = FXCollections.observableArrayList();
     private final ObservableList<AuditoriaAccion> auditoriaFilteredList = FXCollections.observableArrayList();
 
     public AuditoriaController(AuditoriaAccionRepository auditoriaRepository,
-                              UsuarioRepository usuarioRepository) {
+                              UsuarioRepository usuarioRepository,
+                              AutenticacionService autenticacionService) {
         this.auditoriaRepository = auditoriaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.autenticacionService = autenticacionService;
     }
 
     @FXML
@@ -510,6 +514,10 @@ public class AuditoriaController {
 
     @FXML
     public void onExportar() {
+        if (!autenticacionService.tienePermiso("auditoria", "exportar")) {
+            DialogUtils.showWarning("No tiene permisos para exportar auditoria.");
+            return;
+        }
         if (auditoriaFilteredList.isEmpty()) {
             DialogUtils.showWarning("No hay registros de auditoria para exportar");
             return;

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      spacing="12" style="-fx-padding: 24; -fx-background-color: #f8f9fa;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+
+    <Label text="NUEVO VEHÍCULO" styleClass="title"/>
+
+    <GridPane hgap="12" vgap="8">
+        <padding><Insets top="10" right="0" bottom="10" left="0"/></padding>
+        <Label text="Matrícula:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtMatricula" promptText="Matrícula" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Marca:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtMarca" promptText="Marca" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Modelo:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtModelo" promptText="Modelo" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Tipo:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="cmbTipo" promptText="Tipo de vehículo" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Capacidad (kg):" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtCapacidad" promptText="Capacidad en kg" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Consumo medio:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtConsumo" promptText="L/100km" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+        <Label text="Observaciones:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+        <TextArea fx:id="txtObservaciones" promptText="Observaciones" prefRowCount="2" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Cancelar" onAction="#onCancelar" styleClass="button"/>
+        <Button text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
+    </HBox>
+</VBox>

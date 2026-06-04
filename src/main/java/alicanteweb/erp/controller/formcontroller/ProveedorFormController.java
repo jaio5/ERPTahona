@@ -1,8 +1,12 @@
 package alicanteweb.erp.controller.formcontroller;
 
 import alicanteweb.erp.entities.Proveedor;
+import alicanteweb.erp.service.ClienteDatosExternosService;
 import alicanteweb.erp.service.ProveedorService;
+import alicanteweb.erp.service.dto.ClienteDatosExternos;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -12,6 +16,8 @@ import org.springframework.stereotype.Controller;
 import alicanteweb.erp.ui.DialogUtils;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Controlador para el formulario de creación/edición de proveedores
@@ -30,6 +36,8 @@ public class ProveedorFormController {
     @FXML private TextField txtTelefono;
     @FXML private TextField txtEmail;
     @FXML private Button btnGuardarProveedor;
+    @FXML private Button btnBuscarDatosEmpresa;
+    @FXML private ComboBox<Proveedor> cbCoincidenciasProveedor;
     @FXML private Label lblErrNombre;
     @FXML private Label lblErrCIF;
     @FXML private Label lblErrEmail;
@@ -48,11 +56,14 @@ public class ProveedorFormController {
     @FXML private CheckBox chkActivo;
 
     private final ProveedorService proveedorService;
+    private final ClienteDatosExternosService clienteDatosExternosService;
     private Proveedor proveedorActual;
     private boolean modoEdicion = false;
 
-    public ProveedorFormController(ProveedorService proveedorService) {
+    public ProveedorFormController(ProveedorService proveedorService,
+                                   ClienteDatosExternosService clienteDatosExternosService) {
         this.proveedorService = proveedorService;
+        this.clienteDatosExternosService = clienteDatosExternosService;
     }
 
     @FXML
@@ -62,6 +73,7 @@ public class ProveedorFormController {
         configurarProvincias();
         configurarFormasPago();
         configurarValidaciones();
+        configurarCoincidencias();
 
         // Bind botón Guardar y validación en tiempo real
         try {
@@ -150,6 +162,68 @@ public class ProveedorFormController {
         }
     }
 
+    private void configurarCoincidencias() {
+        if (cbCoincidenciasProveedor == null) {
+            return;
+        }
+        cbCoincidenciasProveedor.setVisible(false);
+        cbCoincidenciasProveedor.setManaged(false);
+        cbCoincidenciasProveedor.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(Proveedor item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : textoCoincidencia(item));
+            }
+        });
+        cbCoincidenciasProveedor.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(Proveedor item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : textoCoincidencia(item));
+            }
+        });
+        cbCoincidenciasProveedor.valueProperty().addListener((obs, anterior, seleccionado) -> {
+            if (seleccionado != null && (proveedorActual == null || proveedorActual.getId() == null
+                || !seleccionado.getId().equals(proveedorActual.getId()))) {
+                cargarProveedorExistente(seleccionado);
+            }
+        });
+
+        if (txtNombre != null) {
+            txtNombre.textProperty().addListener((obs, oldV, newV) -> actualizarCoincidenciasLocales());
+        }
+        if (txtCIF != null) {
+            txtCIF.textProperty().addListener((obs, oldV, newV) -> actualizarCoincidenciasLocales());
+        }
+    }
+
+    private void actualizarCoincidenciasLocales() {
+        if (cbCoincidenciasProveedor == null) {
+            return;
+        }
+        String cif = txtCIF != null && txtCIF.getText() != null ? txtCIF.getText().trim() : "";
+        String nombre = txtNombre != null && txtNombre.getText() != null ? txtNombre.getText().trim() : "";
+        try {
+            List<Proveedor> coincidencias = !cif.isBlank()
+                ? proveedorService.findByCif(cif).stream().toList()
+                : nombre.length() >= 3 ? proveedorService.searchByNombre(nombre) : List.of();
+            if (proveedorActual != null && proveedorActual.getId() != null) {
+                coincidencias = coincidencias.stream()
+                    .filter(p -> p.getId() == null || !p.getId().equals(proveedorActual.getId()))
+                    .toList();
+            }
+            cbCoincidenciasProveedor.setItems(FXCollections.observableArrayList(coincidencias.stream().limit(8).toList()));
+            boolean mostrar = !coincidencias.isEmpty();
+            cbCoincidenciasProveedor.setVisible(mostrar);
+            cbCoincidenciasProveedor.setManaged(mostrar);
+            if (mostrar && cbCoincidenciasProveedor.getScene() != null && !cbCoincidenciasProveedor.isShowing()) {
+                cbCoincidenciasProveedor.show();
+            }
+        } catch (Exception e) {
+            log.debug("No se pudieron cargar coincidencias de proveedores: {}", e.getMessage());
+        }
+    }
+
     public void setProveedor(Proveedor proveedor) {
         this.proveedorActual = proveedor;
         this.modoEdicion = (proveedor != null && proveedor.getId() != null);
@@ -218,6 +292,80 @@ public class ProveedorFormController {
     }
 
     @FXML
+    public void onBuscarDatosEmpresa() {
+        String cif = txtCIF != null ? txtCIF.getText().trim().toUpperCase().replace(" ", "") : "";
+        String nombre = txtNombre != null ? txtNombre.getText().trim() : "";
+        boolean buscarPorCif = !cif.isEmpty();
+
+        if (cif.isEmpty() && nombre.isEmpty()) {
+            DialogUtils.showWarning("Introduce primero el CIF/NIF o la razon social para buscar los datos del proveedor.");
+            if (txtCIF != null) txtCIF.requestFocus();
+            return;
+        }
+
+        if (buscarPorCif && !isValidCif(cif)) {
+            DialogUtils.showWarning("El formato del CIF/NIF no es valido.");
+            if (txtCIF != null) txtCIF.requestFocus();
+            return;
+        }
+
+        Optional<Proveedor> existente = buscarPorCif ? proveedorService.findByCif(cif) : proveedorService.findByNombreExacto(nombre);
+        if (existente.isPresent() && (proveedorActual == null || proveedorActual.getId() == null
+            || !existente.get().getId().equals(proveedorActual.getId()))) {
+            cargarProveedorExistente(existente.get());
+            return;
+        }
+
+        Task<List<ClienteDatosExternos>> task = new Task<>() {
+            @Override
+            protected List<ClienteDatosExternos> call() {
+                return buscarPorCif
+                    ? clienteDatosExternosService.buscarCoincidenciasPorCif(cif)
+                    : clienteDatosExternosService.buscarCoincidenciasPorNombre(nombre);
+            }
+        };
+
+        task.setOnRunning(e -> {
+            if (btnBuscarDatosEmpresa != null) {
+                btnBuscarDatosEmpresa.setDisable(true);
+                btnBuscarDatosEmpresa.setText("Buscando...");
+            }
+        });
+        task.setOnSucceeded(e -> {
+            restaurarBotonBusqueda();
+            List<ClienteDatosExternos> datos = task.getValue();
+            if (datos == null || datos.isEmpty()) {
+                DialogUtils.showInfo("No se encontraron datos para ese CIF/NIF.");
+                return;
+            }
+            ClienteDatosExternos datosExternos = seleccionarDatosExternos(datos).orElse(null);
+            if (datosExternos == null) {
+                return;
+            }
+            if (datosExternos.getCif() != null) {
+                Optional<Proveedor> existentePorCif = proveedorService.findByCif(datosExternos.getCif());
+                if (existentePorCif.isPresent() && (proveedorActual == null || proveedorActual.getId() == null
+                    || !existentePorCif.get().getId().equals(proveedorActual.getId()))) {
+                    cargarProveedorExistente(existentePorCif.get());
+                    return;
+                }
+            }
+            aplicarDatosExternos(datosExternos);
+            DialogUtils.showInfo("Datos del proveedor cargados desde la API. Revisa la ficha antes de guardar.");
+        });
+        task.setOnFailed(e -> {
+            restaurarBotonBusqueda();
+            Throwable ex = task.getException();
+            log.warn("No se pudieron cargar datos externos del proveedor", ex);
+            DialogUtils.showError(ex != null ? ex.getMessage() : "No se pudo consultar la API de empresas");
+        });
+
+        Thread thread = new Thread(task, "proveedor-datos-externos");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    @FXML
     public void onGuardar() {
         if (!validarFormulario()) {
             return;
@@ -265,6 +413,62 @@ public class ProveedorFormController {
         } catch (Exception e) {
             log.error("❌ Error guardando proveedor", e);
             DialogUtils.showError("Error al guardar el proveedor: " + e.getMessage());
+        }
+    }
+
+    private void cargarProveedorExistente(Proveedor existente) {
+        proveedorActual = existente;
+        modoEdicion = true;
+        if (cbCoincidenciasProveedor != null) {
+            cbCoincidenciasProveedor.hide();
+            cbCoincidenciasProveedor.setVisible(false);
+            cbCoincidenciasProveedor.setManaged(false);
+            cbCoincidenciasProveedor.getSelectionModel().clearSelection();
+        }
+        if (lblTitulo != null) lblTitulo.setText("Editar Proveedor");
+        cargarDatosProveedor(existente);
+        DialogUtils.showInfo("Este CIF/NIF ya existe en la base de datos. Se ha cargado la ficha existente para evitar duplicados.");
+    }
+
+    private Optional<ClienteDatosExternos> seleccionarDatosExternos(List<ClienteDatosExternos> resultados) {
+        if (resultados.size() == 1) {
+            return Optional.of(resultados.get(0));
+        }
+        ChoiceDialog<ClienteDatosExternos> dialog = new ChoiceDialog<>(resultados.get(0), resultados);
+        dialog.setTitle("Seleccionar empresa");
+        dialog.setHeaderText("Se encontraron varias coincidencias");
+        dialog.setContentText("Elige la ficha que quieres cargar:");
+        return dialog.showAndWait();
+    }
+
+    private void aplicarDatosExternos(ClienteDatosExternos datos) {
+        if (datos.getCif() != null && txtCIF != null) txtCIF.setText(datos.getCif().trim().toUpperCase());
+        if (datos.getNombre() != null && txtNombre != null) txtNombre.setText(datos.getNombre());
+        if (datos.getDireccion() != null && txtDireccion != null) txtDireccion.setText(datos.getDireccion());
+        if (datos.getCodigoPostal() != null && txtCodigoPostal != null) txtCodigoPostal.setText(datos.getCodigoPostal());
+        if (datos.getPoblacion() != null && txtPoblacion != null) txtPoblacion.setText(datos.getPoblacion());
+        if (datos.getProvincia() != null && cbProvincia != null) seleccionarProvincia(datos.getProvincia());
+        if (datos.getTelefono() != null && txtTelefono != null) txtTelefono.setText(datos.getTelefono());
+        if (datos.getEmail() != null && txtEmail != null) txtEmail.setText(datos.getEmail());
+        if (datos.getEstado() != null && chkActivo != null) {
+            chkActivo.setSelected(!datos.getEstado().equalsIgnoreCase("INACTIVA")
+                && !datos.getEstado().equalsIgnoreCase("EXTINGUIDA")
+                && !datos.getEstado().equalsIgnoreCase("DISUELTA"));
+        }
+    }
+
+    private void seleccionarProvincia(String provincia) {
+        String normalizada = provincia.trim();
+        cbProvincia.getItems().stream()
+            .filter(p -> p.equalsIgnoreCase(normalizada))
+            .findFirst()
+            .ifPresentOrElse(cbProvincia::setValue, () -> cbProvincia.setValue(normalizada));
+    }
+
+    private void restaurarBotonBusqueda() {
+        if (btnBuscarDatosEmpresa != null) {
+            btnBuscarDatosEmpresa.setDisable(false);
+            btnBuscarDatosEmpresa.setText("Buscar datos");
         }
     }
 
@@ -377,5 +581,15 @@ public class ProveedorFormController {
         boolean cifOk = txtCIF != null && txtCIF.getText() != null && txtCIF.getText().trim().matches("[A-Z]?\\d{7,8}[A-Z0-9]");
         boolean emailOk = txtEmail == null || txtEmail.getText() == null || txtEmail.getText().trim().isEmpty() || txtEmail.getText().trim().matches("^[A-Za-z0-9+_.-]+@(.+)$");
         return nameOk && cifOk && emailOk;
+    }
+
+    private boolean isValidCif(String cif) {
+        return cif != null && cif.matches("[A-Z]?\\d{7,8}[A-Z0-9]");
+    }
+
+    private String textoCoincidencia(Proveedor proveedor) {
+        String cif = proveedor.getCif() == null || proveedor.getCif().isBlank() ? "" : " (" + proveedor.getCif() + ")";
+        String poblacion = proveedor.getPoblacion() == null || proveedor.getPoblacion().isBlank() ? "" : " - " + proveedor.getPoblacion();
+        return proveedor.getNombre() + cif + poblacion;
     }
 }

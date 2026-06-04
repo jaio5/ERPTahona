@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      spacing="12" style="-fx-padding: 24; -fx-background-color: #f8f9fa;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+
+    <Label text="NUEVO LOTE" styleClass="title"/>
+
+    <GridPane hgap="12" vgap="8">
+        <padding><Insets top="10" right="0" bottom="10" left="0"/></padding>
+        <Label text="Código:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtCodigo" promptText="Código del lote" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Fecha Producción:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="dpFechaProduccion" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Fecha Caducidad:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="dpFechaCaducidad" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Cantidad:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtCantidad" promptText="Cantidad" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Origen:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtOrigen" promptText="Origen del lote" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Nº Reg. Sanitario:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtRegistroSanitario" promptText="Registro sanitario" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+        <Label text="Observaciones:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+        <TextArea fx:id="txtObservaciones" promptText="Observaciones" prefRowCount="3" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Cancelar" onAction="#onCancelar" styleClass="button"/>
+        <Button text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
+    </HBox>
+</VBox>

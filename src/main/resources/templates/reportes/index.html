@@ -1,0 +1,50 @@
+<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}">Informes</h4></div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <a th:href="@{/web/reportes/ventas-mes}" class="text-decoration-none">
+                <div class="stat-card text-center py-4">
+                    <i class="bi bi-graph-up-arrow" style="font-size:2rem;color:#2563eb;"></i>
+                    <h6 class="mt-2 mb-0">Ventas del mes</h6>
+                    <small class="text-muted">Facturación, clientes, evolución diaria</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/web/reportes/produccion}" class="text-decoration-none">
+                <div class="stat-card text-center py-4">
+                    <i class="bi bi-gear-wide-connected" style="font-size:2rem;color:#059669;"></i>
+                    <h6 class="mt-2 mb-0">Producción</h6>
+                    <small class="text-muted">Órdenes, eficiencia, mermas</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/web/reportes/rentabilidad}" class="text-decoration-none">
+                <div class="stat-card text-center py-4">
+                    <i class="bi bi-cash-coin" style="font-size:2rem;color:#d97706;"></i>
+                    <h6 class="mt-2 mb-0">Rentabilidad</h6>
+                    <small class="text-muted">Márgenes, costes, beneficio por producto</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/web/reportes/reparto}" class="text-decoration-none">
+                <div class="stat-card text-center py-4">
+                    <i class="bi bi-truck" style="font-size:2rem;color:#7c3aed;"></i>
+                    <h6 class="mt-2 mb-0">Reparto</h6>
+                    <small class="text-muted">Rutas completadas, km, eficiencia</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/web/reportes/trazabilidad}" class="text-decoration-none">
+                <div class="stat-card text-center py-4">
+                    <i class="bi bi-clipboard-data" style="font-size:2rem;color:#dc2626;"></i>
+                    <h6 class="mt-2 mb-0">Trazabilidad</h6>
+                    <small class="text-muted">Lotes, caducidades, APPCC</small>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>

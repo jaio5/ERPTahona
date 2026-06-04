@@ -2,6 +2,16 @@
 
 Este ERP gestiona facturacion, clientes, proveedores, compras, ventas, caja, contabilidad operativa, auditoria, copias y evidencias VeriFactu para una tahona/panaderia en Espana.
 
+Documentacion ampliada:
+
+- `docs/index.md`
+- `docs/production-checklist.md`
+- `docs/operations.md`
+- `docs/configuration.md`
+- `docs/security-and-authorization.md`
+- `docs/verifactu.md`
+- `docs/architecture.md`
+
 ## Punto actual
 
 - La aplicacion es JavaFX + Spring Boot, con MySQL 8 en uso normal.
@@ -26,16 +36,17 @@ Fuentes revisadas el 8 de mayo de 2026:
 1. Instalar JDK 17, 21 o 23 y definir `JAVA_HOME`.
 2. Crear una base MySQL 8 dedicada y usuario de aplicacion sin permisos administrativos globales.
 3. Ejecutar con `SPRING_PROFILES_ACTIVE=prod`.
-4. Definir todos los secretos de `.env.production.example` con valores reales.
+4. Copiar `.env.production.example` a `.env.production.local` y definir ahi todos los secretos con valores reales. El archivo local esta ignorado por Git.
 5. Configurar un certificado valido para firma VeriFactu:
    - `VERIFACTU_CERT_PATH`
    - `VERIFACTU_CERT_PASSWORD`
    - `VERIFACTU_KEY_ALIAS`
    - `VERIFACTU_KEY_PASSWORD`
-6. Validar el XML, QR, firma y envio con el entorno de pruebas de AEAT antes de activar remision real.
-7. Verificar que la empresa configurada tiene NIF/CIF, datos fiscales y `verifactu_habilitado=true` cuando se use como sistema adaptado.
-8. Probar exportacion de evidencias y eventos para un periodo completo.
-9. Probar backup y restauracion en una copia de la base antes de operar.
+6. Ejecutar `.\scripts\check-verifactu-production.ps1` para validar certificado, alias y endpoint si `VERIFACTU_AEAT_ENABLED=true`.
+7. Validar el XML, QR, firma y envio con el entorno de pruebas de AEAT antes de iniciar funcionamiento VERI*FACTU.
+8. Verificar que la empresa configurada tiene NIF/CIF y datos fiscales. Despues, en la pantalla VERI*FACTU, usar `Probar AEAT` y `Iniciar VERI*FACTU`.
+9. Probar exportacion de evidencias y eventos para un periodo completo.
+10. Probar backup y restauracion en una copia de la base antes de operar.
 
 ## Guard de produccion
 
@@ -83,21 +94,12 @@ Si MySQL local no esta disponible en perfiles no productivos, el lanzador reinte
 Arranque de produccion:
 
 ```powershell
-$env:SPRING_PROFILES_ACTIVE="prod"
-$env:SPRING_DATASOURCE_URL="jdbc:mysql://mysql-host:3306/tahona?useSSL=true&requireSSL=true&serverTimezone=Europe/Madrid&characterEncoding=UTF-8&useUnicode=true"
-$env:SPRING_DATASOURCE_USERNAME="erp_app"
-$env:SPRING_DATASOURCE_PASSWORD="<password-real>"
-$env:CIFRADO_AES_KEY="<base64-32-bytes-real>"
-$env:SECURITY_PBKDF2_SECRET="<secreto-real>"
-$env:ERP_LOG_FILE="C:\erp-tahona\logs\erp-tahona.log"
-$env:ERP_BACKUP_DIRECTORY="C:\erp-tahona\backups"
-$env:VERIFACTU_CERT_PATH="C:\secure\certs\verifactu.p12"
-$env:VERIFACTU_CERT_PASSWORD="<password-cert>"
-$env:VERIFACTU_KEY_ALIAS="<alias-real>"
-$env:VERIFACTU_KEY_PASSWORD="<password-key>"
-$env:ADMIN_DEFAULT_PASSWORD="<password-admin-temporal-fuerte>"
+Copy-Item .env.production.example .env.production.local
+# Edita .env.production.local con valores reales.
 .\scripts\run-production.ps1
 ```
+
+`run-production.ps1` carga automaticamente `.env.production.local` si existe y ejecuta el precheck VERI*FACTU antes de arrancar el JAR.
 
 En el primer arranque con `prod`, si la migracion inicial ha creado el usuario `admin` con una password insegura heredada, la aplicacion la sustituye por `ADMIN_DEFAULT_PASSWORD`, deja el usuario activo y marca `requiere_cambio_password=true`.
 

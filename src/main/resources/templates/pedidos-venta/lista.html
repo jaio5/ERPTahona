@@ -1,0 +1,16 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Pedidos de venta</h4><a th:href="@{/web/pedidos-venta/nuevo}" class="btn btn-success btn-sm">+ Nuevo</a></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Numero</th><th>Fecha</th><th>Cliente</th><th>Estado</th></tr></thead>
+        <tbody>
+        <tr th:each="p : ${pedidos}">
+            <td th:text="${p.numero} ?: ${p.id}"></td>
+            <td th:text="${p.fecha}"></td>
+            <td th:text="${p.cliente != null ? p.cliente.nombre : ''}"></td>
+            <td th:text="${p.estado}"></td>
+        </tr>
+        </tbody>
+    </table>
+</section>

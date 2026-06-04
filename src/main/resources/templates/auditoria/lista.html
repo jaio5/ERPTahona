@@ -1,0 +1,16 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Auditoria</h4></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Fecha</th><th>Usuario</th><th>Modulo</th><th>Accion</th><th>Resultado</th><th>Descripcion</th></tr></thead>
+        <tbody>
+        <tr th:each="r : ${registros}">
+            <td th:text="${r.fecha}"></td>
+            <td th:text="${r.usuarioNombre}"></td>
+            <td th:text="${r.modulo}"></td>
+            <td th:text="${r.tipoAccion}"></td>
+            <td th:text="${r.resultado}"></td>
+            <td th:text="${r.descripcion}"></td>
+        </tr>
+        </tbody>
+    </table>
+</section>

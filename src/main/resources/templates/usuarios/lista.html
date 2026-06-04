@@ -1,0 +1,7 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Usuarios</h4><a th:href="@{/web/usuarios/nuevo}" class="btn btn-success btn-sm">+ Nuevo</a></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Usuario</th><th>Nombre</th><th>Email</th><th>Activo</th></tr></thead>
+        <tbody><tr th:each="u : ${usuarios}"><td th:text="${u.username}"></td><td th:text="${u.nombre}"></td><td th:text="${u.email}"></td><td th:text="${u.enabled}"></td></tr></tbody>
+    </table>
+</section>

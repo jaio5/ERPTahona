@@ -1,0 +1,19 @@
+<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/clientes}" class="btn btn-outline-secondary btn-sm">Volver</a></div>
+    <div class="form-card" style="max-width:760px;">
+        <form th:action="@{/web/clientes}" method="post">
+            <input type="hidden" name="id" th:value="${cliente?.id}">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Codigo *</label><input type="text" name="codigo" class="form-control" th:value="${cliente?.codigo}" required></div>
+                <div class="col-md-6"><label class="form-label">Razon social *</label><input type="text" name="nombre" class="form-control" th:value="${cliente?.nombre}" required></div>
+                <div class="col-md-6"><label class="form-label">CIF/NIF</label><input type="text" name="cif" class="form-control" th:value="${cliente?.cif}"></div>
+                <div class="col-md-6"><label class="form-label">Telefono</label><input type="text" name="telefono" class="form-control" th:value="${cliente?.telefono}"></div>
+                <div class="col-md-6"><label class="form-label">Correo</label><input type="email" name="email" class="form-control" th:value="${cliente?.email}"></div>
+                <div class="col-md-6"><label class="form-label">Poblacion</label><input type="text" name="poblacion" class="form-control" th:value="${cliente?.poblacion}"></div>
+                <div class="col-md-8"><label class="form-label">Direccion</label><input type="text" name="direccion" class="form-control" th:value="${cliente?.direccion}"></div>
+                <div class="col-md-4"><label class="form-label">Codigo postal</label><input type="text" name="codigoPostal" class="form-control" th:value="${cliente?.codigoPostal}"></div>
+            </div>
+            <div class="mt-4"><button type="submit" class="btn btn-primary">Guardar</button><a th:href="@{/web/clientes}" class="btn btn-outline-secondary ms-2">Cancelar</a></div>
+        </form>
+    </div>
+</div>

@@ -1,6 +1,6 @@
 package alicanteweb.erp.tools;
 
-import alicanteweb.erp.ErpLauncher;
+import alicanteweb.erp.ErpWebApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.WebApplicationType;
@@ -12,7 +12,7 @@ public class SpringContextSmokeTest {
 
     public static void main(String[] args) {
         log.info("Iniciando verificación de contexto Spring (sin JavaFX)...");
-        try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(ErpLauncher.class)
+        try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(ErpWebApplication.class)
                 .headless(true)
                 .web(WebApplicationType.NONE)
                 .run(args)) {

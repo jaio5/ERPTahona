@@ -149,6 +149,13 @@
                                 <CheckBox fx:id="chkControlStock" text="Controlar stock" selected="true"/>
                                 <CheckBox fx:id="chkActivo" text="Articulo activo" selected="true"/>
                             </HBox>
+
+                            <VBox spacing="8" style="-fx-padding: 8 0 0 0;">
+                                <Label text="Alérgenos" styleClass="form-label"/>
+                                <Label text="Separados por comas. Obligatorio UE 1169/2011." styleClass="muted"/>
+                                <TextField fx:id="txtAlergenos" promptText="Gluten, Huevos, Leche, Frutos de cáscara..."/>
+                                <Label text="14 alérgenos UE: Gluten, Crustáceos, Huevos, Pescado, Cacahuetes, Soja, Leche, Frutos de cáscara, Apio, Mostaza, Sésamo, Sulfitos, Altramuces, Moluscos" style="-fx-font-size: 9px; -fx-text-fill: #888;"/>
+                            </VBox>
                         </VBox>
                     </VBox>
                 </ScrollPane>

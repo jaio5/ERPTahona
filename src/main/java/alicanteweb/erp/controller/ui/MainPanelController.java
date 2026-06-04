@@ -40,11 +40,36 @@ public class MainPanelController {
     @FXML private Button btnActualizarApp;
 
     // Controles de menú con visibilidad controlada por rol
+    @FXML private Button btnDashboard;
+    @FXML private Button btnCaja;
+    @FXML private Button btnFacturas;
+    @FXML private Button btnAlbaranes;
+    @FXML private Button btnPedidosVenta;
+    @FXML private Button btnPresupuestos;
+    @FXML private Button btnClientes;
+    @FXML private Button btnArticulos;
+    @FXML private Button btnAlmacenes;
+    @FXML private Button btnProveedores;
+    @FXML private Button btnPedidosCompra;
+    @FXML private Button btnFacturasCompra;
+    @FXML private Button btnBanco;
+    @FXML private Button btnVerifactu;
+    @FXML private Button btnConfiguracion;
     @FXML private Button btnBackups;
     @FXML private Button btnUsuarios;
     @FXML private Button btnAuditoria;
     @FXML private Button btnAsientos;
+    @FXML private Button btnPlanContable;
     @FXML private Button btnModelo347;
+    @FXML private Button btnRecetas;
+    @FXML private Button btnOrdenesProduccion;
+    @FXML private Button btnHorneadas;
+    @FXML private Button btnLotes;
+    @FXML private Button btnAppcc;
+    @FXML private Button btnVehiculos;
+    @FXML private Button btnRutas;
+    @FXML private Button btnHojasRuta;
+    @FXML private Button btnDevoluciones;
 
     public MainPanelController(ApplicationContext springContext,
                                AutenticacionService autenticacionService,
@@ -56,12 +81,8 @@ public class MainPanelController {
 
     @FXML
     public void initialize() {
-        if (contentArea != null) {
-            cargarVista("/ui/dashboard.fxml");
-        } else {
-            log.warn("contentArea no fue inyectado por FXML");
-        }
         aplicarVisibilidadPorRol();
+        cargarVistaInicial();
         actualizarInfoUsuario();
         comprobarActualizacionEnSegundoPlano();
     }
@@ -81,13 +102,69 @@ public class MainPanelController {
         setVisible(btnUsuarios, esAdmin);
         setVisible(btnAuditoria, esAdmin);
         setVisible(btnAsientos, verContabilidad);
+        setVisible(btnPlanContable, verContabilidad);
         setVisible(btnModelo347, verContabilidad);
+        setVisible(btnDashboard, puedeVer("dashboard"));
+        setVisible(btnCaja, puedeVer("tesoreria"));
+        setVisible(btnFacturas, puedeVer("ventas"));
+        setVisible(btnAlbaranes, puedeVer("ventas"));
+        setVisible(btnPedidosVenta, puedeVer("ventas"));
+        setVisible(btnPresupuestos, puedeVer("ventas"));
+        setVisible(btnClientes, puedeVer("clientes"));
+        setVisible(btnArticulos, puedeVer("articulos"));
+        setVisible(btnAlmacenes, puedeVer("almacen"));
+        setVisible(btnProveedores, puedeVer("proveedores"));
+        setVisible(btnPedidosCompra, puedeVer("compras"));
+        setVisible(btnFacturasCompra, puedeVer("compras"));
+        setVisible(btnAsientos, puedeVer("contabilidad"));
+        setVisible(btnModelo347, puedeVer("fiscal"));
+        setVisible(btnBanco, puedeVer("tesoreria"));
+        setVisible(btnVerifactu, puedeVer("verifactu"));
+        setVisible(btnBackups, puedeVer("backup"));
+        setVisible(btnUsuarios, puedeVer("usuarios"));
+        setVisible(btnAuditoria, puedeVer("auditoria"));
+        setVisible(btnConfiguracion, puedeVer("configuracion"));
+        setVisible(btnRecetas, puedeVer("produccion"));
+        setVisible(btnOrdenesProduccion, puedeVer("produccion"));
+        setVisible(btnHorneadas, puedeVer("produccion"));
+        setVisible(btnLotes, puedeVer("trazabilidad"));
+        setVisible(btnAppcc, puedeVer("produccion"));
+        setVisible(btnVehiculos, puedeVer("reparto"));
+        setVisible(btnRutas, puedeVer("reparto"));
+        setVisible(btnHojasRuta, puedeVer("reparto"));
+        setVisible(btnDevoluciones, puedeVer("reparto"));
     }
 
     private void setVisible(Node nodo, boolean visible) {
         if (nodo != null) {
             nodo.setVisible(visible);
             nodo.setManaged(visible);
+        }
+    }
+
+    private boolean puedeVer(String modulo) {
+        return autenticacionService.tienePermiso(modulo, "ver");
+    }
+
+    private void cargarVistaInicial() {
+        if (contentArea == null) {
+            log.warn("contentArea no fue inyectado por FXML");
+            return;
+        }
+        if (puedeVer("dashboard")) {
+            cargarVista("/ui/dashboard.fxml");
+        } else if (puedeVer("ventas")) {
+            cargarVista("/ui/facturas_panel.fxml");
+        } else if (puedeVer("clientes")) {
+            cargarVista("/ui/clientes_panel.fxml");
+        } else if (puedeVer("compras")) {
+            cargarVista("/ui/pedidos_compra_panel.fxml");
+        } else if (puedeVer("tesoreria")) {
+            cargarVista("/ui/caja_panel.fxml");
+        } else {
+            Label label = new Label("No tiene permisos para acceder a ningun modulo.");
+            label.getStyleClass().add("muted");
+            contentArea.getChildren().setAll(label);
         }
     }
 
@@ -160,8 +237,17 @@ public class MainPanelController {
     @FXML public void onModelo347()         { cargarVistaAutorizada("fiscal", "/ui/modelo347_panel.fxml"); }
     @FXML public void onCaja()              { cargarVistaAutorizada("tesoreria", "/ui/caja_panel.fxml"); }
     @FXML public void onMovimientosBanco()  { cargarVistaAutorizada("tesoreria", "/ui/movimientos_banco_panel.fxml"); }
-    @FXML public void onEmpresaConfig()     { cargarVistaAutorizada("configuracion", "/ui/empresa_config_panel.fxml"); }
+    @FXML public void onEmpresaConfig()     { onConfiguracion(); }
     @FXML public void onConfiguracion()     { cargarVistaAutorizada("configuracion", "/ui/empresa_config_panel.fxml"); }
+    @FXML public void onRecetas()           { cargarVistaAutorizada("produccion", "/ui/recetas_panel.fxml"); }
+    @FXML public void onOrdenesProduccion() { cargarVistaAutorizada("produccion", "/ui/ordenes_produccion_panel.fxml"); }
+    @FXML public void onHorneadas()         { cargarVistaAutorizada("produccion", "/ui/horneadas_panel.fxml"); }
+    @FXML public void onLotes()             { cargarVistaAutorizada("trazabilidad", "/ui/lotes_panel.fxml"); }
+    @FXML public void onAppcc()             { cargarVistaAutorizada("produccion", "/ui/appcc_panel.fxml"); }
+    @FXML public void onVehiculos()         { cargarVistaAutorizada("reparto", "/ui/vehiculos_panel.fxml"); }
+    @FXML public void onRutas()             { cargarVistaAutorizada("reparto", "/ui/rutas_reparto_panel.fxml"); }
+    @FXML public void onHojasRuta()         { cargarVistaAutorizada("reparto", "/ui/hojas_ruta_panel.fxml"); }
+    @FXML public void onDevoluciones()      { cargarVistaAutorizada("reparto", "/ui/devoluciones_panel.fxml"); }
 
     @FXML
     public void onActualizarApp() {
@@ -185,11 +271,6 @@ public class MainPanelController {
         confirmacion.showAndWait()
             .filter(r -> r == ButtonType.OK)
             .ifPresent(r -> cerrarVentana());
-    }
-
-    @FXML
-    public void onSalir() {
-        cerrarVentana();
     }
 
     private void cerrarVentana() {

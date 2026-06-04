@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="alicanteweb.erp.controller.formcontroller.RutaRepartoFormController"
+      spacing="12" style="-fx-padding: 24; -fx-background-color: #f8f9fa;"
+      VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+
+    <Label text="RUTA DE REPARTO" styleClass="title"/>
+
+    <GridPane hgap="12" vgap="8">
+        <padding><Insets top="10" right="0" bottom="10" left="0"/></padding>
+        <Label text="Código:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtCodigo" promptText="Código de la ruta" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtNombre" promptText="Nombre de la ruta" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Descripción:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextArea fx:id="txtDescripcion" promptText="Descripción" prefRowCount="2" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Conductor:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtConductor" promptText="Nombre del conductor" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Distancia (km):" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtDistanciaKm" promptText="Distancia total en km" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Tiempo est. (min):" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtTiempoMinutos" promptText="Tiempo estimado" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Cancelar" onAction="#onCancelar" styleClass="button"/>
+        <Button text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
+    </HBox>
+</VBox>

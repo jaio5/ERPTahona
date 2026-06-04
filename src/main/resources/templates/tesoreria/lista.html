@@ -1,0 +1,13 @@
+<section>
+    <div class="topbar"><h4 th:text="${titulo}">Tesoreria</h4></div>
+    <h5>Caja</h5>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th>Importe</th></tr></thead>
+        <tbody><tr th:each="m : ${caja}"><td th:text="${m.fecha}"></td><td th:text="${m.concepto}"></td><td th:text="${m.tipo}"></td><td th:text="${m.importe}"></td></tr></tbody>
+    </table>
+    <h5>Banco</h5>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th>Importe</th></tr></thead>
+        <tbody><tr th:each="m : ${banco}"><td th:text="${m.fecha}"></td><td th:text="${m.concepto}"></td><td th:text="${m.tipo}"></td><td th:text="${m.importe}"></td></tr></tbody>
+    </table>
+</section>

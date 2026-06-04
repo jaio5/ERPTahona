@@ -24,4 +24,12 @@ public class ClienteDatosExternos {
     private boolean tieneTexto(String valor) {
         return valor != null && !valor.trim().isEmpty();
     }
+
+    @Override
+    public String toString() {
+        String nombreTexto = tieneTexto(nombre) ? nombre.trim() : "Empresa sin nombre";
+        String cifTexto = tieneTexto(cif) ? " (" + cif.trim() + ")" : "";
+        String poblacionTexto = tieneTexto(poblacion) ? " - " + poblacion.trim() : "";
+        return nombreTexto + cifTexto + poblacionTexto;
+    }
 }

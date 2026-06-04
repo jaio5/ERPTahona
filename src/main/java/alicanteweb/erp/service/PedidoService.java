@@ -167,7 +167,7 @@ public class PedidoService {
         }
 
         // Guardar albarán
-        AlbaranVenta albaranGuardado = albaranService.save(albaran);
+        AlbaranVenta albaranGuardado =             albaranService.guardar(albaran);;
 
         // Actualizar estado del pedido
         pedido.setEstado("SERVIDO");
@@ -224,7 +224,7 @@ public class PedidoService {
         }
 
         // Guardar albarán
-        AlbaranVenta albaranGuardado = albaranService.save(albaran);
+        AlbaranVenta albaranGuardado =             albaranService.guardar(albaran);;
 
         // Actualizar estado del pedido (si está completamente servido)
         boolean completamenteServido = verificarPedidoCompleto(pedido, entregas);

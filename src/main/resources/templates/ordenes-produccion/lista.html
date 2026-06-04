@@ -1,0 +1,8 @@
+﻿<div th:fragment="content">
+    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/ordenes-produccion/nuevo}" class="btn btn-success btn-sm">+ Nueva</a></div>
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div class="table-card"><table class="table table-hover">
+        <thead><tr><th>Número</th><th>Fecha</th><th>Estado</th><th class="text-end">Cantidad</th></tr></thead>
+        <tbody><tr th:each="o : ${ordenes}"><td th:text="${o.numero}"></td><td th:text="${o.fecha}"></td><td><span class="badge-status" th:classappend="${o.estado == 'EN_CURSO' ? 'bg-progress' : o.estado == 'FINALIZADA' ? 'bg-completed' : o.estado == 'CANCELADA' ? 'bg-cancelled' : 'bg-draft'}" th:text="${o.estado}"></span></td><td class="text-end" th:text="${o.cantidadPlanificada}"></td></tr></tbody>
+    </table></div>
+</div>

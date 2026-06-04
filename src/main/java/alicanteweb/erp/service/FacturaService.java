@@ -50,6 +50,10 @@ public class FacturaService {
         return repository.findById(id);
     }
 
+    public Optional<Factura> findByIdParaPdf(Long id) {
+        return repository.findByIdWithPdfData(id);
+    }
+
     public Optional<Factura> findByNumero(String numero) {
         return repository.findByNumero(numero);
     }
