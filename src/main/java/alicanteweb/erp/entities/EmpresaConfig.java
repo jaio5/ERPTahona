@@ -100,6 +100,38 @@ public class EmpresaConfig {
     @Column(name = "verifactu_id_dispositivo", length = 50)
     private String verifactuIdDispositivo;
 
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'VERIFACTU'")
+    @Column(name = "sif_modalidad", nullable = false, length = 20)
+    private SifModalidad sifModalidad;
+
+    @ColumnDefault("false")
+    @Column(name = "declaracion_responsable_emitida")
+    private Boolean declaracionResponsableEmitida;
+
+    @Column(name = "declaracion_responsable_fecha")
+    private LocalDateTime declaracionResponsableFecha;
+
+    @Size(max = 100)
+    @Column(name = "declaracion_responsable_version", length = 100)
+    private String declaracionResponsableVersion;
+
+    @Size(max = 128)
+    @Column(name = "declaracion_responsable_hash", length = 128)
+    private String declaracionResponsableHash;
+
+    @Size(max = 500)
+    @Column(name = "declaracion_responsable_ruta", length = 500)
+    private String declaracionResponsableRuta;
+
+    @Size(max = 255)
+    @Column(name = "productor_software", length = 255)
+    private String productorSoftware;
+
+    @Size(max = 100)
+    @Column(name = "nif_productor_software", length = 100)
+    private String nifProductorSoftware;
+
     @ColumnDefault("TRUE")
     @Column(name = "activo")
     private Boolean activo;
@@ -119,6 +151,12 @@ public class EmpresaConfig {
         }
         if (verifactuHabilitado == null) {
             verifactuHabilitado = true;
+        }
+        if (sifModalidad == null) {
+            sifModalidad = SifModalidad.VERIFACTU;
+        }
+        if (declaracionResponsableEmitida == null) {
+            declaracionResponsableEmitida = false;
         }
     }
 

@@ -1,7 +1,10 @@
 package alicanteweb.erp.controller;
 
 import alicanteweb.erp.entities.EmpresaConfig;
+import alicanteweb.erp.entities.SifModalidad;
+import alicanteweb.erp.service.DeclaracionResponsableService;
 import alicanteweb.erp.service.EmpresaConfigService;
+import alicanteweb.erp.service.FiscalComplianceService;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import org.springframework.stereotype.Controller;
@@ -35,14 +38,27 @@ public class EmpresaConfigController {
     @FXML private TextField txtIBAN;
     @FXML private TextField txtBanco;
     @FXML private TextField txtSwift;
+    @FXML private ComboBox<String> cmbModalidadSif;
+    @FXML private TextField txtSifNombre;
+    @FXML private TextField txtSifVersion;
+    @FXML private TextField txtSifInstalacion;
+    @FXML private TextField txtProductorSoftware;
+    @FXML private TextField txtNifProductorSoftware;
+    @FXML private Label lblDeclaracion;
 
     private EmpresaConfig empresaActual;
 
     private final EmpresaConfigService empresaConfigService;
+    private final FiscalComplianceService fiscalComplianceService;
+    private final DeclaracionResponsableService declaracionResponsableService;
 
     // Spring injecta el servicio
-    public EmpresaConfigController(EmpresaConfigService empresaConfigService) {
+    public EmpresaConfigController(EmpresaConfigService empresaConfigService,
+                                   FiscalComplianceService fiscalComplianceService,
+                                   DeclaracionResponsableService declaracionResponsableService) {
         this.empresaConfigService = empresaConfigService;
+        this.fiscalComplianceService = fiscalComplianceService;
+        this.declaracionResponsableService = declaracionResponsableService;
     }
 
     @FXML
@@ -52,6 +68,10 @@ public class EmpresaConfigController {
         if (cmbRegimenIVA != null) {
             cmbRegimenIVA.getItems().addAll("General", "Recargo", "Exento");
             cmbRegimenIVA.setValue("General");
+        }
+        if (cmbModalidadSif != null) {
+            cmbModalidadSif.getItems().setAll(SifModalidad.VERIFACTU.name(), SifModalidad.NO_VERIFACTU.name());
+            cmbModalidadSif.setValue(SifModalidad.VERIFACTU.name());
         }
         // Asegurarnos de que los botones estén habilitados por defecto
         if (btnGuardar != null) btnGuardar.setDisable(false);
@@ -98,6 +118,17 @@ public class EmpresaConfigController {
             if (txtBanco != null) txtBanco.setText("");
             if (txtSwift != null) txtSwift.setText("");
             if (txtNotas != null) txtNotas.setText("");
+            if (cmbModalidadSif != null) cmbModalidadSif.setValue(empresaActual.getSifModalidad() != null ? empresaActual.getSifModalidad().name() : SifModalidad.VERIFACTU.name());
+            if (txtSifNombre != null) txtSifNombre.setText(empresaActual.getVerifactuNombreSistema());
+            if (txtSifVersion != null) txtSifVersion.setText(empresaActual.getVerifactuVersionSistema());
+            if (txtSifInstalacion != null) txtSifInstalacion.setText(empresaActual.getVerifactuIdDispositivo());
+            if (txtProductorSoftware != null) txtProductorSoftware.setText(empresaActual.getProductorSoftware());
+            if (txtNifProductorSoftware != null) txtNifProductorSoftware.setText(empresaActual.getNifProductorSoftware());
+            if (lblDeclaracion != null) {
+                lblDeclaracion.setText(Boolean.TRUE.equals(empresaActual.getDeclaracionResponsableEmitida())
+                    ? "Declaracion emitida: " + valor(empresaActual.getDeclaracionResponsableVersion()) + " | " + valor(empresaActual.getDeclaracionResponsableHash())
+                    : "Declaracion responsable pendiente");
+            }
 
             log.info("Configuración cargada");
         } catch (Exception e) {
@@ -130,6 +161,14 @@ public class EmpresaConfigController {
             if (txtIBAN != null) log.info("IBAN: {}", txtIBAN.getText());
             if (txtBanco != null) log.info("Banco: {}", txtBanco.getText());
             if (txtSwift != null) log.info("SWIFT: {}", txtSwift.getText());
+            if (cmbModalidadSif != null && cmbModalidadSif.getValue() != null) {
+                empresaActual.setSifModalidad(SifModalidad.valueOf(cmbModalidadSif.getValue()));
+            }
+            if (txtSifNombre != null) empresaActual.setVerifactuNombreSistema(txtSifNombre.getText());
+            if (txtSifVersion != null) empresaActual.setVerifactuVersionSistema(txtSifVersion.getText());
+            if (txtSifInstalacion != null) empresaActual.setVerifactuIdDispositivo(txtSifInstalacion.getText());
+            if (txtProductorSoftware != null) empresaActual.setProductorSoftware(txtProductorSoftware.getText());
+            if (txtNifProductorSoftware != null) empresaActual.setNifProductorSoftware(txtNifProductorSoftware.getText());
 
             // Persistir empresaActual usando EmpresaConfigService
             EmpresaConfig saved = empresaConfigService.save(empresaActual);
@@ -150,6 +189,35 @@ public class EmpresaConfigController {
         mostrarInfo("Cambios cancelados");
     }
 
+    @FXML
+    public void onDiagnosticoFiscal() {
+        FiscalComplianceService.FiscalComplianceReport report = fiscalComplianceService.diagnosticar();
+        StringBuilder detalle = new StringBuilder();
+        detalle.append("Estado: ").append(report.listoProduccion() ? "LISTO" : "PENDIENTE").append("\n");
+        detalle.append("Modalidad: ").append(report.modalidad()).append("\n\n");
+        for (FiscalComplianceService.FiscalComplianceCheck check : report.checks()) {
+            detalle.append(check.ok() ? "[OK] " : "[PENDIENTE] ")
+                .append(check.codigo())
+                .append(" - ")
+                .append(check.descripcion())
+                .append("\n");
+        }
+        mostrarInfo(detalle.toString());
+    }
+
+    @FXML
+    public void onGenerarDeclaracionResponsable() {
+        try {
+            onGuardar();
+            java.io.File pdf = declaracionResponsableService.generarDeclaracionResponsable();
+            cargarConfiguracion();
+            mostrarInfo("Declaracion responsable generada:\n" + pdf.getAbsolutePath());
+        } catch (Exception e) {
+            log.error("Error generando declaracion responsable", e);
+            mostrarError(e.getMessage());
+        }
+    }
+
     private void mostrarInfo(String mensaje) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Información");
@@ -163,5 +231,9 @@ public class EmpresaConfigController {
         alert.setHeaderText("Error en la operación");
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+
+    private String valor(Object value) {
+        return value != null ? value.toString() : "";
     }
 }

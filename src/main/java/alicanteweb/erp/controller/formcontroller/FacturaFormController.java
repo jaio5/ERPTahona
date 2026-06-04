@@ -81,6 +81,12 @@ public class FacturaFormController {
     @FXML private TableView<AlbaranVenta> tableAlbaranesVinculados;
     @FXML private TableColumn<AlbaranVenta, String> colVincNumero;
     @FXML private TableColumn<AlbaranVenta, LocalDate> colVincFecha;
+    @FXML private Button btnAgregarLinea;
+    @FXML private Button btnEliminarLinea;
+    @FXML private Button btnVincularAlbaran;
+    @FXML private Button btnDesvincularAlbaran;
+    @FXML private Button btnGuardarBorrador;
+    @FXML private Button btnEmitir;
 
     private final FacturaService facturaService;
     private final ClienteService clienteService;
@@ -281,6 +287,7 @@ public class FacturaFormController {
         // Cargar albaranes relacionados y disponibles
         cargarAlbaranesDisponibles("");
         cargarAlbaranesVinculados();
+        aplicarBloqueoFiscal();
     }
 
     // ---------------- Albaranes relacionados ----------------
@@ -325,6 +332,7 @@ public class FacturaFormController {
 
     @FXML
     public void onVincularAlbaran() {
+        if (!validarMutable()) return;
         if (facturaActual == null || facturaActual.getId() == null) { mostrarAdvertencia("Guarda la factura antes de vincular albaranes"); return; }
         AlbaranVenta sel = tableAlbaranesDisponibles != null ? tableAlbaranesDisponibles.getSelectionModel().getSelectedItem() : null;
         if (sel == null) { mostrarAdvertencia("Selecciona un albarán para vincular"); return; }
@@ -346,6 +354,7 @@ public class FacturaFormController {
 
     @FXML
     public void onDesvincularAlbaran() {
+        if (!validarMutable()) return;
         AlbaranVenta sel = tableAlbaranesVinculados != null ? tableAlbaranesVinculados.getSelectionModel().getSelectedItem() : null;
         if (sel == null) { mostrarAdvertencia("Selecciona un albarán vinculado para desvincular"); return; }
         try {
@@ -376,6 +385,7 @@ public class FacturaFormController {
 
     @FXML
     public void onAgregarLinea() {
+        if (!validarMutable()) return;
         // Crear diálogo para agregar línea
         Dialog<LineaFacturaTemp> dialog = new Dialog<>();
         dialog.setTitle("Agregar Articulo");
@@ -533,6 +543,7 @@ public class FacturaFormController {
 
     @FXML
     public void onEliminarLinea() {
+        if (!validarMutable()) return;
         LineaFacturaTemp selected = tableLineas != null ? tableLineas.getSelectionModel().getSelectedItem() : null;
         if (selected != null) {
             lineasTemp.remove(selected);
@@ -569,11 +580,13 @@ public class FacturaFormController {
 
     @FXML
     public void onGuardarBorrador() {
+        if (!validarMutable()) return;
         guardarFactura("BORRADOR");
     }
 
     @FXML
     public void onEmitir() {
+        if (!validarMutable()) return;
         if (!validarFormulario()) {
             return;
         }
@@ -631,6 +644,7 @@ public class FacturaFormController {
 
     private void guardarFactura(String estado) {
         try {
+            if (!validarMutable()) return;
             if (facturaActual == null) {
                 facturaActual = new Factura();
             }
@@ -779,6 +793,38 @@ public class FacturaFormController {
 
     private boolean formularioModificado() {
         return (cbCliente != null && cbCliente.getValue() != null) || !lineasTemp.isEmpty();
+    }
+
+    private boolean validarMutable() {
+        if (facturaBloqueada()) {
+            mostrarAdvertencia("La factura emitida no se puede modificar. Crea una rectificativa si necesitas corregirla.");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean facturaBloqueada() {
+        return facturaActual != null
+            && ("EMITIDA".equalsIgnoreCase(facturaActual.getEstado()) || Boolean.TRUE.equals(facturaActual.getVerifactuEnviada()));
+    }
+
+    private void aplicarBloqueoFiscal() {
+        boolean bloqueada = facturaBloqueada();
+        if (cbCliente != null) cbCliente.setDisable(bloqueada);
+        if (dpFechaEmision != null) dpFechaEmision.setDisable(bloqueada);
+        if (dpFechaVencimiento != null) dpFechaVencimiento.setDisable(bloqueada);
+        if (cbFormaPago != null) cbFormaPago.setDisable(bloqueada);
+        if (txtObservaciones != null) txtObservaciones.setDisable(bloqueada);
+        if (txtBuscarAlbaran != null) txtBuscarAlbaran.setDisable(bloqueada);
+        if (btnAgregarLinea != null) btnAgregarLinea.setDisable(bloqueada);
+        if (btnEliminarLinea != null) btnEliminarLinea.setDisable(bloqueada);
+        if (btnVincularAlbaran != null) btnVincularAlbaran.setDisable(bloqueada);
+        if (btnDesvincularAlbaran != null) btnDesvincularAlbaran.setDisable(bloqueada);
+        if (btnGuardarBorrador != null) btnGuardarBorrador.setDisable(bloqueada);
+        if (btnEmitir != null) btnEmitir.setDisable(bloqueada);
+        if (bloqueada && lblTitulo != null) {
+            lblTitulo.setText("Factura emitida - solo lectura");
+        }
     }
 
     private void cerrarVentana() {

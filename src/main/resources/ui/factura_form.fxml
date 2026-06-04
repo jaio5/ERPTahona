@@ -70,7 +70,7 @@
                                 <HBox alignment="CENTER_LEFT" spacing="15">
                                     <Label text="Líneas de Factura" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
                                     <Region HBox.hgrow="ALWAYS"/>
-                                    <Button text="+ Agregar Artículo" onAction="#onAgregarLinea" styleClass="button-success"/>
+                                    <Button fx:id="btnAgregarLinea" text="+ Agregar Artículo" onAction="#onAgregarLinea" styleClass="button-success"/>
                                 </HBox>
                                 <Separator/>
 
@@ -86,7 +86,7 @@
                                 </TableView>
 
                                 <HBox spacing="10">
-                                    <Button text="Eliminar Línea" onAction="#onEliminarLinea" styleClass="button-danger"/>
+                                    <Button fx:id="btnEliminarLinea" text="Eliminar Línea" onAction="#onEliminarLinea" styleClass="button-danger"/>
                                 </HBox>
                             </VBox>
 
@@ -135,8 +135,8 @@
                                     </columns>
                                 </TableView>
                                 <HBox spacing="10">
-                                    <Button text="Vincular →" onAction="#onVincularAlbaran" styleClass="button-primary"/>
-                                    <Button text="← Desvincular" onAction="#onDesvincularAlbaran" styleClass="button-danger"/>
+                                    <Button fx:id="btnVincularAlbaran" text="Vincular →" onAction="#onVincularAlbaran" styleClass="button-primary"/>
+                                    <Button fx:id="btnDesvincularAlbaran" text="← Desvincular" onAction="#onDesvincularAlbaran" styleClass="button-danger"/>
                                 </HBox>
                                 <Label text="Albaranes vinculados" style="-fx-font-weight: bold;"/>
                                 <TableView fx:id="tableAlbaranesVinculados" prefHeight="120">
@@ -154,9 +154,9 @@
                     <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-padding: 15 20; -fx-border-width: 1 0 0 0; -fx-border-color: #e2e8f0;">
                         <Button text="Cancelar" onAction="#onCancelar"
                                 style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 10 24; -fx-font-size: 13; -fx-cursor: hand;"/>
-                        <Button text="Guardar Borrador" onAction="#onGuardarBorrador" styleClass="button"
+                        <Button fx:id="btnGuardarBorrador" text="Guardar Borrador" onAction="#onGuardarBorrador" styleClass="button"
                                 style="-fx-padding: 10 24; -fx-font-size: 13;"/>
-                        <Button text="Emitir Factura" onAction="#onEmitir" styleClass="button-success"
+                        <Button fx:id="btnEmitir" text="Emitir Factura" onAction="#onEmitir" styleClass="button-success"
                                 style="-fx-padding: 10 24; -fx-font-size: 13; -fx-font-weight: bold;"/>
                     </HBox>
                 </bottom>

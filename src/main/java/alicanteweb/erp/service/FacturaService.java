@@ -28,17 +28,20 @@ public class FacturaService {
     private final FacturaSerieSequenceRepository sequenceRepository;
     private final VerifactuService verifactuService;
     private final FacturacionEventoService facturacionEventoService;
+    private final FiscalComplianceService fiscalComplianceService;
     private final EntityManager entityManager;
 
     public FacturaService(FacturaRepository repository,
                           FacturaSerieSequenceRepository sequenceRepository,
                           VerifactuService verifactuService,
                           FacturacionEventoService facturacionEventoService,
+                          FiscalComplianceService fiscalComplianceService,
                           EntityManager entityManager) {
         this.repository = repository;
         this.sequenceRepository = sequenceRepository;
         this.verifactuService = verifactuService;
         this.facturacionEventoService = facturacionEventoService;
+        this.fiscalComplianceService = fiscalComplianceService;
         this.entityManager = entityManager;
     }
 
@@ -60,11 +63,19 @@ public class FacturaService {
 
     @Transactional
     public Factura save(Factura factura) {
+        if (factura != null && factura.getId() != null) {
+            Factura existente = repository.findById(factura.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
+            validarFacturaMutable(existente);
+        }
         return repository.save(factura);
     }
 
     @Transactional
     public void deleteById(Long id) {
+        Factura existente = repository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
+        validarFacturaMutable(existente);
         repository.deleteById(id);
     }
 
@@ -103,9 +114,7 @@ public class FacturaService {
             throw new IllegalStateException("Solo se pueden emitir facturas en estado REVISION");
         }
 
-        if (!verifactuService.isAeatAvailable()) {
-            throw new IllegalStateException("Imposible emitir: AEAT no está disponible. Configure verifactu.aeat.enabled, el keystore y el cliente SOAP.");
-        }
+        fiscalComplianceService.exigirListoParaEmision();
 
         verifactuService.enviarFacturaVerifactu(factura);
         Factura guardada = repository.save(factura);
@@ -188,6 +197,15 @@ public class FacturaService {
             return motivo.trim();
         }
         return observacionActual + "\n" + motivo.trim();
+    }
+
+    private void validarFacturaMutable(Factura factura) {
+        if (factura == null) {
+            return;
+        }
+        if ("EMITIDA".equalsIgnoreCase(factura.getEstado()) || Boolean.TRUE.equals(factura.getVerifactuEnviada())) {
+            throw new IllegalStateException("La factura emitida no se puede modificar ni eliminar. Use una factura rectificativa.");
+        }
     }
 
     private FacturaSerieSequence crearSecuenciaFactura(String serie, int ejercicio, String prefijo) {

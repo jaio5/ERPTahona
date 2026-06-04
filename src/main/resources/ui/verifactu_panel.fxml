@@ -9,14 +9,14 @@
       VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
     <HBox alignment="CENTER_LEFT" spacing="16">
-        <Label text="âœ… VeriFacTu AEAT" styleClass="title"/>
+        <Label text="VeriFactu / SIF" styleClass="title"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblEstado" text="Deshabilitado" style="-fx-text-fill: #6c757d;"/>
-        <Button text="ðŸ”„" onAction="#onRefresh" styleClass="button" style="-fx-font-size: 16;"/>
+        <Button text="Actualizar" onAction="#onRefresh" styleClass="button"/>
     </HBox>
 
     <VBox spacing="16" style="-fx-background-color: white; -fx-background-radius: 12; -fx-padding: 20;">
-        <Label text="ConfiguraciÃ³n" style="-fx-font-weight: 600; -fx-font-size: 14;"/>
+        <Label text="Configuracion" style="-fx-font-weight: 600; -fx-font-size: 14;"/>
 
         <HBox spacing="12" alignment="CENTER_LEFT">
             <Label text="Estado:" minWidth="120"/>
@@ -28,14 +28,14 @@
         </HBox>
 
         <HBox spacing="12">
-            <Button fx:id="btnGuardar" text="ðŸ’¾ Guardar" onAction="#onGuardar" styleClass="button-success"/>
-            <Button fx:id="btnProbar" text="ðŸ” Probar" onAction="#onProbar" styleClass="button-primary"/>
+            <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar" styleClass="button-success"/>
+            <Button fx:id="btnProbar" text="Diagnostico fiscal" onAction="#onDiagnosticoFiscal" styleClass="button-primary"/>
         </HBox>
     </VBox>
 
     <HBox spacing="12" alignment="CENTER_LEFT">
-        <Button fx:id="btnEnviar" text="ðŸ“¤ Enviar Facturas" onAction="#onEnviar" styleClass="button-primary"/>
-        <Button text="âœ”ï¸ Verificar" onAction="#onVerificar" styleClass="button"/>
+        <Button fx:id="btnEnviar" text="Emitir facturas" onAction="#onEnviar" styleClass="button-primary"/>
+        <Button text="Verificar" onAction="#onVerificar" styleClass="button"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblInfo" text="0 pendientes" style="-fx-text-fill: #6c757d;"/>
         <ProgressIndicator fx:id="progressIndicator" visible="false" prefWidth="20" prefHeight="20"/>
@@ -43,13 +43,12 @@
 
     <VBox VBox.vgrow="ALWAYS" spacing="12">
         <HBox spacing="8" alignment="CENTER_LEFT">
-            <Label text="Registro de EnvÃ­os" style="-fx-font-weight: 600;"/>
+            <Label text="Registro de evidencias" style="-fx-font-weight: 600;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <TextField fx:id="txtBuscar" promptText="Buscar factura..." prefWidth="220"
                        style="-fx-padding: 6 10;"/>
         </HBox>
-        <TableView fx:id="tableEnvios" VBox.vgrow="ALWAYS"
-                   style="-fx-background-color: white;" >
+        <TableView fx:id="tableEnvios" VBox.vgrow="ALWAYS" style="-fx-background-color: white;">
             <columns>
                 <TableColumn fx:id="colFecha" text="Fecha" minWidth="100" maxWidth="140"/>
                 <TableColumn fx:id="colFactura" text="Factura" minWidth="80" maxWidth="120"/>
@@ -63,13 +62,10 @@
     </VBox>
 
     <HBox spacing="12" alignment="CENTER_LEFT">
-        <Button text="ðŸ‘ï¸ Ver" onAction="#onVerDetalles" styleClass="button"/>
-        <Button text="ðŸ” Reenviar" onAction="#onReenviar" styleClass="button"/>
-        <Button text="ðŸ“¤ Exportar" onAction="#onExportar" styleClass="button-primary"/>
+        <Button text="Ver" onAction="#onVerDetalles" styleClass="button"/>
+        <Button text="Reenviar" onAction="#onReenviar" styleClass="button"/>
+        <Button text="Exportar eventos" onAction="#onExportar" styleClass="button-primary"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblTotal" text="0 registros" style="-fx-text-fill: #6c757d;"/>
     </HBox>
-
 </VBox>
-
-

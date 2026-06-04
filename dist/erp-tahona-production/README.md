@@ -58,8 +58,6 @@ $env:SECURITY_PBKDF2_SECRET="<secreto-pbkdf2>"
 - La validacion XSD incluida es estructural e interna al proyecto.
 - Antes de dar cumplimiento completo en España, debe sustituirse por el esquema oficial completo y validarse contra la especificacion final de AEAT/Orden HAC/1177/2024.
 
-La configuracion SIF y el diagnostico de preparacion fiscal estan documentados en `docs/fiscal-compliance.md`.
-
 ## Build
 
 ```powershell

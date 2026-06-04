@@ -58,6 +58,15 @@ public final class HashUtils {
      */
     public static String sha256Hex(String input) throws Exception {
         byte[] hash = sha256(input);
+        return toHex(hash);
+    }
+
+    public static String sha256Hex(byte[] input) throws Exception {
+        byte[] hash = sha256(input);
+        return toHex(hash);
+    }
+
+    private static String toHex(byte[] hash) {
         StringBuilder sb = new StringBuilder(hash.length * 2);
         for (byte b : hash) {
             sb.append(String.format("%02x", b));

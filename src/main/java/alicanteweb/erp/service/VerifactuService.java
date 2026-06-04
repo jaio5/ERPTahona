@@ -3,6 +3,7 @@ package alicanteweb.erp.service;
 import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
+import alicanteweb.erp.entities.SifModalidad;
 import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.repository.VerifactuEvidenceRepository;
 import alicanteweb.erp.util.HashUtils;
@@ -616,7 +617,8 @@ public class VerifactuService implements InitializingBean {
         EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
 
         // 2. Verificar que Verifactu está habilitado en la empresa
-        if (!Boolean.TRUE.equals(empresa.getVerifactuHabilitado())) {
+        SifModalidad modalidad = empresa.getSifModalidad() != null ? empresa.getSifModalidad() : SifModalidad.VERIFACTU;
+        if (modalidad == SifModalidad.VERIFACTU && !Boolean.TRUE.equals(empresa.getVerifactuHabilitado())) {
             throw new IllegalStateException("Verifactu está deshabilitado en la configuración de empresa");
         }
 
@@ -694,14 +696,19 @@ public class VerifactuService implements InitializingBean {
         if (firma != null) {
             evidencia.setSignature(firma);
         }
-        evidencia.setEstado("ENVIADO");
-        evidencia.setFechaEnvio(java.time.Instant.now());
+        boolean envioAeatReal = aeatEnabled && this.enabled;
+        evidencia.setEstado(envioAeatReal ? "ENVIADO" : "REGISTRADO_LOCAL");
+        if (envioAeatReal) {
+            evidencia.setFechaEnvio(java.time.Instant.now());
+        }
 
         // Metadata como Map
         java.util.Map<String, Object> metadata = new java.util.HashMap<>();
         metadata.put("empresa", empresa.getNombreEmpresa());
         metadata.put("cif", empresa.getCif());
         metadata.put("xml_length", xml.length());
+        metadata.put("modalidadSif", modalidad.name());
+        metadata.put("origenSistema", "VerifactuService");
         evidencia.setMetadata(metadata);
 
         evidenceRepository.save(evidencia);
@@ -713,7 +720,7 @@ public class VerifactuService implements InitializingBean {
         ));
 
         // 10. Envío real a la AEAT (si está habilitado)
-        if (aeatEnabled && this.enabled) {
+        if (envioAeatReal) {
             try {
                 log.info("Enviando factura {} a AEAT endpoint: {}", factura.getNumero(), aeatEndpoint);
                 String respuestaAEAT = enviarXMLaAEAT(xml, firma);
@@ -968,6 +975,10 @@ public class VerifactuService implements InitializingBean {
         payload.put("facturaId", factura.getId());
         payload.put("numero", factura.getNumero());
         payload.put("serie", resolverSerie(factura));
+        payload.putIfAbsent("origenSistema", "VerifactuService");
+        empresaConfigService.getConfiguracionActiva()
+            .map(EmpresaConfig::getSifModalidad)
+            .ifPresent(mod -> payload.putIfAbsent("modalidadSif", mod.name()));
         facturacionEventoService.registrarEvento(
             FacturacionEventoService.AMBITO_FACTURAS,
             tipoEvento,

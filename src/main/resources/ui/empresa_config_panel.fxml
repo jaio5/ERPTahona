@@ -84,6 +84,47 @@
                 </VBox>
 
                 <VBox styleClass="card" spacing="12">
+                    <Label text="Cumplimiento SIF / VeriFactu" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
+
+                    <HBox spacing="12">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Modalidad SIF" styleClass="form-label"/>
+                            <ComboBox fx:id="cmbModalidadSif" maxWidth="Infinity"/>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Nombre del sistema" styleClass="form-label"/>
+                            <TextField fx:id="txtSifNombre"/>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Version" styleClass="form-label"/>
+                            <TextField fx:id="txtSifVersion"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Identificador instalacion" styleClass="form-label"/>
+                            <TextField fx:id="txtSifInstalacion"/>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="Productor software" styleClass="form-label"/>
+                            <TextField fx:id="txtProductorSoftware"/>
+                        </VBox>
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label text="NIF productor" styleClass="form-label"/>
+                            <TextField fx:id="txtNifProductorSoftware"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <Button text="Diagnostico fiscal" onAction="#onDiagnosticoFiscal" styleClass="button-primary"/>
+                        <Button text="Generar declaracion responsable" onAction="#onGenerarDeclaracionResponsable" styleClass="button-success"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="lblDeclaracion" text="Declaracion responsable pendiente" style="-fx-text-fill: #6c757d;"/>
+                    </HBox>
+                </VBox>
+
+                <VBox styleClass="card" spacing="12">
                     <Label text="Datos Bancarios" style="-fx-font-weight: 600; -fx-font-size: 16;"/>
 
                     <VBox spacing="8">

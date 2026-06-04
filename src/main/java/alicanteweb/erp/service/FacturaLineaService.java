@@ -36,12 +36,25 @@ public class FacturaLineaService {
 
     @Transactional
     public FacturaLinea save(FacturaLinea linea) {
+        validarLineaMutable(linea);
         return repository.save(linea);
     }
 
     @Transactional
     public void deleteById(Long id) {
+        FacturaLinea existente = repository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Linea de factura no encontrada"));
+        validarLineaMutable(existente);
         repository.deleteById(id);
+    }
+
+    private void validarLineaMutable(FacturaLinea linea) {
+        if (linea == null || linea.getFactura() == null) {
+            return;
+        }
+        if ("EMITIDA".equalsIgnoreCase(linea.getFactura().getEstado()) || Boolean.TRUE.equals(linea.getFactura().getVerifactuEnviada())) {
+            throw new IllegalStateException("No se pueden modificar lineas de una factura emitida.");
+        }
     }
 }
 

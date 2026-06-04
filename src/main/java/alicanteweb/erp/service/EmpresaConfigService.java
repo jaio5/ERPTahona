@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -19,9 +21,12 @@ public class EmpresaConfigService {
     private static final Logger log = LoggerFactory.getLogger(EmpresaConfigService.class);
 
     private final EmpresaConfigRepository empresaConfigRepository;
+    private final FacturacionEventoService facturacionEventoService;
 
-    public EmpresaConfigService(EmpresaConfigRepository empresaConfigRepository) {
+    public EmpresaConfigService(EmpresaConfigRepository empresaConfigRepository,
+                                FacturacionEventoService facturacionEventoService) {
         this.empresaConfigRepository = empresaConfigRepository;
+        this.facturacionEventoService = facturacionEventoService;
     }
 
     /**
@@ -52,6 +57,10 @@ public class EmpresaConfigService {
      */
     @Transactional
     public EmpresaConfig save(EmpresaConfig config) {
+        EmpresaConfig anterior = config.getId() != null
+            ? empresaConfigRepository.findById(config.getId()).orElse(null)
+            : null;
+
         // Si se marca como activa, desactivar las demás
         if (Boolean.TRUE.equals(config.getActivo())) {
             List<EmpresaConfig> todas = empresaConfigRepository.findAll();
@@ -64,6 +73,7 @@ public class EmpresaConfigService {
         }
 
         EmpresaConfig saved = empresaConfigRepository.save(config);
+        registrarEventoConfiguracion(anterior, saved);
         log.info("Configuración de empresa guardada: {}", saved.getNombreEmpresa());
         return saved;
     }
@@ -122,5 +132,28 @@ public class EmpresaConfigService {
         }
         empresaConfigRepository.deleteById(id);
         log.info("Configuración {} eliminada", id);
+    }
+    private void registrarEventoConfiguracion(EmpresaConfig anterior, EmpresaConfig saved) {
+        try {
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("empresaId", saved.getId());
+            metadata.put("nif", saved.getCif());
+            metadata.put("modalidadSif", saved.getSifModalidad() != null ? saved.getSifModalidad().name() : null);
+            metadata.put("origenSistema", "EmpresaConfigService");
+            metadata.put("versionSistema", saved.getVerifactuVersionSistema());
+            metadata.put("declaracionResponsableEmitida", saved.getDeclaracionResponsableEmitida());
+            if (anterior != null) {
+                metadata.put("modalidadAnterior", anterior.getSifModalidad() != null ? anterior.getSifModalidad().name() : null);
+                metadata.put("versionAnterior", anterior.getVerifactuVersionSistema());
+            }
+            facturacionEventoService.registrarEvento(
+                FacturacionEventoService.AMBITO_GLOBAL,
+                anterior == null ? "CONFIG_EMPRESA_ALTA" : "CONFIG_EMPRESA_MODIFICADA",
+                saved.getId() != null ? saved.getId().toString() : saved.getCif(),
+                metadata
+            );
+        } catch (Exception e) {
+            log.warn("No se pudo registrar evento fiscal de configuracion de empresa: {}", e.getMessage());
+        }
     }
 }

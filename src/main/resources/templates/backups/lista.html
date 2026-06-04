@@ -1,0 +1,12 @@
+<section>
+    <div class="topbar">
+        <h4 th:text="${titulo}">Backups</h4>
+        <form th:action="@{/web/backups/crear}" method="post"><button class="btn btn-success btn-sm" type="submit">Crear backup</button></form>
+    </div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
+    <table class="table table-sm table-hover">
+        <thead><tr><th>Nombre</th><th>Tamano MB</th><th>Fecha</th></tr></thead>
+        <tbody><tr th:each="b : ${backups}"><td th:text="${b.nombre}"></td><td th:text="${b.tamanoMB}"></td><td th:text="${b.fechaFormateada}"></td></tr></tbody>
+    </table>
+</section>
