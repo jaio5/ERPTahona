@@ -338,7 +338,7 @@ public class AlbaranFormController {
                 albaranActual.getLineas().add(linea);
             }
 
-            albaranService.guardar(albaranActual);
+            albaranService.save(albaranActual);
 
             mostrarExito();
             cerrarVentana();
