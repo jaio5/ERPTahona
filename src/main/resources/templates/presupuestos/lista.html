@@ -1,17 +1,35 @@
-<section>
-    <div class="topbar"><h4 th:text="${titulo}">Presupuestos</h4><a th:href="@{/web/presupuestos/nuevo}" class="btn btn-success btn-sm">+ Nuevo</a></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
-    <table class="table table-sm table-hover">
-        <thead><tr><th>Numero</th><th>Fecha</th><th>Validez</th><th>Cliente</th><th>Estado</th></tr></thead>
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Presupuestos</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/presupuestos/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo presupuesto
+            </a>
+        </div>
+    </div>
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>Número</th><th>Fecha</th><th>Válido hasta</th><th>Cliente</th><th>Estado</th><th style="width:80px;"></th></tr></thead>
         <tbody>
-        <tr th:each="p : ${presupuestos}">
-            <td th:text="${p.numero} ?: ${p.id}"></td>
-            <td th:text="${p.fecha}"></td>
-            <td th:text="${p.fechaValidez}"></td>
-            <td th:text="${p.cliente != null ? p.cliente.nombre : ''}"></td>
-            <td th:text="${p.estado}"></td>
-        </tr>
+            <tr th:if="${#lists.isEmpty(presupuestos)}"><td colspan="6" class="empty-state"><i class="bi bi-file-earmark-text"></i><div>No hay presupuestos</div></td></tr>
+            <tr th:each="p : ${presupuestos}">
+                <td><a th:href="@{/web/presupuestos/{id}(id=${p.id})}"
+                       class="fw-medium text-decoration-none" th:text="${p.numero ?: '—'}"></a></td>
+                <td th:text="${p.fecha != null ? #temporals.format(p.fecha, 'dd/MM/yyyy') : '-'}"></td>
+                <td th:text="${p.fechaValidez != null ? #temporals.format(p.fechaValidez, 'dd/MM/yyyy') : '-'}"></td>
+                <td th:text="${p.cliente?.nombre} ?: '-'"></td>
+                <td><span class="badge-status" th:attr="data-status=${p.estado?.toLowerCase()}" th:text="${p.estado}"></span></td>
+                <td class="text-end">
+                    <a th:href="@{/web/presupuestos/{id}(id=${p.id})}" class="btn btn-ghost btn-sm" title="Ver">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </td>
+            </tr>
         </tbody>
-    </table>
-</section>
+    </table></div></div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/presupuestos')}"></div>
+</div>

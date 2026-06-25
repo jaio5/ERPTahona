@@ -100,7 +100,14 @@
                                th:attr="aria-label='Editar factura ' + ${f.numero}" title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form th:if="${f.estado == 'BORRADOR' or f.estado == 'REVISION'}"
+                            <form th:if="${f.estado == 'BORRADOR'}"
+                                  th:action="@{/web/facturas/{id}/revision(id=${f.id})}" method="post" class="d-inline">
+                                <button class="btn btn-ghost btn-sm text-warning" data-no-double-click="true"
+                                        th:attr="aria-label='Enviar a revisión factura ' + ${f.numero}" title="Enviar a revisión">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                            </form>
+                            <form th:if="${f.estado == 'REVISION'}"
                                   th:action="@{/web/facturas/{id}/emitir(id=${f.id})}" method="post" class="d-inline">
                                 <button class="btn btn-ghost btn-sm text-success" data-no-double-click="true"
                                         th:attr="aria-label='Emitir factura ' + ${f.numero}" title="Emitir">
