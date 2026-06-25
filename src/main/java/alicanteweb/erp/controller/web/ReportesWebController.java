@@ -2,7 +2,6 @@ package alicanteweb.erp.controller.web;
 
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.service.*;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -11,8 +10,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.stream.Collectors;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
+@PreAuthorize("@permisos.puede('reportes', 'ver')")
 @RequestMapping("/web/reportes")
 public class ReportesWebController {
 
@@ -35,23 +37,18 @@ public class ReportesWebController {
     }
 
     @GetMapping
-    public String index(HttpSession s, Model m) {
-        if (WebController.requireLogin(s)) return "redirect:/web/login";
+    public String index(Model m) {
         m.addAttribute("moduloActivo","reportes"); m.addAttribute("titulo","Informes");
         return WebController.layout(m, "reportes/index");
     }
 
     @GetMapping("/ventas-mes")
-    public String ventasMes(HttpSession s, Model m) {
-        if (WebController.requireLogin(s)) return "redirect:/web/login";
+    public String ventasMes(Model m) {
         YearMonth ym = YearMonth.now();
         LocalDate inicio = ym.atDay(1);
         LocalDate fin = ym.atEndOfMonth();
 
-        List<Factura> facturas = facturaService.findAll().stream()
-            .filter(f -> f.getFecha() != null && !f.getFecha().isBefore(inicio) && !f.getFecha().isAfter(fin)
-                     && "EMITIDA".equals(f.getEstado()))
-            .toList();
+        List<Factura> facturas = facturaService.findByFechaBetweenAndEstado(inicio, fin, "EMITIDA");
 
         BigDecimal totalVentas = facturas.stream()
             .map(f -> f.getTotal() != null ? f.getTotal() : BigDecimal.ZERO)
@@ -76,6 +73,12 @@ public class ReportesWebController {
             .limit(10)
             .collect(LinkedHashMap::new, (m2, e) -> m2.put(e.getKey(), e.getValue()), LinkedHashMap::putAll);
 
+        int dias = ym.lengthOfMonth();
+        BigDecimal ticketMedio = totalVentas.compareTo(BigDecimal.ZERO) > 0 && !facturas.isEmpty()
+            ? totalVentas.divide(BigDecimal.valueOf(facturas.size()), 2, java.math.RoundingMode.HALF_UP)
+            : BigDecimal.ZERO;
+        BigDecimal mediaDiaria = totalVentas.divide(BigDecimal.valueOf(dias), 2, java.math.RoundingMode.HALF_UP);
+
         m.addAttribute("moduloActivo","reportes");
         m.addAttribute("titulo","Ventas del mes");
         m.addAttribute("totalVentas", totalVentas);
@@ -83,12 +86,13 @@ public class ReportesWebController {
         m.addAttribute("mes", ym.getMonth().toString() + " " + ym.getYear());
         m.addAttribute("porDia", porDia);
         m.addAttribute("porCliente", porCliente);
+        m.addAttribute("ticketMedio", ticketMedio);
+        m.addAttribute("mediaDiaria", mediaDiaria);
         return WebController.layout(m, "reportes/ventas-mes");
     }
 
     @GetMapping("/produccion")
-    public String produccion(HttpSession s, Model m) {
-        if (WebController.requireLogin(s)) return "redirect:/web/login";
+    public String produccion(Model m) {
         YearMonth ym = YearMonth.now();
         LocalDate inicio = ym.atDay(1);
         LocalDate fin = ym.atEndOfMonth();
@@ -121,19 +125,47 @@ public class ReportesWebController {
     }
 
     @GetMapping("/rentabilidad")
-    public String rentabilidad(HttpSession s, Model m) {
-        if (WebController.requireLogin(s)) return "redirect:/web/login";
-        List<Receta> recetas = new java.util.ArrayList<>();
-        // Simple profitability: PVP - cost for each article with a recipe
+    public String rentabilidad(Model m) {
+
+        List<Articulo> articulos = articuloService.findAll();
+
+        List<Map<String, Object>> rentabilidad = articulos.stream()
+            .filter(a -> Boolean.TRUE.equals(a.getActivo())
+                      && a.getPvp() != null && a.getPvp().compareTo(BigDecimal.ZERO) > 0)
+            .map(a -> {
+                BigDecimal pvp = a.getPvp();
+                BigDecimal coste = a.getCoste() != null ? a.getCoste() : BigDecimal.ZERO;
+                BigDecimal margen = pvp.subtract(coste);
+                BigDecimal margenPct = pvp.compareTo(BigDecimal.ZERO) > 0
+                    ? margen.multiply(new BigDecimal("100"))
+                            .divide(pvp, 1, java.math.RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+                Map<String, Object> entry = new LinkedHashMap<>();
+                entry.put("nombre", a.getNombre());
+                entry.put("codigo", a.getCodigo());
+                entry.put("categoria", a.getCategoria() != null ? a.getCategoria() : "-");
+                entry.put("pvp", pvp);
+                entry.put("coste", coste);
+                entry.put("margen", margen);
+                entry.put("margenPct", margenPct);
+                entry.put("tieneCoste", coste.compareTo(BigDecimal.ZERO) > 0);
+                return entry;
+            })
+            .sorted((a, b) -> ((BigDecimal) b.get("margenPct")).compareTo((BigDecimal) a.get("margenPct")))
+            .collect(java.util.stream.Collectors.toList());
+
+        long conCoste = rentabilidad.stream().filter(e -> Boolean.TRUE.equals(e.get("tieneCoste"))).count();
+
         m.addAttribute("moduloActivo","reportes");
-        m.addAttribute("titulo","Rentabilidad");
-        m.addAttribute("recetas", recetas);
+        m.addAttribute("titulo","Rentabilidad por producto");
+        m.addAttribute("rentabilidad", rentabilidad);
+        m.addAttribute("numArticulos", rentabilidad.size());
+        m.addAttribute("numConCoste", conCoste);
         return WebController.layout(m, "reportes/rentabilidad");
     }
 
     @GetMapping("/reparto")
-    public String reparto(HttpSession s, Model m) {
-        if (WebController.requireLogin(s)) return "redirect:/web/login";
+    public String reparto(Model m) {
         YearMonth ym = YearMonth.now();
         LocalDate inicio = ym.atDay(1);
         LocalDate fin = ym.atEndOfMonth();
@@ -152,11 +184,10 @@ public class ReportesWebController {
     }
 
     @GetMapping("/trazabilidad")
-    public String trazabilidad(HttpSession s, Model m) {
-        if (WebController.requireLogin(s)) return "redirect:/web/login";
-        long caducados = loteService.findByFechaCaducidadBefore(LocalDate.now()).size();
-        long porCaducar = loteService.findByFechaCaducidadBetween(LocalDate.now(), LocalDate.now().plusDays(7)).size();
-        long total = loteService.findAll().size();
+    public String trazabilidad(Model m) {
+        long caducados = loteService.countByFechaCaducidadBefore(LocalDate.now());
+        long porCaducar = loteService.countByFechaCaducidadBetween(LocalDate.now(), LocalDate.now().plusDays(7));
+        long total = loteService.count();
 
         m.addAttribute("moduloActivo","reportes");
         m.addAttribute("titulo","Trazabilidad");
@@ -164,5 +195,11 @@ public class ReportesWebController {
         m.addAttribute("porCaducar", porCaducar);
         m.addAttribute("totalLotes", total);
         return WebController.layout(m, "reportes/trazabilidad");
+    }
+
+    @GetMapping("/inventario")
+    public String inventario(Model m) {
+        m.addAttribute("moduloActivo","reportes"); m.addAttribute("titulo","Inventario");
+        return WebController.layout(m, "reportes/inventario");
     }
 }
