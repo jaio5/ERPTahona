@@ -17,7 +17,7 @@ Todas las pantallas capturadas en `screenshots/`.
 
 ---
 
-### UI-02 · Dashboard — "Estado producción" vacío
+### ✅ UI-02 · Dashboard — "Estado producción" vacío — RESUELTO
 **Pantalla:** `/web/dashboard` (sección inferior derecha)
 **Problema:** La tarjeta "Estado producción" aparece completamente vacía, sin datos ni indicadores. La tarjeta izquierda "Ventas últimos 6 meses" sí muestra datos. El usuario no tiene visibilidad del estado de producción desde el panel principal.
 **Fix:** Implementar el contenido de la sección con: número de órdenes activas, último horneado, recetas más usadas, o un mensaje "Sin órdenes activas" si no hay datos.
@@ -156,7 +156,7 @@ public String nuevaAlias() {
 
 ---
 
-### UI-13 · Auditoría — "MÓDULO" vacío en algunos registros
+### ✅ UI-13 · Auditoría — "MÓDULO" vacío en algunos registros — RESUELTO
 **Pantalla:** `/web/auditoria`
 **Problema:** Los registros de "Usuario inició sesión" tienen la columna MÓDULO vacía. Esto hace que la tabla sea inconsistente visualmente.
 **Fix:** Al registrar el login exitoso en `AutenticacionService`, pasar `"AUTENTICACION"` como módulo en ambas llamadas (o resolver el issue UI-01 que elimina el duplicado).
