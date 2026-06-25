@@ -4,6 +4,11 @@
             <h4 th:text="${titulo}">Presupuesto</h4>
         </div>
         <div class="page-header-actions">
+            <a th:if="${presupuesto.estado == 'BORRADOR'}"
+               th:href="@{/web/presupuestos/{id}/editar(id=${presupuesto.id})}"
+               class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </a>
             <form th:if="${presupuesto.estado == 'ENVIADO' or presupuesto.estado == 'BORRADOR'}"
                   th:action="@{/web/presupuestos/{id}/aprobar(id=${presupuesto.id})}" method="post" class="d-inline">
                 <button class="btn btn-success btn-sm" data-no-double-click>
@@ -18,7 +23,7 @@
     <div class="form-card" style="max-width:640px;">
         <div class="row g-3">
             <div class="col-md-4"><small class="text-muted">Número</small><h6 th:text="${presupuesto.numero} ?: '-'"></h6></div>
-            <div class="col-md-4"><small class="text-muted">Fecha</small><h6 th:text="${presupuesto.fecha}"></h6></div>
+            <div class="col-md-4"><small class="text-muted">Fecha</small><h6 th:text="${presupuesto.fecha != null ? #temporals.format(presupuesto.fecha, 'dd/MM/yyyy') : '-'}"></h6></div>
             <div class="col-md-4"><small class="text-muted">Estado</small>
                 <h6><span class="badge-status" th:attr="data-status=${presupuesto.estado?.toLowerCase()}" th:text="${presupuesto.estado}"></span></h6>
             </div>
@@ -26,7 +31,7 @@
             <div class="col-md-6"><small class="text-muted">Total</small>
                 <h4 class="text-primary" th:text="${presupuesto.total != null ? #numbers.formatDecimal(presupuesto.total,1,2) + ' €' : '-'}"></h4>
             </div>
-            <div class="col-md-6"><small class="text-muted">Válido hasta</small><h6 th:text="${presupuesto.fechaValidez} ?: '-'"></h6></div>
+            <div class="col-md-6"><small class="text-muted">Válido hasta</small><h6 th:text="${presupuesto.fechaValidez != null ? #temporals.format(presupuesto.fechaValidez, 'dd/MM/yyyy') : '-'}"></h6></div>
             <div class="col-md-6" th:if="${presupuesto.factura != null}"><small class="text-muted">Factura generada</small>
                 <h6><a th:href="@{/web/facturas/{id}(id=${presupuesto.factura.id})}" th:text="${presupuesto.factura.numero}"></a></h6>
             </div>

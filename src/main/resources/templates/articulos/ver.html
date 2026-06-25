@@ -1,14 +1,119 @@
 <div th:fragment="content">
-    <div class="topbar"><h4 th:text="${articulo.nombre}"></h4><a th:href="@{/web/articulos}" class="btn btn-outline-secondary btn-sm">Volver</a></div>
-    <div class="form-card" style="max-width:600px;">
-        <div class="row g-3">
-            <div class="col-md-4"><small class="text-muted">Código</small><h6 th:text="${articulo.codigo}"></h6></div>
-            <div class="col-md-4"><small class="text-muted">Categoría</small><h6 th:text="${articulo.categoria} ?: '-'"></h6></div>
-            <div class="col-md-4"><small class="text-muted">Unidad</small><h6 th:text="${articulo.unidad} ?: '-'"></h6></div>
-            <div class="col-md-4"><small class="text-muted">PVP</small><h6 th:text="${articulo.pvp != null ? #numbers.formatCurrency(articulo.pvp) : '-'}"></h6></div>
-            <div class="col-md-4"><small class="text-muted">IVA</small><h6 th:text="${articulo.iva != null ? articulo.iva + '%' : '-'}"></h6></div>
-            <div class="col-md-4"><small class="text-muted">Stock</small><h6 th:text="${articulo.stock} ?: '0'"></h6></div>
-            <div class="col-12"><small class="text-muted">Alérgenos</small><h6 th:text="${articulo.alergenos} ?: 'No declarados'" class="text-danger"></h6></div>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${articulo.nombre}">Artículo</h4>
+            <p>
+                <span class="text-muted small" th:text="${articulo.codigo}"></span>
+                <span th:if="${articulo.categoria != null}" class="ms-2 badge bg-light text-dark"
+                      th:text="${articulo.categoria}"></span>
+            </p>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/articulos/{id}/editar(id=${articulo.id})}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </a>
+            <a th:href="@{/web/articulos}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="form-card">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="doc-header-icon">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5" th:text="${articulo.nombre}">Artículo</div>
+                        <div class="text-muted small">
+                            <span th:text="${articulo.codigo}"></span>
+                            <span th:if="${articulo.categoria != null}" class="ms-2" th:text="${articulo.categoria}"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section-title">
+                    <i class="bi bi-tag"></i> Precios
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">PVP</span>
+                        <div class="doc-field-value"
+                             style="font-size:1.3rem;color:var(--brand-color);"
+                             th:text="${articulo.pvp != null ? #numbers.formatCurrency(articulo.pvp) : '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">IVA</span>
+                        <div class="doc-field-value"
+                             th:text="${articulo.iva != null ? articulo.iva + '%' : '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Coste</span>
+                        <div class="doc-field-value"
+                             th:text="${articulo.coste != null ? #numbers.formatCurrency(articulo.coste) : '—'}">—</div>
+                    </div>
+                </div>
+
+                <div class="form-section-title">
+                    <i class="bi bi-archive"></i> Stock e identificación
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Stock actual</span>
+                        <div class="doc-field-value"
+                             th:text="${articulo.stock != null ? articulo.stock + ' ' + (articulo.unidad ?: 'ud.') : '0'}">0</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Unidad</span>
+                        <div class="doc-field-value" th:text="${articulo.unidad ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Estado</span>
+                        <div class="mt-1">
+                            <span class="badge-status"
+                                  th:attr="data-status=${articulo.activo ? 'activo' : 'anulada'}"
+                                  th:text="${articulo.activo ? 'Activo' : 'Inactivo'}">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section-title">
+                    <i class="bi bi-shield-check"></i> Información alimentaria
+                </div>
+                <div th:if="${articulo.alergenos != null and !articulo.alergenos.isEmpty()}">
+                    <span class="doc-field-label">Alérgenos declarados</span>
+                    <div class="mt-1">
+                        <span class="badge bg-warning text-dark me-1"
+                              th:each="a : ${#strings.arraySplit(articulo.alergenos, ',')}"
+                              th:text="${#strings.trim(a)}"></span>
+                    </div>
+                </div>
+                <div th:unless="${articulo.alergenos != null and !articulo.alergenos.isEmpty()}"
+                     class="text-muted small">
+                    <i class="bi bi-check-circle me-1 text-success"></i>Sin alérgenos declarados
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="form-card total-card-big mb-3">
+                <div class="label">Precio de venta</div>
+                <div class="amount"
+                     th:text="${articulo.pvp != null ? #numbers.formatCurrency(articulo.pvp) : '—'}">—</div>
+                <div class="text-muted small"
+                     th:text="${articulo.iva != null ? 'IVA ' + #numbers.formatDecimal(articulo.iva, 1, 2) + '% incluido' : '—'}"></div>
+            </div>
+
+            <div class="form-card">
+                <div class="doc-field-label mb-3">Acciones</div>
+                <div class="d-grid gap-2">
+                    <a th:href="@{/web/articulos/{id}/editar(id=${articulo.id})}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-2"></i>Editar artículo
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

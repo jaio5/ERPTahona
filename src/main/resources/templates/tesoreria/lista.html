@@ -78,7 +78,7 @@
         </div>
     </div>
 
-    <script th:inline="javascript">
+    <script th:attr="nonce=${cspNonce}" th:inline="javascript">
         document.getElementById('modalMovCaja').addEventListener('show.bs.modal', function(e) {
             var tipo = e.relatedTarget?.getAttribute('data-tipo') || 'INGRESO';
             document.getElementById('movTipo').value = tipo;
