@@ -541,6 +541,32 @@ body {
 .login-card .alert-danger  { background:#fef2f2; color:#991b1b; border-color:#fecaca; }
 .login-card .alert-success { background:#f0fdf4; color:#166534; border-color:#bbf7d0; }
 
+/* Formulario login — sustitutos de Bootstrap (form-control, btn, form-label, mb-3) */
+.login-card .form-label {
+    display: block; margin-bottom: 4px;
+    font-size: var(--text-md); font-weight: 500; color: var(--color-text-2);
+}
+.login-card .form-control {
+    display: block; width: 100%; padding: 0.5rem 0.75rem;
+    font-size: var(--text-md); line-height: 1.5;
+    color: var(--color-text); background-color: #fff;
+    border: 1px solid var(--color-border-strong); border-radius: var(--radius-md);
+    box-sizing: border-box; transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+.login-card .form-control:focus {
+    border-color: var(--brand-color); outline: 0;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+}
+.login-card .mb-3 { margin-bottom: 1rem; }
+.login-card .btn {
+    display: inline-block; font-weight: 500; text-align: center; cursor: pointer;
+    padding: 0.5rem 1rem; font-size: var(--text-md); border-radius: var(--radius-md);
+    border: 1px solid transparent; transition: all .15s ease-in-out;
+}
+.login-card .btn-primary { background-color: var(--brand-color); color: #fff; border-color: var(--brand-color); }
+.login-card .btn-primary:hover { background-color: var(--brand-hover); border-color: var(--brand-hover); }
+.login-card .w-100 { width: 100%; }
+
 /* ═══════════════════════════════════════════════
    TPV
    ═══════════════════════════════════════════════ */
