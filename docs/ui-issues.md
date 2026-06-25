@@ -184,19 +184,60 @@ public String nuevaAlias() {
 
 ---
 
+---
+
+## Segunda revisión — Workflow completo (25/06/2026)
+
+### ✅ UI-15 · Facturas — flujo BORRADOR→REVISIÓN bloqueado — RESUELTO
+**Problema:** `aprobarYEmitir()` requería estado REVISION pero no existía ningún endpoint ni botón para pasar de BORRADOR a REVISION. Las facturas nunca podían emitirse.
+**Fix:** Añadido `pasarARevision()` en FacturaService, endpoint `POST /{id}/revision`, y botones diferenciados: ojo-amarillo (→REVISION) para BORRADOR, send-verde (→EMITIDA) para REVISION.
+
+### ✅ UI-16 · error.html — expresión Thymeleaf inválida causaba timeout — RESUELTO
+**Problema:** `th:text="${codigo} ?: ${status} ?: '500'"` usa doble `?:` que Thymeleaf no soporta. Al producirse cualquier error 500, el servidor intentaba renderizar error.html que también fallaba, causando timeout infinito en el browser.
+**Fix:** Reescrito con `th:with` anidados: `th:with="cod=${codigo} ?: ${status}"` + `th:text="${cod} ?: '500'"`.
+
+### ✅ UI-17 · Pedidos venta — botón "Confirmar" usaba GET en lugar de POST — RESUELTO
+**Problema:** `<a href="/confirmar">` enviaba GET pero el endpoint es `@PostMapping`. El botón no hacía nada visible al usuario. Además el número en el listado no era un enlace, y el estado inicial `PENDIENTE` no coincidía con la condición `BORRADOR` del template.
+**Fix:** Cambiado a `<form method="post">`, número → enlace, condición actualizada a `PENDIENTE`, añadido botón editar en listado.
+
+### ✅ UI-18 · Pedidos venta — LazyInitializationException al cargar detalle — RESUELTO
+**Problema:** `PedidoRepository.findById()` heredado cargaba `cliente` y `pedidoLineas` como lazy proxies. Con `open-in-view=false`, el acceso en la vista lanzaba `LazyInitializationException` → timeout.
+**Fix:** Sobrescrito `findById()` con `@EntityGraph(attributePaths = {"cliente", "pedidoLineas", "pedidoLineas.articulo"})`.
+
+### ✅ UI-19 · Presupuestos — botón "Aprobar" usaba GET en lugar de POST — RESUELTO
+**Problema:** `<a href="/aprobar">` → GET. El endpoint es `@PostMapping`. El presupuesto nunca podía aprobarse desde la UI.
+**Fix:** Cambiado a `<form method="post">`. Número en listado → enlace clickable.
+
+### ✅ UI-20 · Órdenes de producción — sin transiciones de estado en la UI — RESUELTO
+**Problema:** `OrdenProduccionService` tenía `iniciarProduccion()`, `finalizarProduccion()` y `cancelarProduccion()` pero el controlador web no los exponía. El detalle solo mostraba "Editar".
+**Fix:** Añadidos endpoints `POST /{id}/iniciar`, `POST /{id}/finalizar`, `POST /{id}/cancelar`. Template actualizado con botones contextuales: PLANIFICADA→(Iniciar + Cancelar), EN_CURSO→(Finalizar con campos cantidad/merma + Cancelar).
+
+### ✅ UI-21 · Pedidos compra — sin transiciones de estado — RESUELTO
+**Problema:** No había forma de avanzar un pedido de compra de BORRADOR a ENVIADO o RECIBIDO.
+**Fix:** Añadido endpoint `POST /{id}/estado`. Detalle muestra "Enviar pedido" para BORRADOR y "Marcar recibido" para ENVIADO. Número en listado → enlace.
+
+---
+
 ## Checklist de implementación
 
-- [ ] UI-01: Eliminar registro duplicado de login en `SecurityConfig.erpAuthenticationSuccessHandler`
-- [ ] UI-02: Implementar contenido de "Estado producción" en dashboard
-- [ ] UI-03: Añadir alias `@GetMapping("/nueva")` en `AlbaranWebController`
-- [ ] UI-04: Corregir `error.html` (fallback atributos + link CSS app)
-- [ ] UI-05: Corregir labels en template de empresa (acentos + CIF/NIF)
-- [ ] UI-06: Añadir botones de acción en Tesorería
-- [ ] UI-07: Añadir acción "Emitir" en listado de facturas
-- [ ] UI-08: Añadir editar/eliminar en listado de artículos
-- [ ] UI-09: Preseleccionar almacén en formulario de albarán
-- [ ] UI-10: Mejorar contraste de sección Resumen en formularios
-- [ ] UI-11: Verificar mensaje de error en login
-- [ ] UI-12: Añadir columna ciudad en listado de clientes
-- [ ] UI-13: Pasar módulo "AUTENTICACION" en todos los registros de login
-- [ ] UI-14: Corregir resaltado en tabla de almacenes
+- [x] UI-01: Eliminar registro duplicado de login
+- [x] UI-02: Dashboard estado producción
+- [x] UI-03: Alias `/web/albaranes/nueva`
+- [x] UI-04: `error.html` con CSS de app
+- [x] UI-05: Labels empresa con acentos
+- [x] UI-06: Botones Tesorería
+- [x] UI-07: Acción Emitir en listado facturas
+- [x] UI-08: Editar en listado artículos
+- [x] UI-09: Almacén preseleccionado en albarán
+- [x] UI-10: Contraste sección Resumen
+- [x] UI-11: Mensaje error login visible
+- [x] UI-12: Columna ciudad en clientes
+- [x] UI-13: Módulo AUTENTICACION en auditoría
+- [ ] UI-14: Resaltado en tabla de almacenes (falso positivo — spell-check del navegador)
+- [x] UI-15: Flujo BORRADOR→REVISIÓN→EMITIDA en facturas
+- [x] UI-16: error.html expresión Thymeleaf inválida
+- [x] UI-17: Pedido venta confirmar GET→POST + estado PENDIENTE
+- [x] UI-18: LazyInitializationException en detalle pedido venta
+- [x] UI-19: Presupuesto aprobar GET→POST
+- [x] UI-20: Órdenes producción transiciones de estado
+- [x] UI-21: Pedidos compra transiciones de estado
