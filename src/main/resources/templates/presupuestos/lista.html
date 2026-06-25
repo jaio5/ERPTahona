@@ -26,6 +26,11 @@
                     <a th:href="@{/web/presupuestos/{id}(id=${p.id})}" class="btn btn-ghost btn-sm" title="Ver">
                         <i class="bi bi-eye"></i>
                     </a>
+                    <a th:if="${p.estado == 'BORRADOR'}"
+                       th:href="@{/web/presupuestos/{id}/editar(id=${p.id})}"
+                       class="btn btn-ghost btn-sm" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </a>
                 </td>
             </tr>
         </tbody>
