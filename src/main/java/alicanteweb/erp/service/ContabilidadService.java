@@ -1,5 +1,6 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.repository.AsientoContableRepository;
 import alicanteweb.erp.repository.PlanCuentasRepository;
@@ -117,16 +118,17 @@ public class ContabilidadService {
 
             // Auditar
             if (auditoriaService != null && usuario != null) {
-                auditoriaService.registrarAccion(usuario, "CONTABILIDAD", "CREAR_ASIENTO",
-                    "Asiento generado automáticamente para factura " + factura.getNumero(),
-                    "EXITOSO");
+                String idStr = guardado.getId() != null ? guardado.getId().toString() : null;
+                auditoriaService.registrarAccion(usuario, "CREAR_ASIENTO", "AsientoContable",
+                    idStr,
+                    "Asiento generado automáticamente para factura " + factura.getNumero());
             }
 
             return guardado;
 
         } catch (Exception e) {
             log.error("❌ Error generando asiento de factura", e);
-            throw new RuntimeException("Error al generar asiento contable", e);
+            throw new ErpException("Error al generar asiento contable", e);
         }
     }
 
@@ -200,7 +202,7 @@ public class ContabilidadService {
 
         } catch (Exception e) {
             log.error("❌ Error generando asiento de pago", e);
-            throw new RuntimeException("Error al generar asiento de pago", e);
+            throw new ErpException("Error al generar asiento de pago", e);
         }
     }
 
@@ -280,16 +282,16 @@ public class ContabilidadService {
 
             // Auditar (solo si usuario proporcionado)
             if (auditoriaService != null && usuario != null) {
-                auditoriaService.registrarAccion(usuario, "CONTABILIDAD", "CREAR_ASIENTO_COMPRA",
-                    "Asiento de compra generado: " + guardado.getNumero(),
-                    "EXITOSO");
+                auditoriaService.registrarAccion(usuario, "CREAR_ASIENTO_COMPRA", "AsientoContable",
+                    guardado.getId().toString(),
+                    "Asiento de compra generado: " + guardado.getNumero());
             }
 
             return guardado;
 
         } catch (Exception e) {
             log.error("❌ Error generando asiento de compra", e);
-            throw new RuntimeException("Error al generar asiento de compra", e);
+            throw new ErpException("Error al generar asiento de compra", e);
         }
     }
 

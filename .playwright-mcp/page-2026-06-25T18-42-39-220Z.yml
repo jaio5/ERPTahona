@@ -1,0 +1,296 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - text:     
+    - generic [ref=e22]:
+      - button " Compras " [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: 
+        - generic [ref=e25]: Compras
+        - generic [ref=e26]: 
+      - text:    
+    - generic [ref=e27]:
+      - button " Almacén " [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: 
+        - generic [ref=e30]: Almacén
+        - generic [ref=e31]: 
+      - text:    
+    - generic [ref=e32]:
+      - button " Producción " [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 
+        - generic [ref=e35]: Producción
+        - generic [ref=e36]: 
+      - text:    
+    - generic [ref=e37]:
+      - button " Reparto " [ref=e38] [cursor=pointer]:
+        - generic [ref=e39]: 
+        - generic [ref=e40]: Reparto
+        - generic [ref=e41]: 
+      - text:    
+    - generic [ref=e42]:
+      - button " Finanzas " [ref=e43] [cursor=pointer]:
+        - generic [ref=e44]: 
+        - generic [ref=e45]: Finanzas
+        - generic [ref=e46]: 
+      - text:     
+    - generic [ref=e47]:
+      - button " Administración " [expanded] [ref=e48] [cursor=pointer]:
+        - generic [ref=e49]: 
+        - generic [ref=e50]: Administración
+        - generic [ref=e51]: 
+      - generic [ref=e52]:
+        - link " Usuarios" [ref=e53] [cursor=pointer]:
+          - /url: /web/usuarios
+          - generic [ref=e54]: 
+          - generic [ref=e55]: Usuarios
+        - link " Empresa" [ref=e56] [cursor=pointer]:
+          - /url: /web/empresa
+          - generic [ref=e57]: 
+          - generic [ref=e58]: Empresa
+        - link " Auditoría" [ref=e59] [cursor=pointer]:
+          - /url: /web/auditoria
+          - generic [ref=e60]: 
+          - generic [ref=e61]: Auditoría
+        - link " Búsqueda global" [ref=e62] [cursor=pointer]:
+          - /url: /web/buscar
+          - generic [ref=e63]: 
+          - generic [ref=e64]: Búsqueda global
+        - link " Backups" [ref=e65] [cursor=pointer]:
+          - /url: /web/backups
+          - generic [ref=e66]: 
+          - generic [ref=e67]: Backups
+        - link " Importar datos" [ref=e68] [cursor=pointer]:
+          - /url: /web/importar
+          - generic [ref=e69]: 
+          - generic [ref=e70]: Importar datos
+    - generic [ref=e71]:
+      - button " Fiscal " [ref=e72] [cursor=pointer]:
+        - generic [ref=e73]: 
+        - generic [ref=e74]: Fiscal
+        - generic [ref=e75]: 
+      - text:  
+    - link " Informes" [ref=e76] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e77]: 
+      - generic [ref=e78]: Informes
+    - generic [ref=e80]:
+      - generic [ref=e81]: A
+      - generic [ref=e82]:
+        - generic [ref=e83]: Administrador
+        - generic [ref=e84]: Panadería Tahona
+  - main [ref=e85]:
+    - generic [ref=e86]:
+      - text: 
+      - navigation "breadcrumb" [ref=e87]:
+        - list [ref=e88]:
+          - listitem [ref=e89]:
+            - link "Inicio" [ref=e90] [cursor=pointer]:
+              - /url: /web/dashboard
+          - listitem [ref=e91]:
+            - text: /
+            - link "Administración" [ref=e92] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e93]: / Auditoría
+      - generic [ref=e94]:
+        - link "" [ref=e95] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e96]: 
+        - button "" [ref=e98] [cursor=pointer]:
+          - generic [ref=e99]: 
+    - generic [ref=e101]:
+      - heading "Auditoría" [level=4] [ref=e104]
+      - generic [ref=e106]:
+        - generic: 
+        - searchbox "Buscar..." [ref=e107]
+      - table [ref=e110]:
+        - rowgroup [ref=e111]:
+          - row "Fecha Usuario Módulo Acción Resultado Descripción" [ref=e112]:
+            - columnheader "Fecha" [ref=e113]
+            - columnheader "Usuario" [ref=e114]
+            - columnheader "Módulo" [ref=e115]
+            - columnheader "Acción" [ref=e116]
+            - columnheader "Resultado" [ref=e117]
+            - columnheader "Descripción" [ref=e118]
+        - rowgroup [ref=e119]:
+          - row "25/06/2026 20:42 admin AUTENTICACION LOGIN EXITO Login exitoso" [ref=e120]:
+            - cell "25/06/2026 20:42" [ref=e121]
+            - cell "admin" [ref=e122]
+            - cell "AUTENTICACION" [ref=e123]
+            - cell "LOGIN" [ref=e124]
+            - cell "EXITO" [ref=e125]
+            - cell "Login exitoso" [ref=e126]
+          - row "25/06/2026 20:30 admin AUTENTICACION LOGIN EXITO Login exitoso" [ref=e127]:
+            - cell "25/06/2026 20:30" [ref=e128]
+            - cell "admin" [ref=e129]
+            - cell "AUTENTICACION" [ref=e130]
+            - cell "LOGIN" [ref=e131]
+            - cell "EXITO" [ref=e132]
+            - cell "Login exitoso" [ref=e133]
+          - row "25/06/2026 20:21 admin AUTENTICACION LOGIN EXITO Login exitoso" [ref=e134]:
+            - cell "25/06/2026 20:21" [ref=e135]
+            - cell "admin" [ref=e136]
+            - cell "AUTENTICACION" [ref=e137]
+            - cell "LOGIN" [ref=e138]
+            - cell "EXITO" [ref=e139]
+            - cell "Login exitoso" [ref=e140]
+          - row "25/06/2026 20:18 admin AUTENTICACION LOGIN EXITO Login exitoso" [ref=e141]:
+            - cell "25/06/2026 20:18" [ref=e142]
+            - cell "admin" [ref=e143]
+            - cell "AUTENTICACION" [ref=e144]
+            - cell "LOGIN" [ref=e145]
+            - cell "EXITO" [ref=e146]
+            - cell "Login exitoso" [ref=e147]
+          - row "25/06/2026 20:15 admin AUTENTICACION LOGIN EXITO Login exitoso" [ref=e148]:
+            - cell "25/06/2026 20:15" [ref=e149]
+            - cell "admin" [ref=e150]
+            - cell "AUTENTICACION" [ref=e151]
+            - cell "LOGIN" [ref=e152]
+            - cell "EXITO" [ref=e153]
+            - cell "Login exitoso" [ref=e154]
+          - row "25/06/2026 20:15 admin Usuario LOGIN EXITO Usuario inició sesión" [ref=e155]:
+            - cell "25/06/2026 20:15" [ref=e156]
+            - cell "admin" [ref=e157]
+            - cell "Usuario" [ref=e158]
+            - cell "LOGIN" [ref=e159]
+            - cell "EXITO" [ref=e160]
+            - cell "Usuario inició sesión" [ref=e161]
+          - row "25/06/2026 20:05 admin AUTENTICACION LOGIN EXITO Login exitoso" [ref=e162]:
+            - cell "25/06/2026 20:05" [ref=e163]
+            - cell "admin" [ref=e164]
+            - cell "AUTENTICACION" [ref=e165]
+            - cell "LOGIN" [ref=e166]
+            - cell "EXITO" [ref=e167]
+            - cell "Login exitoso" [ref=e168]
+          - row "25/06/2026 20:05 admin Usuario LOGIN EXITO Usuario inició sesión" [ref=e169]:
+            - cell "25/06/2026 20:05" [ref=e170]
+            - cell "admin" [ref=e171]
+            - cell "Usuario" [ref=e172]
+            - cell "LOGIN" [ref=e173]
+            - cell "EXITO" [ref=e174]
+            - cell "Usuario inició sesión" [ref=e175]
+          - row "25/06/2026 19:30 admin AlbaranVenta CONVERTIR_FACTURA EXITO Albarán ALB-2026-000011 convertido a factura F-GEN-2026-0009" [ref=e176]:
+            - cell "25/06/2026 19:30" [ref=e177]
+            - cell "admin" [ref=e178]
+            - cell "AlbaranVenta" [ref=e179]
+            - cell "CONVERTIR_FACTURA" [ref=e180]
+            - cell "EXITO" [ref=e181]
+            - cell "Albarán ALB-2026-000011 convertido a factura F-GEN-2026-0009" [ref=e182]
+          - row "25/06/2026 19:27 admin AUTENTICACION LOGIN EXITO Login exitoso" [ref=e183]:
+            - cell "25/06/2026 19:27" [ref=e184]
+            - cell "admin" [ref=e185]
+            - cell "AUTENTICACION" [ref=e186]
+            - cell "LOGIN" [ref=e187]
+            - cell "EXITO" [ref=e188]
+            - cell "Login exitoso" [ref=e189]
+          - row "25/06/2026 19:27 admin Usuario LOGIN EXITO Usuario inició sesión" [ref=e190]:
+            - cell "25/06/2026 19:27" [ref=e191]
+            - cell "admin" [ref=e192]
+            - cell "Usuario" [ref=e193]
+            - cell "LOGIN" [ref=e194]
+            - cell "EXITO" [ref=e195]
+            - cell "Usuario inició sesión" [ref=e196]
+          - row "25/06/2026 19:27 SISTEMA Usuario ERROR ERROR Intento de login - usuario no encontrado" [ref=e197]:
+            - cell "25/06/2026 19:27" [ref=e198]
+            - cell "SISTEMA" [ref=e199]
+            - cell "Usuario" [ref=e200]
+            - cell "ERROR" [ref=e201]
+            - cell "ERROR" [ref=e202]
+            - cell "Intento de login - usuario no encontrado" [ref=e203]
+          - row "25/06/2026 19:27 SISTEMA Usuario ERROR ERROR Intento de login - usuario no encontrado" [ref=e204]:
+            - cell "25/06/2026 19:27" [ref=e205]
+            - cell "SISTEMA" [ref=e206]
+            - cell "Usuario" [ref=e207]
+            - cell "ERROR" [ref=e208]
+            - cell "ERROR" [ref=e209]
+            - cell "Intento de login - usuario no encontrado" [ref=e210]
+          - row "25/06/2026 19:27 admin AUTENTICACION LOGIN_FALLIDO ERROR Login fallido" [ref=e211]:
+            - cell "25/06/2026 19:27" [ref=e212]
+            - cell "admin" [ref=e213]
+            - cell "AUTENTICACION" [ref=e214]
+            - cell "LOGIN_FALLIDO" [ref=e215]
+            - cell "ERROR" [ref=e216]
+            - cell "Login fallido" [ref=e217]
+          - row "25/06/2026 19:27 admin AUTENTICACION LOGIN_FALLIDO ERROR Login fallido" [ref=e218]:
+            - cell "25/06/2026 19:27" [ref=e219]
+            - cell "admin" [ref=e220]
+            - cell "AUTENTICACION" [ref=e221]
+            - cell "LOGIN_FALLIDO" [ref=e222]
+            - cell "ERROR" [ref=e223]
+            - cell "Login fallido" [ref=e224]
+          - row "25/06/2026 16:50 admin AUTENTICACION LOGIN EXITO Login exitoso" [ref=e225]:
+            - cell "25/06/2026 16:50" [ref=e226]
+            - cell "admin" [ref=e227]
+            - cell "AUTENTICACION" [ref=e228]
+            - cell "LOGIN" [ref=e229]
+            - cell "EXITO" [ref=e230]
+            - cell "Login exitoso" [ref=e231]
+          - row "25/06/2026 16:50 admin Usuario LOGIN EXITO Usuario inició sesión" [ref=e232]:
+            - cell "25/06/2026 16:50" [ref=e233]
+            - cell "admin" [ref=e234]
+            - cell "Usuario" [ref=e235]
+            - cell "LOGIN" [ref=e236]
+            - cell "EXITO" [ref=e237]
+            - cell "Usuario inició sesión" [ref=e238]
+          - row "25/06/2026 16:47 admin AUTENTICACION LOGIN EXITO Login exitoso" [ref=e239]:
+            - cell "25/06/2026 16:47" [ref=e240]
+            - cell "admin" [ref=e241]
+            - cell "AUTENTICACION" [ref=e242]
+            - cell "LOGIN" [ref=e243]
+            - cell "EXITO" [ref=e244]
+            - cell "Login exitoso" [ref=e245]
+          - row "25/06/2026 16:47 admin Usuario LOGIN EXITO Usuario inició sesión" [ref=e246]:
+            - cell "25/06/2026 16:47" [ref=e247]
+            - cell "admin" [ref=e248]
+            - cell "Usuario" [ref=e249]
+            - cell "LOGIN" [ref=e250]
+            - cell "EXITO" [ref=e251]
+            - cell "Usuario inició sesión" [ref=e252]
+          - row "25/06/2026 16:46 admin AUTENTICACION LOGIN_FALLIDO ERROR Login fallido" [ref=e253]:
+            - cell "25/06/2026 16:46" [ref=e254]
+            - cell "admin" [ref=e255]
+            - cell "AUTENTICACION" [ref=e256]
+            - cell "LOGIN_FALLIDO" [ref=e257]
+            - cell "ERROR" [ref=e258]
+            - cell "Login fallido" [ref=e259]
+          - row "25/06/2026 16:46 admin AUTENTICACION LOGIN_FALLIDO ERROR Login fallido" [ref=e260]:
+            - cell "25/06/2026 16:46" [ref=e261]
+            - cell "admin" [ref=e262]
+            - cell "AUTENTICACION" [ref=e263]
+            - cell "LOGIN_FALLIDO" [ref=e264]
+            - cell "ERROR" [ref=e265]
+            - cell "Login fallido" [ref=e266]
+          - row "25/06/2026 16:03 admin AUTENTICACION LOGIN EXITO Login exitoso" [ref=e267]:
+            - cell "25/06/2026 16:03" [ref=e268]
+            - cell "admin" [ref=e269]
+            - cell "AUTENTICACION" [ref=e270]
+            - cell "LOGIN" [ref=e271]
+            - cell "EXITO" [ref=e272]
+            - cell "Login exitoso" [ref=e273]
+          - row "25/06/2026 16:03 admin Usuario LOGIN EXITO Usuario inició sesión" [ref=e274]:
+            - cell "25/06/2026 16:03" [ref=e275]
+            - cell "admin" [ref=e276]
+            - cell "Usuario" [ref=e277]
+            - cell "LOGIN" [ref=e278]
+            - cell "EXITO" [ref=e279]
+            - cell "Usuario inició sesión" [ref=e280]

@@ -1,0 +1,50 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Almacén</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/almacenes/{id}/editar(id=${almacen.id})}" class="btn btn-outline-primary btn-sm">Editar</a>
+            <a th:href="@{/web/almacenes}" class="btn btn-ghost btn-sm">Volver</a>
+        </div>
+    </div>
+    <div class="form-card">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <span class="doc-field-label">Código</span>
+                <div class="doc-field-value" th:text="${almacen.codigo}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Nombre</span>
+                <div class="doc-field-value" th:text="${almacen.nombre ?: '—'}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Estado</span>
+                <div class="doc-field-value">
+                    <span class="badge-status" th:attr="data-status=${almacen.activo ? 'activo' : 'anulada'}"
+                          th:text="${almacen.activo ? 'Activo' : 'Inactivo'}">—</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Capacidad</span>
+                <div class="doc-field-value" th:text="${almacen.capacidad ?: '—'}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Disponible</span>
+                <div class="doc-field-value" th:text="${almacen.disponible ?: '—'}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Localidad</span>
+                <div class="doc-field-value" th:text="${almacen.localidad ?: '—'}">—</div>
+            </div>
+            <div class="col-md-6">
+                <span class="doc-field-label">Responsable</span>
+                <div class="doc-field-value" th:text="${almacen.responsable ?: '—'}">—</div>
+            </div>
+            <div class="col-12" th:if="${almacen.descripcion}">
+                <span class="doc-field-label">Descripción</span>
+                <div class="doc-field-value text-muted" th:text="${almacen.descripcion}">—</div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -20,6 +20,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     @EntityGraph(attributePaths = {"cliente"})
     List<Pedido> findByEstado(String estado);
 
+    @EntityGraph(attributePaths = {"cliente"})
+    Page<Pedido> findByEstado(String estado, Pageable pageable);
+
     long countByEstado(String estado);
     List<Pedido> findByCliente_Id(Long clienteId);
 
@@ -31,6 +34,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     @EntityGraph(attributePaths = {"cliente"})
     List<Pedido> findByNumeroContainingIgnoreCaseOrCliente_NombreContainingIgnoreCase(String numero, String nombre);
+
+    @EntityGraph(attributePaths = {"cliente"})
+    Page<Pedido> findByNumeroContainingIgnoreCaseOrCliente_NombreContainingIgnoreCase(String numero, String nombre, Pageable pageable);
 
     List<Pedido> findByFecha(LocalDate fecha);
     List<Pedido> findByFechaBetween(LocalDate inicio, LocalDate fin);

@@ -15,6 +15,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @Transactional(readOnly = true)
@@ -24,15 +26,18 @@ public class OrdenProduccionService {
     private final ArticuloService articuloService;
     private final AlmacenService almacenService;
     private final RecetaRepository recetaRepository;
+    private final StockService stockService;
 
     public OrdenProduccionService(OrdenProduccionRepository repository,
                                    ArticuloService articuloService,
                                    AlmacenService almacenService,
-                                   RecetaRepository recetaRepository) {
+                                   RecetaRepository recetaRepository,
+                                   StockService stockService) {
         this.repository = repository;
         this.articuloService = articuloService;
         this.almacenService = almacenService;
         this.recetaRepository = recetaRepository;
+        this.stockService = stockService;
     }
 
     public List<OrdenProduccion> findAll() {
@@ -43,12 +48,28 @@ public class OrdenProduccionService {
         return repository.findById(id);
     }
 
+    public Optional<OrdenProduccion> findDetailById(Long id) {
+        return repository.findDetailById(id);
+    }
+
+    public Page<OrdenProduccion> findPage(String estado, Long recetaId, Pageable pageable) {
+        return repository.findPage(normalize(estado), recetaId, pageable);
+    }
+
+    private String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     public Optional<OrdenProduccion> findByNumero(String numero) {
         return repository.findByNumero(numero);
     }
 
     public List<OrdenProduccion> findByEstado(String estado) {
         return repository.findByEstado(estado);
+    }
+
+    public long countByEstado(String estado) {
+        return repository.countByEstado(estado);
     }
 
     public List<OrdenProduccion> findByFechaBetween(LocalDate inicio, LocalDate fin) {
@@ -60,7 +81,7 @@ public class OrdenProduccionService {
     }
 
     @Transactional
-    public OrdenProduccion save(OrdenProduccion orden) {
+    public synchronized OrdenProduccion save(OrdenProduccion orden) {
         if (orden == null) throw new IllegalArgumentException("Orden de producción nula");
         if (orden.getNumero() == null || orden.getNumero().trim().isEmpty()) {
             orden.setNumero(generarNumero());
@@ -73,7 +94,7 @@ public class OrdenProduccionService {
         repository.deleteById(id);
     }
 
-    public String generarNumero() {
+    public synchronized String generarNumero() {
         String prefijo = "OP-" + LocalDate.now().getYear();
         int maxSeq = repository.findMaxNumeroSecuencialBySerie(prefijo);
         return prefijo + "-" + String.format("%04d", maxSeq + 1);
@@ -102,7 +123,30 @@ public class OrdenProduccionService {
         orden.setFechaFin(java.time.LocalDateTime.now());
         orden.setCantidadProducida(cantidadProducida);
         orden.setMerma(merma);
-        return repository.save(orden);
+        orden = repository.save(orden);
+
+        // Entrada de stock del artículo resultante
+        if (orden.getArticulo() != null && cantidadProducida != null && cantidadProducida.compareTo(BigDecimal.ZERO) > 0) {
+            Long almacenId = orden.getAlmacen() != null ? orden.getAlmacen().getId() : null;
+            stockService.registrarEntrada(orden.getArticulo().getId(), almacenId, cantidadProducida,
+                    "Produccion " + orden.getNumero(), "ORDEN_PRODUCCION", orden.getId());
+        }
+
+        // Salida de stock de ingredientes (si hay receta)
+        if (orden.getReceta() != null && orden.getReceta().getIngredientes() != null) {
+            BigDecimal rendimiento = orden.getReceta().getRendimientoCantidad();
+            if (rendimiento == null || rendimiento.compareTo(BigDecimal.ZERO) <= 0) rendimiento = BigDecimal.ONE;
+            BigDecimal factor = cantidadProducida.divide(rendimiento, 4, java.math.RoundingMode.HALF_UP);
+            Long almacenId = orden.getAlmacen() != null ? orden.getAlmacen().getId() : null;
+            for (var ing : orden.getReceta().getIngredientes()) {
+                if (ing.getArticulo() == null || ing.getCantidad() == null) continue;
+                BigDecimal cantidadInsumo = ing.getCantidad().multiply(factor);
+                stockService.registrarSalida(ing.getArticulo().getId(), almacenId, cantidadInsumo,
+                        "Consumo produccion " + orden.getNumero(), "ORDEN_PRODUCCION", orden.getId());
+            }
+        }
+
+        return orden;
     }
 
     @Transactional
@@ -130,12 +174,7 @@ public class OrdenProduccionService {
         for (PedidoLinea linea : pedido.getLineas()) {
             if (linea.getArticulo() == null) continue;
 
-            // Buscar recetas que produzcan este artículo
-            List<Receta> recetas = recetaRepository.findAll().stream()
-                    .filter(r -> r.getArticuloResultante() != null
-                            && r.getArticuloResultante().getId().equals(linea.getArticulo().getId())
-                            && Boolean.TRUE.equals(r.getActivo()))
-                    .toList();
+            List<Receta> recetas = recetaRepository.findByArticuloResultante_IdAndActivoTrue(linea.getArticulo().getId());
 
             if (!recetas.isEmpty()) {
                 Receta receta = recetas.get(0);

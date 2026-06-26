@@ -1,5 +1,6 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.entities.MovimientoBanco;
 import alicanteweb.erp.repository.MovimientoBancoRepository;
 import org.slf4j.Logger;
@@ -164,7 +165,7 @@ public class IntegracionBancariaService {
 
         } catch (Exception e) {
             log.error("Error generando reporte", e);
-            throw new RuntimeException("Error al generar reporte", e);
+            throw new ErpException("Error al generar reporte", e);
         }
     }
 

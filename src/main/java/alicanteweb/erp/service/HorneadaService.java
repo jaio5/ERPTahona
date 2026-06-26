@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @Transactional(readOnly = true)
@@ -37,6 +39,14 @@ public class HorneadaService {
 
     public List<Horneada> findByFechaBetween(LocalDate inicio, LocalDate fin) {
         return repository.findByFechaBetween(inicio, fin);
+    }
+
+    public Page<Horneada> findPage(Long ordenId, LocalDate fecha, Pageable pageable) {
+        return repository.findPage(ordenId, fecha, pageable);
+    }
+
+    public List<Horneada> buscar(String q) {
+        return repository.buscar(q);
     }
 
     @Transactional

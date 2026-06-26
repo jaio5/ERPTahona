@@ -102,14 +102,14 @@
                             </a>
                             <form th:if="${f.estado == 'BORRADOR'}"
                                   th:action="@{/web/facturas/{id}/revision(id=${f.id})}" method="post" class="d-inline">
-                                <button class="btn btn-ghost btn-sm text-warning" data-no-double-click="true"
+                                <button class="btn btn-ghost btn-sm text-warning" data-no-double-click
                                         th:attr="aria-label='Enviar a revisión factura ' + ${f.numero}" title="Enviar a revisión">
                                     <i class="bi bi-eye-fill"></i>
                                 </button>
                             </form>
                             <form th:if="${f.estado == 'REVISION'}"
                                   th:action="@{/web/facturas/{id}/emitir(id=${f.id})}" method="post" class="d-inline">
-                                <button class="btn btn-ghost btn-sm text-success" data-no-double-click="true"
+                                <button class="btn btn-ghost btn-sm text-success" data-no-double-click
                                         th:attr="aria-label='Emitir factura ' + ${f.numero}" title="Emitir">
                                     <i class="bi bi-send-check"></i>
                                 </button>
@@ -117,7 +117,7 @@
                             <form th:if="${f.estado != null and f.estado != 'ANULADA' and f.estado != 'RECTIFICADA'}"
                                   th:action="@{/web/facturas/{id}/anular(id=${f.id})}" method="post" class="d-inline"
                                   onsubmit="return confirm('¿Anular esta factura?')">
-                                <button class="btn btn-ghost btn-sm text-danger" data-no-spinner="true"
+                                <button class="btn btn-ghost btn-sm text-danger" data-no-double-click
                                         th:attr="aria-label='Anular factura ' + ${f.numero}" title="Anular">
                                     <i class="bi bi-x-circle"></i>
                                 </button>

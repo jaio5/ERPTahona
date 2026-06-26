@@ -1,0 +1,120 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${proveedor.nombre}">Proveedor</h4>
+            <p>
+                <span class="badge-status"
+                      th:attr="data-status=${proveedor.activo ? 'activo' : 'anulada'}"
+                      th:text="${proveedor.activo ? 'Activo' : 'Inactivo'}">Activo</span>
+                <span class="text-muted small ms-2" th:text="${proveedor.codigo}"></span>
+            </p>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/proveedores/{id}/editar(id=${proveedor.id})}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </a>
+            <a th:href="@{/web/proveedores}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="form-card">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="doc-header-icon">
+                        <i class="bi bi-building-check"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5" th:text="${proveedor.nombre}">Proveedor</div>
+                        <div class="text-muted small" th:text="${proveedor.cif ?: ''}"></div>
+                    </div>
+                </div>
+
+                <div class="form-section-title">
+                    <i class="bi bi-info-circle"></i> Datos generales
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Código</span>
+                        <div class="doc-field-value" th:text="${proveedor.codigo ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">CIF / NIF</span>
+                        <div class="doc-field-value" th:text="${proveedor.cif ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Estado</span>
+                        <div class="mt-1">
+                            <span class="badge-status"
+                                  th:attr="data-status=${proveedor.activo ? 'activo' : 'anulada'}"
+                                  th:text="${proveedor.activo ? 'Activo' : 'Inactivo'}">—</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Nombre comercial</span>
+                        <div class="doc-field-value" th:text="${proveedor.nombreComercial ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Persona de contacto</span>
+                        <div class="doc-field-value" th:text="${proveedor.personaContacto ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Teléfono</span>
+                        <div class="doc-field-value" th:text="${proveedor.telefono ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Email</span>
+                        <div class="doc-field-value" th:text="${proveedor.email ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Web</span>
+                        <div class="doc-field-value" th:text="${proveedor.web ?: '—'}">—</div>
+                    </div>
+                </div>
+
+                <div class="form-section-title">
+                    <i class="bi bi-geo-alt"></i> Dirección y pagos
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <span class="doc-field-label">Dirección</span>
+                        <div class="doc-field-value" th:text="${proveedor.direccion ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">C.P. / Población</span>
+                        <div class="doc-field-value" th:text="${(proveedor.codigoPostal ?: '') + ' ' + (proveedor.poblacion ?: '')}">—</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Forma de pago</span>
+                        <div class="doc-field-value" th:text="${proveedor.formaPago ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Días de pago</span>
+                        <div class="doc-field-value" th:text="${proveedor.diasPago ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="doc-field-label">IBAN</span>
+                        <div class="doc-field-value" th:text="${proveedor.iban ?: '—'}">—</div>
+                    </div>
+                    <div class="col-12" th:if="${proveedor.notas}">
+                        <span class="doc-field-label">Notas</span>
+                        <div class="text-muted mt-1" th:text="${proveedor.notas}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="form-card">
+                <div class="doc-field-label mb-3">Acciones</div>
+                <div class="d-grid gap-2">
+                    <a th:href="@{/web/proveedores/{id}/editar(id=${proveedor.id})}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-2"></i>Editar proveedor
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

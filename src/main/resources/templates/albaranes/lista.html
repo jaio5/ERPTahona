@@ -1,14 +1,180 @@
 <div th:fragment="content">
-    <div class="topbar"><h4 th:text="${titulo}">Albaranes</h4><a th:href="@{/web/albaranes/nuevo}" class="btn btn-success btn-sm">+ Nuevo albarán</a></div>
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
-    <div class="row g-2 mb-3"><div class="col-md-5"><form class="d-flex gap-2"><input type="search" name="q" class="form-control form-control-sm" placeholder="Buscar..." th:value="${q}"><button class="btn btn-outline-primary btn-sm">Filtrar</button></form></div></div>
-    <div class="table-card"><table class="table table-hover">
-        <thead><tr><th>Número</th><th>Fecha</th><th>Cliente</th><th class="text-end">Total</th><th style="width:100px;"></th></tr></thead>
-        <tbody><tr th:each="a : ${albaranes}">
-            <td th:text="${a.numero}"></td><td th:text="${a.fecha != null ? #temporals.format(a.fecha, 'dd/MM/yyyy') : '-'}"></td>
-            <td th:text="${a.cliente?.nombre}"></td><td class="text-end" th:text="${a.total != null ? #numbers.formatCurrency(a.total) : '-'}"></td>
-            <td><a th:href="@{/web/albaranes/{id}(id=${a.id})}" class="btn btn-outline-secondary btn-sm">Ver</a></td>
-        </tr></tbody>
-    </table></div>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Albaranes</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/albaranes/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo albarán
+            </a>
+        </div>
+    </div>
+
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/albaranes}">
+        <input type="hidden" name="sort" th:value="${sort}">
+        <input type="hidden" name="dir"  th:value="${dir}">
+        <div class="filter-bar-search">
+            <label for="albaranes-search" class="visually-hidden">Buscar albaranes</label>
+            <i class="bi bi-search"></i>
+            <input id="albaranes-search" type="search" name="q" class="form-control form-control-sm"
+                   placeholder="Número o cliente..." th:value="${q}" autocomplete="off">
+        </div>
+        <div class="filter-bar-filters">
+            <select name="estado" class="form-select form-select-sm" style="width:150px;">
+                <option value="">Todos los estados</option>
+                <option value="PENDIENTE"  th:selected="${estado == 'PENDIENTE'}">Pendiente</option>
+                <option value="ENTREGADO"  th:selected="${estado == 'ENTREGADO'}">Entregado</option>
+                <option value="FACTURADO"  th:selected="${estado == 'FACTURADO'}">Facturado</option>
+                <option value="ANULADO"    th:selected="${estado == 'ANULADO'}">Anulado</option>
+            </select>
+        </div>
+        <div class="filter-bar-actions">
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-funnel me-1"></i>Filtrar
+            </button>
+            <a th:href="@{/web/albaranes}" class="btn btn-ghost btn-sm">Limpiar</a>
+            <span class="text-muted small" th:if="${page != null}">
+                <span th:text="${page.totalElements}">0</span> albaranes
+            </span>
+        </div>
+    </form>
+
+    <div class="table-card">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0" style="min-width:800px;">
+            <thead>
+                <tr>
+                    <th style="min-width:120px;">
+                        <a th:href="@{/web/albaranes(q=${q},estado=${estado},sort='numero',dir=${sort == 'numero' and dir == 'asc' ? 'desc' : 'asc'})}"
+                           class="text-decoration-none text-body d-flex align-items-center gap-1">
+                            Número
+                            <i class="bi" th:classappend="${sort == 'numero'} ? (${dir == 'asc'} ? 'bi-sort-up' : 'bi-sort-down') : 'bi-arrow-down-up opacity-25'"></i>
+                        </a>
+                    </th>
+                    <th style="min-width:100px;">
+                        <a th:href="@{/web/albaranes(q=${q},estado=${estado},sort='fecha',dir=${sort == 'fecha' and dir == 'asc' ? 'desc' : 'asc'})}"
+                           class="text-decoration-none text-body d-flex align-items-center gap-1">
+                            Fecha
+                            <i class="bi" th:classappend="${sort == 'fecha'} ? (${dir == 'asc'} ? 'bi-sort-up' : 'bi-sort-down') : 'bi-arrow-down-up opacity-25'"></i>
+                        </a>
+                    </th>
+                    <th style="min-width:160px;">Cliente</th>
+                    <th class="text-end" style="min-width:100px;">Total</th>
+                    <th style="min-width:100px;">Estado</th>
+                    <th style="width:80px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(albaranes)}">
+                    <td colspan="6" class="empty-state">
+                        <i class="bi bi-truck"></i>
+                        <div>No hay albaranes</div>
+                        <small th:if="${q != null and !q.isEmpty()}">Prueba con otros términos de búsqueda</small>
+                    </td>
+                </tr>
+                <tr th:each="a : ${albaranes}">
+                    <td><a th:href="@{/web/albaranes/{id}(id=${a.id})}" class="fw-medium text-decoration-none" th:text="${a.numero}"></a></td>
+                    <td class="text-muted small" th:text="${a.fecha != null ? #temporals.format(a.fecha, 'dd/MM/yyyy') : '-'}"></td>
+                    <td th:text="${a.cliente?.nombre}"></td>
+                    <td class="text-end fw-medium" th:text="${a.total != null ? #numbers.formatCurrency(a.total) : '-'}"></td>
+                    <td>
+                        <span class="badge-status" th:attr="data-status=${a.estado?.toLowerCase()}" th:text="${a.estado}">-</span>
+                    </td>
+                    <td class="text-end" style="white-space:nowrap;">
+                        <a th:href="@{/web/albaranes/{id}(id=${a.id})}" class="btn btn-ghost btn-sm"
+                           th:attr="aria-label='Ver albarán ' + ${a.numero}" title="Ver">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a th:href="@{/web/albaranes/{id}/editar(id=${a.id})}" class="btn btn-ghost btn-sm"
+                           th:attr="aria-label='Editar albarán ' + ${a.numero}" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-ghost btn-sm"
+                                th:if="${a.estado != 'FACTURADO' and a.estado != 'ANULADO'}"
+                                data-bs-toggle="modal" data-bs-target="#modalFacturar"
+                                th:attr="data-albaran-numero=${a.numero}, data-albaran-id=${a.id}, data-cliente=${a.cliente?.nombre}"
+                                title="Convertir en factura">
+                            <i class="bi bi-receipt text-primary"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/albaranes')}"></div>
+
+    <!-- Modal: Convertir en factura -->
+    <div class="modal fade" id="modalFacturar" tabindex="-1" aria-labelledby="modalFacturarLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalFacturarLabel">
+                        <i class="bi bi-receipt me-2 text-primary"></i>Convertir en factura
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formFacturar" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <div class="modal-body">
+                        <p class="text-muted small mb-4" id="modalFacturarInfo"></p>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="fFecha">
+                                Fecha de factura <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" id="fFecha" name="fecha" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="fMedioCobro">Medio de cobro</label>
+                            <select id="fMedioCobro" name="medioCobro" class="form-select">
+                                <option value="">— Sin especificar —</option>
+                                <option value="EFECTIVO">Efectivo</option>
+                                <option value="TRANSFERENCIA">Transferencia bancaria</option>
+                                <option value="TARJETA">Tarjeta</option>
+                                <option value="CHEQUE">Cheque</option>
+                                <option value="PAGARE">Pagaré</option>
+                                <option value="BIZUM">Bizum</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="fFechaVencimiento">Fecha de vencimiento</label>
+                            <input type="date" id="fFechaVencimiento" name="fechaVencimiento" class="form-control">
+                            <div class="form-text">Déjala vacía si el pago es inmediato</div>
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label fw-semibold" for="fObservaciones">Observaciones adicionales</label>
+                            <textarea id="fObservaciones" name="observaciones" class="form-control" rows="2"
+                                      placeholder="Opcional..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" data-no-double-click>
+                            <i class="bi bi-receipt me-1"></i>Crear factura
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script th:attr="nonce=${cspNonce}">
+    (function() {
+        const modal = document.getElementById('modalFacturar');
+        if (!modal) return;
+        modal.addEventListener('show.bs.modal', function(e) {
+            const btn = e.relatedTarget;
+            const numero  = btn.dataset.albaranNumero;
+            const id      = btn.dataset.albaranId;
+            const cliente = btn.dataset.cliente || '';
+            document.getElementById('formFacturar').action = '/web/albaranes/' + id + '/facturar';
+            document.getElementById('modalFacturarInfo').textContent =
+                'Albarán ' + numero + (cliente ? '  ·  ' + cliente : '');
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fFecha').value = hoy;
+            document.getElementById('fFechaVencimiento').value = '';
+            document.getElementById('fObservaciones').value = '';
+        });
+    })();
+    </script>
 </div>

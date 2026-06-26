@@ -76,7 +76,7 @@ public class VerifactuHardeningService {
                 return;
             }
 
-            List<VerifactuEvidence> evidencias = evidenceRepository.findAll();
+            List<VerifactuEvidence> evidencias = evidenceRepository.findAllByOrderByIdAsc();
             if (evidencias.isEmpty()) {
                 log.info("No hay evidencias VeriFactu para verificar.");
                 return;
@@ -118,9 +118,7 @@ public class VerifactuHardeningService {
                 return;
             }
 
-            List<Factura> emitidas = facturaRepository.findAll().stream()
-                    .filter(f -> "EMITIDA".equals(f.getEstado()))
-                    .toList();
+            List<Factura> emitidas = facturaRepository.findByEstado("EMITIDA");
 
             int pendientes = 0;
             for (Factura f : emitidas) {

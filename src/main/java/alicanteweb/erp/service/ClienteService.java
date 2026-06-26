@@ -6,6 +6,9 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +24,10 @@ public class ClienteService {
 
     public List<Cliente> findAll() {
         return repository.findAll();
+    }
+
+    public long count() {
+        return repository.count();
     }
 
     public Optional<Cliente> findById(Long id) {
@@ -113,14 +120,14 @@ public class ClienteService {
         repository.save(cliente);
     }
 
-    @PostConstruct
-    private void markSearchUsage() {
-        // Llamada ligera y segura para marcar `searchByNombre` como usada en tiempo de ejecución.
-        // Busca una cadena improbable para minimizar resultados y coste. Capturamos excepciones por seguridad.
-        try {
-            searchByNombre("__NO_MATCH_123456__");
-        } catch (Exception ignored) {
-            // No queremos bloquear el arranque por este self-check
-        }
+    public Page<Cliente> buscarPaginado(String q, Pageable pageable) {
+        return repository.buscarPaginado(
+            (q != null && !q.isBlank()) ? q : null,
+            pageable);
+    }
+
+    public List<Cliente> buscarParaApi(String q, Pageable pageable) {
+        String normalized = q != null && !q.isBlank() ? q.trim() : null;
+        return repository.buscarParaApi(normalized, pageable);
     }
 }

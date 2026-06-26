@@ -1,0 +1,104 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Usuario</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/usuarios/{id}/editar(id=${usuario.id})}" class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </a>
+            <a th:href="@{/web/usuarios}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="form-card">
+                <div class="form-section-title">
+                    <i class="bi bi-person"></i> Información del usuario
+                </div>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Usuario</span>
+                        <div class="doc-field-value fw-medium" th:text="${usuario.username}">—</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Nombre</span>
+                        <div class="doc-field-value" th:text="${usuario.nombre ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Email</span>
+                        <div class="doc-field-value" th:text="${usuario.email ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Rol</span>
+                        <div class="doc-field-value" th:text="${usuario.role ?: usuario.rol?.nombre ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Estado</span>
+                        <div class="doc-field-value">
+                            <span th:if="${usuario.bloqueado}" class="badge-status" data-status="anulada">Bloqueado</span>
+                            <span th:if="${!usuario.bloqueado and usuario.enabled}" class="badge-status" data-status="activo">Activo</span>
+                            <span th:if="${!usuario.bloqueado and !usuario.enabled}" class="badge-status" data-status="borrador">Inactivo</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Intentos fallidos</span>
+                        <div class="doc-field-value" th:text="${usuario.intentosFallidos ?: 0}">0</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Creado</span>
+                        <div class="doc-field-value text-muted"
+                             th:text="${usuario.fechaCreacion != null ? #temporals.format(usuario.fechaCreacion,'dd/MM/yyyy HH:mm') : '—'}">—</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Último acceso</span>
+                        <div class="doc-field-value text-muted"
+                             th:text="${usuario.ultimoLogin != null ? #temporals.format(usuario.ultimoLogin,'dd/MM/yyyy HH:mm') : 'Nunca'}">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="form-card">
+                <div class="form-section-title">
+                    <i class="bi bi-gear"></i> Acciones
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    <form th:if="${!usuario.bloqueado}"
+                          th:action="@{/web/usuarios/{id}/bloquear(id=${usuario.id})}" method="post">
+                        <button type="submit" class="btn btn-outline-warning btn-sm w-100" data-no-double-click
+                                data-confirm="¿Bloquear este usuario?">
+                            <i class="bi bi-lock me-1"></i>Bloquear usuario
+                        </button>
+                    </form>
+                    <form th:if="${usuario.bloqueado}"
+                          th:action="@{/web/usuarios/{id}/desbloquear(id=${usuario.id})}" method="post">
+                        <button type="submit" class="btn btn-outline-success btn-sm w-100" data-no-double-click>
+                            <i class="bi bi-unlock me-1"></i>Desbloquear usuario
+                        </button>
+                    </form>
+                    <form th:if="${usuario.enabled}"
+                          th:action="@{/web/usuarios/{id}/desactivar(id=${usuario.id})}" method="post">
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100" data-no-double-click
+                                data-confirm="¿Desactivar este usuario?">
+                            <i class="bi bi-person-x me-1"></i>Desactivar cuenta
+                        </button>
+                    </form>
+                    <form th:if="${!usuario.enabled}"
+                          th:action="@{/web/usuarios/{id}/activar(id=${usuario.id})}" method="post">
+                        <button type="submit" class="btn btn-outline-success btn-sm w-100" data-no-double-click>
+                            <i class="bi bi-person-check me-1"></i>Activar cuenta
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

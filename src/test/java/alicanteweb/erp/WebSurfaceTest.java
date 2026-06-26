@@ -31,7 +31,7 @@ class WebSurfaceTest {
     @Test
     void existenRecursosEstaticosDelFrontendWeb() {
         assertTrue(Files.exists(Path.of("src/main/resources/static/index.html")), "Falta index.html");
-        assertTrue(Files.exists(Path.of("src/main/resources/static/app.css")), "Falta app.css");
-        assertTrue(Files.exists(Path.of("src/main/resources/static/app.js")), "Falta app.js");
+        assertTrue(Files.exists(Path.of("src/main/resources/static/css/app.css")), "Falta css/app.css");
+        assertTrue(Files.exists(Path.of("src/main/resources/static/js/app.js")), "Falta js/app.js");
     }
 }

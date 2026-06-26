@@ -2,6 +2,7 @@ package alicanteweb.erp.repository;
 
 import alicanteweb.erp.entities.HojaRutaEntrega;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,4 +13,11 @@ public interface HojaRutaEntregaRepository extends JpaRepository<HojaRutaEntrega
     List<HojaRutaEntrega> findByClienteId(Long clienteId);
     List<HojaRutaEntrega> findByAlbaranId(Long albaranId);
     List<HojaRutaEntrega> findByHojaRutaIdAndEntregadoFalse(Long hojaRutaId);
+    long countByHojaRutaId(Long hojaRutaId);
+
+    @Query("SELECT e.albaran.id FROM HojaRutaEntrega e WHERE e.albaran IS NOT NULL")
+    List<Long> findAllAlbaranIdsAsignados();
+
+    boolean existsByIdAndHojaRutaUsuarioId(Long id, Long usuarioId);
+    boolean existsByIdAndHojaRutaUsuarioIsNullAndHojaRutaConductorIgnoreCase(Long id, String conductor);
 }

@@ -2,6 +2,7 @@
 *.class
 target/
 dist/
+node_modules/
 
 # Log files
 *.log

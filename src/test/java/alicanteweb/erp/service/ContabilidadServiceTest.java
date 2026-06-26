@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.isNull;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -142,7 +143,12 @@ class ContabilidadServiceTest {
 
         contabilidadService.generarAsientoFactura(factura, usuario);
 
-        verify(auditoriaService, atLeastOnce()).registrarAccion(eq(usuario), anyString(), anyString(), argThat(s -> s != null && s.toLowerCase().contains("factura")), anyString());
+        // entidadId es el ID del asiento (null en test porque el mock no asigna IDs)
+        // descripcion contiene el número de factura
+        verify(auditoriaService, atLeastOnce()).registrarAccion(
+                eq(usuario), anyString(), anyString(),
+                isNull(),
+                argThat(s -> s != null && s.toLowerCase().contains("factura")));
     }
 
     @Test

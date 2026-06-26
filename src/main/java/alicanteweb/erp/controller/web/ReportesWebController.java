@@ -2,6 +2,7 @@ package alicanteweb.erp.controller.web;
 
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.service.*;
+import alicanteweb.erp.util.FinancialMath;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -75,9 +76,9 @@ public class ReportesWebController {
 
         int dias = ym.lengthOfMonth();
         BigDecimal ticketMedio = totalVentas.compareTo(BigDecimal.ZERO) > 0 && !facturas.isEmpty()
-            ? totalVentas.divide(BigDecimal.valueOf(facturas.size()), 2, java.math.RoundingMode.HALF_UP)
+            ? totalVentas.divide(BigDecimal.valueOf(facturas.size()), 2, FinancialMath.ROUND)
             : BigDecimal.ZERO;
-        BigDecimal mediaDiaria = totalVentas.divide(BigDecimal.valueOf(dias), 2, java.math.RoundingMode.HALF_UP);
+        BigDecimal mediaDiaria = totalVentas.divide(BigDecimal.valueOf(dias), 2, FinancialMath.ROUND);
 
         m.addAttribute("moduloActivo","reportes");
         m.addAttribute("titulo","Ventas del mes");
@@ -119,7 +120,7 @@ public class ReportesWebController {
         m.addAttribute("totalPlanificado", totalPlanificado);
         m.addAttribute("totalProducido", totalProducido);
         m.addAttribute("eficiencia", totalPlanificado.compareTo(BigDecimal.ZERO) > 0
-            ? totalProducido.multiply(new BigDecimal("100")).divide(totalPlanificado, 1, java.math.RoundingMode.HALF_UP)
+            ? totalProducido.multiply(FinancialMath.CIEN).divide(totalPlanificado, 1, FinancialMath.ROUND)
             : BigDecimal.ZERO);
         return WebController.layout(m, "reportes/produccion");
     }
@@ -137,8 +138,8 @@ public class ReportesWebController {
                 BigDecimal coste = a.getCoste() != null ? a.getCoste() : BigDecimal.ZERO;
                 BigDecimal margen = pvp.subtract(coste);
                 BigDecimal margenPct = pvp.compareTo(BigDecimal.ZERO) > 0
-                    ? margen.multiply(new BigDecimal("100"))
-                            .divide(pvp, 1, java.math.RoundingMode.HALF_UP)
+                    ? margen.multiply(FinancialMath.CIEN)
+                            .divide(pvp, 1, FinancialMath.ROUND)
                     : BigDecimal.ZERO;
                 Map<String, Object> entry = new LinkedHashMap<>();
                 entry.put("nombre", a.getNombre());

@@ -7,8 +7,11 @@ import alicanteweb.erp.repository.RutaRepartoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -28,6 +31,10 @@ public class RutaRepartoService {
 
     public Optional<RutaReparto> findById(Long id) {
         return rutaRepository.findById(id);
+    }
+
+    public Optional<RutaReparto> findDetailById(Long id) {
+        return rutaRepository.findDetailById(id);
     }
 
     public List<RutaReparto> findByActivo(boolean activo) {
@@ -70,12 +77,17 @@ public class RutaRepartoService {
 
     @Transactional
     public void reordenarParadas(Long rutaId, List<Long> paradaIdsEnOrden) {
+        Map<Long, RutaParada> paradaMap = paradaRepository.findAllById(paradaIdsEnOrden)
+                .stream().collect(Collectors.toMap(RutaParada::getId, p -> p));
+        List<RutaParada> actualizadas = new ArrayList<>(paradaIdsEnOrden.size());
         for (int i = 0; i < paradaIdsEnOrden.size(); i++) {
-            RutaParada parada = paradaRepository.findById(paradaIdsEnOrden.get(i))
-                    .orElseThrow(() -> new IllegalArgumentException("Parada no encontrada"));
+            Long paradaId = paradaIdsEnOrden.get(i);
+            RutaParada parada = paradaMap.get(paradaId);
+            if (parada == null) throw new IllegalArgumentException("Parada no encontrada: " + paradaId);
             parada.setOrden(i + 1);
-            paradaRepository.save(parada);
+            actualizadas.add(parada);
         }
+        paradaRepository.saveAll(actualizadas);
     }
 
     @Transactional

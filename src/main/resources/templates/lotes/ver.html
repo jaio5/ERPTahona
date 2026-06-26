@@ -1,0 +1,65 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title"><h4 th:text="${titulo}">Detalle de lote</h4></div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/lotes/{id}/editar(id=${lote.id})}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <a th:href="@{/web/lotes}" class="btn btn-ghost btn-sm">Volver</a>
+        </div>
+    </div>
+    <div class="form-card mb-3">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <span class="doc-field-label">Código</span>
+                <div class="doc-field-value" th:text="${lote.codigo}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Artículo</span>
+                <div class="doc-field-value" th:text="${lote.articulo?.nombre ?: '—'}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Estado</span>
+                <div class="doc-field-value">
+                    <span class="badge-status" th:attr="data-status=${lote.estado?.toLowerCase()}" th:text="${lote.estado}">—</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Almacén</span>
+                <div class="doc-field-value" th:text="${lote.almacen?.nombre ?: '—'}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Producción</span>
+                <div class="doc-field-value" th:text="${#temporals.format(lote.fechaProduccion, 'dd/MM/yyyy')}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Caducidad</span>
+                <div class="doc-field-value" th:text="${#temporals.format(lote.fechaCaducidad, 'dd/MM/yyyy')}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Cantidad inicial</span>
+                <div class="doc-field-value" th:text="${lote.cantidadInicial ?: '—'}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Cantidad actual</span>
+                <div class="doc-field-value" th:text="${lote.cantidadActual ?: '—'}">—</div>
+            </div>
+            <div class="col-12" th:if="${lote.observaciones}">
+                <span class="doc-field-label">Observaciones</span>
+                <div class="doc-field-value text-muted" th:text="${lote.observaciones}">—</div>
+            </div>
+        </div>
+    </div>
+    <div class="table-card mb-3">
+        <div class="p-3 border-bottom"><h6 class="mb-0">Materias primas utilizadas</h6></div>
+        <div class="table-responsive"><table class="table mb-0"><thead><tr><th>Lote insumo</th><th>Artículo</th><th class="text-end">Cantidad</th></tr></thead>
+            <tbody><tr th:if="${#lists.isEmpty(insumos)}"><td colspan="3" class="empty-state"><i class="bi bi-box"></i><div>Sin insumos vinculados</div></td></tr>
+            <tr th:each="i : ${insumos}"><td th:text="${i.loteInsumo?.codigo ?: '—'}"></td><td th:text="${i.loteInsumo?.articulo?.nombre ?: '—'}"></td><td class="text-end" th:text="${i.cantidadUsada ?: '—'}"></td></tr></tbody>
+        </table></div>
+    </div>
+    <div class="table-card">
+        <div class="p-3 border-bottom"><h6 class="mb-0">Productos que utilizaron este lote</h6></div>
+        <div class="table-responsive"><table class="table mb-0"><thead><tr><th>Lote producto</th><th>Artículo</th><th class="text-end">Cantidad</th></tr></thead>
+            <tbody><tr th:if="${#lists.isEmpty(usos)}"><td colspan="3" class="empty-state"><i class="bi bi-box"></i><div>Sin usos posteriores registrados</div></td></tr>
+            <tr th:each="i : ${usos}"><td><a th:href="@{/web/lotes/{id}(id=${i.loteProducto?.id})}" th:text="${i.loteProducto?.codigo ?: '—'}"></a></td><td th:text="${i.loteProducto?.articulo?.nombre ?: '—'}"></td><td class="text-end" th:text="${i.cantidadUsada ?: '—'}"></td></tr></tbody>
+        </table></div>
+    </div>
+</div>

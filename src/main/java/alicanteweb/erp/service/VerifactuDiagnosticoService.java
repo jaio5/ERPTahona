@@ -5,6 +5,7 @@ import alicanteweb.erp.repository.EmpresaConfigRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -20,6 +21,7 @@ import java.util.Optional;
  * Verifica que toda la configuración esté correcta
  */
 @Service
+@ConditionalOnProperty(name = "verifactu.diagnostics.enabled", havingValue = "true")
 public class VerifactuDiagnosticoService {
 
     private static final Logger log = LoggerFactory.getLogger(VerifactuDiagnosticoService.class);
@@ -104,7 +106,7 @@ public class VerifactuDiagnosticoService {
 
     private void verificarEmpresa() {
         try {
-            Optional<EmpresaConfig> empresaOpt = empresaConfigRepository.findActive();
+            Optional<EmpresaConfig> empresaOpt = empresaConfigRepository.findFirstByActivoTrue();
             if (empresaOpt.isEmpty()) {
                 log.error("No hay empresa configurada. Ejecuta el script scripts/configurar_verifactu.bat o inserta los datos en empresa_config.");
                 return;
@@ -144,7 +146,7 @@ public class VerifactuDiagnosticoService {
             ? "Servicio: OPERATIVO\n"
             : "Servicio: DESHABILITADO (sin certificado)\n");
 
-        Optional<EmpresaConfig> empresaOpt = empresaConfigRepository.findActive();
+        Optional<EmpresaConfig> empresaOpt = empresaConfigRepository.findFirstByActivoTrue();
         sb.append(empresaOpt.isPresent() && Boolean.TRUE.equals(empresaOpt.get().getVerifactuHabilitado())
             ? "Empresa: configurada con Verifactu habilitado\n"
             : "Empresa: no configurada o Verifactu deshabilitado\n");

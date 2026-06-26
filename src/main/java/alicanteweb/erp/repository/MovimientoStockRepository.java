@@ -4,7 +4,7 @@ import alicanteweb.erp.entities.MovimientoStock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -41,6 +41,6 @@ public interface MovimientoStockRepository extends JpaRepository<MovimientoStock
     /**
      * Busca movimientos entre fechas
      */
-    List<MovimientoStock> findByFechaBetween(LocalDateTime desde, LocalDateTime hasta);
+    List<MovimientoStock> findByFechaBetween(LocalDate desde, LocalDate hasta);
 }
 

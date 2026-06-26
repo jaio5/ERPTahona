@@ -34,6 +34,8 @@ class TrazabilidadRepartoServiceTest {
     @Mock private DevolucionLineaRepository devolucionLineaRepository;
     @Mock private ArticuloService articuloService;
     @Mock private AlmacenService almacenService;
+    @Mock private AlbaranService albaranService;
+    @Mock private StockService stockService;
 
     @InjectMocks private LoteService loteService;
     @InjectMocks private VehiculoService vehiculoService;
@@ -44,9 +46,9 @@ class TrazabilidadRepartoServiceTest {
     @BeforeEach
     void setUp() {
         // HojaRutaService needs RutaRepartoService injected
-        hojaRutaService = new HojaRutaService(hojaRutaRepository, entregaRepository, rutaService);
+        hojaRutaService = new HojaRutaService(hojaRutaRepository, entregaRepository, rutaService, albaranService);
         loteService = new LoteService(loteRepository, loteInsumoRepository);
-        devolucionService = new DevolucionService(devolucionRepository, devolucionLineaRepository, articuloService, loteService);
+        devolucionService = new DevolucionService(devolucionRepository, devolucionLineaRepository, articuloService, loteService, stockService);
     }
 
     @Test

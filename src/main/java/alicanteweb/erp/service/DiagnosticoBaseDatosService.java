@@ -11,6 +11,7 @@ import alicanteweb.erp.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "diagnostics.database.enabled", havingValue = "true")
 public class DiagnosticoBaseDatosService {
 
     private static final int MUESTRA_LIMITE = 5;

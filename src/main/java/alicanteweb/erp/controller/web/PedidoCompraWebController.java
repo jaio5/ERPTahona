@@ -5,13 +5,15 @@ import alicanteweb.erp.service.PedidoCompraService;
 import alicanteweb.erp.service.ProveedorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
-import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
@@ -31,19 +33,16 @@ public class PedidoCompraWebController {
 
     @GetMapping
     public String lista(Model model,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size,
                         @RequestParam(required = false) String q,
                         @RequestParam(required = false) String estado) {
-        List<PedidoCompra> pedidos;
-        if (q != null && !q.isBlank()) {
-            pedidos = pedidoCompraService.buscar(q);
-        } else if (estado != null && !estado.isBlank()) {
-            pedidos = pedidoCompraService.findByEstado(estado);
-        } else {
-            pedidos = pedidoCompraService.findAll();
-        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PedidoCompra> pageResult = pedidoCompraService.findPage(q, estado, pageable);
         model.addAttribute("moduloActivo", "pedidos-compra");
         model.addAttribute("titulo", "Pedidos de compra");
-        model.addAttribute("pedidos", pedidos);
+        model.addAttribute("page", pageResult);
+        model.addAttribute("pedidos", pageResult.getContent());
         model.addAttribute("q", q);
         model.addAttribute("estado", estado);
         return WebController.layout(model, "pedidos-compra/lista");

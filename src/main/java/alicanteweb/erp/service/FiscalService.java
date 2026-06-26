@@ -1,11 +1,11 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.util.FinancialMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 /**
  * Servicio para cálculos fiscales españoles
@@ -32,7 +32,7 @@ public class FiscalService {
         log.debug("Calculando IVA: {} - Tipo: {}", base, tipoIVA);
 
         BigDecimal porcentaje = obtenerPorcentajeIVA(tipoIVA);
-        BigDecimal iva = base.multiply(porcentaje).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal iva = base.multiply(porcentaje).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
 
         log.debug("IVA calculado: {}", iva);
         return iva;
@@ -60,7 +60,7 @@ public class FiscalService {
      */
     public BigDecimal calcularRetencionIRPF(BigDecimal base, BigDecimal porcentaje) {
         log.debug("Calculando IRPF: {} - Porcentaje: {}", base, porcentaje);
-        return base.multiply(porcentaje).setScale(2, RoundingMode.HALF_UP);
+        return base.multiply(porcentaje).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
     }
 
     /**
@@ -68,7 +68,7 @@ public class FiscalService {
      */
     public BigDecimal calcularTotalFactura(BigDecimal base, String tipoIVA, BigDecimal retencion) {
         BigDecimal iva = calcularIVA(base, tipoIVA);
-        BigDecimal total = base.add(iva).subtract(retencion).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = base.add(iva).subtract(retencion).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
 
         log.debug("Total factura: Base={}, IVA={}, Retención={}, Total={}",
             base, iva, retencion, total);
@@ -125,7 +125,7 @@ public class FiscalService {
     public BigDecimal calcularRecargoEquivalencia(BigDecimal base, String tipoIVA) {
         if (base == null || base.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
         BigDecimal porcentaje = obtenerPorcentajeRecargo(tipoIVA);
-        return base.multiply(porcentaje).setScale(2, RoundingMode.HALF_UP);
+        return base.multiply(porcentaje).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
     }
 
     private BigDecimal obtenerPorcentajeRecargo(String tipoIVA) {

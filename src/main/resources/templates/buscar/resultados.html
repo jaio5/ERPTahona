@@ -1,13 +1,20 @@
 <div th:fragment="content">
-    <div class="topbar"><h4 th:text="${titulo}"></h4></div>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Búsqueda</h4>
+        </div>
+    </div>
     <div class="form-card">
         <form th:action="@{/web/buscar}" class="mb-3"><input type="search" name="q" class="form-control" th:value="${query}" placeholder="Buscar clientes, artículos, facturas, recetas..."></form>
         <div th:if="${!resultados.isEmpty()}">
             <div th:each="r : ${resultados}" class="border-bottom py-2">
-                <span class="badge bg-secondary me-2" th:text="${r.tipo}"></span>
+                <span class="badge-status me-2" th:attr="data-status=${r.tipo?.toLowerCase()}" th:text="${r.tipo}"></span>
                 <a th:href="${r.url}" th:text="${r.texto}" class="fw-bold"></a>
             </div>
         </div>
-        <div th:if="${resultados.isEmpty()}" class="text-center text-muted py-4">Sin resultados para "<span th:text="${query}"></span>"</div>
+        <div th:if="${resultados.isEmpty()}" class="empty-state">
+            <i class="bi bi-search"></i>
+            <p>Sin resultados para "<span th:text="${query}"></span>"</p>
+        </div>
     </div>
 </div>

@@ -1,5 +1,6 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.exception.ErpException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -81,21 +82,13 @@ public class CifradoService {
                 }
             } else {
                 if (aesKeyString == null || aesKeyString.isBlank() || aesKeyString.equals("DEFAULT_KEY_32_CHARACTERS_MIN!!")) {
-                    log.warn("╔══════════════════════════════════════════════════════════════╗");
-                    log.warn("║  ⚠️  ADVERTENCIA DE SEGURIDAD - CLAVE AES POR DEFECTO       ║");
-                    log.warn("║  La clave 'cifrado.aes.key' no está configurada.             ║");
-                    log.warn("║  Los datos cifrados en dev NO son seguros en producción.     ║");
-                    log.warn("║  Configure 'cifrado.aes.key' en application-prod.properties  ║");
-                    log.warn("╚══════════════════════════════════════════════════════════════╝");
+                    log.warn("Clave AES no configurada; se usara una clave efimera solo para este arranque no productivo.");
 
-                    // Generar una clave de ejemplo para desarrolladores y setearla localmente
+                    // Generar una clave efimera para evitar operar con el placeholder en dev/test.
                     try {
-                        String ejemploKey = generarKeyAES();
-                        log.info("Clave AES de ejemplo (no use en producción): {}", ejemploKey);
-                        // Usamos setSecretKey para demostrar su utilidad en entornos de desarrollo
-                        setSecretKey(ejemploKey);
+                        setSecretKey(generarKeyAES());
                     } catch (Exception e) {
-                        log.debug("No se pudo generar clave de ejemplo: {}", e.getMessage());
+                        log.debug("No se pudo generar clave AES efimera: {}", e.getMessage());
                     }
                 } else {
                     // Si hay clave configurada (aunque sea legible), probamos cifrar/descifrar para validar
@@ -156,7 +149,7 @@ public class CifradoService {
             return Base64.getEncoder().encodeToString(ivAndCipher);
         } catch (Exception e) {
             log.error("Error cifrando con AES-256-GCM", e);
-            throw new RuntimeException("Error en cifrado AES-256-GCM", e);
+            throw new ErpException("Error en cifrado AES-256-GCM", e);
         }
     }
 
@@ -189,7 +182,7 @@ public class CifradoService {
             return new String(decrypted, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("Error descifrando con AES-256-GCM", e);
-            throw new RuntimeException("Error en descifrado AES-256-GCM", e);
+            throw new ErpException("Error en descifrado AES-256-GCM", e);
         }
     }
 
@@ -260,7 +253,7 @@ public class CifradoService {
             SecretKey secretKey = keyGen.generateKey();
             return Base64.getEncoder().encodeToString(secretKey.getEncoded());
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error generando clave AES", e);
+            throw new ErpException("Error generando clave AES", e);
         }
     }
 
@@ -268,7 +261,7 @@ public class CifradoService {
      * Obtiene la clave secreta desde la configuración.
      * Se acepta que `aesKeyString` esté en Base64 (recomendado). Si no, se deriva
      * una clave de 256 bits aplicando SHA-256 sobre el string (menos ideal pero
-     * útil para compatibilidad con valores legibles).
+     * útil para valores legibles).
      */
     private SecretKey getSecretKey() {
         try {
@@ -291,7 +284,7 @@ public class CifradoService {
 
             if (keyBytes.length == 0) {
                 // Fallback: si está habilitado PBKDF2 y hay salt, derivar con PBKDF2;
-                // en caso contrario usar SHA-256 (compatibilidad).
+                // en caso contrario usar SHA-256.
                 if (usePbkdf2 && pbkdf2Salt != null && !pbkdf2Salt.isBlank()) {
                     try {
                         byte[] saltBytes;
@@ -327,7 +320,7 @@ public class CifradoService {
 
             return new SecretKeySpec(keyBytes, "AES");
         } catch (Exception e) {
-            throw new RuntimeException("Error obteniendo clave AES", e);
+            throw new ErpException("Error obteniendo clave AES", e);
         }
     }
 

@@ -7,9 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -22,7 +19,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -217,7 +213,7 @@ public class FacturaWebController extends BaseWebController {
         try {
             facturaService.pasarARevision(id);
             ra.addFlashAttribute("exito", "Factura enviada a revisión");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Error al enviar factura {} a revisión: {}", id, e.getMessage(), e);
             ra.addFlashAttribute("error", e.getMessage());
         }
@@ -230,7 +226,7 @@ public class FacturaWebController extends BaseWebController {
         try {
             facturaService.aprobarYEmitir(id);
             ra.addFlashAttribute("exito", "Factura emitida");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Error al emitir factura {}: {}", id, e.getMessage(), e);
             ra.addFlashAttribute("error", e.getMessage());
         }
@@ -258,15 +254,8 @@ public class FacturaWebController extends BaseWebController {
             File pdf = impresionService.generarFacturaPdf(factura);
             auditoriaService.registrarImpresion(usuarioActual(session), "FACTURA", String.valueOf(id),
                 "PDF de factura generado: " + factura.getNumero());
-            return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-                    .filename(pdf.getName())
-                    .build()
-                    .toString())
-                .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(Files.readAllBytes(pdf.toPath()));
-        } catch (Exception e) {
+            return WebController.servirPdf(pdf);
+        } catch (RuntimeException e) {
             log.error("Error al generar PDF de factura {}: {}", id, e.getMessage(), e);
             throw new ErpException("Error al generar PDF: " + e.getMessage(), e);
         }

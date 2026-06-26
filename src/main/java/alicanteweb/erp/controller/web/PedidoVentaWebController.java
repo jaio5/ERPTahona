@@ -8,6 +8,8 @@ import alicanteweb.erp.service.PedidoService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -41,18 +43,21 @@ public class PedidoVentaWebController {
 
     @GetMapping
     public String lista(Model model, @RequestParam(required = false) String q,
-                        @RequestParam(required = false) String estado) {
-        List<Pedido> pedidos;
+                        @RequestParam(required = false) String estado,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "15") int size) {
+        Page<Pedido> pageResult;
         if (q != null && !q.isBlank()) {
-            pedidos = pedidoService.buscar(q);
+            pageResult = pedidoService.buscar(q, PageRequest.of(page, size));
         } else if (estado != null && !estado.isBlank()) {
-            pedidos = pedidoService.buscarPorEstado(estado);
+            pageResult = pedidoService.buscarPorEstado(estado, PageRequest.of(page, size));
         } else {
-            pedidos = pedidoService.obtenerTodosLimitado();
+            pageResult = pedidoService.obtenerTodos(PageRequest.of(page, size));
         }
         model.addAttribute("moduloActivo", "pedidos-venta");
         model.addAttribute("titulo", "Pedidos de venta");
-        model.addAttribute("pedidos", pedidos);
+        model.addAttribute("pedidos", pageResult.getContent());
+        model.addAttribute("page", pageResult);
         model.addAttribute("q", q);
         model.addAttribute("estado", estado);
         return WebController.layout(model, "pedidos-venta/lista");

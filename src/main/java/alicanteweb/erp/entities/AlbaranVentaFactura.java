@@ -20,7 +20,7 @@ public class AlbaranVentaFactura {
     // Relación al albarán: se asigna al campo embebido albaranesventasId
     @MapsId("albaranesventasId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "albaranesVentas_id", nullable = false)
+    @JoinColumn(name = "albaranes_ventas_id", nullable = false)
     private AlbaranVenta albaran;
 
 }

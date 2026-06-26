@@ -131,7 +131,7 @@ public class FacturaService {
     }
 
     @Transactional
-    public Factura aprobarYEmitir(Long facturaId) throws Exception {
+    public Factura aprobarYEmitir(Long facturaId) {
         Factura factura = repository.findById(facturaId)
                 .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
 

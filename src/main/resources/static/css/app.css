@@ -297,7 +297,6 @@ body {
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 /* Quick actions */
@@ -341,7 +340,6 @@ body {
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 .table-card .table {
@@ -770,3 +768,17 @@ body {
 .total-card-big .label { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; font-weight: 600; color: var(--color-text-muted); }
 
 [x-cloak] { display: none !important; }
+
+/* Section separator */
+.border-separator {
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* Form footer actions row */
+.form-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+}

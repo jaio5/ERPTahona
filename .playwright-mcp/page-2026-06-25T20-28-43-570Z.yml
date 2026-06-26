@@ -1,0 +1,135 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - text:     
+    - generic [ref=e22]:
+      - button " Compras " [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: 
+        - generic [ref=e25]: Compras
+        - generic [ref=e26]: 
+      - text:    
+    - generic [ref=e27]:
+      - button " Almacén " [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: 
+        - generic [ref=e30]: Almacén
+        - generic [ref=e31]: 
+      - text:    
+    - generic [ref=e32]:
+      - button " Producción " [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 
+        - generic [ref=e35]: Producción
+        - generic [ref=e36]: 
+      - text:    
+    - generic [ref=e37]:
+      - button " Reparto " [ref=e38] [cursor=pointer]:
+        - generic [ref=e39]: 
+        - generic [ref=e40]: Reparto
+        - generic [ref=e41]: 
+      - text:    
+    - generic [ref=e42]:
+      - button " Finanzas " [ref=e43] [cursor=pointer]:
+        - generic [ref=e44]: 
+        - generic [ref=e45]: Finanzas
+        - generic [ref=e46]: 
+      - text:     
+    - generic [ref=e47]:
+      - button " Administración " [expanded] [ref=e48] [cursor=pointer]:
+        - generic [ref=e49]: 
+        - generic [ref=e50]: Administración
+        - generic [ref=e51]: 
+      - generic [ref=e52]:
+        - link " Usuarios" [ref=e53] [cursor=pointer]:
+          - /url: /web/usuarios
+          - generic [ref=e54]: 
+          - generic [ref=e55]: Usuarios
+        - link " Empresa" [ref=e56] [cursor=pointer]:
+          - /url: /web/empresa
+          - generic [ref=e57]: 
+          - generic [ref=e58]: Empresa
+        - link " Auditoría" [ref=e59] [cursor=pointer]:
+          - /url: /web/auditoria
+          - generic [ref=e60]: 
+          - generic [ref=e61]: Auditoría
+        - link " Búsqueda global" [ref=e62] [cursor=pointer]:
+          - /url: /web/buscar
+          - generic [ref=e63]: 
+          - generic [ref=e64]: Búsqueda global
+        - link " Backups" [ref=e65] [cursor=pointer]:
+          - /url: /web/backups
+          - generic [ref=e66]: 
+          - generic [ref=e67]: Backups
+        - link " Importar datos" [ref=e68] [cursor=pointer]:
+          - /url: /web/importar
+          - generic [ref=e69]: 
+          - generic [ref=e70]: Importar datos
+    - generic [ref=e71]:
+      - button " Fiscal " [ref=e72] [cursor=pointer]:
+        - generic [ref=e73]: 
+        - generic [ref=e74]: Fiscal
+        - generic [ref=e75]: 
+      - text:  
+    - link " Informes" [ref=e76] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e77]: 
+      - generic [ref=e78]: Informes
+    - generic [ref=e80]:
+      - generic [ref=e81]: A
+      - generic [ref=e82]:
+        - generic [ref=e83]: Administrador
+        - generic [ref=e84]: Panadería Tahona
+  - main [ref=e85]:
+    - generic [ref=e86]:
+      - text: 
+      - navigation "breadcrumb" [ref=e87]:
+        - list [ref=e88]:
+          - listitem [ref=e89]:
+            - link "Inicio" [ref=e90] [cursor=pointer]:
+              - /url: /web/dashboard
+          - listitem [ref=e91]:
+            - text: /
+            - link "Administración" [ref=e92] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e93]: / Importar datos
+      - generic [ref=e94]:
+        - link "" [ref=e95] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e96]: 
+        - button "" [ref=e98] [cursor=pointer]:
+          - generic [ref=e99]: 
+    - generic [ref=e101]:
+      - heading "Importar datos" [level=4] [ref=e104]
+      - generic [ref=e105]:
+        - generic [ref=e107]:
+          - heading "Importar clientes" [level=5] [ref=e108]
+          - paragraph [ref=e109]: "Formato CSV con columnas: código;nombre;CIF;teléfono;email;dirección;población"
+          - generic [ref=e110]:
+            - button "Choose File" [ref=e111] [cursor=pointer]
+            - button "Importar clientes" [ref=e112] [cursor=pointer]
+        - generic [ref=e114]:
+          - heading "Importar artículos" [level=5] [ref=e115]
+          - paragraph [ref=e116]: "Formato CSV: código;nombre;PVP;IVA;categoría;alérgenos"
+          - generic [ref=e117]:
+            - button "Choose File" [ref=e118] [cursor=pointer]
+            - button "Importar artículos" [ref=e119] [cursor=pointer]

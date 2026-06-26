@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* Paginación reutilizable. Uso: th:replace="fragments/pagination :: paginacion(${page}, '/web/facturas')"
+       Pasa también los parámetros de filtro como atributo data-extra-params o mediante th:with */-->
+
+<nav th:fragment="paginacion(page, baseUrl)" aria-label="Paginación" th:if="${page != null and page.totalPages > 1}">
+  <ul class="pagination pagination-sm justify-content-center mb-0 mt-3">
+
+    <!-- Anterior -->
+    <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+      <a class="page-link"
+         th:href="@{${baseUrl}(page=${page.number - 1}, size=${page.size}, q=${param.q}, estado=${param.estado}, sort=${param.sort}, dir=${param.dir})}"
+         aria-label="Anterior">
+        <i class="bi bi-chevron-left"></i>
+      </a>
+    </li>
+
+    <!-- Números de página — máximo 7 -->
+    <th:block th:with="start=${T(Math).max(0, page.number - 3)}, end=${T(Math).min(page.totalPages - 1, page.number + 3)}">
+      <li th:each="i : ${#numbers.sequence(start, end)}"
+          class="page-item" th:classappend="${i == page.number} ? 'active'">
+        <a class="page-link"
+           th:href="@{${baseUrl}(page=${i}, size=${page.size}, q=${param.q}, estado=${param.estado}, sort=${param.sort}, dir=${param.dir})}"
+           th:text="${i + 1}">1</a>
+      </li>
+    </th:block>
+
+    <!-- Siguiente -->
+    <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+      <a class="page-link"
+         th:href="@{${baseUrl}(page=${page.number + 1}, size=${page.size}, q=${param.q}, estado=${param.estado}, sort=${param.sort}, dir=${param.dir})}"
+         aria-label="Siguiente">
+        <i class="bi bi-chevron-right"></i>
+      </a>
+    </li>
+
+  </ul>
+  <p class="text-center text-muted small mt-1 mb-0">
+    Mostrando <span th:text="${page.numberOfElements}">20</span>
+    de <span th:text="${page.totalElements}">100</span> registros
+    (página <span th:text="${page.number + 1}">1</span>
+    de <span th:text="${page.totalPages}">5</span>)
+  </p>
+</nav>
+
+</body>
+</html>

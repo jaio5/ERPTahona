@@ -39,38 +39,26 @@ public class NotificacionService {
      */
     @Scheduled(cron = "${notificaciones.presupuestos.cron:0 0 9 * * ?}")
     public void verificarPresupuestosPorCaducar() {
-        log.info("🔔 Verificando presupuestos por caducar...");
-
-        LocalDate hoy = LocalDate.now();
-        LocalDate dentroDeUnaSemana = hoy.plusDays(7);
-
-        List<Presupuesto> porCaducar = presupuestoRepository
-            .findByFechaValidezBetween(hoy, dentroDeUnaSemana)
-            .stream()
-            .filter(p -> !"RECHAZADO".equals(p.getEstado()))
-            .filter(p -> !"FACTURADO".equals(p.getEstado()))
-            .toList();
-
-        if (!porCaducar.isEmpty()) {
-            log.warn("⚠️ {} presupuestos caducan en los próximos 7 días:", porCaducar.size());
-
-            for (Presupuesto p : porCaducar) {
-                long diasRestantes = java.time.temporal.ChronoUnit.DAYS.between(hoy, p.getFechaValidez());
-                log.warn("   - Presupuesto {} ({}) caduca en {} días ({})",
-                    p.getNumero(),
-                    p.getCliente() != null ? p.getCliente().getNombre() : "Sin cliente",
-                    diasRestantes,
-                    p.getFechaValidez());
-
-                // Aquí se podría enviar email, mostrar notificación UI, etc.
-                crearNotificacion(
-                    "PRESUPUESTO_CADUCAR",
-                    String.format("Presupuesto %s caduca en %d días", p.getNumero(), diasRestantes),
-                    "MEDIA"
-                );
+        try {
+            log.info("Verificando presupuestos por caducar...");
+            LocalDate hoy = LocalDate.now();
+            LocalDate dentroDeUnaSemana = hoy.plusDays(7);
+            List<Presupuesto> porCaducar = presupuestoRepository
+                .findByFechaValidezBetween(hoy, dentroDeUnaSemana)
+                .stream()
+                .filter(p -> !"RECHAZADO".equals(p.getEstado()))
+                .filter(p -> !"FACTURADO".equals(p.getEstado()))
+                .toList();
+            if (!porCaducar.isEmpty()) {
+                log.warn("{} presupuestos caducan en los próximos 7 días", porCaducar.size());
+                for (Presupuesto p : porCaducar) {
+                    long diasRestantes = java.time.temporal.ChronoUnit.DAYS.between(hoy, p.getFechaValidez());
+                    crearNotificacion("PRESUPUESTO_CADUCAR",
+                        String.format("Presupuesto %s caduca en %d días", p.getNumero(), diasRestantes), "MEDIA");
+                }
             }
-        } else {
-            log.info("✅ No hay presupuestos próximos a caducar");
+        } catch (Exception e) {
+            log.error("Error verificando presupuestos por caducar", e);
         }
     }
 
@@ -79,33 +67,19 @@ public class NotificacionService {
      */
     @Scheduled(cron = "${notificaciones.stock.cron:0 0 10 * * ?}")
     public void verificarStockBajo() {
-        log.info("🔔 Verificando stock bajo...");
-
-        List<Articulo> stockBajo = articuloRepository.findAll()
-            .stream()
-            .filter(a -> a.getStock() != null)
-            .filter(a -> a.getStockMinimo() != null)
-            .filter(a -> a.getStock().compareTo(a.getStockMinimo()) <= 0)
-            .toList();
-
-        if (!stockBajo.isEmpty()) {
-            log.warn("⚠️ {} artículos con stock bajo:", stockBajo.size());
-
-            for (Articulo a : stockBajo) {
-                log.warn("   - {} (Stock: {}, Mínimo: {})",
-                    a.getNombre(),
-                    a.getStock(),
-                    a.getStockMinimo());
-
-                crearNotificacion(
-                    "STOCK_BAJO",
-                    String.format("Stock bajo en %s: %s unidades (mínimo: %s)",
-                        a.getNombre(), a.getStock(), a.getStockMinimo()),
-                    "ALTA"
-                );
+        try {
+            log.info("Verificando stock bajo...");
+            List<Articulo> stockBajo = articuloRepository.findConStockBajo();
+            if (!stockBajo.isEmpty()) {
+                log.warn("{} artículos con stock bajo", stockBajo.size());
+                for (Articulo a : stockBajo) {
+                    crearNotificacion("STOCK_BAJO",
+                        String.format("Stock bajo en %s: %s unidades (mínimo: %s)",
+                            a.getNombre(), a.getStock(), a.getStockMinimo()), "ALTA");
+                }
             }
-        } else {
-            log.info("✅ Todos los artículos tienen stock suficiente");
+        } catch (Exception e) {
+            log.error("Error verificando stock bajo", e);
         }
     }
 
@@ -114,42 +88,19 @@ public class NotificacionService {
      */
     @Scheduled(cron = "${notificaciones.pagos.cron:0 0 9 * * MON}")
     public void verificarFacturasPendientesPago() {
-        log.info("🔔 Verificando facturas pendientes de pago...");
-
-        List<Factura> pendientes = facturaRepository.findAll()
-            .stream()
-            .filter(f -> "PENDIENTE".equals(f.getEstado()) || "EMITIDA".equals(f.getEstado()))
-            .filter(f -> f.getFecha() != null)
-            .filter(f -> f.getFecha().isBefore(LocalDate.now().minusDays(30)))
-            .toList();
-
-        if (!pendientes.isEmpty()) {
-            log.warn("⚠️ {} facturas con más de 30 días pendientes:", pendientes.size());
-
-            BigDecimal totalPendiente = BigDecimal.ZERO;
-
-            for (Factura f : pendientes) {
-                long diasPendientes = java.time.temporal.ChronoUnit.DAYS.between(
-                    f.getFecha(), LocalDate.now());
-
-                log.warn("   - Factura {} ({}) - {} días - {}€",
-                    f.getNumero(),
-                    f.getCliente() != null ? f.getCliente().getNombre() : "Sin cliente",
-                    diasPendientes,
-                    f.getTotal());
-
-                totalPendiente = totalPendiente.add(f.getTotal() != null ? f.getTotal() : BigDecimal.ZERO);
+        try {
+            log.info("Verificando facturas pendientes de pago...");
+            List<Factura> pendientes = facturaRepository.findPendientesCobro(LocalDate.now().minusDays(30));
+            if (!pendientes.isEmpty()) {
+                BigDecimal totalPendiente = pendientes.stream()
+                    .map(f -> f.getTotal() != null ? f.getTotal() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                log.warn("{} facturas pendientes por {}€", pendientes.size(), totalPendiente);
+                crearNotificacion("FACTURAS_PENDIENTES",
+                    String.format("%d facturas pendientes por %s€", pendientes.size(), totalPendiente), "ALTA");
             }
-
-            log.warn("💰 Total pendiente de cobro: {}€", totalPendiente);
-
-            crearNotificacion(
-                "FACTURAS_PENDIENTES",
-                String.format("%d facturas pendientes por %s€", pendientes.size(), totalPendiente),
-                "ALTA"
-            );
-        } else {
-            log.info("✅ No hay facturas con retraso en el pago");
+        } catch (Exception e) {
+            log.error("Error verificando facturas pendientes", e);
         }
     }
 
@@ -158,34 +109,20 @@ public class NotificacionService {
      */
     @Scheduled(cron = "${notificaciones.resumen.cron:0 0 8 * * MON}")
     public void resumenSemanal() {
-        log.info("📊 Generando resumen semanal...");
-
-        LocalDate inicioSemana = LocalDate.now().minusDays(7);
-        LocalDate finSemana = LocalDate.now();
-
-        // Facturas de la semana
-        long facturasEmitidas = facturaRepository
-            .findByFechaBetween(inicioSemana, finSemana)
-            .size();
-
-        BigDecimal ventasSemana = facturaRepository
-            .findByFechaBetween(inicioSemana, finSemana)
-            .stream()
-            .map(f -> f.getTotal() != null ? f.getTotal() : BigDecimal.ZERO)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        log.info("═══════════════════════════════════════════");
-        log.info("  RESUMEN SEMANAL ({} - {})", inicioSemana, finSemana);
-        log.info("═══════════════════════════════════════════");
-        log.info("  Facturas emitidas: {}", facturasEmitidas);
-        log.info("  Ventas totales: {}€", ventasSemana);
-        log.info("═══════════════════════════════════════════");
-
-        crearNotificacion(
-            "RESUMEN_SEMANAL",
-            String.format("Semana: %d facturas, %s€ en ventas", facturasEmitidas, ventasSemana),
-            "BAJA"
-        );
+        try {
+            LocalDate inicioSemana = LocalDate.now().minusDays(7);
+            LocalDate finSemana = LocalDate.now();
+            List<Factura> facturasSemana = facturaRepository.findByFechaBetween(inicioSemana, finSemana);
+            long facturasEmitidas = facturasSemana.size();
+            BigDecimal ventasSemana = facturasSemana.stream()
+                .map(f -> f.getTotal() != null ? f.getTotal() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            log.info("Resumen semanal ({} - {}): {} facturas, {}€", inicioSemana, finSemana, facturasEmitidas, ventasSemana);
+            crearNotificacion("RESUMEN_SEMANAL",
+                String.format("Semana: %d facturas, %s€ en ventas", facturasEmitidas, ventasSemana), "BAJA");
+        } catch (Exception e) {
+            log.error("Error generando resumen semanal", e);
+        }
     }
 
     /**
@@ -215,18 +152,10 @@ public class NotificacionService {
             .filter(p -> !"FACTURADO".equals(p.getEstado()))
             .count();
 
-        int stockBajo = (int) articuloRepository.findAll()
-            .stream()
-            .filter(a -> a.getStock() != null && a.getStockMinimo() != null)
-            .filter(a -> a.getStock().compareTo(a.getStockMinimo()) <= 0)
-            .count();
+        int stockBajo = articuloRepository.findConStockBajo().size();
 
-        int facturasPendientes = (int) facturaRepository.findAll()
-            .stream()
-            .filter(f -> "PENDIENTE".equals(f.getEstado()) || "EMITIDA".equals(f.getEstado()))
-            .filter(f -> f.getFecha() != null)
-            .filter(f -> f.getFecha().isBefore(LocalDate.now().minusDays(30)))
-            .count();
+        int facturasPendientes = facturaRepository.findPendientesCobro(
+            LocalDate.now().minusDays(30)).size();
 
         return new NotificacionResumen(
             presupuestosCaducar,
@@ -243,17 +172,17 @@ public class NotificacionService {
      */
     @Scheduled(cron = "0 0 7 * * ?")
     public void verificarLotesProximosACaducar() {
-        log.info("🔔 Verificando lotes próximos a caducar...");
-        LocalDate hoy = LocalDate.now();
-        LocalDate en3Dias = hoy.plusDays(3);
-        List<Lote> lotes = loteRepository.findByFechaCaducidadBetween(hoy, en3Dias);
-        if (!lotes.isEmpty()) {
-            log.warn("⚠ {} lote(s) caducan en los próximos 3 días", lotes.size());
-            for (Lote l : lotes) {
-                log.warn("  - Lote {} ({}) caduca el {}", l.getCodigo(),
-                    l.getArticulo() != null ? l.getArticulo().getNombre() : "sin artículo",
-                    l.getFechaCaducidad());
+        try {
+            LocalDate hoy = LocalDate.now();
+            List<Lote> lotes = loteRepository.findByFechaCaducidadBetween(hoy, hoy.plusDays(3));
+            if (!lotes.isEmpty()) {
+                log.warn("{} lote(s) caducan en los próximos 3 días", lotes.size());
+                lotes.forEach(l -> crearNotificacion("LOTE_CADUCAR",
+                    String.format("Lote %s (%s) caduca el %s", l.getCodigo(),
+                        l.getArticulo() != null ? l.getArticulo().getNombre() : "?", l.getFechaCaducidad()), "ALTA"));
             }
+        } catch (Exception e) {
+            log.error("Error verificando lotes próximos a caducar", e);
         }
     }
 
@@ -262,10 +191,13 @@ public class NotificacionService {
      */
     @Scheduled(cron = "0 0 8 * * ?")
     public void verificarOrdenesPendientes() {
-        log.info("🔔 Verificando órdenes de producción pendientes...");
-        List<OrdenProduccion> planificadas = ordenProduccionRepository.findByEstado("PLANIFICADA");
-        if (!planificadas.isEmpty()) {
-            log.info("📋 {} orden(es) de producción planificadas pendientes", planificadas.size());
+        try {
+            List<OrdenProduccion> planificadas = ordenProduccionRepository.findByEstado("PLANIFICADA");
+            if (!planificadas.isEmpty()) {
+                log.info("{} orden(es) de producción planificadas pendientes", planificadas.size());
+            }
+        } catch (Exception e) {
+            log.error("Error verificando órdenes pendientes", e);
         }
     }
 

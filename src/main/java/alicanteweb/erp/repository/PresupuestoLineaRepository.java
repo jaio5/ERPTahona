@@ -2,29 +2,21 @@ package alicanteweb.erp.repository;
 
 import alicanteweb.erp.entities.PresupuestoLinea;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-/**
- * Repository para gestionar líneas de presupuestos
- */
 @Repository
 public interface PresupuestoLineaRepository extends JpaRepository<PresupuestoLinea, Long> {
 
-    /**
-     * Busca líneas por presupuesto
-     */
     List<PresupuestoLinea> findByPresupuestoId(Long presupuestoId);
 
-    /**
-     * Busca líneas por artículo
-     */
+    @Query("SELECT l FROM PresupuestoLinea l LEFT JOIN FETCH l.articulo WHERE l.presupuesto.id = :presupuestoId")
+    List<PresupuestoLinea> findByPresupuestoIdWithArticulo(@Param("presupuestoId") Long presupuestoId);
+
     List<PresupuestoLinea> findByArticuloId(Long articuloId);
 
-    /**
-     * Elimina todas las líneas de un presupuesto
-     */
     void deleteByPresupuestoId(Long presupuestoId);
 }
-

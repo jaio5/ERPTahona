@@ -4,6 +4,7 @@ import alicanteweb.erp.entities.AlbaranVenta;
 import alicanteweb.erp.entities.AlbaranVentaLinea;
 import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.entities.Cliente;
+import alicanteweb.erp.repository.AlbaranVentaFacturaRepository;
 import alicanteweb.erp.repository.AlbaranVentaRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,10 +27,19 @@ class AlbaranServiceTest {
     AlbaranVentaRepository albaranRepository;
 
     @Mock
+    AlbaranVentaFacturaRepository albaranFacturaRepository;
+
+    @Mock
     FacturaService facturaService;
 
     @Mock
     AuditoriaService auditoriaService;
+
+    @Mock
+    StockService stockService;
+
+    @Mock
+    AlbaranNumeroService albaranNumeroService;
 
     @InjectMocks
     AlbaranService service;
@@ -58,10 +68,10 @@ class AlbaranServiceTest {
         lineaOriginal.setPrecio(new BigDecimal("3.50"));
         lineaOriginal.setDescuento(BigDecimal.ZERO);
         lineaOriginal.setIva(new BigDecimal("21"));
-        original.getLineas().add(lineaOriginal);
+        original.getAlbaranVentaLineas().add(lineaOriginal);
 
         when(albaranRepository.findById(3L)).thenReturn(Optional.of(original));
-        when(albaranRepository.findMaxSecuenciaByYear("ALB-" + year + "-%")).thenReturn(10);
+        when(albaranNumeroService.generarNumero()).thenReturn("ALB-" + year + "-000011");
         when(albaranRepository.save(any(AlbaranVenta.class))).thenAnswer(inv -> inv.getArgument(0));
 
         AlbaranVenta duplicado = service.duplicar(3L);
@@ -78,8 +88,8 @@ class AlbaranServiceTest {
         assertEquals("Dejar en almacen", guardado.getObservaciones());
         assertEquals(new BigDecimal("8.47"), guardado.getTotal());
 
-        assertEquals(1, guardado.getLineas().size());
-        AlbaranVentaLinea lineaDuplicada = guardado.getLineas().iterator().next();
+        assertEquals(1, guardado.getAlbaranVentaLineas().size());
+        AlbaranVentaLinea lineaDuplicada = guardado.getAlbaranVentaLineas().iterator().next();
         assertNull(lineaDuplicada.getId());
         assertSame(guardado, lineaDuplicada.getAlbaran());
         assertSame(articulo, lineaDuplicada.getArticulo());
@@ -88,5 +98,58 @@ class AlbaranServiceTest {
         assertEquals(lineaOriginal.getPrecio(), lineaDuplicada.getPrecio());
         assertEquals(lineaOriginal.getDescuento(), lineaDuplicada.getDescuento());
         assertEquals(lineaOriginal.getIva(), lineaDuplicada.getIva());
+    }
+
+    @Test
+    void marcarEntregadoDescuentaStockUnaVezYDespuesCambiaEstado() {
+        Articulo articulo = new Articulo();
+        articulo.setId(11L);
+
+        AlbaranVenta albaran = new AlbaranVenta();
+        albaran.setId(3L);
+        albaran.setNumero("ALB-2026-000003");
+        albaran.setEstado("PENDIENTE");
+
+        AlbaranVentaLinea linea = new AlbaranVentaLinea();
+        linea.setAlbaran(albaran);
+        linea.setArticulo(articulo);
+        linea.setCantidad(new BigDecimal("2.50"));
+        albaran.getAlbaranVentaLineas().add(linea);
+
+        when(albaranRepository.findById(3L)).thenReturn(Optional.of(albaran));
+        when(albaranRepository.save(albaran)).thenReturn(albaran);
+
+        AlbaranVenta result = service.marcarEntregado(3L);
+
+        verify(stockService).registrarSalida(
+                11L, null, new BigDecimal("2.50"),
+                "Entrega albaran ALB-2026-000003", "ALBARAN", 3L);
+        verify(albaranRepository).save(albaran);
+        assertEquals("ENTREGADO", result.getEstado());
+    }
+
+    @Test
+    void marcarEntregadoNoCambiaEstadoSiFallaElStock() {
+        Articulo articulo = new Articulo();
+        articulo.setId(11L);
+
+        AlbaranVenta albaran = new AlbaranVenta();
+        albaran.setId(3L);
+        albaran.setNumero("ALB-2026-000003");
+        albaran.setEstado("PENDIENTE");
+
+        AlbaranVentaLinea linea = new AlbaranVentaLinea();
+        linea.setAlbaran(albaran);
+        linea.setArticulo(articulo);
+        linea.setCantidad(BigDecimal.ONE);
+        albaran.getAlbaranVentaLineas().add(linea);
+
+        when(albaranRepository.findById(3L)).thenReturn(Optional.of(albaran));
+        doThrow(new IllegalStateException("Stock insuficiente"))
+                .when(stockService).registrarSalida(anyLong(), any(), any(), anyString(), anyString(), anyLong());
+
+        assertThrows(IllegalStateException.class, () -> service.marcarEntregado(3L));
+        assertEquals("PENDIENTE", albaran.getEstado());
+        verify(albaranRepository, never()).save(albaran);
     }
 }

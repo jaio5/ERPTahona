@@ -72,14 +72,19 @@ Acciones habituales:
 - `restaurar`
 - `enviar`
 
-## Protecciones aplicadas
+## Estado de aplicacion de permisos
 
-- El menu principal oculta modulos sin permiso `ver`.
-- Las acciones genericas de crear, editar y eliminar comprueban permisos.
-- Usuarios exige permisos del modulo `usuarios`.
-- Backups exige permisos `backup.crear`, `backup.restaurar` y `backup.eliminar`.
-- Auditoria exige `auditoria.exportar`.
-- VERI*FACTU exige permisos `verifactu.enviar` o `verifactu.exportar` segun la accion.
+La matriz JSON existe en el modelo y `RolService` puede consultarla, pero actualmente no se aplica de forma general en los controladores y servicios. No debe considerarse todavía una barrera de seguridad efectiva.
+
+Las protecciones efectivas actuales se basan principalmente en roles de Spring Security:
+
+- Usuarios, empresa, backups y auditoria requieren `ADMIN` o `ADMINISTRADOR`.
+- Fiscalidad y contabilidad requieren `ADMIN`, `ADMINISTRADOR` o `CONTABLE`.
+- Las eliminaciones mediante CRUD generico requieren rol administrativo.
+- El resto de superficies web y API exige un usuario autenticado.
+- CSRF permanece activo para formularios y APIs basadas en sesion.
+
+Pendiente: integrar los permisos JSON mediante seguridad de metodo y añadir pruebas negativas por modulo y accion.
 
 ## Recomendacion de operacion
 

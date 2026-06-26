@@ -2,6 +2,7 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.repository.ClienteRepository;
+import alicanteweb.erp.util.FinancialMath;
 import alicanteweb.erp.repository.FacturaRepository;
 import alicanteweb.erp.repository.ProveedorRepository;
 import lombok.RequiredArgsConstructor;
@@ -243,7 +244,8 @@ public class Modelo347Service {
         }
 
         if (modelo.operaciones() == null || modelo.operaciones().isEmpty()) {
-            errores.add("No hay operaciones a declarar");
+            log.info("Modelo 347 sin operaciones a declarar para el ejercicio {}", modelo.ejercicio());
+            return errores;
         }
 
         for (OperacionTercero operacion : modelo.operaciones()) {
@@ -300,7 +302,7 @@ public class Modelo347Service {
         if (importe == null) importe = BigDecimal.ZERO;
 
         // Formato: 13 posiciones + 2 decimales sin coma
-        long importeCentimos = importe.multiply(new BigDecimal("100")).longValue();
+        long importeCentimos = importe.multiply(FinancialMath.CIEN).longValue();
         String importeStr = String.format("%015d", Math.abs(importeCentimos));
 
         // Signo: + o -

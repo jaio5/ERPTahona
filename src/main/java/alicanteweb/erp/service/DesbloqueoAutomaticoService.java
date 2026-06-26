@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Slf4j
-@Profile({"dev", "test", "default"})
+@Profile("dev")
 public class DesbloqueoAutomaticoService {
 
     /** Contraseña por defecto del admin en dev. Configurable en application-dev.properties */

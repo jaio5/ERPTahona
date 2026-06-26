@@ -1,7 +1,14 @@
 package alicanteweb.erp.controller.rest;
 
 import alicanteweb.erp.entities.*;
+import alicanteweb.erp.controller.dto.PageResponse;
+import alicanteweb.erp.controller.dto.ProduccionDto;
 import alicanteweb.erp.service.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,12 +63,14 @@ public class ProduccionRestController {
     }
 
     @GetMapping("/ordenes")
-    public List<OrdenProduccion> listOrdenes(
+    public PageResponse<ProduccionDto.Orden> listOrdenes(
             @RequestParam(required = false) String estado,
-            @RequestParam(required = false) Long recetaId) {
-        if (estado != null) return ordenProduccionService.findByEstado(estado);
-        if (recetaId != null) return ordenProduccionService.findByRecetaId(recetaId);
-        return ordenProduccionService.findAll();
+            @RequestParam(required = false) Long recetaId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        return PageResponse.from(ordenProduccionService.findPage(estado, recetaId,
+                PageRequest.of(Math.max(page, 0), Math.max(1, Math.min(size, 200)),
+                        Sort.by(Sort.Direction.DESC, "fecha", "id"))), ProduccionDto.Orden::from);
     }
 
     @GetMapping("/ordenes/{id}")
@@ -91,24 +100,37 @@ public class ProduccionRestController {
         return ResponseEntity.ok(ordenProduccionService.iniciarProduccion(id));
     }
 
-    @PostMapping("/ordenes/{id}/finalizar")
+    @PostMapping(value = "/ordenes/{id}/finalizar", consumes = "application/json")
     public ResponseEntity<OrdenProduccion> finalizarOrden(@PathVariable Long id,
-                                                           @RequestParam java.math.BigDecimal cantidad,
-                                                           @RequestParam java.math.BigDecimal merma) {
+                                                           @Valid @RequestBody FinalizarOrdenRequest request) {
+        return ResponseEntity.ok(ordenProduccionService.finalizarProduccion(id, request.cantidad(), request.merma()));
+    }
+
+    @PostMapping(value = "/ordenes/{id}/finalizar", params = {"cantidad", "merma"})
+    public ResponseEntity<OrdenProduccion> finalizarOrdenCompat(@PathVariable Long id,
+                                                                @RequestParam @DecimalMin("0.01") java.math.BigDecimal cantidad,
+                                                                @RequestParam @DecimalMin("0.00") java.math.BigDecimal merma) {
         return ResponseEntity.ok(ordenProduccionService.finalizarProduccion(id, cantidad, merma));
     }
 
     @GetMapping("/horneadas")
-    public List<Horneada> listHorneadas(
+    public PageResponse<ProduccionDto.HorneadaItem> listHorneadas(
             @RequestParam(required = false) Long ordenId,
-            @RequestParam(required = false) String fecha) {
-        if (ordenId != null) return horneadaService.findByOrdenProduccionId(ordenId);
-        if (fecha != null) return horneadaService.findByFecha(java.time.LocalDate.parse(fecha));
-        return horneadaService.findAll();
+            @RequestParam(required = false) java.time.LocalDate fecha,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        return PageResponse.from(horneadaService.findPage(ordenId, fecha,
+                PageRequest.of(Math.max(page, 0), Math.max(1, Math.min(size, 200)),
+                        Sort.by(Sort.Direction.DESC, "fecha", "id"))), ProduccionDto.HorneadaItem::from);
     }
 
     @PostMapping("/horneadas")
     public Horneada createHorneada(@RequestBody Horneada horneada) {
         return horneadaService.save(horneada);
+    }
+
+    public record FinalizarOrdenRequest(
+            @NotNull @DecimalMin(value = "0.01") java.math.BigDecimal cantidad,
+            @NotNull @DecimalMin(value = "0.00") java.math.BigDecimal merma) {
     }
 }

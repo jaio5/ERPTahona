@@ -1,5 +1,9 @@
 <div th:fragment="content">
-    <div class="topbar"><h4 th:text="${titulo}">Informes</h4></div>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Informes</h4>
+        </div>
+    </div>
     <div class="row g-3">
         <div class="col-md-4">
             <a th:href="@{/web/reportes/ventas-mes}" class="text-decoration-none">
@@ -43,6 +47,15 @@
                     <i class="bi bi-clipboard-data" style="font-size:2rem;color:#dc2626;"></i>
                     <h6 class="mt-2 mb-0">Trazabilidad</h6>
                     <small class="text-muted">Lotes, caducidades, APPCC</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/web/reportes/inventario}" class="text-decoration-none">
+                <div class="stat-card text-center py-4">
+                    <i class="bi bi-box-seam" style="font-size:2rem;color:#0891b2;"></i>
+                    <h6 class="mt-2 mb-0">Inventario</h6>
+                    <small class="text-muted">Valoración, movimientos, ajustes</small>
                 </div>
             </a>
         </div>

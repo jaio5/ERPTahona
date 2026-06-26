@@ -25,5 +25,10 @@ public class AlbaranVentaLineaService {
     public AlbaranVentaLinea save(AlbaranVentaLinea linea) {
         return repository.save(linea);
     }
+
+    @Transactional
+    public void deleteById(Long id) {
+        repository.deleteById(id);
+    }
 }
 

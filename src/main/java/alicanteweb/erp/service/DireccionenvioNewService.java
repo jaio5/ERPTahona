@@ -37,17 +37,6 @@ public class DireccionenvioNewService {
         return Optional.ofNullable(repository.findByCodigoDireccion(codigoDireccion));
     }
 
-    //compatibilidad: buscar por codigo puesto en texto (p. ej. desde UI)
-    public Optional<DireccionenvioNew> findByCodigoPostal(String codigoPostal) {
-        if (codigoPostal == null || codigoPostal.isBlank()) return Optional.empty();
-        try {
-            Integer codigo = Integer.valueOf(codigoPostal.trim());
-            return findByCodigoDireccion(codigo);
-        } catch (NumberFormatException e) {
-            return Optional.empty();
-        }
-    }
-
     //buscar por cliente id
     public List<DireccionenvioNew> findByClienteId(Long clienteId) {
         return repository.findByClienteId(clienteId);

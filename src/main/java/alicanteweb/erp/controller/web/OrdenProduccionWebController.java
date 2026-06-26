@@ -4,7 +4,9 @@ import alicanteweb.erp.entities.*;
 import alicanteweb.erp.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,17 +41,17 @@ public class OrdenProduccionWebController {
         this.horneadaService = horneadaService;
     }
 
-    private static final PageRequest LISTA_PAGEABLE =
-            PageRequest.of(0, 200, Sort.by(Sort.Direction.DESC, "fecha"));
-
     @GetMapping
-    public String lista(Model m, @RequestParam(required = false) String estado) {
-        List<OrdenProduccion> items = (estado != null && !estado.isBlank())
-                ? service.findByEstado(estado)
-                : service.findPage(null, null, LISTA_PAGEABLE).getContent();
+    public String lista(Model m,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size,
+                        @RequestParam(required = false) String estado) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fecha"));
+        Page<OrdenProduccion> pageResult = service.findPage(estado, null, pageable);
         m.addAttribute("moduloActivo", "ordenes-produccion");
         m.addAttribute("titulo", "Órdenes de producción");
-        m.addAttribute("ordenes", items);
+        m.addAttribute("page", pageResult);
+        m.addAttribute("ordenes", pageResult.getContent());
         m.addAttribute("estado", estado);
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
             BreadcrumbBuilder.link("Inicio", "/web/dashboard"),

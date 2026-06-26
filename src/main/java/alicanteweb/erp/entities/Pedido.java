@@ -60,4 +60,8 @@ public class Pedido {
         this.pedidoLineas = lineas;
     }
 
+    public alicanteweb.erp.entities.enums.EstadoPedidoEnum getEstadoEnum() {
+        try { return estado != null ? alicanteweb.erp.entities.enums.EstadoPedidoEnum.valueOf(estado) : null; }
+        catch (IllegalArgumentException e) { return null; }
+    }
 }

@@ -6,6 +6,7 @@ import alicanteweb.erp.repository.AsientoContableRepository;
 import alicanteweb.erp.repository.FacturaRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,6 +80,7 @@ public class AsientoContableService {
     /**
      * Guardar un asiento
      */
+    @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR','CONTABLE')")
     @Transactional
     public AsientoContable save(AsientoContable asiento) {
         log.info("Guardando asiento contable: {}", asiento.getNumero());
@@ -97,6 +99,7 @@ public class AsientoContableService {
     /**
      * Eliminar un asiento
      */
+    @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR','CONTABLE')")
     @Transactional
     public void deleteById(Long id) {
         log.info("Eliminando asiento contable con ID: {}", id);

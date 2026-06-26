@@ -4,7 +4,9 @@ import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.entities.VerifactuEvidence;
+import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.repository.VerifactuEvidenceRepository;
+import alicanteweb.erp.util.FinancialMath;
 import alicanteweb.erp.util.HashUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.InitializingBean;
@@ -234,37 +236,13 @@ public class VerifactuService implements InitializingBean {
     }
 
     /**
-     * Método público de delegación para compatibilidad con controladores que llaman a
-     * `enviarFactura(...)`. Mantener este método evita renombrados masivos y preserva
-     * la intención del API público.
-     */
-    public java.util.Map<String,Object> enviarFactura(Factura factura) {
-        java.util.Map<String,Object> resultado = new java.util.HashMap<>();
-        try {
-            enviarFacturaVerifactu(factura);
-            resultado.put("exito", true);
-            resultado.put("mensaje", "Factura registrada/enviada correctamente (local o AEAT dependiendo de configuración)");
-        } catch (Exception e) {
-            log.error("Error en enviarFactura wrapper: {}", e.getMessage());
-            resultado.put("exito", false);
-            resultado.put("mensaje", e.getMessage());
-            resultado.put("error", e.toString());
-        }
-        return resultado;
-    }
-
-    /**
      * Genera el hash SHA-256 de los datos proporcionados (Base64 URL-safe sin padding)
      */
-    public String generarHash(String datos) throws Exception {
-        // Usar formato URL-safe para persistir y usar en QR
+    public String generarHash(String datos) {
         return HashUtils.sha256Base64UrlSafe(datos);
     }
 
-    /**
-     * Genera el hash de una factura con encadenamiento (incluye hash anterior)
-     */
-    public String generarHashEncadenado(String datosFactura, String hashAnterior) throws Exception {
+    public String generarHashEncadenado(String datosFactura, String hashAnterior) {
         String datosCompletos = datosFactura;
         if (hashAnterior != null && !hashAnterior.isEmpty()) {
             datosCompletos += "|" + hashAnterior;
@@ -272,49 +250,43 @@ public class VerifactuService implements InitializingBean {
         return generarHash(datosCompletos);
     }
 
-    /**
-     * Firma digitalmente los datos usando la clave privada del certificado
-     */
-    public byte[] firmarDatos(byte[] datos) throws Exception {
+    public byte[] firmarDatos(byte[] datos) {
         if (!enabled) {
             throw new IllegalStateException("VeriFactu no está habilitado - no se puede firmar");
         }
-
-        Signature signature = Signature.getInstance("SHA256withRSA");
-        signature.initSign(privateKey);
-        signature.update(datos);
-        return signature.sign();
+        try {
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initSign(privateKey);
+            signature.update(datos);
+            return signature.sign();
+        } catch (Exception e) {
+            throw new ErpException("Error firmando datos con certificado VeriFactu", e);
+        }
     }
 
-    /**
-     * Verifica una firma digital
-     */
-    public boolean verificarFirma(byte[] datos, byte[] firma) throws Exception {
+    public boolean verificarFirma(byte[] datos, byte[] firma) {
         if (!enabled) {
             throw new IllegalStateException("VeriFactu no está habilitado - no se puede verificar");
         }
-
-        Signature signature = Signature.getInstance("SHA256withRSA");
-        // Use the certificate's public key explicitly to initialize verification
-        signature.initVerify(certificate.getPublicKey());
-        signature.update(datos);
-        return signature.verify(firma);
+        try {
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initVerify(certificate.getPublicKey());
+            signature.update(datos);
+            return signature.verify(firma);
+        } catch (Exception e) {
+            throw new ErpException("Error verificando firma VeriFactu", e);
+        }
     }
 
-    /**
-     * Obtiene la huella digital (fingerprint) del certificado
-     */
-    public String getCertificateFingerprint() throws Exception {
+    public String getCertificateFingerprint() {
         if (!enabled || certificate == null) {
             return null;
         }
-
         try {
-            // Usar HashUtils para fingerprint en Base64 URL-safe
             byte[] certBytes = certificate.getEncoded();
             return HashUtils.sha256Base64UrlSafe(new String(certBytes, StandardCharsets.ISO_8859_1));
         } catch (Exception e) {
-            throw e;
+            throw new ErpException("Error obteniendo fingerprint del certificado", e);
         }
     }
 
@@ -422,23 +394,7 @@ public class VerifactuService implements InitializingBean {
         StringBuilder xml = new StringBuilder();
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         xml.append("<RegistroFacturaVerifactu xmlns=\"https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/RegistroFacturaVerifactu.xsd\">\n");
-
-        // Datos del emisor (de empresa_config)
-        xml.append("  <Cabecera>\n");
-        xml.append("    <Emisor>\n");
-        xml.append("      <NIF>").append(escapeXml(empresa.getVerifactuNifEmisor())).append("</NIF>\n");
-        xml.append("      <NombreRazonSocial>").append(escapeXml(empresa.getNombreEmpresa())).append("</NombreRazonSocial>\n");
-        xml.append("    </Emisor>\n");
-
-        // Sistema informático (de empresa_config)
-        xml.append("    <SistemaInformatico>\n");
-        xml.append("      <NombreSistema>").append(escapeXml(empresa.getVerifactuNombreSistema())).append("</NombreSistema>\n");
-        xml.append("      <Version>").append(escapeXml(empresa.getVerifactuVersionSistema())).append("</Version>\n");
-        if (empresa.getVerifactuIdDispositivo() != null && !empresa.getVerifactuIdDispositivo().isEmpty()) {
-            xml.append("      <IdDispositivo>").append(escapeXml(empresa.getVerifactuIdDispositivo())).append("</IdDispositivo>\n");
-        }
-        xml.append("    </SistemaInformatico>\n");
-        xml.append("  </Cabecera>\n");
+        appendCabecera(xml, empresa);
 
         // Datos de la factura
         xml.append("  <Factura>\n");
@@ -446,38 +402,11 @@ public class VerifactuService implements InitializingBean {
         xml.append("    <FechaExpedicion>").append(factura.getFecha() != null ? factura.getFecha().format(DATE_FORMATTER) : "").append("</FechaExpedicion>\n");
         xml.append("    <HoraExpedicion>").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append("</HoraExpedicion>\n");
 
-        // Cliente
-        if (factura.getCliente() != null) {
-            xml.append("    <Destinatario>\n");
-            if (factura.getCliente().getCif() != null && !factura.getCliente().getCif().isEmpty()) {
-                xml.append("      <NIF>").append(escapeXml(factura.getCliente().getCif())).append("</NIF>\n");
-            }
-            xml.append("      <NombreRazonSocial>").append(escapeXml(factura.getCliente().getNombre())).append("</NombreRazonSocial>\n");
-            xml.append("    </Destinatario>\n");
-        }
-
-        // Líneas de factura
-        if (lineas != null && !lineas.isEmpty()) {
-            xml.append("    <Desglose>\n");
-            BigDecimal baseImponible = BigDecimal.ZERO;
-            BigDecimal totalIva = BigDecimal.ZERO;
-
-            for (FacturaLinea linea : lineas) {
-                BigDecimal subtotal = linea.getCantidad().multiply(linea.getPrecio());
-                baseImponible = baseImponible.add(subtotal);
-                if (linea.getIva() != null && linea.getIva().compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal importeIva = subtotal.multiply(linea.getIva()).divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-                    totalIva = totalIva.add(importeIva);
-                }
-            }
-
-            xml.append("      <BaseImponible>").append(baseImponible.setScale(2, java.math.RoundingMode.HALF_UP)).append("</BaseImponible>\n");
-            xml.append("      <CuotaIVA>").append(totalIva.setScale(2, java.math.RoundingMode.HALF_UP)).append("</CuotaIVA>\n");
-            xml.append("    </Desglose>\n");
-        }
+        appendDestinatario(xml, factura);
+        appendDesglose(xml, lineas);
 
         // Total
-        xml.append("    <ImporteTotal>").append(factura.getTotal() != null ? factura.getTotal().setScale(2, java.math.RoundingMode.HALF_UP) : "0.00").append("</ImporteTotal>\n");
+        xml.append("    <ImporteTotal>").append(factura.getTotal() != null ? factura.getTotal().setScale(FinancialMath.SCALE, FinancialMath.ROUND) : "0.00").append("</ImporteTotal>\n");
 
         // Hash encadenado
         try {
@@ -521,36 +450,11 @@ public class VerifactuService implements InitializingBean {
             xml.append("    <FechaHoraGeneracion>").append(escapeXml(fechaHoraGeneracion)).append("</FechaHoraGeneracion>\n");
             xml.append("    <TipoFactura>").append(escapeXml(factura.getTipoFactura() != null ? factura.getTipoFactura() : "ORDINARIA")).append("</TipoFactura>\n");
 
-            if (factura.getCliente() != null) {
-                xml.append("    <Destinatario>\n");
-                if (factura.getCliente().getCif() != null && !factura.getCliente().getCif().isEmpty()) {
-                    xml.append("      <NIF>").append(escapeXml(factura.getCliente().getCif())).append("</NIF>\n");
-                }
-                xml.append("      <NombreRazonSocial>").append(escapeXml(factura.getCliente().getNombre())).append("</NombreRazonSocial>\n");
-                xml.append("    </Destinatario>\n");
-            }
+            appendDestinatario(xml, factura);
+            appendDesglose(xml, lineas);
 
-            if (lineas != null && !lineas.isEmpty()) {
-                xml.append("    <Desglose>\n");
-                BigDecimal baseImponible = BigDecimal.ZERO;
-                BigDecimal totalIva = BigDecimal.ZERO;
-
-                for (FacturaLinea linea : lineas) {
-                    BigDecimal subtotal = linea.getCantidad().multiply(linea.getPrecio());
-                    baseImponible = baseImponible.add(subtotal);
-                    if (linea.getIva() != null && linea.getIva().compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal importeIva = subtotal.multiply(linea.getIva()).divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-                        totalIva = totalIva.add(importeIva);
-                    }
-                }
-
-                xml.append("      <BaseImponible>").append(baseImponible.setScale(2, java.math.RoundingMode.HALF_UP)).append("</BaseImponible>\n");
-                xml.append("      <CuotaIVA>").append(totalIva.setScale(2, java.math.RoundingMode.HALF_UP)).append("</CuotaIVA>\n");
-                xml.append("    </Desglose>\n");
-            }
-
-            xml.append("    <CuotaTotal>").append(cuotaTotal.setScale(2, java.math.RoundingMode.HALF_UP)).append("</CuotaTotal>\n");
-            xml.append("    <ImporteTotal>").append(importeTotal.setScale(2, java.math.RoundingMode.HALF_UP)).append("</ImporteTotal>\n");
+            xml.append("    <CuotaTotal>").append(cuotaTotal.setScale(FinancialMath.SCALE, FinancialMath.ROUND)).append("</CuotaTotal>\n");
+            xml.append("    <ImporteTotal>").append(importeTotal.setScale(FinancialMath.SCALE, FinancialMath.ROUND)).append("</ImporteTotal>\n");
             xml.append("    <Hash>").append(hash).append("</Hash>\n");
             if (hashAnterior != null) {
                 xml.append("    <HashAnterior>").append(hashAnterior).append("</HashAnterior>\n");
@@ -605,7 +509,7 @@ public class VerifactuService implements InitializingBean {
     /**
      * Envía una factura a Verifactu/AEAT con todas las validaciones
      */
-    public void enviarFacturaVerifactu(Factura factura) throws Exception {
+    public void enviarFacturaVerifactu(Factura factura) {
         log.info("Iniciando envío de factura {} a Verifactu", factura.getNumero());
 
         // 1. Verificar que existe configuración de empresa
@@ -664,17 +568,13 @@ public class VerifactuService implements InitializingBean {
         );
         log.info("QR generado para factura {} ({} bytes)", factura.getNumero(), qrCodeService.obtenerTamanoQR(qrBase64));
 
-        // 8.6 Actualizar factura con hash y QR
+        // 8.6 Preparar metadatos de la factura (hash, QR) — el estado se actualiza solo tras confirmación
         String hashAnterior = obtenerHashAnterior(resolverSerie(factura));
         factura.setVerifactuHash(hash);
         factura.setVerifactuHashAnterior(hashAnterior);
         factura.setVerifactuQr(qrBase64);
-        factura.setVerifactuEnviada(true);
-        factura.setFechaEmisionVerifactu(LocalDateTime.now());
-        factura.setEstado("EMITIDA");
-        // La factura se guardará después por el controlador
 
-        // 9. Guardar evidencia en BD
+        // 9. Guardar evidencia en estado PENDIENTE antes de intentar el envío
         VerifactuEvidence evidencia = new VerifactuEvidence();
         evidencia.setSerie(resolverSerie(factura));
         evidencia.setNumero(factura.getNumero());
@@ -684,20 +584,18 @@ public class VerifactuService implements InitializingBean {
             factura.getFecha().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant() :
             java.time.Instant.now());
         evidencia.setHash(hash);
-        evidencia.setHashAnterior(obtenerHashAnterior(evidencia.getSerie()));
+        evidencia.setHashAnterior(hashAnterior);
         evidencia.setTipoRegistro("ALTA");
         evidencia.setXmlGenerado(xml);
         evidencia.setFechaGeneracionRegistro(java.time.Instant.now());
-        evidencia.setHuellaRegistro(extraerValorXml(xml, "Hash"));
+        evidencia.setHuellaRegistro(hash);
         evidencia.setNifEmisor(empresa.getVerifactuNifEmisor());
         evidencia.setFechaExpedicionFactura(factura.getFecha());
         if (firma != null) {
             evidencia.setSignature(firma);
         }
-        evidencia.setEstado("ENVIADO");
-        evidencia.setFechaEnvio(java.time.Instant.now());
+        evidencia.setEstado("PENDIENTE");
 
-        // Metadata como Map
         java.util.Map<String, Object> metadata = new java.util.HashMap<>();
         metadata.put("empresa", empresa.getNombreEmpresa());
         metadata.put("cif", empresa.getCif());
@@ -706,32 +604,31 @@ public class VerifactuService implements InitializingBean {
 
         evidenceRepository.save(evidencia);
         log.info("Evidencia guardada para factura {} con ID {}", factura.getNumero(), evidencia.getId());
-        registrarEventoVerifactu("REGISTRO_VERIFACTU_LOCAL", factura, java.util.Map.of(
-            "evidenciaId", evidencia.getId(),
-            "serie", evidencia.getSerie(),
-            "hash", hash
-        ));
 
-        // 10. Envío real a la AEAT (si está habilitado)
+        // 10. Envío real a la AEAT (si está habilitado) — la factura solo pasa a EMITIDA si esto va bien
         if (aeatEnabled && this.enabled) {
             try {
                 log.info("Enviando factura {} a AEAT endpoint: {}", factura.getNumero(), aeatEndpoint);
                 String respuestaAEAT = enviarXMLaAEAT(xml, firma);
 
-                // Actualizar evidencia con respuesta
+                evidencia.setEstado("ENVIADO");
+                evidencia.setFechaEnvio(java.time.Instant.now());
                 evidencia.setCodigoRespuestaAEAT(respuestaAEAT != null ? "OK" : "ERROR");
-                if (respuestaAEAT != null) {
-                    metadata.put("respuesta_aeat", respuestaAEAT);
-                    metadata.put("fecha_envio_real", java.time.Instant.now().toString());
-                    evidencia.setMetadata(metadata);
-                }
+                metadata.put("respuesta_aeat", respuestaAEAT);
+                metadata.put("fecha_envio_real", java.time.Instant.now().toString());
+                evidencia.setMetadata(metadata);
                 evidenceRepository.save(evidencia);
+
+                // Solo aquí, con AEAT confirmada, marcamos la factura como emitida
+                factura.setVerifactuEnviada(true);
+                factura.setFechaEmisionVerifactu(LocalDateTime.now());
+                factura.setEstado("EMITIDA");
+
                 registrarEventoVerifactu("ENVIO_AEAT_OK", factura, java.util.Map.of(
                     "evidenciaId", evidencia.getId(),
                     "codigoRespuesta", evidencia.getCodigoRespuestaAEAT(),
                     "endpoint", aeatEndpoint
                 ));
-
                 log.info("Factura {} enviada y registrada correctamente en AEAT", factura.getNumero());
             } catch (Exception e) {
                 log.error("Error enviando factura {} a AEAT: {}", factura.getNumero(), e.getMessage());
@@ -744,9 +641,19 @@ public class VerifactuService implements InitializingBean {
                     "mensajeError", e.getMessage(),
                     "endpoint", aeatEndpoint
                 ));
-                throw new Exception("Error al enviar factura a AEAT: " + e.getMessage(), e);
+                // La factura NO cambia de estado: el controlador verá la excepción y no guardará EMITIDA
+                throw new ErpException("Error al enviar factura a AEAT: " + e.getMessage(), e);
             }
         } else {
+            // Sin envío AEAT (modo local/pruebas): se marca como emitida igualmente
+            evidencia.setEstado("ENVIADO");
+            evidencia.setFechaEnvio(java.time.Instant.now());
+            evidenceRepository.save(evidencia);
+
+            factura.setVerifactuEnviada(true);
+            factura.setFechaEmisionVerifactu(LocalDateTime.now());
+            factura.setEstado("EMITIDA");
+
             if (!aeatEnabled) {
                 log.info("Envio a AEAT deshabilitado (verifactu.aeat.enabled=false). Evidencia guardada localmente.");
             }
@@ -759,6 +666,12 @@ public class VerifactuService implements InitializingBean {
             ));
             log.info("Factura {} registrada localmente (modo de pruebas)", factura.getNumero());
         }
+
+        registrarEventoVerifactu("REGISTRO_VERIFACTU_LOCAL", factura, java.util.Map.of(
+            "evidenciaId", evidencia.getId(),
+            "serie", evidencia.getSerie(),
+            "hash", hash
+        ));
     }
 
     /**
@@ -770,7 +683,7 @@ public class VerifactuService implements InitializingBean {
      * @return La respuesta de la AEAT
      * @throws Exception Si hay error en el envío
      */
-    private String enviarXMLaAEAT(String xml, byte[] firma) throws Exception {
+    private String enviarXMLaAEAT(String xml, byte[] firma) {
         log.info("═══════════════════════════════════════════════════════════════");
         log.info("   ENVIANDO FACTURA A LA AEAT VÍA SOAP");
         log.info("═══════════════════════════════════════════════════════════════");
@@ -792,9 +705,12 @@ public class VerifactuService implements InitializingBean {
 
             return respuesta;
 
-        } catch (Exception e) {
+        } catch (ErpException e) {
             log.error("❌ Error al enviar a AEAT: {}", e.getMessage());
             throw e;
+        } catch (Exception e) {
+            log.error("❌ Error al enviar a AEAT: {}", e.getMessage());
+            throw new ErpException("Error de comunicación con AEAT", e);
         }
     }
 
@@ -806,12 +722,7 @@ public class VerifactuService implements InitializingBean {
 
         EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
         String xml = generarRegistroAnulacionXml(factura, motivo);
-        String hashDocumento;
-        try {
-            hashDocumento = generarHash(xml);
-        } catch (Exception e) {
-            throw new IllegalStateException("No se pudo generar la huella del registro de anulacion", e);
-        }
+        String hashDocumento = generarHash(xml);
 
         VerifactuEvidence evidencia = new VerifactuEvidence();
         evidencia.setSerie(resolverSerie(factura));
@@ -826,7 +737,7 @@ public class VerifactuService implements InitializingBean {
         evidencia.setTipoRegistro("ANULACION");
         evidencia.setXmlGenerado(xml);
         evidencia.setFechaGeneracionRegistro(java.time.Instant.now());
-        evidencia.setHuellaRegistro(extraerValorXml(xml, "Hash"));
+        evidencia.setHuellaRegistro(hashDocumento);
         evidencia.setNifEmisor(empresa.getVerifactuNifEmisor());
         evidencia.setFechaExpedicionFactura(factura.getFecha());
         evidencia.setEstado("ANULADO");
@@ -844,6 +755,31 @@ public class VerifactuService implements InitializingBean {
             "motivo", motivo != null ? motivo : "",
             "tipoRegistro", "ANULACION"
         ));
+    }
+
+    private void appendDestinatario(StringBuilder xml, Factura factura) {
+        if (factura.getCliente() == null) return;
+        xml.append("    <Destinatario>\n");
+        if (factura.getCliente().getCif() != null && !factura.getCliente().getCif().isEmpty()) {
+            xml.append("      <NIF>").append(escapeXml(factura.getCliente().getCif())).append("</NIF>\n");
+        }
+        xml.append("      <NombreRazonSocial>").append(escapeXml(factura.getCliente().getNombre())).append("</NombreRazonSocial>\n");
+        xml.append("    </Destinatario>\n");
+    }
+
+    private void appendDesglose(StringBuilder xml, List<FacturaLinea> lineas) {
+        if (lineas == null || lineas.isEmpty()) return;
+        BigDecimal baseImponible = BigDecimal.ZERO;
+        BigDecimal totalIva = BigDecimal.ZERO;
+        for (FacturaLinea linea : lineas) {
+            BigDecimal subtotal = linea.getCantidad().multiply(linea.getPrecio());
+            baseImponible = baseImponible.add(subtotal);
+            totalIva = totalIva.add(FinancialMath.porcentaje(subtotal, linea.getIva()));
+        }
+        xml.append("    <Desglose>\n");
+        xml.append("      <BaseImponible>").append(baseImponible.setScale(FinancialMath.SCALE, FinancialMath.ROUND)).append("</BaseImponible>\n");
+        xml.append("      <CuotaIVA>").append(totalIva.setScale(FinancialMath.SCALE, FinancialMath.ROUND)).append("</CuotaIVA>\n");
+        xml.append("    </Desglose>\n");
     }
 
     private void appendCabecera(StringBuilder xml, EmpresaConfig empresa) {
@@ -871,7 +807,7 @@ public class VerifactuService implements InitializingBean {
                                              BigDecimal cuotaTotal,
                                              BigDecimal importeTotal,
                                              String hashAnterior,
-                                             String fechaHoraGeneracion) throws Exception {
+                                             String fechaHoraGeneracion) {
         return HashUtils.sha256Hex(String.join("|",
             valorSeguro(empresa.getVerifactuNifEmisor()),
             valorSeguro(resolverSerie(factura)),
@@ -888,7 +824,7 @@ public class VerifactuService implements InitializingBean {
     private String generarHuellaRegistroAnulacion(EmpresaConfig empresa,
                                                   Factura factura,
                                                   String hashAnterior,
-                                                  String fechaHoraGeneracion) throws Exception {
+                                                  String fechaHoraGeneracion) {
         return HashUtils.sha256Hex(String.join("|",
             valorSeguro(empresa.getVerifactuNifEmisor()),
             valorSeguro(resolverSerie(factura)),
@@ -915,14 +851,21 @@ public class VerifactuService implements InitializingBean {
     }
 
     private String extraerValorXml(String xml, String tag) {
-        String startTag = "<" + tag + ">";
-        String endTag = "</" + tag + ">";
-        int start = xml.indexOf(startTag);
-        int end = xml.indexOf(endTag);
-        if (start < 0 || end < 0 || end <= start) {
+        try {
+            javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setNamespaceAware(true);
+            org.w3c.dom.Document doc = factory.newDocumentBuilder()
+                    .parse(new org.xml.sax.InputSource(new java.io.StringReader(xml)));
+            org.w3c.dom.NodeList nodes = doc.getElementsByTagNameNS("*", tag);
+            if (nodes.getLength() == 0) {
+                nodes = doc.getElementsByTagName(tag);
+            }
+            return nodes.getLength() > 0 ? nodes.item(0).getTextContent().trim() : null;
+        } catch (Exception e) {
+            log.warn("No se pudo extraer <{}> del XML de Verifactu: {}", tag, e.getMessage());
             return null;
         }
-        return xml.substring(start + startTag.length(), end).trim();
     }
 
     private String valorSeguro(String valor) {
@@ -930,7 +873,7 @@ public class VerifactuService implements InitializingBean {
     }
 
     private String normalizarImporte(BigDecimal importe) {
-        return (importe != null ? importe : BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
+        return (importe != null ? importe : BigDecimal.ZERO).setScale(FinancialMath.SCALE, FinancialMath.ROUND).toPlainString();
     }
 
     /**

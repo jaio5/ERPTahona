@@ -1,0 +1,50 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4>Modelo 347</h4>
+            <small class="text-muted">Operaciones anuales con terceros superiores a 3.005,06 €</small>
+        </div>
+        <div class="page-header-actions">
+            <a th:if="${#lists.isEmpty(errores)}"
+               th:href="@{/web/modelo347/descargar(ejercicio=${ejercicio})}"
+               class="btn btn-primary btn-sm"><i class="bi bi-download me-1"></i>Descargar BOE</a>
+        </div>
+    </div>
+
+    <form method="get" th:action="@{/web/modelo347}" class="filter-bar mb-3">
+        <div class="filter-bar-filters">
+            <label for="ejercicio347" class="form-label mb-0">Ejercicio</label>
+            <input id="ejercicio347" name="ejercicio" type="number" min="2000" max="2100"
+                   class="form-control form-control-sm" style="width:110px" th:value="${ejercicio}">
+        </div>
+        <div class="filter-bar-actions"><button class="btn btn-outline-primary btn-sm">Generar</button></div>
+    </form>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4"><div class="form-card h-100"><small class="text-muted">Declarados</small><h3 th:text="${resultado.totalDeclarantes}">0</h3></div></div>
+        <div class="col-md-4"><div class="form-card h-100"><small class="text-muted">Total declarado</small><h3 th:text="${#numbers.formatDecimal(resultado.totalDeclarado, 1, 'POINT', 2, 'COMMA')} + ' €'">0 €</h3></div></div>
+        <div class="col-md-4"><div class="form-card h-100"><small class="text-muted">Fecha de cálculo</small><h3 class="fs-5" th:text="${#temporals.format(resultado.fechaGeneracion, 'dd/MM/yyyy')}"></h3></div></div>
+    </div>
+
+    <div th:if="${!#lists.isEmpty(errores)}" class="alert alert-warning">
+        <strong>No se puede generar el fichero:</strong>
+        <ul class="mb-0 mt-1"><li th:each="error : ${errores}" th:text="${error}"></li></ul>
+    </div>
+
+    <div class="table-card"><div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>NIF</th><th>Tercero</th><th>Tipo</th><th class="text-end">Base</th><th class="text-end">IVA</th><th class="text-end">Total</th></tr></thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(resultado.operaciones)}"><td colspan="6" class="empty-state"><i class="bi bi-file-earmark-spreadsheet"></i><div>No hay operaciones que superen el umbral</div></td></tr>
+            <tr th:each="o : ${resultado.operaciones}">
+                <td class="fw-medium" th:text="${o.nif ?: '—'}"></td>
+                <td th:text="${o.nombre}"></td>
+                <td th:text="${o.tipo}"></td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(o.importeOperaciones, 1, 'POINT', 2, 'COMMA')} + ' €'"></td>
+                <td class="text-end" th:text="${#numbers.formatDecimal(o.importeIVA, 1, 'POINT', 2, 'COMMA')} + ' €'"></td>
+                <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(o.totalDeclarar, 1, 'POINT', 2, 'COMMA')} + ' €'"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div></div>
+</div>

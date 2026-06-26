@@ -34,6 +34,10 @@ public class VehiculoService {
         return repository.findByActivo(activo);
     }
 
+    public List<Vehiculo> buscar(String q) {
+        return repository.buscar(q);
+    }
+
     @Transactional
     public Vehiculo save(Vehiculo vehiculo) {
         if (vehiculo == null) throw new IllegalArgumentException("Vehículo nulo");

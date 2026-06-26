@@ -1,0 +1,203 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [expanded] [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - generic [ref=e22]:
+        - link " Facturas" [ref=e23] [cursor=pointer]:
+          - /url: /web/facturas
+          - generic [ref=e24]: 
+          - generic [ref=e25]: Facturas
+        - link " Albaranes" [ref=e26] [cursor=pointer]:
+          - /url: /web/albaranes
+          - generic [ref=e27]: 
+          - generic [ref=e28]: Albaranes
+        - link " Pedidos venta" [ref=e29] [cursor=pointer]:
+          - /url: /web/pedidos-venta
+          - generic [ref=e30]: 
+          - generic [ref=e31]: Pedidos venta
+        - link " Presupuestos" [ref=e32] [cursor=pointer]:
+          - /url: /web/presupuestos
+          - generic [ref=e33]: 
+          - generic [ref=e34]: Presupuestos
+        - link " Clientes" [ref=e35] [cursor=pointer]:
+          - /url: /web/clientes
+          - generic [ref=e36]: 
+          - generic [ref=e37]: Clientes
+    - generic [ref=e38]:
+      - button " Compras " [ref=e39] [cursor=pointer]:
+        - generic [ref=e40]: 
+        - generic [ref=e41]: Compras
+        - generic [ref=e42]: 
+      - text:    
+    - generic [ref=e43]:
+      - button " Almacén " [ref=e44] [cursor=pointer]:
+        - generic [ref=e45]: 
+        - generic [ref=e46]: Almacén
+        - generic [ref=e47]: 
+      - text:    
+    - generic [ref=e48]:
+      - button " Producción " [ref=e49] [cursor=pointer]:
+        - generic [ref=e50]: 
+        - generic [ref=e51]: Producción
+        - generic [ref=e52]: 
+      - text:    
+    - generic [ref=e53]:
+      - button " Reparto " [ref=e54] [cursor=pointer]:
+        - generic [ref=e55]: 
+        - generic [ref=e56]: Reparto
+        - generic [ref=e57]: 
+      - text:    
+    - generic [ref=e58]:
+      - button " Finanzas " [ref=e59] [cursor=pointer]:
+        - generic [ref=e60]: 
+        - generic [ref=e61]: Finanzas
+        - generic [ref=e62]: 
+      - text:     
+    - generic [ref=e63]:
+      - button " Administración " [ref=e64] [cursor=pointer]:
+        - generic [ref=e65]: 
+        - generic [ref=e66]: Administración
+        - generic [ref=e67]: 
+      - text:      
+    - generic [ref=e68]:
+      - button " Fiscal " [ref=e69] [cursor=pointer]:
+        - generic [ref=e70]: 
+        - generic [ref=e71]: Fiscal
+        - generic [ref=e72]: 
+      - text:  
+    - link " Informes" [ref=e73] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e74]: 
+      - generic [ref=e75]: Informes
+    - generic [ref=e77]:
+      - generic [ref=e78]: A
+      - generic [ref=e79]:
+        - generic [ref=e80]: Administrador
+        - generic [ref=e81]: Panadería Tahona
+  - main [ref=e82]:
+    - generic [ref=e83]:
+      - text: 
+      - navigation "breadcrumb" [ref=e84]:
+        - list [ref=e85]:
+          - listitem [ref=e86]:
+            - link "Inicio" [ref=e87] [cursor=pointer]:
+              - /url: /web/dashboard
+          - listitem [ref=e88]:
+            - text: /
+            - link "Albaranes" [ref=e89] [cursor=pointer]:
+              - /url: /web/albaranes
+          - listitem [ref=e90]: / ALB-2026-000001
+      - generic [ref=e91]:
+        - link "" [ref=e92] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e93]: 
+        - button "" [ref=e95] [cursor=pointer]:
+          - generic [ref=e96]: 
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - generic [ref=e100]:
+          - heading "Albarán ALB-2026-000001" [level=4] [ref=e101]
+          - paragraph [ref=e102]: PENDIENTE 19/06/2026
+        - generic [ref=e103]:
+          - link " PDF" [ref=e104] [cursor=pointer]:
+            - /url: /web/albaranes/1/pdf
+            - generic [ref=e105]: 
+            - text: PDF
+          - button " Marcar entregado" [ref=e107] [cursor=pointer]:
+            - generic [ref=e108]: 
+            - text: Marcar entregado
+          - button " Convertir en factura" [ref=e109] [cursor=pointer]:
+            - generic [ref=e110]: 
+            - text: Convertir en factura
+          - link " Editar" [ref=e111] [cursor=pointer]:
+            - /url: /web/albaranes/1/editar
+            - generic [ref=e112]: 
+            - text: Editar
+          - link " Volver" [ref=e113] [cursor=pointer]:
+            - /url: /web/albaranes
+            - generic [ref=e114]: 
+            - text: Volver
+      - generic [ref=e115]:
+        - generic [ref=e116]:
+          - generic [ref=e117]:
+            - generic [ref=e118]:
+              - generic [ref=e120]: 
+              - generic [ref=e122]: Paco
+            - generic [ref=e123]:
+              - generic [ref=e124]:
+                - generic [ref=e125]: Fecha
+                - generic [ref=e126]: 19/06/2026
+              - generic [ref=e127]:
+                - generic [ref=e128]: Almacén
+                - generic [ref=e129]: —
+              - generic [ref=e130]:
+                - generic [ref=e131]: Estado
+                - generic [ref=e132]: PENDIENTE
+          - generic [ref=e134]:
+            - generic: 
+            - searchbox "Buscar..." [ref=e135]
+          - generic [ref=e136]:
+            - generic [ref=e138]: Líneas del albarán
+            - table [ref=e140]:
+              - rowgroup [ref=e141]:
+                - row "Producto Cantidad Precio unit. IVA" [ref=e142]:
+                  - columnheader "Producto" [ref=e143]
+                  - columnheader "Cantidad" [ref=e144]
+                  - columnheader "Precio unit." [ref=e145]
+                  - columnheader "IVA" [ref=e146]
+              - rowgroup [ref=e147]:
+                - row "patatas 1 3.00 1,20 € 10.00%" [ref=e148]:
+                  - cell "patatas 1" [ref=e149]:
+                    - generic [ref=e150]: patatas
+                    - text: "1"
+                  - cell "3.00" [ref=e151]
+                  - cell "1,20 €" [ref=e152]
+                  - cell "10.00%" [ref=e153]
+              - rowgroup [ref=e154]:
+                - row "Total albarán 3,96 €" [ref=e155]:
+                  - cell "Total albarán" [ref=e156]
+                  - cell "3,96 €" [ref=e157]
+        - generic [ref=e158]:
+          - generic [ref=e159]:
+            - generic [ref=e160]: Total albarán
+            - generic [ref=e161]: 3,96 €
+            - generic [ref=e162]: PENDIENTE
+          - generic [ref=e163]:
+            - generic [ref=e164]: Acciones
+            - generic [ref=e165]:
+              - link " Editar albarán" [ref=e166] [cursor=pointer]:
+                - /url: /web/albaranes/1/editar
+                - generic [ref=e167]: 
+                - text: Editar albarán
+              - link " Descargar PDF" [ref=e168] [cursor=pointer]:
+                - /url: /web/albaranes/1/pdf
+                - generic [ref=e169]: 
+                - text: Descargar PDF
+              - button " Marcar entregado" [ref=e171] [cursor=pointer]:
+                - generic [ref=e172]: 
+                - text: Marcar entregado
+              - button " Convertir en factura" [ref=e173] [cursor=pointer]:
+                - generic [ref=e174]: 
+                - text: Convertir en factura
+      - text:  

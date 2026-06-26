@@ -1,0 +1,131 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - text:     
+    - generic [ref=e22]:
+      - button " Compras " [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: 
+        - generic [ref=e25]: Compras
+        - generic [ref=e26]: 
+      - text:    
+    - generic [ref=e27]:
+      - button " Almacén " [expanded] [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: 
+        - generic [ref=e30]: Almacén
+        - generic [ref=e31]: 
+      - generic [ref=e32]:
+        - link " Artículos" [ref=e33] [cursor=pointer]:
+          - /url: /web/articulos
+          - generic [ref=e34]: 
+          - generic [ref=e35]: Artículos
+        - link " Almacenes" [ref=e36] [cursor=pointer]:
+          - /url: /web/almacenes
+          - generic [ref=e37]: 
+          - generic [ref=e38]: Almacenes
+        - link " Lotes / Trazab." [ref=e39] [cursor=pointer]:
+          - /url: /web/lotes
+          - generic [ref=e40]: 
+          - generic [ref=e41]: Lotes / Trazab.
+        - link " Mermas" [ref=e42] [cursor=pointer]:
+          - /url: /web/mermas
+          - generic [ref=e43]: 
+          - generic [ref=e44]: Mermas
+    - generic [ref=e45]:
+      - button " Producción " [ref=e46] [cursor=pointer]:
+        - generic [ref=e47]: 
+        - generic [ref=e48]: Producción
+        - generic [ref=e49]: 
+      - text:    
+    - generic [ref=e50]:
+      - button " Reparto " [ref=e51] [cursor=pointer]:
+        - generic [ref=e52]: 
+        - generic [ref=e53]: Reparto
+        - generic [ref=e54]: 
+      - text:    
+    - generic [ref=e55]:
+      - button " Finanzas " [ref=e56] [cursor=pointer]:
+        - generic [ref=e57]: 
+        - generic [ref=e58]: Finanzas
+        - generic [ref=e59]: 
+      - text:     
+    - generic [ref=e60]:
+      - button " Administración " [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: 
+        - generic [ref=e63]: Administración
+        - generic [ref=e64]: 
+      - text:      
+    - generic [ref=e65]:
+      - button " Fiscal " [ref=e66] [cursor=pointer]:
+        - generic [ref=e67]: 
+        - generic [ref=e68]: Fiscal
+        - generic [ref=e69]: 
+      - text:  
+    - link " Informes" [ref=e70] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e71]: 
+      - generic [ref=e72]: Informes
+    - generic [ref=e74]:
+      - generic [ref=e75]: A
+      - generic [ref=e76]:
+        - generic [ref=e77]: Administrador
+        - generic [ref=e78]: Panadería Tahona
+  - main [ref=e79]:
+    - generic [ref=e80]:
+      - text: 
+      - generic [ref=e81]:
+        - link "" [ref=e82] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e83]: 
+        - button "" [ref=e85] [cursor=pointer]:
+          - generic [ref=e86]: 
+    - generic [ref=e88]:
+      - generic [ref=e89]:
+        - heading "Mermas" [level=4] [ref=e91]
+        - link " Nueva merma" [ref=e93] [cursor=pointer]:
+          - /url: /web/mermas/nueva
+          - generic [ref=e94]: 
+          - text: Nueva merma
+      - combobox [ref=e96]:
+        - option "Todos los tipos" [selected]
+        - option "Producción"
+        - option "Reparto"
+        - option "Stock"
+        - option "Caducidad"
+      - generic [ref=e98]:
+        - generic: 
+        - searchbox "Buscar..." [ref=e99]
+      - table [ref=e102]:
+        - rowgroup [ref=e103]:
+          - row "Fecha Artículo Cantidad Tipo Motivo Responsable" [ref=e104]:
+            - columnheader "Fecha" [ref=e105]
+            - columnheader "Artículo" [ref=e106]
+            - columnheader "Cantidad" [ref=e107]
+            - columnheader "Tipo" [ref=e108]
+            - columnheader "Motivo" [ref=e109]
+            - columnheader "Responsable" [ref=e110]
+            - columnheader [ref=e111]
+        - rowgroup [ref=e112]:
+          - row "No hay mermas registradas" [ref=e113]:
+            - cell "No hay mermas registradas" [ref=e114]

@@ -73,8 +73,7 @@ public class Rol {
     private Boolean esSistema;
 
     /**
-     * Usuarios con este rol
-     * TODO: La base de datos actual no soporta esta relación - el rol está en la columna 'role' de 'users'
+     * Relación omitida: el rol se almacena en la columna `role` de `users`.
      */
     // @OneToMany(mappedBy = "rol")
     // private Set<Usuario> usuarios = new LinkedHashSet<>();

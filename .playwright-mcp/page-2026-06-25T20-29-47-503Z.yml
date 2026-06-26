@@ -1,0 +1,225 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [expanded] [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - generic [ref=e22]:
+        - link " Facturas" [ref=e23] [cursor=pointer]:
+          - /url: /web/facturas
+          - generic [ref=e24]: 
+          - generic [ref=e25]: Facturas
+        - link " Albaranes" [ref=e26] [cursor=pointer]:
+          - /url: /web/albaranes
+          - generic [ref=e27]: 
+          - generic [ref=e28]: Albaranes
+        - link " Pedidos venta" [ref=e29] [cursor=pointer]:
+          - /url: /web/pedidos-venta
+          - generic [ref=e30]: 
+          - generic [ref=e31]: Pedidos venta
+        - link " Presupuestos" [ref=e32] [cursor=pointer]:
+          - /url: /web/presupuestos
+          - generic [ref=e33]: 
+          - generic [ref=e34]: Presupuestos
+        - link " Clientes" [ref=e35] [cursor=pointer]:
+          - /url: /web/clientes
+          - generic [ref=e36]: 
+          - generic [ref=e37]: Clientes
+    - generic [ref=e38]:
+      - button " Compras " [ref=e39] [cursor=pointer]:
+        - generic [ref=e40]: 
+        - generic [ref=e41]: Compras
+        - generic [ref=e42]: 
+      - text:    
+    - generic [ref=e43]:
+      - button " Almacén " [ref=e44] [cursor=pointer]:
+        - generic [ref=e45]: 
+        - generic [ref=e46]: Almacén
+        - generic [ref=e47]: 
+      - text:    
+    - generic [ref=e48]:
+      - button " Producción " [ref=e49] [cursor=pointer]:
+        - generic [ref=e50]: 
+        - generic [ref=e51]: Producción
+        - generic [ref=e52]: 
+      - text:    
+    - generic [ref=e53]:
+      - button " Reparto " [ref=e54] [cursor=pointer]:
+        - generic [ref=e55]: 
+        - generic [ref=e56]: Reparto
+        - generic [ref=e57]: 
+      - text:    
+    - generic [ref=e58]:
+      - button " Finanzas " [ref=e59] [cursor=pointer]:
+        - generic [ref=e60]: 
+        - generic [ref=e61]: Finanzas
+        - generic [ref=e62]: 
+      - text:     
+    - generic [ref=e63]:
+      - button " Administración " [ref=e64] [cursor=pointer]:
+        - generic [ref=e65]: 
+        - generic [ref=e66]: Administración
+        - generic [ref=e67]: 
+      - text:      
+    - generic [ref=e68]:
+      - button " Fiscal " [ref=e69] [cursor=pointer]:
+        - generic [ref=e70]: 
+        - generic [ref=e71]: Fiscal
+        - generic [ref=e72]: 
+      - text:  
+    - link " Informes" [ref=e73] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e74]: 
+      - generic [ref=e75]: Informes
+    - generic [ref=e77]:
+      - generic [ref=e78]: A
+      - generic [ref=e79]:
+        - generic [ref=e80]: Administrador
+        - generic [ref=e81]: Panadería Tahona
+  - main [ref=e82]:
+    - generic [ref=e83]:
+      - text: 
+      - navigation "breadcrumb" [ref=e84]:
+        - list [ref=e85]:
+          - listitem [ref=e86]:
+            - link "Inicio" [ref=e87] [cursor=pointer]:
+              - /url: /web/dashboard
+          - listitem [ref=e88]:
+            - text: /
+            - link "Facturas" [ref=e89] [cursor=pointer]:
+              - /url: /web/facturas
+          - listitem [ref=e90]: / Editar F-GEN-2026-0009
+      - generic [ref=e91]:
+        - link "" [ref=e92] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e93]: 
+        - button "" [ref=e95] [cursor=pointer]:
+          - generic [ref=e96]: 
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - heading "Editar factura F-GEN-2026-0009" [level=4] [ref=e101]
+        - link " Volver" [ref=e103] [cursor=pointer]:
+          - /url: /web/facturas
+          - generic [ref=e104]: 
+          - text: Volver
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - generic [ref=e108]: 
+          - text: Datos de la factura
+        - generic [ref=e109]:
+          - generic [ref=e110]:
+            - generic [ref=e111]: Número
+            - textbox "Número" [ref=e112]:
+              - /placeholder: Auto-generado
+              - text: F-GEN-2026-0009
+          - generic [ref=e113]:
+            - generic [ref=e114]: Fecha *
+            - textbox "Fecha *" [ref=e115]: 2026-06-25
+          - generic [ref=e116]:
+            - generic [ref=e117]: Fecha vencimiento
+            - textbox "Fecha vencimiento" [ref=e118]
+          - generic [ref=e119]:
+            - generic [ref=e120]: Medio de cobro
+            - combobox "Medio de cobro" [ref=e121]:
+              - option "—" [selected]
+              - option "Efectivo"
+              - option "Tarjeta"
+              - option "Transferencia"
+              - option "Bizum"
+              - option "Cheque"
+              - option "Pagaré"
+          - generic [ref=e122]:
+            - generic [ref=e123]: Cliente *
+            - combobox [ref=e124]:
+              - option "Seleccionar cliente..."
+              - option "Paco ()"
+              - option "Cliente UI Test (12345678A)"
+              - option "Cliente Test" [selected]
+            - generic [ref=e126] [cursor=pointer]:
+              - generic [ref=e127]: Cliente Test
+              - combobox "Cliente *" [ref=e128]
+          - generic [ref=e129]:
+            - generic [ref=e130]: Observaciones
+            - textbox "Observaciones" [ref=e131]: Generada desde albarán ALB-2026-000011
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - generic [ref=e135]: 
+              - text: Líneas de factura
+            - button " Añadir producto" [ref=e136] [cursor=pointer]:
+              - generic [ref=e137]: 
+              - text: Añadir producto
+          - table [ref=e139]:
+            - rowgroup [ref=e140]:
+              - row "Producto Cantidad Precio unit. IVA % Dto % Subtotal" [ref=e141]:
+                - columnheader "Producto" [ref=e142]
+                - columnheader "Cantidad" [ref=e143]
+                - columnheader "Precio unit." [ref=e144]
+                - columnheader "IVA %" [ref=e145]
+                - columnheader "Dto %" [ref=e146]
+                - columnheader "Subtotal" [ref=e147]
+                - columnheader [ref=e148]
+            - rowgroup [ref=e149]:
+              - row "2 — Pan de pueblo 3,00 2,1000 10,00 0,00 6,30 € " [ref=e150]:
+                - cell "2 — Pan de pueblo" [ref=e151]:
+                  - combobox [ref=e152]:
+                    - option "Seleccionar producto..."
+                    - option "1 — patatas"
+                    - option "TEST001 — Art�culo de prueba"
+                    - option "PRUEBA01 — Pan de prueba"
+                    - option "ART001 — Barra de Pan"
+                    - option "2 — Pan de pueblo" [selected]
+                    - option "50 — articulo 1"
+                    - option "UI-ART-01 — Barra de Pan UI"
+                    - option "260 — Estrotoscopio"
+                - cell "3,00" [ref=e153]:
+                  - textbox "0" [ref=e154]: 3,00
+                - cell "2,1000" [ref=e155]:
+                  - textbox "0,00" [ref=e156]: 2,1000
+                - cell "10,00" [ref=e157]:
+                  - textbox "21" [ref=e158]: 10,00
+                - cell "0,00" [ref=e159]:
+                  - textbox "0" [ref=e160]: 0,00
+                - cell "6,30 €" [ref=e161]
+                - cell "" [ref=e162]:
+                  - button "" [ref=e163] [cursor=pointer]:
+                    - generic [ref=e164]: 
+          - generic [ref=e165]:
+            - generic [ref=e166]:
+              - generic [ref=e167]: 
+              - text: Resumen
+            - generic [ref=e168]:
+              - generic [ref=e169]:
+                - generic [ref=e170]: Base
+                - generic [ref=e171]: 6,30 €
+              - generic [ref=e172]:
+                - generic [ref=e173]: IVA
+                - generic [ref=e174]: 0,63 €
+              - generic [ref=e175]:
+                - generic [ref=e176]: Total
+                - generic [ref=e177]: 6,93 €
+        - generic [ref=e178]:
+          - button " Guardar borrador" [ref=e179] [cursor=pointer]:
+            - generic [ref=e180]: 
+            - text: Guardar borrador
+          - link "Cancelar" [ref=e181] [cursor=pointer]:
+            - /url: /web/facturas

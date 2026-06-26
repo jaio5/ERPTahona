@@ -1,0 +1,188 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - text:     
+    - generic [ref=e22]:
+      - button " Compras " [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: 
+        - generic [ref=e25]: Compras
+        - generic [ref=e26]: 
+      - text:    
+    - generic [ref=e27]:
+      - button " Almacén " [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: 
+        - generic [ref=e30]: Almacén
+        - generic [ref=e31]: 
+      - text:    
+    - generic [ref=e32]:
+      - button " Producción " [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 
+        - generic [ref=e35]: Producción
+        - generic [ref=e36]: 
+      - text:    
+    - generic [ref=e37]:
+      - button " Reparto " [ref=e38] [cursor=pointer]:
+        - generic [ref=e39]: 
+        - generic [ref=e40]: Reparto
+        - generic [ref=e41]: 
+      - text:    
+    - generic [ref=e42]:
+      - button " Finanzas " [ref=e43] [cursor=pointer]:
+        - generic [ref=e44]: 
+        - generic [ref=e45]: Finanzas
+        - generic [ref=e46]: 
+      - text:     
+    - generic [ref=e47]:
+      - button " Administración " [ref=e48] [cursor=pointer]:
+        - generic [ref=e49]: 
+        - generic [ref=e50]: Administración
+        - generic [ref=e51]: 
+      - text:      
+    - generic [ref=e52]:
+      - button " Fiscal " [ref=e53] [cursor=pointer]:
+        - generic [ref=e54]: 
+        - generic [ref=e55]: Fiscal
+        - generic [ref=e56]: 
+      - text:  
+    - link " Informes" [ref=e57] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e58]: 
+      - generic [ref=e59]: Informes
+    - generic [ref=e61]:
+      - generic [ref=e62]: A
+      - generic [ref=e63]:
+        - generic [ref=e64]: Administrador
+        - generic [ref=e65]: Panadería Tahona
+  - main [ref=e66]:
+    - generic [ref=e67]:
+      - text: 
+      - generic [ref=e68]:
+        - link "" [ref=e69] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e70]: 
+        - button "" [ref=e72] [cursor=pointer]:
+          - generic [ref=e73]: 
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - heading "Rentabilidad por producto" [level=4] [ref=e78]
+        - link " Volver" [ref=e80] [cursor=pointer]:
+          - /url: /web/reportes
+          - generic [ref=e81]: 
+          - text: Volver
+      - generic [ref=e82]:
+        - generic [ref=e84]:
+          - generic [ref=e85]: Productos analizados
+          - generic [ref=e86]: "8"
+        - generic [ref=e88]:
+          - generic [ref=e89]: Con coste configurado
+          - generic [ref=e90]: "1"
+        - generic [ref=e92]:
+          - generic [ref=e93]: Sin coste (pendiente)
+          - generic [ref=e94]: "7"
+      - generic [ref=e96]:
+        - generic: 
+        - searchbox "Buscar..." [ref=e97]
+      - table [ref=e99]:
+        - rowgroup [ref=e100]:
+          - row "Codigo Producto Categoria PVP Coste Margen Margen %" [ref=e101]:
+            - columnheader "Codigo" [ref=e102]
+            - columnheader "Producto" [ref=e103]
+            - columnheader "Categoria" [ref=e104]
+            - columnheader "PVP" [ref=e105]
+            - columnheader "Coste" [ref=e106]
+            - columnheader "Margen" [ref=e107]
+            - columnheader "Margen %" [ref=e108]
+        - rowgroup [ref=e109]:
+          - row "1 patatas 1,20 € sin coste 1,20 € -" [ref=e110]:
+            - cell "1" [ref=e111]
+            - cell "patatas" [ref=e112]
+            - cell [ref=e113]
+            - cell "1,20 €" [ref=e114]
+            - cell "sin coste" [ref=e115]
+            - cell "1,20 €" [ref=e116]
+            - cell "-" [ref=e117]
+          - row "TEST001 Art�culo de prueba - 1,50 € sin coste 1,50 € -" [ref=e118]:
+            - cell "TEST001" [ref=e119]
+            - cell "Art�culo de prueba" [ref=e120]
+            - cell "-" [ref=e121]:
+              - generic [ref=e122]: "-"
+            - cell "1,50 €" [ref=e123]
+            - cell "sin coste" [ref=e124]
+            - cell "1,50 €" [ref=e125]
+            - cell "-" [ref=e126]
+          - row "PRUEBA01 Pan de prueba - 1,50 € sin coste 1,50 € -" [ref=e127]:
+            - cell "PRUEBA01" [ref=e128]
+            - cell "Pan de prueba" [ref=e129]
+            - cell "-" [ref=e130]:
+              - generic [ref=e131]: "-"
+            - cell "1,50 €" [ref=e132]
+            - cell "sin coste" [ref=e133]
+            - cell "1,50 €" [ref=e134]
+            - cell "-" [ref=e135]
+          - row "ART001 Barra de Pan - 1,20 € sin coste 1,20 € -" [ref=e136]:
+            - cell "ART001" [ref=e137]
+            - cell "Barra de Pan" [ref=e138]
+            - cell "-" [ref=e139]:
+              - generic [ref=e140]: "-"
+            - cell "1,20 €" [ref=e141]
+            - cell "sin coste" [ref=e142]
+            - cell "1,20 €" [ref=e143]
+            - cell "-" [ref=e144]
+          - row "2 Pan de pueblo Pan 2,10 € sin coste 2,10 € -" [ref=e145]:
+            - cell "2" [ref=e146]
+            - cell "Pan de pueblo" [ref=e147]
+            - cell "Pan" [ref=e148]:
+              - generic [ref=e149]: Pan
+            - cell "2,10 €" [ref=e150]
+            - cell "sin coste" [ref=e151]
+            - cell "2,10 €" [ref=e152]
+            - cell "-" [ref=e153]
+          - row "50 articulo 1 Pan 2,10 € sin coste 2,10 € -" [ref=e154]:
+            - cell "50" [ref=e155]
+            - cell "articulo 1" [ref=e156]
+            - cell "Pan" [ref=e157]:
+              - generic [ref=e158]: Pan
+            - cell "2,10 €" [ref=e159]
+            - cell "sin coste" [ref=e160]
+            - cell "2,10 €" [ref=e161]
+            - cell "-" [ref=e162]
+          - row "UI-ART-01 Barra de Pan UI 1,20 € sin coste 1,20 € -" [ref=e163]:
+            - cell "UI-ART-01" [ref=e164]
+            - cell "Barra de Pan UI" [ref=e165]
+            - cell [ref=e166]
+            - cell "1,20 €" [ref=e167]
+            - cell "sin coste" [ref=e168]
+            - cell "1,20 €" [ref=e169]
+            - cell "-" [ref=e170]
+          - row "260 Estrotoscopio hortalizas 2,10 € 5,00 € -2,90 € -138.1%" [ref=e171]:
+            - cell "260" [ref=e172]
+            - cell "Estrotoscopio" [ref=e173]
+            - cell "hortalizas" [ref=e174]:
+              - generic [ref=e175]: hortalizas
+            - cell "2,10 €" [ref=e176]
+            - cell "5,00 €" [ref=e177]
+            - cell "-2,90 €" [ref=e178]
+            - cell "-138.1%" [ref=e179]:
+              - generic [ref=e180]: "-138.1%"

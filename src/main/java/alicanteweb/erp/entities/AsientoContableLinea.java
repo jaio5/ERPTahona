@@ -43,15 +43,6 @@ public class AsientoContableLinea {
     @ColumnDefault("0.00")
     private BigDecimal debe;
 
-    // Método auxiliar para compatibilidad con servicios
-    public void setCuentaContable(PlanContable cuenta) {
-        this.cuenta = cuenta;
-    }
-
-    public PlanContable getCuentaContable() {
-        return this.cuenta;
-    }
-
     @NotNull
     @Column(name = "haber", nullable = false, precision = 12, scale = 2)
     @ColumnDefault("0.00")

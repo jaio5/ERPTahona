@@ -66,8 +66,7 @@
             </div>
 
             <div class="table-card" th:if="${pedido.pedidoLineas != null and !pedido.pedidoLineas.isEmpty()}">
-                <div class="d-flex align-items-center justify-content-between px-4 py-3"
-                     style="border-bottom:1px solid var(--color-border);">
+                <div class="d-flex align-items-center justify-content-between px-4 py-3 border-separator">
                     <span class="fw-semibold">Líneas del pedido</span>
                 </div>
                 <div class="table-responsive">
@@ -126,7 +125,7 @@
                     </form>
                     <a th:if="${pedido.estado == 'PENDIENTE'}"
                        th:href="@{/web/pedidos-venta/{id}/editar(id=${pedido.id})}"
-                       class="btn btn-outline-secondary">
+                        class="btn btn-ghost">
                         <i class="bi bi-pencil me-2"></i>Editar pedido
                     </a>
                     <a th:if="${pedido.estado == 'CONFIRMADO'}"

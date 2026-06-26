@@ -2,7 +2,7 @@
 
 ## Resultado ejecutivo
 
-Estado actual: preproduccion. La aplicacion compila, levanta el contexto Spring, carga recursos JavaFX principales, responde por web y supera la suite automatizada. No esta apta para produccion real hasta completar configuracion de entorno, secretos, certificado VeriFactu, MySQL y pruebas manuales con datos de negocio.
+Estado actual: preproduccion. La aplicacion compila, levanta el contexto Spring, responde por web y supera la suite automatizada. No esta apta para produccion real hasta completar configuracion de entorno, secretos, certificado VeriFactu, MySQL y pruebas manuales con datos de negocio.
 
 ## Pruebas ejecutadas
 
@@ -11,7 +11,6 @@ Estado actual: preproduccion. La aplicacion compila, levanta el contexto Spring,
 | Suite completa Maven | OK | 77 tests, 0 fallos, 1 omitido |
 | Arranque de contexto Spring | OK | `ErpApplicationTests` |
 | Recursos web | OK | `WebSurfaceTest` |
-| Recursos JavaFX | OK parcial | `FxmlLoaderSmokeTest`, `FxmlContractTest` omitido 1 |
 | Arranque web dev H2 | OK | `GET /web/login` devuelve 200 |
 | Check readiness produccion | FAIL | 13 OK / 10 fallos |
 | Check variables produccion | FAIL | falta `SPRING_DATASOURCE_URL` |

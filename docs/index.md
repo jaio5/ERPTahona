@@ -1,30 +1,39 @@
 # Documentacion del proyecto ERP Tahona
 
-ERP Tahona es una aplicacion de escritorio JavaFX con Spring Boot para gestion de una tahona/panaderia: ventas, compras, clientes, proveedores, articulos, almacen, caja, contabilidad operativa, auditoria, backups y preparacion VERI*FACTU.
+ERP Tahona es una aplicacion web con Spring Boot y Thymeleaf para gestion de una tahona/panaderia: ventas, compras, clientes, proveedores, articulos, almacen, caja, contabilidad operativa, auditoria, backups y preparacion VERI*FACTU.
 
 ## Guias principales
 
-- [Despliegue de produccion](production-deployment.md): instalacion, variables, prechequeos y arranque.
-- [Checklist de produccion](production-checklist.md): lista de verificacion antes de usar datos reales.
-- [Operacion diaria](operations.md): uso operativo, backups, facturacion y mantenimiento.
+- [Estado actual](estado-actual.md): build, capacidades, cambios recientes y riesgos abiertos.
+- [Manual de la aplicacion](manual-aplicacion.md): módulos, flujos operativos, rutas y TPV.
+- [Referencia de API REST](api-reference.md): todos los endpoints REST con métodos, rutas y parámetros.
+- [Arquitectura](architecture.md): estructura técnica, capas, migraciones y Alpine.js.
+- [Seguridad y autorizacion](security-and-authorization.md): usuarios, roles, permisos y contraseñas.
+- [VERI*FACTU](verifactu.md): configuración, flujo legal de inicio y validaciones previas.
+- [Operacion diaria](operations.md): uso operativo, backups, facturación y mantenimiento.
 - [Configuracion](configuration.md): variables de entorno y secretos.
-- [Seguridad y autorizacion](security-and-authorization.md): usuarios, roles, permisos y contrasenas.
-- [VERI*FACTU](verifactu.md): configuracion, flujo legal de inicio y validaciones previas.
-- [Arquitectura](architecture.md): estructura tecnica del proyecto.
+- [Despliegue de produccion](production-deployment.md): instalación, variables, prechequeos y arranque.
+- [Checklist de produccion](production-checklist.md): lista de verificación antes de usar datos reales.
+- [Hoja de ruta](hoja-ruta.md): fases, entregables y definición objetiva de aplicación completada.
+- [Auditoria de la aplicacion del 19 de junio de 2026](auditoria-aplicacion-2026-06-19.md): auditoría fechada y riesgos detectados.
 
-## Estado operativo
+## Capacidades de produccion
 
-El proyecto queda preparado tecnicamente para producir con:
+El proyecto dispone de:
 
 - Perfil `prod` separado.
 - MySQL obligatorio en produccion.
 - Migraciones Flyway.
 - Validacion de entorno antes de arrancar.
 - Secretos fuera de Git mediante `.env.production.local`.
-- Roles y permisos por modulo.
+- Roles con restricciones para superficies administrativas y fiscales.
 - Cambio obligatorio de contrasena inicial cuando corresponde.
 - Copias de seguridad con base de datos resuelta desde la URL JDBC.
 - Estado legal VERI*FACTU sin boton simple de activar/desactivar.
+
+Antes de un despliegue real deben cerrarse los riesgos de la [auditoria actual](auditoria-aplicacion-2026-06-19.md), especialmente autorizacion fina, Docker, migraciones MySQL y stock por almacen.
+
+El seguimiento de esos trabajos se realiza en la [hoja de ruta](hoja-ruta.md).
 
 ## Lo que no debe guardarse en Git
 

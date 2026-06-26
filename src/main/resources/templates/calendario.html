@@ -1,0 +1,106 @@
+<div th:fragment="content" x-data="calendarioApp" x-cloak>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4>Calendario semanal</h4>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-ghost btn-sm" @click="cambiarSemana(-1)"><i class="bi bi-chevron-left"></i></button>
+            <span class="fw-bold mx-2" x-text="rangoTexto"></span>
+            <button class="btn btn-ghost btn-sm" @click="cambiarSemana(1)"><i class="bi bi-chevron-right"></i></button>
+            <button class="btn btn-primary btn-sm" @click="irHoy()">Hoy</button>
+        </div>
+    </div>
+
+    <div class="row g-2">
+        <template x-for="dia in dias" :key="dia.fecha">
+            <div class="col">
+                <div class="card h-100" :class="{'border-primary': dia.esHoy}">
+                    <div class="card-header text-center py-2" :class="{'bg-primary text-white': dia.esHoy}">
+                        <div class="small text-uppercase" x-text="dia.nombreDia"></div>
+                        <div class="fw-bold" x-text="dia.numero"></div>
+                    </div>
+                    <div class="card-body p-2" style="min-height:200px;">
+                        <template x-for="ev in dia.eventos" :key="ev.id + ev.tipo">
+                            <div class="mb-1 p-1 rounded small"
+                                 :class="ev.tipo === 'PEDIDO' ? 'bg-info-subtle text-info-emphasis' : 'bg-warning-subtle text-warning-emphasis'"
+                                 style="cursor:pointer;"
+                                 @click="abrirEvento(ev)">
+                                <div class="fw-bold" x-text="ev.tipo === 'PEDIDO' ? 'Pedido' : 'Produccion'"></div>
+                                <div x-text="ev.titulo"></div>
+                                <span class="badge rounded-pill" :class="badgeClass(ev.estado)" x-text="ev.estado"></span>
+                            </div>
+                        </template>
+                        <div x-show="dia.eventos.length === 0" class="text-muted text-center small mt-3">Sin eventos</div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <script th:attr="nonce=${cspNonce}">
+        document.addEventListener('alpine:init', function () {
+            Alpine.data('calendarioApp', function () {
+                return {
+                inicioSemana: null,
+                dias: [],
+                rangoTexto: '',
+                init() { this.irHoy(); },
+                irHoy() {
+                    const hoy = new Date();
+                    const diaSemana = hoy.getDay(); // 0=domingo
+                    const diff = hoy.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
+                    this.inicioSemana = new Date(hoy.setDate(diff));
+                    this.cargar();
+                },
+                cambiarSemana(delta) {
+                    this.inicioSemana.setDate(this.inicioSemana.getDate() + delta * 7);
+                    this.cargar();
+                },
+                abrirEvento(evento) {
+                    window.location.assign(evento.url);
+                },
+                cargar() {
+                    const inicioStr = this.inicioSemana.toISOString().split('T')[0];
+                    const fin = new Date(this.inicioSemana);
+                    fin.setDate(fin.getDate() + 6);
+                    const finStr = fin.toISOString().split('T')[0];
+                    this.rangoTexto = `${inicioStr} - ${finStr}`;
+
+                    fetch(`/api/web/calendario?inicio=${inicioStr}&fin=${finStr}`)
+                        .then(r => r.json())
+                        .then(eventos => {
+                            const nombres = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'];
+                            this.dias = [];
+                            const hoyStr = new Date().toISOString().split('T')[0];
+                            for (let i = 0; i < 7; i++) {
+                                const d = new Date(this.inicioSemana);
+                                d.setDate(d.getDate() + i);
+                                const fechaStr = d.toISOString().split('T')[0];
+                                this.dias.push({
+                                    fecha: fechaStr,
+                                    nombreDia: nombres[i],
+                                    numero: d.getDate(),
+                                    esHoy: fechaStr === hoyStr,
+                                    eventos: eventos.filter(e => e.fecha === fechaStr)
+                                });
+                            }
+                        });
+                },
+                badgeClass(estado) {
+                    const map = {
+                        PENDIENTE: 'bg-secondary',
+                        SERVIDO: 'bg-success',
+                        SERVIDO_PARCIAL: 'bg-info',
+                        CANCELADO: 'bg-danger',
+                        PLANIFICADA: 'bg-secondary',
+                        EN_CURSO: 'bg-primary',
+                        FINALIZADA: 'bg-success',
+                        CANCELADA: 'bg-danger'
+                    };
+                    return map[estado] || 'bg-light text-dark';
+                }
+                };
+            });
+        });
+    </script>
+</div>

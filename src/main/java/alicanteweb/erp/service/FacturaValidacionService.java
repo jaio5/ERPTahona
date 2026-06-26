@@ -2,6 +2,7 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
+import alicanteweb.erp.util.FinancialMath;
 import alicanteweb.erp.repository.FacturaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import java.util.regex.Pattern;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class FacturaValidacionService {
 
     private static final Pattern CIF_PATTERN = Pattern.compile("^[A-HJ-NP-SUVW][0-9]{7}[0-9A-J]$");
@@ -117,7 +119,7 @@ public class FacturaValidacionService {
 
             if (linea.getIva() != null) {
                 BigDecimal iva = linea.getIva();
-                if (iva.compareTo(BigDecimal.ZERO) < 0 || iva.compareTo(new BigDecimal("100")) > 0) {
+                if (iva.compareTo(BigDecimal.ZERO) < 0 || iva.compareTo(FinancialMath.CIEN) > 0) {
                     errores.add(prefijo + "El IVA debe estar entre 0 y 100");
                 }
             }

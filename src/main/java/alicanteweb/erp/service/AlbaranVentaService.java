@@ -5,7 +5,6 @@ import alicanteweb.erp.repository.AlbaranVentaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,9 +13,12 @@ import java.util.Optional;
 public class AlbaranVentaService {
 
     private final AlbaranVentaRepository repository;
+    private final AlbaranNumeroService albaranNumeroService;
 
-    public AlbaranVentaService(AlbaranVentaRepository repository) {
+    public AlbaranVentaService(AlbaranVentaRepository repository,
+                               AlbaranNumeroService albaranNumeroService) {
         this.repository = repository;
+        this.albaranNumeroService = albaranNumeroService;
     }
 
     public List<AlbaranVenta> findAll() {
@@ -49,17 +51,8 @@ public class AlbaranVentaService {
         repository.deleteById(id);
     }
 
-    /**
-     * Genera un número de albarán automático basado en el año y secuencia.
-     * Usa MAX en BD para evitar duplicados bajo concurrencia.
-     */
+    @Transactional
     public String generarNumeroAlbaran() {
-        int year = LocalDate.now().getYear();
-        String patron = "ALB-" + year + "-%";
-
-        Integer maxSecuencia = repository.findMaxSecuenciaByYear(patron);
-        int siguiente = (maxSecuencia != null ? maxSecuencia : 0) + 1;
-
-        return "ALB-" + year + "-" + String.format("%06d", siguiente);
+        return albaranNumeroService.generarNumero();
     }
 }

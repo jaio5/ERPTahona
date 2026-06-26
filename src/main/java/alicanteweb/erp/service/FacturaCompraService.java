@@ -5,6 +5,8 @@ import alicanteweb.erp.repository.FacturaCompraRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,6 +86,11 @@ public class FacturaCompraService {
     public List<FacturaCompra> buscar(String busqueda) {
         log.debug("Buscando facturas con: {}", busqueda);
         return facturaCompraRepository.buscar(busqueda);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<FacturaCompra> findPage(String q, String estado, Pageable pageable) {
+        return facturaCompraRepository.findPage(q, estado, pageable);
     }
 
     /**

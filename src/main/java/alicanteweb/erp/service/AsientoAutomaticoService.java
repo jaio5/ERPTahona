@@ -54,7 +54,7 @@ public class AsientoAutomaticoService {
      * Genera asiento de compra a proveedor
      */
     public AsientoContable generarAsientoCompra(FacturaCompra facturaCompra) {
-        log.info("Generando asiento automático de compra para factura: {}", facturaCompra.getNumeroFactura());
+        log.info("Generando asiento automático de compra para factura: {}", facturaCompra.getNumero());
         BigDecimal base = facturaCompra.getBaseImponible() != null ? facturaCompra.getBaseImponible() : BigDecimal.ZERO;
         BigDecimal iva = facturaCompra.getImporteIva() != null ? facturaCompra.getImporteIva() : BigDecimal.ZERO;
         BigDecimal total = facturaCompra.getTotal() != null ? facturaCompra.getTotal() : BigDecimal.ZERO;
@@ -68,11 +68,11 @@ public class AsientoAutomaticoService {
      * HABER: 572 Banco (importe)
      */
     public AsientoContable generarAsientoPagoProveedor(FacturaCompra facturaCompra, Banco banco) {
-        log.info("Generando asiento de pago para factura compra: {}", facturaCompra.getNumeroFactura());
+        log.info("Generando asiento de pago para factura compra: {}", facturaCompra.getNumero());
 
         AsientoContable asiento = new AsientoContable();
         asiento.setFecha(LocalDate.now());
-        asiento.setDescripcion("Pago factura " + facturaCompra.getNumeroFactura());
+        asiento.setDescripcion("Pago factura " + facturaCompra.getNumero());
         asiento.setConcepto("PAGO");
         asiento.setAsientoApertura(false);
         asiento.setAsientoCierre(false);
@@ -93,7 +93,7 @@ public class AsientoAutomaticoService {
         LineaAsiento lineaBanco = new LineaAsiento();
         PlanCuentas cuentaBanco = buscarCuenta(banco != null ? "572" : "570");
         lineaBanco.setCuenta(cuentaBanco);
-        lineaBanco.setConcepto("Pago factura " + facturaCompra.getNumeroFactura());
+        lineaBanco.setConcepto("Pago factura " + facturaCompra.getNumero());
         lineaBanco.setDebe(BigDecimal.ZERO);
         lineaBanco.setHaber(facturaCompra.getTotal());
         lineaBanco.setAsiento(asiento);

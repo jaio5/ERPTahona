@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -48,6 +49,9 @@ public class BackupService {
     @Value("${backup.enabled:true}")
     private boolean backupEnabled;
 
+    @Value("${backup.mysqldump-path:}")
+    private String mysqldumpPath;
+
     private final FacturacionEventoService facturacionEventoService;
 
     /**
@@ -86,6 +90,7 @@ public class BackupService {
     /**
      * Realiza un backup manual de la base de datos
      */
+    @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR')")
     public String realizarBackup() throws IOException, InterruptedException {
         log.info("📦 Creando backup de la base de datos...");
 
@@ -118,7 +123,7 @@ public class BackupService {
             }
 
             // --defaults-extra-file must be provided before other options
-            comando.add("mysqldump");
+            comando.add(resolverEjecutableMysqldump());
             comando.add("--defaults-extra-file=" + tempCredFile.toString());
 
             comando.add("--single-transaction");
@@ -159,7 +164,8 @@ public class BackupService {
             if (tempCredFile != null) {
                 try {
                     Files.deleteIfExists(tempCredFile);
-                } catch (Exception ignored) {
+                } catch (IOException e) {
+                    log.warn("No se pudo eliminar el fichero temporal de credenciales {}: {}", tempCredFile, e.getMessage());
                 }
             }
         }
@@ -168,6 +174,7 @@ public class BackupService {
     /**
      * Restaura la base de datos desde un archivo de backup
      */
+    @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR')")
     public void restaurarBackup(String rutaArchivo) throws IOException, InterruptedException {
         log.info("🔄 Restaurando backup desde: {}", rutaArchivo);
 
@@ -291,6 +298,17 @@ public class BackupService {
     }
 
     /**
+     * Devuelve la ruta al ejecutable mysqldump: usa backup.mysqldump-path si está configurado,
+     * o simplemente "mysqldump" para resolverlo desde el PATH del sistema.
+     */
+    private String resolverEjecutableMysqldump() {
+        if (mysqldumpPath != null && !mysqldumpPath.isBlank()) {
+            return mysqldumpPath;
+        }
+        return "mysqldump";
+    }
+
+    /**
      * Verifica que mysqldump esté disponible
      */
     public boolean verificarDisponibilidad() {
@@ -302,7 +320,7 @@ public class BackupService {
                 comando.add("cmd.exe");
                 comando.add("/c");
             }
-            comando.add("mysqldump");
+            comando.add(resolverEjecutableMysqldump());
             comando.add("--version");
 
             ProcessBuilder pb = new ProcessBuilder(comando);

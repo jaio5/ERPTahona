@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import alicanteweb.erp.util.FinancialMath;
 import java.math.BigDecimal;
 
 /**
@@ -65,8 +66,7 @@ public class FacturaCompraLinea {
         BigDecimal subtotal = cantidad.multiply(precioUnitario);
 
         if (descuento != null && descuento.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal importeDescuento = subtotal.multiply(descuento).divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-            subtotal = subtotal.subtract(importeDescuento);
+            subtotal = subtotal.subtract(FinancialMath.porcentaje(subtotal, descuento));
         }
 
         importe = subtotal;

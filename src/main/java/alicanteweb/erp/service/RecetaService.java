@@ -26,8 +26,16 @@ public class RecetaService {
         return recetaRepository.findAll();
     }
 
+    public long count() {
+        return recetaRepository.count();
+    }
+
     public Optional<Receta> findById(Long id) {
         return recetaRepository.findById(id);
+    }
+
+    public Optional<Receta> findDetailById(Long id) {
+        return recetaRepository.findDetailById(id);
     }
 
     public Optional<Receta> findByCodigo(String codigo) {
@@ -61,7 +69,7 @@ public class RecetaService {
     }
 
     public List<RecetaIngrediente> getIngredientes(Long recetaId) {
-        return ingredienteRepository.findByRecetaIdOrderByOrden(recetaId);
+        return ingredienteRepository.findDetailByRecetaId(recetaId);
     }
 
     @Transactional

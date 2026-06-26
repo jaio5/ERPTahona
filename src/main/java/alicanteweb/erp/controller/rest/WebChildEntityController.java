@@ -4,6 +4,8 @@ import alicanteweb.erp.entities.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -59,14 +61,16 @@ public class WebChildEntityController {
         if (definition == null || entityManager.find(definition.parentClass(), parentId) == null) {
             return ResponseEntity.notFound().build();
         }
-        String entityName = definition.entityClass().getSimpleName();
-        String parentField = definition.parentField();
-        List<?> rows = entityManager.createQuery(
-                        "select e from " + entityName + " e where e." + parentField + ".id = :parentId",
-                        definition.entityClass())
-                .setParameter("parentId", parentId)
-                .getResultList();
+        List<?> rows = findByParent(definition.entityClass(), definition.parentField(), parentId);
         return ResponseEntity.ok(rows.stream().map(this::toDto).toList());
+    }
+
+    private <T> List<T> findByParent(Class<T> entityClass, String parentField, Long parentId) {
+        CriteriaQuery<T> query = entityManager.getCriteriaBuilder().createQuery(entityClass);
+        Root<T> root = query.from(entityClass);
+        query.select(root).where(entityManager.getCriteriaBuilder()
+                .equal(root.get(parentField).get("id"), parentId));
+        return entityManager.createQuery(query).setMaxResults(500).getResultList();
     }
 
     @PostMapping("/{child}/{parentId}")
@@ -192,28 +196,11 @@ public class WebChildEntityController {
     }
 
     private Object convert(Object value, Class<?> type) {
-        if (value == null || String.valueOf(value).isBlank()) {
-            return type.isPrimitive() ? primitiveDefault(type) : null;
-        }
-        if (type == String.class) return String.valueOf(value);
-        if (type == Long.class || type == long.class) return Long.valueOf(String.valueOf(value));
-        if (type == Integer.class || type == int.class) return Integer.valueOf(String.valueOf(value));
-        if (type == Double.class || type == double.class) return Double.valueOf(String.valueOf(value));
-        if (type == Boolean.class || type == boolean.class) return Boolean.valueOf(String.valueOf(value));
-        if (type == BigDecimal.class) return new BigDecimal(String.valueOf(value));
-        if (type == Instant.class) return Instant.parse(String.valueOf(value));
-        if (type == LocalDate.class) return LocalDate.parse(String.valueOf(value));
-        if (type == LocalTime.class) return LocalTime.parse(String.valueOf(value));
-        if (type == LocalDateTime.class) return LocalDateTime.parse(String.valueOf(value));
-        return value;
+        return EntityFieldConverter.convert(value, type);
     }
 
     private Object primitiveDefault(Class<?> type) {
-        if (type == boolean.class) return false;
-        if (type == int.class) return 0;
-        if (type == long.class) return 0L;
-        if (type == double.class) return 0D;
-        return null;
+        return EntityFieldConverter.primitiveDefault(type);
     }
 
     private boolean isSimple(Class<?> type) {

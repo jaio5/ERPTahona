@@ -1,0 +1,64 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Merma</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/mermas}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+    <div class="form-card" style="max-width:600px;">
+        <form th:action="@{/web/mermas}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${merma?.id}">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label" for="articuloId">Artículo *</label>
+                    <select id="articuloId" name="articuloId" class="form-select" data-searchable required>
+                        <option value="">-- Selecciona artículo --</option>
+                        <option th:each="a : ${articulos}" th:value="${a.id}" th:text="${a.nombre}" th:selected="${merma?.articulo?.id == a.id}"></option>
+                    </select>
+                    <div class="invalid-feedback">El artículo es obligatorio</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="cantidad">Cantidad *</label>
+                    <input type="text" inputmode="decimal" id="cantidad" name="cantidad" class="form-control" required>
+                    <div class="invalid-feedback">Indica la cantidad</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="tipo">Tipo</label>
+                    <select id="tipo" name="tipo" class="form-select">
+                        <option value="">-- Selecciona --</option>
+                        <option value="PRODUCCION">Producción</option>
+                        <option value="REPARTO">Reparto</option>
+                        <option value="STOCK">Stock</option>
+                        <option value="CADUCIDAD">Caducidad</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="fecha">Fecha</label>
+                    <input type="date" id="fecha" name="fecha" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="motivo">Motivo</label>
+                    <input type="text" id="motivo" name="motivo" class="form-control" maxlength="200">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="responsable">Responsable</label>
+                    <input type="text" id="responsable" name="responsable" class="form-control" maxlength="100">
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="observaciones">Observaciones</label>
+                    <textarea id="observaciones" name="observaciones" class="form-control" rows="3" maxlength="1000"></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1"></i>Registrar merma
+                </button>
+                <a th:href="@{/web/mermas}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

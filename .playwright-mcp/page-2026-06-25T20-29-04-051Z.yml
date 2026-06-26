@@ -1,0 +1,132 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - text:     
+    - generic [ref=e22]:
+      - button " Compras " [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: 
+        - generic [ref=e25]: Compras
+        - generic [ref=e26]: 
+      - text:    
+    - generic [ref=e27]:
+      - button " Almacén " [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: 
+        - generic [ref=e30]: Almacén
+        - generic [ref=e31]: 
+      - text:    
+    - generic [ref=e32]:
+      - button " Producción " [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 
+        - generic [ref=e35]: Producción
+        - generic [ref=e36]: 
+      - text:    
+    - generic [ref=e37]:
+      - button " Reparto " [ref=e38] [cursor=pointer]:
+        - generic [ref=e39]: 
+        - generic [ref=e40]: Reparto
+        - generic [ref=e41]: 
+      - text:    
+    - generic [ref=e42]:
+      - button " Finanzas " [ref=e43] [cursor=pointer]:
+        - generic [ref=e44]: 
+        - generic [ref=e45]: Finanzas
+        - generic [ref=e46]: 
+      - text:     
+    - generic [ref=e47]:
+      - button " Administración " [ref=e48] [cursor=pointer]:
+        - generic [ref=e49]: 
+        - generic [ref=e50]: Administración
+        - generic [ref=e51]: 
+      - text:      
+    - generic [ref=e52]:
+      - button " Fiscal " [expanded] [ref=e53] [cursor=pointer]:
+        - generic [ref=e54]: 
+        - generic [ref=e55]: Fiscal
+        - generic [ref=e56]: 
+      - generic [ref=e57]:
+        - link " Modelo 347" [ref=e58] [cursor=pointer]:
+          - /url: /web/modelo347
+          - generic [ref=e59]: 
+          - generic [ref=e60]: Modelo 347
+        - link " VERI*FACTU" [ref=e61] [cursor=pointer]:
+          - /url: /web/verifactu
+          - generic [ref=e62]: 
+          - generic [ref=e63]: VERI*FACTU
+    - link " Informes" [ref=e64] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e65]: 
+      - generic [ref=e66]: Informes
+    - generic [ref=e68]:
+      - generic [ref=e69]: A
+      - generic [ref=e70]:
+        - generic [ref=e71]: Administrador
+        - generic [ref=e72]: Panadería Tahona
+  - main [ref=e73]:
+    - generic [ref=e74]:
+      - text: 
+      - navigation "breadcrumb" [ref=e75]:
+        - list [ref=e76]:
+          - listitem [ref=e77]:
+            - link "Inicio" [ref=e78] [cursor=pointer]:
+              - /url: /web/dashboard
+          - listitem [ref=e79]: / VERI*FACTU
+      - generic [ref=e80]:
+        - link "" [ref=e81] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e82]: 
+        - button "" [ref=e84] [cursor=pointer]:
+          - generic [ref=e85]: 
+    - generic [ref=e87]:
+      - generic [ref=e88]:
+        - heading "Evidencias VERI*FACTU" [level=4] [ref=e90]
+        - generic [ref=e91]:
+          - generic [ref=e92]: 0 pendientes
+          - generic [ref=e93]: 0 errores
+      - generic [ref=e94]:
+        - generic [ref=e95]:
+          - generic: 
+          - searchbox "Serie, número o factura..." [ref=e96]
+        - combobox [ref=e98]:
+          - option "Todos los estados" [selected]
+          - option "Pendiente"
+          - option "Enviado"
+          - option "Verificado"
+          - option "Error"
+        - generic [ref=e99]:
+          - button "Filtrar" [ref=e100] [cursor=pointer]
+          - link "Limpiar" [ref=e101] [cursor=pointer]:
+            - /url: /web/verifactu
+      - table [ref=e104]:
+        - rowgroup [ref=e105]:
+          - row "Factura Serie / número Generación Estado Código AEAT" [ref=e106]:
+            - columnheader "Factura" [ref=e107]
+            - columnheader "Serie / número" [ref=e108]
+            - columnheader "Generación" [ref=e109]
+            - columnheader "Estado" [ref=e110]
+            - columnheader "Código AEAT" [ref=e111]
+            - columnheader [ref=e112]
+        - rowgroup [ref=e113]:
+          - row "No hay evidencias" [ref=e114]:
+            - cell "No hay evidencias" [ref=e115]

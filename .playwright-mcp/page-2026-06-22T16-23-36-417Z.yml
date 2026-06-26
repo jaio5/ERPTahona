@@ -1,0 +1,13 @@
+- generic [ref=e3]:
+  - heading "ERP Tahona" [level=3] [ref=e4]
+  - paragraph [ref=e5]: Gestión de panadería y obrador
+  - generic [ref=e6]: Usuario o contraseña incorrectos
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]: Usuario
+      - textbox "Usuario" [ref=e10]:
+        - /placeholder: admin
+    - generic [ref=e11]:
+      - generic [ref=e12]: Contraseña
+      - textbox "Contraseña" [ref=e13]
+    - button "Iniciar sesión" [ref=e14] [cursor=pointer]

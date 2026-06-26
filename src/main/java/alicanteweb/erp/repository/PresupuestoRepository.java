@@ -36,6 +36,9 @@ public interface PresupuestoRepository extends JpaRepository<Presupuesto, Long> 
     @EntityGraph(attributePaths = {"cliente"})
     List<Presupuesto> findByEstado(String estado);
 
+    @EntityGraph(attributePaths = {"cliente"})
+    Page<Presupuesto> findByEstado(String estado, Pageable pageable);
+
     /**
      * Busca presupuestos por rango de fechas
      */
@@ -56,6 +59,15 @@ public interface PresupuestoRepository extends JpaRepository<Presupuesto, Long> 
            "LOWER(p.cliente.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%')) " +
            "ORDER BY p.fecha DESC")
     List<Presupuesto> buscar(@Param("busqueda") String busqueda);
+
+    @Query(value = "SELECT p FROM Presupuesto p LEFT JOIN FETCH p.cliente WHERE " +
+           "LOWER(p.numero) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR " +
+           "LOWER(p.cliente.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%')) " +
+           "ORDER BY p.fecha DESC",
+           countQuery = "SELECT COUNT(p) FROM Presupuesto p LEFT JOIN p.cliente WHERE " +
+           "LOWER(p.numero) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR " +
+           "LOWER(p.cliente.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%'))")
+    Page<Presupuesto> buscar(@Param("busqueda") String busqueda, Pageable pageable);
 
     /**
      * Obtiene todos los presupuestos ordenados por fecha descendente

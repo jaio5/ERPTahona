@@ -3,6 +3,8 @@ package alicanteweb.erp.controller.web;
 import alicanteweb.erp.entities.MovimientoBanco;
 import alicanteweb.erp.service.MovimientoBancoService;
 import alicanteweb.erp.service.MovimientoCajaService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +20,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @PreAuthorize("@permisos.puede('tesoreria', 'ver')")
 @RequestMapping("/web/tesoreria")
 public class TesoreriaWebController {
+
+    private static final Logger log = LoggerFactory.getLogger(TesoreriaWebController.class);
 
     private final MovimientoCajaService cajaS;
     private final MovimientoBancoService bancoS;
@@ -54,7 +58,8 @@ public class TesoreriaWebController {
                 cajaS.registrarGasto(concepto, importe, categoria);
             }
             ra.addFlashAttribute("exito", "Movimiento de caja registrado");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Error al registrar movimiento de caja: {}", e.getMessage(), e);
             ra.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/web/tesoreria";
@@ -99,7 +104,8 @@ public class TesoreriaWebController {
                 resultado = bancoS.conciliar(id);
             }
             return ResponseEntity.ok(Map.of("ok", true, "id", resultado.getId()));
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Error en conciliación bancaria {}: {}", id, e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of("ok", false, "error", e.getMessage()));
         }
     }

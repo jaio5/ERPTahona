@@ -200,36 +200,6 @@ public class FacturaCompra {
         }
     }
 
-    // ===== MÉTODOS AUXILIARES PARA COMPATIBILIDAD =====
-
-    /**
-     * Obtiene el número de factura (alias para compatibilidad)
-     */
-    public String getNumeroFactura() {
-        return this.numero;
-    }
-
-    /**
-     * Obtiene la cuota de IVA (alias para compatibilidad)
-     */
-    public BigDecimal getCuotaIva() {
-        return this.importeIva;
-    }
-
-    /**
-     * Obtiene el total de la factura (alias para compatibilidad)
-     */
-    public BigDecimal getTotalFactura() {
-        return this.total;
-    }
-
-    /**
-     * Obtiene la fecha de la factura (alias para compatibilidad)
-     */
-    public LocalDate getFechaFactura() {
-        return this.fecha;
-    }
-
     @Override
     public String toString() {
         return numero + " - " + (proveedor != null ? proveedor.getNombre() : "") + " - " + total + "€";

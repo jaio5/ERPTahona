@@ -1,5 +1,6 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.exception.ErpException;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -70,7 +71,7 @@ public class QrCodeService {
 
         } catch (WriterException | IOException e) {
             log.error("Error generando código QR", e);
-            throw new RuntimeException("Error generando código QR", e);
+            throw new ErpException("Error generando código QR", e);
         }
     }
 
@@ -115,7 +116,7 @@ public class QrCodeService {
             return generarQR(url);
         } catch (Exception e) {
             log.error("Error preparando QR VeriFactu", e);
-            throw new RuntimeException("Error preparando QR VeriFactu", e);
+            throw new ErpException("Error preparando QR VeriFactu", e);
         }
     }
 

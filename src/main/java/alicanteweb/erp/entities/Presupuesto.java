@@ -26,6 +26,10 @@ public class Presupuesto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @NotNull
     @Size(max = 100)
     @Column(name = "numero", nullable = false, unique = true, length = 100)
@@ -88,22 +92,5 @@ public class Presupuesto {
         fechaModificacion = LocalDateTime.now();
     }
 
-    // ============================================
-    // Métodos de conveniencia para tests
-    // ============================================
-
-    /**
-     * Alias de getFechaValidez para compatibilidad con tests
-     */
-    public LocalDate getValidoHasta() {
-        return this.fechaValidez;
-    }
-
-    /**
-     * Alias de setFechaValidez para compatibilidad con tests
-     */
-    public void setValidoHasta(LocalDate validoHasta) {
-        this.fechaValidez = validoHasta;
-    }
 }
 

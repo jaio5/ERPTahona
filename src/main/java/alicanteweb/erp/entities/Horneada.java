@@ -65,6 +65,25 @@ public class Horneada {
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
+    @Column(name = "coste_mano_obra", precision = 10, scale = 2)
+    private BigDecimal costeManoObra;
+
+    @Column(name = "coste_energia", precision = 10, scale = 2)
+    private BigDecimal costeEnergia;
+
+    @Column(name = "coste_materiales", precision = 10, scale = 2)
+    private BigDecimal costeMateriales;
+
+    /** Coste unitario real calculado = (mano_obra + energia + materiales) / cantidad_producida */
+    public BigDecimal costeUnitario() {
+        BigDecimal total = BigDecimal.ZERO;
+        if (costeManoObra != null) total = total.add(costeManoObra);
+        if (costeEnergia != null) total = total.add(costeEnergia);
+        if (costeMateriales != null) total = total.add(costeMateriales);
+        if (cantidadProducida == null || cantidadProducida.compareTo(BigDecimal.ZERO) == 0) return null;
+        return total.divide(cantidadProducida, 4, java.math.RoundingMode.HALF_UP);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

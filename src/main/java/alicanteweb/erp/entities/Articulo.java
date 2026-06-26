@@ -27,6 +27,10 @@ public class Articulo {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     @Size(max = 50)
     @NotNull
     @Column(name = "codigo", nullable = false, length = 50)

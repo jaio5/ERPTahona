@@ -3,6 +3,8 @@ package alicanteweb.erp.service;
 import alicanteweb.erp.entities.Proveedor;
 import alicanteweb.erp.repository.ProveedorRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -158,6 +160,13 @@ public class ProveedorService {
     public List<Proveedor> buscar(String criterio) {
         log.debug("Buscando proveedores con criterio: {}", criterio);
         return proveedorRepository.buscarPorCriterio(criterio);
+    }
+
+    public Page<Proveedor> buscarPaginado(String q, Pageable pageable) {
+        if (q == null || q.isBlank()) {
+            return proveedorRepository.findAll(pageable);
+        }
+        return proveedorRepository.buscarPaginado(q, pageable);
     }
 
     /**

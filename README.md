@@ -1,6 +1,6 @@
 # ERP Tahona
 
-Aplicacion de escritorio JavaFX + Spring Boot para gestion ERP con soporte de facturacion, compras, ventas, clientes, proveedores, almacen, caja, auditoria, backups y preparacion VERI*FACTU.
+Aplicacion web Spring Boot + Thymeleaf para gestion ERP con soporte de facturacion, compras, ventas, clientes, proveedores, almacen, caja, auditoria, backups y preparacion VERI*FACTU.
 
 ## Requisitos
 
@@ -11,6 +11,8 @@ Aplicacion de escritorio JavaFX + Spring Boot para gestion ERP con soporte de fa
 ## Documentacion
 
 - [Indice de documentacion](docs/index.md)
+- [Estado actual](docs/estado-actual.md)
+- [Hoja de ruta hasta completar la aplicacion](docs/hoja-ruta.md)
 - [Despliegue de produccion](docs/production-deployment.md)
 - [Checklist de produccion](docs/production-checklist.md)
 - [Operacion diaria](docs/operations.md)
@@ -18,6 +20,15 @@ Aplicacion de escritorio JavaFX + Spring Boot para gestion ERP con soporte de fa
 - [Seguridad y autorizacion](docs/security-and-authorization.md)
 - [VERI*FACTU](docs/verifactu.md)
 - [Arquitectura](docs/architecture.md)
+- [Manual de la aplicacion](docs/manual-aplicacion.md)
+- [Auditoria actual (19 de junio de 2026)](docs/auditoria-aplicacion-2026-06-19.md)
+
+Estado técnico validado:
+
+- 209 pruebas, sin fallos.
+- 50,27 % de cobertura de líneas.
+- 29,92 % de cobertura de ramas.
+- Gate JaCoCo mínimo: 50 % de líneas y 20 % de ramas.
 
 ## Arranque local
 
@@ -30,24 +41,24 @@ $env:SPRING_DATASOURCE_USERNAME="root"
 $env:SPRING_DATASOURCE_PASSWORD="<tu-password>"
 ```
 
-3. Ejecuta la aplicacion:
+3. Ejecuta la aplicacion web:
 
 ```powershell
-.\mvnw.cmd javafx:run
+.\mvnw.cmd spring-boot:run
 ```
 
 En desarrollo, si MySQL no esta disponible, la aplicacion puede reintentar con H2 en memoria para diagnostico local. Para forzarlo explicitamente:
 
 ```powershell
 $env:ERP_FALLBACK_H2_ENABLED="true"
-.\mvnw.cmd javafx:run
+.\mvnw.cmd spring-boot:run
 ```
 
 Para impedir ese fallback local:
 
 ```powershell
 $env:ERP_FALLBACK_H2_ENABLED="false"
-.\mvnw.cmd javafx:run
+.\mvnw.cmd spring-boot:run
 ```
 
 ## Produccion
@@ -67,7 +78,7 @@ $env:SPRING_DATASOURCE_USERNAME="erp_app"
 $env:SPRING_DATASOURCE_PASSWORD="<tu-password>"
 $env:CIFRADO_AES_KEY="<clave-base64-32-bytes>"
 $env:SECURITY_PBKDF2_SECRET="<secreto-pbkdf2>"
-.\mvnw.cmd javafx:run
+.\mvnw.cmd spring-boot:run
 ```
 
 ## Estado de cumplimiento legal

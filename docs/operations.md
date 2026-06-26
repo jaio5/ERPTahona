@@ -10,6 +10,32 @@ En produccion se debe arrancar siempre con:
 
 El script carga `.env.production.local`, fuerza el perfil `prod`, ejecuta prechequeos y arranca el ultimo JAR disponible en `target`.
 
+## Arranque local en segundo plano
+
+Para arrancar el último JAR local sin abrir el navegador:
+
+```powershell
+$jar = (Get-ChildItem target -Filter "ERP-*.jar" |
+    Where-Object { $_.Name -notlike "*.original" } |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1).FullName
+
+Start-Process java `
+    -ArgumentList @("-Derp.web.open-browser.enabled=false", "-jar", $jar) `
+    -WorkingDirectory (Get-Location) `
+    -RedirectStandardOutput "startup-restart.log" `
+    -RedirectStandardError "startup-restart-error.log" `
+    -WindowStyle Hidden
+```
+
+Verificación:
+
+```powershell
+Invoke-WebRequest http://localhost:8080/web/login -UseBasicParsing
+```
+
+La respuesta esperada es HTTP 200. No se deben detener procesos Java por nombre; hay que identificar la instancia por puerto y línea de comandos.
+
 ## Usuarios
 
 - Cada persona debe trabajar con su propio usuario.
@@ -63,7 +89,7 @@ Debe revisarse cuando haya:
 Antes de actualizar:
 
 ```powershell
-.\mvnw.cmd test
+.\mvnw.cmd clean verify
 .\scripts\build-production.ps1
 ```
 
