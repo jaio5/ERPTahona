@@ -202,7 +202,7 @@ Además, el botón de submit usaba `onsubmit="return confirm(...)"` (violación 
 
 ---
 
-### BUG-010 — Rectificativa: `registrarAnulacionLocal` falla XSD sin VeriFactu configurado ✅ CORREGIDO (pendiente restart)
+### BUG-010 — Rectificativa: `registrarAnulacionLocal` falla XSD sin VeriFactu configurado ✅ CORREGIDO
 **Severidad:** Alta  
 **Módulo afectado:** Facturas → Crear rectificativa
 
@@ -210,7 +210,37 @@ Al anular la factura original durante la creación de una rectificativa, `Verifa
 
 **Fix aplicado:** `VerifactuService.registrarAnulacionLocal` — verifica si existe empresa y si `verifactuNifEmisor` está configurado antes de intentar generar el XML; usa hash simplificado si no.
 
-⚠️ **Requiere restart del servidor** para activarse (cambio de clase Java, sin DevTools).
+---
+
+### BUG-011 — Columna `xml_generado` creada demasiado pequeña por Hibernate en dev ✅ CORREGIDO
+**Severidad:** Alta  
+**Módulo afectado:** Facturas → Crear rectificativa (internamente: `VerifactuEvidence`)
+
+En entornos donde Flyway está deshabilitado (dev), Hibernate `ddl-auto=update` crea la columna `xml_generado` con un tipo incorrecto (TINYTEXT/TEXT) en lugar de LONGTEXT. Al guardar el XML de anulación (~800 bytes), MySQL devuelve `Data too long for column` → la transacción de creación de rectificativa aborta.
+
+**Causas encadenadas:**
+1. `verifactu.keystore.path=/certs/mi_certificado.p12` → keystore no existe en dev → VeriFactu deshabilitado pero `registrarAnulacionLocal` SÍ ejecuta porque `verifactuNifEmisor = "NIF000000A"` está configurado
+2. La columna `xml_generado` debía ser LONGTEXT (definido en migración V4) pero Flyway no se ejecuta en dev
+3. Hibernate `ddl-auto=update` crea la columna con el tipo erróneo
+
+**Fix aplicado (tres capas):**
+- `VerifactuEvidence.java`: `@Column(columnDefinition = "LONGTEXT")` en `xmlGenerado`
+- `V6__fix_xml_generado_longtext.sql`: migración que hace `MODIFY COLUMN xml_generado LONGTEXT`
+- `DevDataInitializer.java`: `JdbcTemplate.execute("ALTER TABLE verifactu_evidence MODIFY COLUMN xml_generado LONGTEXT")` en arranque dev
+
+---
+
+### BUG-012 — Total de factura rectificativa muestra 0,00 € aunque las líneas tienen valor negativo ⚠️ PENDIENTE
+**Severidad:** Media  
+**Módulo afectado:** Facturas → detalle de rectificativa
+
+La rectificativa R-GEN-2026-0011 tiene una línea: Pan de pueblo × −3.00 = −6,30 €. Sin embargo el panel "Total" muestra **0,00 €** y el pie de la tabla "Total factura" muestra **—**.
+
+**Causa probable:** Misma que BUG-002 (pedido total). El campo `total` de la entidad `Factura` no se recalcula al crear la rectificativa con líneas en negativo, o la lógica de `FacturaService.crearRectificativa` no llama a `recalcularTotales()` después de guardar las líneas.
+
+**Cómo reproducir:** Crear una rectificativa y ver el detalle de la nueva factura R-...
+
+**Fix sugerido:** En `FacturaService.crearRectificativa`, llamar a `recalcularTotales(rectificativa)` antes de guardar, o asegurarse de que el total se actualiza correctamente con cantidades negativas.
 
 ---
 
@@ -222,7 +252,9 @@ Al anular la factura original durante la creación de una rectificativa, `Verifa
 | 🔴 Alta | BUG-002 Total pedido 0,00€ | Dato financiero incorrecto | Pendiente |
 | 🔴 Alta | BUG-008 PDF facturas 500 | Descarga de facturas inoperativa | ✅ Corregido |
 | 🔴 Alta | BUG-009 Campo formulario rectificativa | Creación de rectificativas imposible | ✅ Corregido |
-| 🔴 Alta | BUG-010 registrarAnulacionLocal XSD | Transacción de rectificativa aborta | ✅ Corregido (restart) |
+| 🔴 Alta | BUG-010 registrarAnulacionLocal XSD | Transacción de rectificativa aborta | ✅ Corregido |
+| 🔴 Alta | BUG-011 xml_generado tipo columna | Creación rectificativa aborta en dev | ✅ Corregido |
+| 🟡 Media | BUG-012 Total rectificativa 0,00€ | Dato financiero incorrecto | Pendiente |
 | 🟡 Media | BUG-003 Alertas de BORRADOR | Ruido en dashboard para el usuario | Pendiente |
 | 🟡 Media | BUG-004 Encoding roto | Datos ilegibles en pantalla | Pendiente |
 | 🟡 Media | BUG-006 Tabla ventas por día sin importe | Informe incompleto | Pendiente |
