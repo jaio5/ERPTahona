@@ -108,7 +108,7 @@ public class VerifactuService implements InitializingBean {
 
         // Comprobación rápida: si la ruta apunta a un fichero vacío, evitar intentar cargarlo
         try {
-            if (keystorePath != null && !keystorePath.trim().isEmpty()) {
+            if (keystorePath != null && !keystorePath.isBlank()) {
                 File kf = new File(keystorePath);
                 if (kf.exists() && kf.isFile() && kf.length() == 0) {
                     log.warn("Keystore file exists but is empty: {} - Verifactu deshabilitado", keystorePath);
@@ -333,7 +333,7 @@ public class VerifactuService implements InitializingBean {
     // Cambiado a public para permitir la reutilización por el servicio de diagnóstico
     public static InputStream openKeystoreStream(String keystorePath) {
         // Validar entrada para evitar NullPointerException dentro de Class.getResourceAsStream
-        if (keystorePath == null || keystorePath.trim().isEmpty()) {
+        if (keystorePath == null || keystorePath.isBlank()) {
             if (log.isWarnEnabled()) log.warn("Keystore path is null or empty");
             return null;
         }
@@ -720,9 +720,24 @@ public class VerifactuService implements InitializingBean {
             return;
         }
 
-        EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
-        String xml = generarRegistroAnulacionXml(factura, motivo);
-        String hashDocumento = generarHash(xml);
+        Optional<EmpresaConfig> empresaOpt = empresaConfigService.getConfiguracionActiva();
+        if (empresaOpt.isEmpty()) {
+            log.warn("No hay configuración de empresa — omitiendo registro de anulación VeriFactu para {}", factura.getNumero());
+            return;
+        }
+        EmpresaConfig empresa = empresaOpt.get();
+
+        String xml = null;
+        String hashDocumento;
+        boolean verifactuConfigurado = empresa.getVerifactuNifEmisor() != null && !empresa.getVerifactuNifEmisor().isBlank();
+        if (verifactuConfigurado) {
+            try {
+                xml = generarRegistroAnulacionXml(factura, motivo);
+            } catch (Exception e) {
+                log.warn("No se pudo generar XML VeriFactu para anulación de {} — se registra evidencia sin XML: {}", factura.getNumero(), e.getMessage());
+            }
+        }
+        hashDocumento = xml != null ? generarHash(xml) : generarHash(factura.getNumero() + "|ANULACION|" + System.currentTimeMillis());
 
         VerifactuEvidence evidencia = new VerifactuEvidence();
         evidencia.setSerie(resolverSerie(factura));

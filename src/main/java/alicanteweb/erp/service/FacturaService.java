@@ -217,6 +217,18 @@ public class FacturaService {
             throw new IllegalStateException("Solo se pueden rectificar facturas emitidas. Estado actual: " + original.getEstado());
         }
 
+        Factura rectificativa = inicializarCabeceraRectificativa(original, motivo, tipoRectificacion, fechaRectificativa);
+        clonarLineasInvertidas(original, rectificativa);
+        prepararFacturaParaGuardar(rectificativa);
+        Factura saved = repository.save(rectificativa);
+
+        anularOriginalPorRectificativa(original, saved.getNumero(), motivo);
+        registrarEventoRectificativa(original, saved, motivo);
+
+        return saved;
+    }
+
+    private Factura inicializarCabeceraRectificativa(Factura original, String motivo, String tipoRectificacion, LocalDate fechaRectificativa) {
         Factura rectificativa = new Factura();
         rectificativa.setTipoFactura("RECTIFICATIVA");
         rectificativa.setCliente(original.getCliente());
@@ -228,7 +240,10 @@ public class FacturaService {
         rectificativa.setTipoRectificacion(tipoRectificacion != null ? tipoRectificacion : "SUSTITUCION");
         rectificativa.setMedioCobro(original.getMedioCobro());
         rectificativa.setObservaciones("Rectificativa de factura " + original.getNumero());
+        return rectificativa;
+    }
 
+    private void clonarLineasInvertidas(Factura original, Factura rectificativa) {
         for (FacturaLinea lineaOriginal : original.getFacturaLineas()) {
             FacturaLinea linea = new FacturaLinea();
             linea.setFactura(rectificativa);
@@ -243,19 +258,20 @@ public class FacturaService {
             linea.setIva(lineaOriginal.getIva());
             rectificativa.getFacturaLineas().add(linea);
         }
+    }
 
-        prepararFacturaParaGuardar(rectificativa);
-        Factura saved = repository.save(rectificativa);
-
+    private void anularOriginalPorRectificativa(Factura original, String numeroRectificativa, String motivo) {
         original.setEstado("ANULADA");
         original.setObservacionesRevision(concatObservacion(
                 original.getObservacionesRevision(),
-                "Anulada por rectificativa " + saved.getNumero()
+                "Anulada por rectificativa " + numeroRectificativa
                         + (motivo != null && !motivo.isBlank() ? " - " + motivo : "")
         ));
         repository.save(original);
         verifactuService.registrarAnulacionLocal(original, motivo);
+    }
 
+    private void registrarEventoRectificativa(Factura original, Factura saved, String motivo) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("facturaOriginalId", original.getId());
         metadata.put("rectificativaId", saved.getId());
@@ -264,8 +280,6 @@ public class FacturaService {
         metadata.put("fecha", LocalDateTime.now().toString());
         facturacionEventoService.registrarEvento(FacturacionEventoService.AMBITO_FACTURAS,
                 "RECTIFICATIVA_CREADA", saved.getNumero(), metadata);
-
-        return saved;
     }
 
     public String normalizarSerie(String serie) {

@@ -58,7 +58,7 @@
                 </div>
                 <form th:action="@{/web/facturas/{id}/rectificar(id=${facturaOriginal.id})}" method="post"
                       class="needs-validation" novalidate
-                      onsubmit="return confirm('¿Crear factura rectificativa? La factura original quedará anulada.')">
+                      id="form-rectificativa">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label" for="fecha">Fecha rectificativa *</label>
@@ -73,15 +73,16 @@
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label" for="motivoRectificacion">Motivo de la rectificación *</label>
-                            <textarea id="motivoRectificacion" name="motivoRectificacion" class="form-control" rows="4" required
+                            <label class="form-label" for="motivo">Motivo de la rectificación *</label>
+                            <textarea id="motivo" name="motivo" class="form-control" rows="4" required
                                       placeholder="Describe el motivo de la rectificativa..."></textarea>
                             <div class="invalid-feedback">El motivo es obligatorio.</div>
                         </div>
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-warning" data-no-double-click>
+                        <button type="submit" class="btn btn-warning" data-no-double-click
+                                data-confirm="¿Crear factura rectificativa? La factura original quedará anulada.">
                             <i class="bi bi-arrow-counterclockwise me-1"></i>Crear rectificativa
                         </button>
                         <a th:href="@{/web/facturas/{id}(id=${facturaOriginal.id})}"

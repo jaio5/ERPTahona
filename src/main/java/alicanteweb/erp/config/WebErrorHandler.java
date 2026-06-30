@@ -76,6 +76,13 @@ public class WebErrorHandler {
         model.addAttribute("codigo", 500);
         model.addAttribute("mensaje", "Ha ocurrido un error inesperado. Por favor, contacta con el administrador.");
         model.addAttribute("url", req.getRequestURI());
+        StringBuilder msg = new StringBuilder(e.getClass().getSimpleName() + ": " + e.getMessage());
+        Throwable cause = e.getCause();
+        while (cause != null) {
+            msg.append("\nCaused by: ").append(cause.getClass().getSimpleName()).append(": ").append(cause.getMessage());
+            cause = cause.getCause();
+        }
+        model.addAttribute("message", msg.toString());
         return "error";
     }
 }

@@ -16,6 +16,9 @@
     <p th:with="ruta=${url} ?: ${path}"
        style="color:#64748b;font-size:0.875rem;"
        th:text="${ruta}"></p>
+    <pre th:if="${message != null and message != ''}"
+         style="text-align:left;background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:1rem;font-size:0.75rem;color:#7f1d1d;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow:auto;margin-top:1rem;"
+         th:text="${message}"></pre>
     <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;">
         <a th:href="@{/web/dashboard}" style="display:inline-block;padding:0.5rem 1.25rem;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-size:0.875rem;">← Volver al panel</a>
         <a href="javascript:history.back()" style="display:inline-block;padding:0.5rem 1.25rem;background:#f1f5f9;color:#374151;border-radius:6px;text-decoration:none;font-size:0.875rem;border:1px solid #e2e8f0;">Volver atrás</a>
