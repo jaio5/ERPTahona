@@ -10,7 +10,7 @@ public final class DocumentoParserUtil {
 
     private DocumentoParserUtil() {}
 
-    /** Construye la lista de líneas con descuento opcional. Omite líneas sin artículo o con cantidad ≤ 0. */
+    /** Construye la lista de líneas con descuento opcional. Omite líneas sin artículo o con cantidad 0. */
     public static List<Map<String, Object>> construirLineas(String[] articuloIds, String[] cantidades,
                                                              String[] precios, String[] ivas,
                                                              String[] descuentos) {
@@ -19,7 +19,7 @@ public final class DocumentoParserUtil {
         for (int i = 0; i < total; i++) {
             Long articuloId = parseLong(at(articuloIds, i));
             BigDecimal cantidad = parseDecimal(at(cantidades, i));
-            if (articuloId == null || cantidad.compareTo(BigDecimal.ZERO) <= 0) continue;
+            if (articuloId == null || cantidad.compareTo(BigDecimal.ZERO) == 0) continue;
             Map<String, Object> linea = new HashMap<>();
             linea.put("articuloId", articuloId);
             linea.put("cantidad", cantidad);

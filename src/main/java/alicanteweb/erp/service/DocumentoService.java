@@ -72,7 +72,7 @@ public class DocumentoService {
 
     private void guardarLineasPedido(Pedido pedido, Map<String, Object> datos, boolean esNuevo) {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
-        if (lineas == null) return;
+        if (lineas == null || lineas.isEmpty()) return;
 
         Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
         Long clienteId = pedido.getCliente() != null ? pedido.getCliente().getId() : null;
@@ -126,7 +126,7 @@ public class DocumentoService {
 
     private void guardarLineasPresupuesto(Presupuesto pre, Map<String, Object> datos) {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
-        if (lineas == null) return;
+        if (lineas == null || lineas.isEmpty()) return;
 
         Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
         Long clienteId = pre.getCliente() != null ? pre.getCliente().getId() : null;
@@ -192,7 +192,7 @@ public class DocumentoService {
 
     private void guardarLineasAlbaran(AlbaranVenta alb, Map<String, Object> datos, boolean esNuevo) {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
-        if (lineas == null) return;
+        if (lineas == null || lineas.isEmpty()) return;
 
         Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
         Long clienteId = alb.getCliente() != null ? alb.getCliente().getId() : null;
@@ -252,7 +252,7 @@ public class DocumentoService {
 
     private void guardarLineasFactura(Factura fac, Map<String, Object> datos, boolean esNuevo) {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
-        if (lineas == null) return;
+        if (lineas == null || lineas.isEmpty()) return;
 
         Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
         Long clienteId = fac.getCliente() != null ? fac.getCliente().getId() : null;
