@@ -212,12 +212,26 @@
     <script th:attr="nonce=${cspNonce}">
         document.addEventListener('alpine:init', function () {
             Alpine.data('dashboardApp', function () {
+                const STORAGE_KEY = 'erp_alertas_descartadas';
+                function getDescartadas() {
+                    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) { return []; }
+                }
+                function saveDescartada(id) {
+                    try {
+                        const ids = getDescartadas();
+                        if (!ids.includes(id)) { ids.push(id); localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); }
+                    } catch(e) {}
+                }
                 return {
                 alertas: [],
                 init() {
+                    const descartadas = getDescartadas();
                     fetch('/api/web/alertas')
                         .then(r => { if (r.ok) return r.json(); return []; })
-                        .then(data => { this.alertas = Array.isArray(data) ? data : []; })
+                        .then(data => {
+                            this.alertas = (Array.isArray(data) ? data : [])
+                                .filter(a => !descartadas.includes(a.id));
+                        })
                         .catch(() => { this.alertas = []; });
                 },
                 hasAlertas() { return this.alertas.length > 0; },
@@ -234,7 +248,8 @@
                     return 'bi-info-circle-fill';
                 },
                 cerrarAlerta(a) {
-                    this.alertas = this.alertas.filter(x => x !== a);
+                    saveDescartada(a.id);
+                    this.alertas = this.alertas.filter(x => x.id !== a.id);
                 }
                 };
             });

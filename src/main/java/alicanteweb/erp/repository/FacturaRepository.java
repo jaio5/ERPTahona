@@ -70,8 +70,8 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
     @Query("SELECT f FROM Factura f LEFT JOIN FETCH f.cliente WHERE f.fecha BETWEEN :inicio AND :fin AND f.estado = :estado")
     List<Factura> findByFechaBetweenAndEstado(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin, @Param("estado") String estado);
 
-    @Query("SELECT f FROM Factura f WHERE f.fechaVencimiento IS NOT NULL AND f.fechaVencimiento < :hoy AND f.estado <> :estadoExcluir")
-    List<Factura> findVencidas(@Param("hoy") LocalDate hoy, @Param("estadoExcluir") String estadoExcluir);
+    @Query("SELECT f FROM Factura f WHERE f.fechaVencimiento IS NOT NULL AND f.fechaVencimiento < :hoy AND f.estado IN ('EMITIDA', 'VENCIDA')")
+    List<Factura> findVencidas(@Param("hoy") LocalDate hoy);
 
     @Query("SELECT f FROM Factura f LEFT JOIN FETCH f.cliente " +
            "WHERE f.estado IN ('PENDIENTE', 'EMITIDA') AND f.fecha < :fechaLimite")

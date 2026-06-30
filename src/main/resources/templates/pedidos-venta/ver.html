@@ -56,7 +56,7 @@
                         <span class="doc-field-label">Total</span>
                         <div class="doc-field-value"
                              style="font-size:1.3rem;color:var(--brand-color);"
-                             th:text="${pedido.total != null ? #numbers.formatCurrency(pedido.total) : '—'}">—</div>
+                             th:text="${#numbers.formatCurrency(totalCalculado)}">—</div>
                     </div>
                     <div class="col-12" th:if="${pedido.observaciones != null and !pedido.observaciones.isEmpty()}">
                         <span class="doc-field-label">Observaciones</span>
@@ -94,7 +94,7 @@
                                 <td colspan="3" class="text-end fw-semibold text-muted">Total pedido</td>
                                 <td class="text-end fw-bold"
                                     style="font-size:1.05rem;color:var(--brand-color);"
-                                    th:text="${pedido.total != null ? #numbers.formatCurrency(pedido.total) : '—'}">—</td>
+                                    th:text="${#numbers.formatCurrency(totalCalculado)}">—</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -106,7 +106,7 @@
             <div class="form-card total-card-big mb-3">
                 <div class="label">Total pedido</div>
                 <div class="amount"
-                     th:text="${pedido.total != null ? #numbers.formatCurrency(pedido.total) : '0,00 €'}">0,00 €</div>
+                     th:text="${#numbers.formatCurrency(totalCalculado)}">0,00 €</div>
                 <div>
                     <span class="badge-status"
                           th:attr="data-status=${pedido.estado?.toLowerCase()}"

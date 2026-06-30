@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +101,16 @@ public class PedidoVentaWebController {
             model.addAttribute("moduloActivo", "pedidos-venta");
             model.addAttribute("titulo", "Pedido " + p.getNumero());
             model.addAttribute("pedido", p);
+            // Calcular total desde líneas si el campo almacenado es 0 o nulo
+            if (p.getTotal() == null || p.getTotal().compareTo(BigDecimal.ZERO) == 0) {
+                BigDecimal totalCalculado = p.getPedidoLineas().stream()
+                    .filter(l -> l.getPrecio() != null && l.getCantidad() != null)
+                    .map(l -> l.getPrecio().multiply(l.getCantidad()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                model.addAttribute("totalCalculado", totalCalculado);
+            } else {
+                model.addAttribute("totalCalculado", p.getTotal());
+            }
             return WebController.layout(model, "pedidos-venta/ver");
         }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/pedidos-venta"; });
     }

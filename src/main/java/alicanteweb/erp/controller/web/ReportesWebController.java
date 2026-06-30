@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -84,7 +85,7 @@ public class ReportesWebController {
         m.addAttribute("titulo","Ventas del mes");
         m.addAttribute("totalVentas", totalVentas);
         m.addAttribute("numFacturas", facturas.size());
-        m.addAttribute("mes", ym.getMonth().toString() + " " + ym.getYear());
+        m.addAttribute("mes", ym.format(DateTimeFormatter.ofPattern("MMMM yyyy", new Locale("es", "ES"))).toUpperCase(new Locale("es", "ES")));
         m.addAttribute("porDia", porDia);
         m.addAttribute("porCliente", porCliente);
         m.addAttribute("ticketMedio", ticketMedio);

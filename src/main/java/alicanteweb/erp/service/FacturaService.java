@@ -5,6 +5,7 @@ import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.entities.FacturaSerieSequence;
 import alicanteweb.erp.repository.FacturaRepository;
 import alicanteweb.erp.repository.FacturaSerieSequenceRepository;
+import alicanteweb.erp.util.FinancialMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -86,7 +87,7 @@ public class FacturaService {
 
     @Transactional(readOnly = true)
     public List<Factura> findVencidas(LocalDate hoy) {
-        return repository.findVencidas(hoy, "PAGADA");
+        return repository.findVencidas(hoy);
     }
 
     @Transactional
@@ -219,6 +220,7 @@ public class FacturaService {
 
         Factura rectificativa = inicializarCabeceraRectificativa(original, motivo, tipoRectificacion, fechaRectificativa);
         clonarLineasInvertidas(original, rectificativa);
+        recalcularTotalesDesdeLineas(rectificativa);
         prepararFacturaParaGuardar(rectificativa);
         Factura saved = repository.save(rectificativa);
 
@@ -331,5 +333,23 @@ public class FacturaService {
     private long obtenerUltimoNumeroExistente(String serie, int ejercicio, String prefijo) {
         String numeroPrefix = prefijo + "-" + serie + "-" + ejercicio + "-";
         return repository.findMaxNumeroSecuencialBySerieAndPrefijo(serie, numeroPrefix + "%", numeroPrefix.length());
+    }
+
+    private void recalcularTotalesDesdeLineas(Factura factura) {
+        java.math.BigDecimal baseTotal = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal ivaTotal = java.math.BigDecimal.ZERO;
+        for (FacturaLinea linea : factura.getFacturaLineas()) {
+            java.math.BigDecimal cantidad = linea.getCantidad() != null ? linea.getCantidad() : java.math.BigDecimal.ZERO;
+            java.math.BigDecimal precio = linea.getPrecioUnitario() != null ? linea.getPrecioUnitario() : java.math.BigDecimal.ZERO;
+            java.math.BigDecimal descuento = linea.getDescuento() != null ? linea.getDescuento() : java.math.BigDecimal.ZERO;
+            java.math.BigDecimal iva = linea.getIva() != null ? linea.getIva() : java.math.BigDecimal.ZERO;
+            java.math.BigDecimal subtotal = FinancialMath.subtotalConDescuento(cantidad, precio, descuento);
+            java.math.BigDecimal ivaLinea = subtotal.multiply(iva).divide(new java.math.BigDecimal("100"), FinancialMath.SCALE, FinancialMath.ROUND);
+            baseTotal = baseTotal.add(subtotal);
+            ivaTotal = ivaTotal.add(ivaLinea);
+        }
+        factura.setBaseImponible(baseTotal);
+        factura.setTotalIva(ivaTotal);
+        factura.setTotal(baseTotal.add(ivaTotal));
     }
 }

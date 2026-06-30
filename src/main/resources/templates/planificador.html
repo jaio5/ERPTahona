@@ -36,14 +36,14 @@
         </div>
         <div class="col-md-4">
             <div class="stat-card">
-                <h6 class="mb-2">Ordenes prod. (<span x-text="ordenes.length"></span>)</h6>
+                <h6 class="mb-2">Órdenes prod. (<span x-text="ordenes.length"></span>)</h6>
                 <template x-for="o in ordenes" :key="o.id">
                     <div class="mb-1 p-1 border rounded small">
                         <div class="fw-bold" x-text="o.numero"></div>
                         <div x-text="(o.receta || 'Sin receta') + ' - ' + (o.estado || '')"></div>
                     </div>
                 </template>
-                <div x-show="ordenes.length === 0" class="text-muted small">Sin ordenes</div>
+                <div x-show="ordenes.length === 0" class="text-muted small">Sin órdenes</div>
             </div>
         </div>
     </div>

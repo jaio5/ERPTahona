@@ -74,40 +74,30 @@ public class DocumentoService {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
         if (lineas == null) return;
 
-        List<Long> artIds = lineas.stream()
-            .map(l -> parseLong(l.get("articuloId")))
-            .filter(id -> id != null)
-            .distinct()
-            .collect(Collectors.toList());
-        Map<Long, Articulo> articuloById = articuloService.findAllById(artIds).stream()
-            .collect(Collectors.toMap(Articulo::getId, a -> a));
+        Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
+        Long clienteId = pedido.getCliente() != null ? pedido.getCliente().getId() : null;
 
         pedido.getPedidoLineas().clear();
+        BigDecimal total = BigDecimal.ZERO;
         for (Map<String, Object> l : lineas) {
             PedidoLinea linea = new PedidoLinea();
             linea.setPedido(pedido);
             Long artId = parseLong(l.get("articuloId"));
-            if (artId != null) {
-                Articulo art = articuloById.get(artId);
-                if (art == null) throw new IllegalArgumentException("Artículo no encontrado: " + artId);
-                linea.setArticulo(art);
-                linea.setDescripcion(art.getNombre());
-            }
-            BigDecimal cantidad = parseDecimal(l.get("cantidad"));
+            asignarArticulo(linea, artId, articuloById);
             BigDecimal precio = parseDecimal(l.get("precio"));
-            BigDecimal iva = parseDecimal(l.get("iva"));
             BigDecimal descuento = parseDecimal(l.get("descuento"));
-            if (artId != null && pedido.getCliente() != null) {
-                precio = tarifaClienteService.resolverPrecio(pedido.getCliente().getId(), artId, precio);
-                BigDecimal tarifaDesc = tarifaClienteService.resolverDescuento(pedido.getCliente().getId(), artId);
-                if (tarifaDesc.compareTo(BigDecimal.ZERO) > 0) descuento = tarifaDesc;
-            }
+            PrecioDescuento pd = resolverPrecioDescuento(clienteId, artId, precio, descuento);
+            BigDecimal cantidad = parseDecimal(l.get("cantidad"));
+            BigDecimal iva = parseDecimal(l.get("iva"));
             linea.setCantidad(cantidad);
-            linea.setPrecio(precio);
+            linea.setPrecio(pd.precio());
             linea.setIva(iva);
-            linea.setDescuento(descuento);
+            linea.setDescuento(pd.descuento());
             pedido.getPedidoLineas().add(linea);
+            BigDecimal base = calcularBase(cantidad, pd.precio(), pd.descuento());
+            total = total.add(base).add(calcularIva(base, iva));
         }
+        pedido.setTotal(total);
         pedidoRepository.save(pedido);
     }
 
@@ -138,13 +128,8 @@ public class DocumentoService {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
         if (lineas == null) return;
 
-        List<Long> artIds = lineas.stream()
-                .map(l -> parseLong(l.get("articuloId")))
-                .filter(id -> id != null)
-                .distinct()
-                .collect(Collectors.toList());
-        Map<Long, Articulo> articuloById = articuloService.findAllById(artIds).stream()
-                .collect(Collectors.toMap(Articulo::getId, a -> a));
+        Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
+        Long clienteId = pre.getCliente() != null ? pre.getCliente().getId() : null;
 
         pre.getLineas().clear();
         BigDecimal total = BigDecimal.ZERO;
@@ -153,38 +138,34 @@ public class DocumentoService {
             PresupuestoLinea linea = new PresupuestoLinea();
             linea.setPresupuesto(pre);
             Long artId = parseLong(l.get("articuloId"));
-            if (artId != null) {
-                Articulo art = articuloById.get(artId);
-                if (art == null) throw new IllegalArgumentException("Artículo no encontrado: " + artId);
-                linea.setArticulo(art);
-                linea.setDescripcion(art.getNombre());
-            }
+            asignarArticulo(linea, artId, articuloById);
             BigDecimal cantidad = parseDecimal(l.get("cantidad"));
-            BigDecimal precio   = parseDecimal(l.get("precio"));
-            BigDecimal iva      = parseDecimal(l.get("iva"));
-            BigDecimal descuento = parseDecimal(l.get("descuento"));
-            if (artId != null && pre.getCliente() != null) {
-                precio = tarifaClienteService.resolverPrecio(pre.getCliente().getId(), artId, precio);
-                BigDecimal tarifaDesc = tarifaClienteService.resolverDescuento(pre.getCliente().getId(), artId);
-                if (tarifaDesc.compareTo(BigDecimal.ZERO) > 0) descuento = tarifaDesc;
-            }
+            BigDecimal iva = parseDecimal(l.get("iva"));
+            PrecioDescuento pd = resolverPrecioDescuento(clienteId, artId,
+                    parseDecimal(l.get("precio")), parseDecimal(l.get("descuento")));
             linea.setCantidad(cantidad);
-            linea.setPrecioUnitario(precio);
+            linea.setPrecioUnitario(pd.precio());
             linea.setTipoIva(iva);
-            linea.setDescuento(descuento);
-            BigDecimal base = cantidad.multiply(precio).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
-            if (descuento.compareTo(BigDecimal.ZERO) > 0) {
-                base = base.subtract(FinancialMath.porcentaje(base, descuento));
-            }
+            linea.setDescuento(pd.descuento());
+            BigDecimal base = calcularBase(cantidad, pd.precio(), pd.descuento());
             linea.setImporte(base);
             linea.setOrden(orden++);
-            BigDecimal ivaImporte = iva.compareTo(BigDecimal.ZERO) > 0
-                    ? FinancialMath.porcentaje(base, iva)
-                    : BigDecimal.ZERO;
-            total = total.add(base).add(ivaImporte);
+            total = total.add(base).add(calcularIva(base, iva));
             pre.getLineas().add(linea);
         }
         pre.setTotal(total);
+    }
+
+    private BigDecimal calcularBase(BigDecimal cantidad, BigDecimal precio, BigDecimal descuento) {
+        BigDecimal base = cantidad.multiply(precio).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
+        if (descuento.compareTo(BigDecimal.ZERO) > 0) {
+            base = base.subtract(FinancialMath.porcentaje(base, descuento));
+        }
+        return base;
+    }
+
+    private BigDecimal calcularIva(BigDecimal base, BigDecimal iva) {
+        return iva.compareTo(BigDecimal.ZERO) > 0 ? FinancialMath.porcentaje(base, iva) : BigDecimal.ZERO;
     }
 
     // =========================== ALBARÁN ===========================
@@ -213,38 +194,21 @@ public class DocumentoService {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
         if (lineas == null) return;
 
-        List<Long> artIds = lineas.stream()
-            .map(l -> parseLong(l.get("articuloId")))
-            .filter(id -> id != null)
-            .distinct()
-            .collect(Collectors.toList());
-        Map<Long, Articulo> articuloById = articuloService.findAllById(artIds).stream()
-            .collect(Collectors.toMap(Articulo::getId, a -> a));
+        Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
+        Long clienteId = alb.getCliente() != null ? alb.getCliente().getId() : null;
 
         alb.getAlbaranVentaLineas().clear();
         for (Map<String, Object> l : lineas) {
             AlbaranVentaLinea linea = new AlbaranVentaLinea();
             linea.setAlbaran(alb);
             Long artId = parseLong(l.get("articuloId"));
-            if (artId != null) {
-                Articulo art = articuloById.get(artId);
-                if (art == null) throw new IllegalArgumentException("Artículo no encontrado: " + artId);
-                linea.setArticulo(art);
-                linea.setDescripcion(art.getNombre());
-            }
-            BigDecimal cantidad = parseDecimal(l.get("cantidad"));
-            BigDecimal precio = parseDecimal(l.get("precio"));
-            BigDecimal iva = parseDecimal(l.get("iva"));
-            BigDecimal descuento = parseDecimal(l.get("descuento"));
-            if (artId != null && alb.getCliente() != null) {
-                precio = tarifaClienteService.resolverPrecio(alb.getCliente().getId(), artId, precio);
-                BigDecimal tarifaDesc = tarifaClienteService.resolverDescuento(alb.getCliente().getId(), artId);
-                if (tarifaDesc.compareTo(BigDecimal.ZERO) > 0) descuento = tarifaDesc;
-            }
-            linea.setCantidad(cantidad);
-            linea.setPrecio(precio);
-            linea.setIva(iva);
-            linea.setDescuento(descuento);
+            asignarArticulo(linea, artId, articuloById);
+            PrecioDescuento pd = resolverPrecioDescuento(clienteId, artId,
+                    parseDecimal(l.get("precio")), parseDecimal(l.get("descuento")));
+            linea.setCantidad(parseDecimal(l.get("cantidad")));
+            linea.setPrecio(pd.precio());
+            linea.setIva(parseDecimal(l.get("iva")));
+            linea.setDescuento(pd.descuento());
             alb.getAlbaranVentaLineas().add(linea);
         }
         albaranRepository.save(alb);
@@ -289,45 +253,78 @@ public class DocumentoService {
     private void guardarLineasFactura(Factura fac, Map<String, Object> datos, boolean esNuevo) {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
         if (lineas == null) return;
+
+        Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
+        Long clienteId = fac.getCliente() != null ? fac.getCliente().getId() : null;
+
         fac.getFacturaLineas().clear();
-        BigDecimal base = BigDecimal.ZERO;
-        BigDecimal totalIva = BigDecimal.ZERO;
+        BigDecimal baseTotal = BigDecimal.ZERO;
+        BigDecimal ivaTotal = BigDecimal.ZERO;
         for (Map<String, Object> l : lineas) {
             FacturaLinea linea = new FacturaLinea();
             linea.setFactura(fac);
             Long artId = parseLong(l.get("articuloId"));
-            if (artId != null) {
-                Articulo art = articuloService.findById(artId).orElseThrow(() -> new IllegalArgumentException("Artículo no encontrado"));
-                linea.setArticulo(art);
-                linea.setDescripcion(art.getNombre());
-            }
+            asignarArticuloFactura(linea, artId, articuloById);
             BigDecimal cantidad = parseDecimal(l.get("cantidad"));
-            BigDecimal precio = parseDecimal(l.get("precio"));
             BigDecimal iva = parseDecimal(l.get("iva"));
-            BigDecimal descuento = parseDecimal(l.get("descuento"));
-            if (artId != null && fac.getCliente() != null) {
-                precio = tarifaClienteService.resolverPrecio(fac.getCliente().getId(), artId, precio);
-                BigDecimal tarifaDesc = tarifaClienteService.resolverDescuento(fac.getCliente().getId(), artId);
-                if (tarifaDesc.compareTo(BigDecimal.ZERO) > 0) descuento = tarifaDesc;
-            }
+            PrecioDescuento pd = resolverPrecioDescuento(clienteId, artId,
+                    parseDecimal(l.get("precio")), parseDecimal(l.get("descuento")));
             linea.setCantidad(cantidad);
-            linea.setPrecioUnitario(precio);
+            linea.setPrecioUnitario(pd.precio());
             linea.setIva(iva);
-            linea.setDescuento(descuento);
-            BigDecimal subtotal = FinancialMath.subtotalConDescuento(cantidad, precio, descuento);
-            base = base.add(subtotal);
-            if (iva != null && iva.compareTo(BigDecimal.ZERO) > 0) {
-                totalIva = totalIva.add(FinancialMath.porcentaje(subtotal, iva));
-            }
+            linea.setDescuento(pd.descuento());
+            BigDecimal subtotal = FinancialMath.subtotalConDescuento(cantidad, pd.precio(), pd.descuento());
+            baseTotal = baseTotal.add(subtotal);
+            ivaTotal = ivaTotal.add(calcularIva(subtotal, iva));
             fac.getFacturaLineas().add(linea);
         }
-        BigDecimal total = base.add(totalIva);
-        fac.setBaseImponible(base);
-        fac.setTotalIva(totalIva);
+        BigDecimal total = baseTotal.add(ivaTotal);
+        fac.setBaseImponible(baseTotal);
+        fac.setTotalIva(ivaTotal);
         fac.setTotal(total);
         facturaRepository.save(fac);
-        facturaRepository.updateTotales(fac.getId(), total, base, totalIva);
+        facturaRepository.updateTotales(fac.getId(), total, baseTotal, ivaTotal);
     }
+
+    // =========================== HELPERS LÍNEAS ===========================
+
+    private Map<Long, Articulo> cargarArticulosDeLíneas(List<Map<String, Object>> lineas) {
+        List<Long> artIds = lineas.stream()
+                .map(l -> parseLong(l.get("articuloId")))
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        return articuloService.findAllById(artIds).stream()
+                .collect(Collectors.toMap(Articulo::getId, a -> a));
+    }
+
+    private void asignarArticulo(Object linea, Long artId, Map<Long, Articulo> articuloById) {
+        if (artId == null) return;
+        Articulo art = articuloById.get(artId);
+        if (art == null) throw new IllegalArgumentException("Artículo no encontrado: " + artId);
+        if (linea instanceof PedidoLinea l) { l.setArticulo(art); l.setDescripcion(art.getNombre()); }
+        else if (linea instanceof PresupuestoLinea l) { l.setArticulo(art); l.setDescripcion(art.getNombre()); }
+        else if (linea instanceof AlbaranVentaLinea l) { l.setArticulo(art); l.setDescripcion(art.getNombre()); }
+    }
+
+    private void asignarArticuloFactura(FacturaLinea linea, Long artId, Map<Long, Articulo> articuloById) {
+        if (artId == null) return;
+        Articulo art = articuloById.computeIfAbsent(artId,
+                id -> articuloService.findById(id).orElseThrow(() -> new IllegalArgumentException("Artículo no encontrado: " + id)));
+        linea.setArticulo(art);
+        linea.setDescripcion(art.getNombre());
+    }
+
+    private PrecioDescuento resolverPrecioDescuento(Long clienteId, Long artId, BigDecimal precio, BigDecimal descuento) {
+        if (artId != null && clienteId != null) {
+            precio = tarifaClienteService.resolverPrecio(clienteId, artId, precio);
+            BigDecimal tarifaDesc = tarifaClienteService.resolverDescuento(clienteId, artId);
+            if (tarifaDesc.compareTo(BigDecimal.ZERO) > 0) descuento = tarifaDesc;
+        }
+        return new PrecioDescuento(precio, descuento);
+    }
+
+    private record PrecioDescuento(BigDecimal precio, BigDecimal descuento) {}
 
     // =========================== UTILIDADES ===========================
 
