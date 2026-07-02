@@ -355,7 +355,7 @@ public class FacturaService {
         return repository.findMaxNumeroSecuencialBySerieAndPrefijo(serie, numeroPrefix + "%", numeroPrefix.length());
     }
 
-    private void recalcularTotalesDesdeLineas(Factura factura) {
+    public void recalcularTotalesDesdeLineas(Factura factura) {
         BigDecimal baseTotal = BigDecimal.ZERO;
         BigDecimal ivaTotal = BigDecimal.ZERO;
         for (FacturaLinea linea : factura.getFacturaLineas()) {

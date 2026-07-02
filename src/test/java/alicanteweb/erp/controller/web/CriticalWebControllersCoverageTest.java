@@ -57,7 +57,8 @@ class CriticalWebControllersCoverageTest {
         when(impresion.generarFacturaPdf(factura)).thenReturn(pdf);
 
         FacturaWebController controller = new FacturaWebController(
-                facturas, clientes, articulos, impresion, auditoria, usuarios, documentos);
+                facturas, clientes, articulos, impresion, auditoria, usuarios, documentos,
+                mock(EmailService.class), mock(FacturaeService.class));
 
         assertEquals("layout", controller.listado(new ExtendedModelMap(), null, null, 0, 25, "fecha", "desc"));
         assertEquals("layout", controller.formularioNueva(new ExtendedModelMap()));

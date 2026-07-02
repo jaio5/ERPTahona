@@ -208,6 +208,72 @@ public class ContabilidadService {
     }
 
     /**
+     * Generar asiento de pago a proveedor (400 a 570/572)
+     */
+    public AsientoContable generarAsientoPagoCompra(alicanteweb.erp.entities.FacturaCompra facturaCompra,
+                                                    BigDecimal importe, String formaPago, Usuario usuario) {
+        Objects.requireNonNull(facturaCompra, "Factura de compra no puede ser null");
+        Objects.requireNonNull(importe, "Importe no puede ser null");
+        Objects.requireNonNull(formaPago, "Forma de pago no puede ser null");
+
+        if (importe.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El importe debe ser mayor que cero");
+        }
+
+        log.info("💸 Generando asiento de pago a proveedor: Factura={}, Importe={}", facturaCompra.getNumero(), importe);
+
+        try {
+            AsientoContable asiento = new AsientoContable();
+            asiento.setNumero(generarNumeroAsiento());
+            asiento.setFecha(LocalDate.now());
+            asiento.setConcepto("Pago factura compra " + facturaCompra.getNumero() + " - " +
+                (facturaCompra.getProveedor() != null ? facturaCompra.getProveedor().getNombre() : "Proveedor desconocido"));
+            asiento.setTipo("OPERACION");
+            asiento.setUsuario(usuario);
+            asiento.setFacturaCompraId(facturaCompra.getId());
+
+            PlanCuentas cuentaProveedores = obtenerCuenta("400"); // 400 - Proveedores
+            PlanCuentas cuentaCaja = "EFECTIVO".equalsIgnoreCase(formaPago) ?
+                obtenerCuenta("570") :
+                obtenerCuenta("572");
+
+            if (asiento.getLineas() == null) asiento.setLineas(new LinkedHashSet<>());
+
+            LineaAsiento lineaProveedor = new LineaAsiento();
+            lineaProveedor.setAsiento(asiento);
+            lineaProveedor.setCuenta(cuentaProveedores);
+            lineaProveedor.setDebe(importe);
+            lineaProveedor.setHaber(BigDecimal.ZERO);
+            lineaProveedor.setConcepto("Proveedor: " + (facturaCompra.getProveedor() != null ? facturaCompra.getProveedor().getNombre() : "(sin proveedor)"));
+            lineaProveedor.setOrden(1);
+
+            LineaAsiento lineaCaja = new LineaAsiento();
+            lineaCaja.setAsiento(asiento);
+            lineaCaja.setCuenta(cuentaCaja);
+            lineaCaja.setDebe(BigDecimal.ZERO);
+            lineaCaja.setHaber(importe);
+            lineaCaja.setConcepto("Pago " + formaPago);
+            lineaCaja.setOrden(2);
+
+            asiento.getLineas().add(lineaProveedor);
+            asiento.getLineas().add(lineaCaja);
+
+            asiento.calcularTotales();
+            if (!asiento.estaCuadrado()) {
+                throw new IllegalStateException("El asiento de pago a proveedor no cuadra");
+            }
+
+            AsientoContable guardado = asientoRepository.save(asiento);
+            log.info("✅ Asiento de pago a proveedor generado: {}", guardado.getNumero());
+            return guardado;
+
+        } catch (Exception e) {
+            log.error("❌ Error generando asiento de pago a proveedor", e);
+            throw new ErpException("Error al generar asiento de pago a proveedor", e);
+        }
+    }
+
+    /**
      * Generar asiento de compra a proveedor
      */
     public AsientoContable generarAsientoCompra(Long facturaCompraId, BigDecimal base,
@@ -413,6 +479,159 @@ public class ContabilidadService {
         );
     }
 
+    /**
+     * Asiento de apertura del ejercicio: traslada al 1 de enero los saldos de
+     * las cuentas de balance (activo, pasivo y patrimonio) a 31/12 del año anterior.
+     * La diferencia (resultado del ejercicio anterior) se lleva a la cuenta 129.
+     */
+    @Transactional
+    public AsientoContable generarAsientoApertura(int año) {
+        LocalDate fechaApertura = LocalDate.of(año, 1, 1);
+        boolean yaExiste = asientoRepository.findByAsientoAperturaTrue().stream()
+                .anyMatch(a -> a.getFecha() != null && a.getFecha().getYear() == año);
+        if (yaExiste) {
+            throw new IllegalStateException("Ya existe un asiento de apertura para el ejercicio " + año);
+        }
+
+        List<BalanceCuentaConTipo> cuentasBalance = obtenerBalanceConTipoCompleto(LocalDate.of(año - 1, 12, 31)).stream()
+                .filter(c -> {
+                    String tipo = c.tipo() != null ? c.tipo().toUpperCase() : "";
+                    return tipo.equals("ACTIVO") || tipo.equals("PASIVO") || tipo.equals("PATRIMONIO");
+                })
+                .toList();
+        AsientoContable apertura = new AsientoContable();
+        apertura.setNumero(generarNumeroAsiento());
+        apertura.setFecha(fechaApertura);
+        apertura.setConcepto("Apertura ejercicio " + año);
+        apertura.setTipo("APERTURA");
+        apertura.setAsientoApertura(true);
+        apertura.setLineas(new LinkedHashSet<>());
+
+        int orden = 1;
+        BigDecimal descuadre = BigDecimal.ZERO; // debe - haber acumulado
+        for (BalanceCuentaConTipo cuenta : cuentasBalance) {
+            if (cuenta.saldo().compareTo(BigDecimal.ZERO) == 0) {
+                continue;
+            }
+            LineaAsiento linea = new LineaAsiento();
+            linea.setAsiento(apertura);
+            linea.setCuenta(obtenerCuenta(cuenta.codigo()));
+            linea.setConcepto("Apertura " + cuenta.nombre());
+            boolean esActivo = "ACTIVO".equalsIgnoreCase(cuenta.tipo());
+            BigDecimal saldo = cuenta.saldo().abs();
+            boolean alDebe = esActivo == (cuenta.saldo().compareTo(BigDecimal.ZERO) > 0);
+            linea.setDebe(alDebe ? saldo : BigDecimal.ZERO);
+            linea.setHaber(alDebe ? BigDecimal.ZERO : saldo);
+            linea.setOrden(orden++);
+            apertura.getLineas().add(linea);
+            descuadre = descuadre.add(linea.getDebe()).subtract(linea.getHaber());
+        }
+
+        if (descuadre.compareTo(BigDecimal.ZERO) != 0) {
+            LineaAsiento resultado = new LineaAsiento();
+            resultado.setAsiento(apertura);
+            resultado.setCuenta(obtenerCuenta("129"));
+            resultado.setConcepto("Resultado del ejercicio " + (año - 1));
+            resultado.setDebe(descuadre.compareTo(BigDecimal.ZERO) < 0 ? descuadre.abs() : BigDecimal.ZERO);
+            resultado.setHaber(descuadre.compareTo(BigDecimal.ZERO) > 0 ? descuadre : BigDecimal.ZERO);
+            resultado.setOrden(orden);
+            apertura.getLineas().add(resultado);
+        }
+
+        if (apertura.getLineas().isEmpty()) {
+            throw new IllegalStateException("No hay saldos de balance a 31/12/" + (año - 1) + " que abrir");
+        }
+
+        apertura.calcularTotales();
+        if (!apertura.estaCuadrado()) {
+            throw new IllegalStateException("El asiento de apertura no cuadra");
+        }
+        AsientoContable guardado = asientoRepository.save(apertura);
+        log.info("✅ Asiento de apertura {} generado ({} líneas)", guardado.getNumero(), guardado.getLineas().size());
+        return guardado;
+    }
+
+    /**
+     * Libro mayor de una cuenta con saldo acumulado por movimiento.
+     */
+    @Transactional(readOnly = true)
+    public List<MovimientoMayor> obtenerLibroMayor(String codigoCuenta, LocalDate desde, LocalDate hasta) {
+        Objects.requireNonNull(codigoCuenta, "Código de cuenta obligatorio");
+        List<Object[]> filas = asientoRepository.movimientosDeCuenta(codigoCuenta.trim(), desde, hasta);
+        List<MovimientoMayor> mayor = new ArrayList<>(filas.size());
+        BigDecimal saldo = BigDecimal.ZERO;
+        for (Object[] fila : filas) {
+            LocalDate fecha = (LocalDate) fila[0];
+            String numero = (String) fila[1];
+            String concepto = (String) fila[2];
+            BigDecimal debe = fila[3] != null ? new BigDecimal(fila[3].toString()) : BigDecimal.ZERO;
+            BigDecimal haber = fila[4] != null ? new BigDecimal(fila[4].toString()) : BigDecimal.ZERO;
+            saldo = saldo.add(debe).subtract(haber);
+            mayor.add(new MovimientoMayor(fecha, numero, concepto, debe, haber, saldo));
+        }
+        return mayor;
+    }
+
+    /**
+     * Balance de situación y cuenta de pérdidas y ganancias agrupados según
+     * el criterio del PGC pymes (por tipo de cuenta y grupo).
+     */
+    @Transactional(readOnly = true)
+    public BalancePgc obtenerBalancePgc(LocalDate fecha) {
+        List<BalanceCuentaConTipo> cuentas = obtenerBalanceConTipoCompleto(fecha);
+
+        List<BalanceCuenta> activo = new ArrayList<>();
+        List<BalanceCuenta> pasivoYNeto = new ArrayList<>();
+        List<BalanceCuenta> gastos = new ArrayList<>();
+        List<BalanceCuenta> ingresos = new ArrayList<>();
+        BigDecimal totalActivo = BigDecimal.ZERO;
+        BigDecimal totalPasivoNeto = BigDecimal.ZERO;
+        BigDecimal totalGastos = BigDecimal.ZERO;
+        BigDecimal totalIngresos = BigDecimal.ZERO;
+
+        for (BalanceCuentaConTipo cuenta : cuentas) {
+            BalanceCuenta bc = new BalanceCuenta(cuenta.codigo(), cuenta.nombre(), cuenta.debe(), cuenta.haber(), cuenta.saldo());
+            switch (cuenta.tipo() != null ? cuenta.tipo().toUpperCase() : "") {
+                case "GASTO" -> {
+                    gastos.add(bc);
+                    totalGastos = totalGastos.add(cuenta.saldo());
+                }
+                case "INGRESO" -> {
+                    ingresos.add(bc);
+                    totalIngresos = totalIngresos.add(cuenta.saldo());
+                }
+                case "ACTIVO" -> {
+                    activo.add(bc);
+                    totalActivo = totalActivo.add(cuenta.saldo());
+                }
+                default -> { // PASIVO, PATRIMONIO
+                    pasivoYNeto.add(bc);
+                    totalPasivoNeto = totalPasivoNeto.add(cuenta.saldo());
+                }
+            }
+        }
+        BigDecimal resultado = totalIngresos.subtract(totalGastos);
+        return new BalancePgc(fecha, activo, totalActivo, pasivoYNeto, totalPasivoNeto,
+                ingresos, totalIngresos, gastos, totalGastos, resultado,
+                totalPasivoNeto.add(resultado));
+    }
+
+    private List<BalanceCuentaConTipo> obtenerBalanceConTipoCompleto(LocalDate fecha) {
+        List<Object[]> filas = asientoRepository.calcularBalanceHasta(fecha);
+        List<BalanceCuentaConTipo> balance = new ArrayList<>(filas.size());
+        for (Object[] fila : filas) {
+            String codigo = (String) fila[0];
+            String nombre = (String) fila[1];
+            String tipo = (String) fila[2];
+            BigDecimal debe = fila[3] != null ? new BigDecimal(fila[3].toString()) : BigDecimal.ZERO;
+            BigDecimal haber = fila[4] != null ? new BigDecimal(fila[4].toString()) : BigDecimal.ZERO;
+            BigDecimal saldo = "ACTIVO".equalsIgnoreCase(tipo) || "GASTO".equalsIgnoreCase(tipo)
+                    ? debe.subtract(haber) : haber.subtract(debe);
+            balance.add(new BalanceCuentaConTipo(codigo, nombre, tipo, debe, haber, saldo));
+        }
+        return balance;
+    }
+
     // Comprueba la integridad contable al iniciar
     @EventListener(ApplicationReadyEvent.class)
     public void comprobarIntegridadContableOnStartup() {
@@ -459,5 +678,20 @@ public class ContabilidadService {
         BigDecimal haber,
         BigDecimal saldo
     ) {}
+
+    public record BalanceCuentaConTipo(String codigo, String nombre, String tipo,
+                                       BigDecimal debe, BigDecimal haber, BigDecimal saldo) {}
+
+    /** Movimiento del libro mayor con saldo acumulado. */
+    public record MovimientoMayor(LocalDate fecha, String numeroAsiento, String concepto,
+                                  BigDecimal debe, BigDecimal haber, BigDecimal saldo) {}
+
+    /** Balance de situación + PyG agrupados según PGC pymes. */
+    public record BalancePgc(LocalDate fecha,
+                             List<BalanceCuenta> activo, BigDecimal totalActivo,
+                             List<BalanceCuenta> pasivoYNeto, BigDecimal totalPasivoYNeto,
+                             List<BalanceCuenta> ingresos, BigDecimal totalIngresos,
+                             List<BalanceCuenta> gastos, BigDecimal totalGastos,
+                             BigDecimal resultado, BigDecimal totalPasivoYNetoConResultado) {}
 }
 

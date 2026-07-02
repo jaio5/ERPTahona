@@ -38,11 +38,14 @@ public class FacturaWebController extends BaseWebController {
     private final ImpresionService impresionService;
     private final AuditoriaService auditoriaService;
     private final DocumentoService documentoService;
+    private final EmailService emailService;
+    private final FacturaeService facturaeService;
 
     public FacturaWebController(FacturaService facturaService, ClienteService clienteService,
                                  ArticuloService articuloService, ImpresionService impresionService,
                                  AuditoriaService auditoriaService, UsuarioService usuarioService,
-                                 DocumentoService documentoService) {
+                                 DocumentoService documentoService, EmailService emailService,
+                                 FacturaeService facturaeService) {
         super(usuarioService);
         this.facturaService = facturaService;
         this.clienteService = clienteService;
@@ -50,6 +53,39 @@ public class FacturaWebController extends BaseWebController {
         this.impresionService = impresionService;
         this.auditoriaService = auditoriaService;
         this.documentoService = documentoService;
+        this.emailService = emailService;
+        this.facturaeService = facturaeService;
+    }
+
+    @GetMapping("/{id}/facturae")
+    public Object descargarFacturae(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            String xml = facturaeService.generarFacturaeXml(id);
+            return ResponseEntity.ok()
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"facturae-" + id + ".xml\"")
+                    .contentType(org.springframework.http.MediaType.APPLICATION_XML)
+                    .body(xml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        } catch (RuntimeException e) {
+            log.error("Error generando Facturae de {}: {}", id, e.getMessage(), e);
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/web/facturas/" + id;
+        }
+    }
+
+    @PostMapping("/{id}/enviar-email")
+    public String enviarEmail(@PathVariable Long id,
+                              @RequestParam(required = false) String emailDestino,
+                              HttpSession session,
+                              RedirectAttributes ra) {
+        try {
+            String destino = emailService.enviarFacturaPorEmail(id, emailDestino, usuarioActual(session));
+            ra.addFlashAttribute("exito", "Factura enviada por email a " + destino);
+        } catch (RuntimeException e) {
+            log.error("Error al enviar factura {} por email: {}", id, e.getMessage(), e);
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/web/facturas/" + id;
     }
 
     @GetMapping

@@ -50,9 +50,13 @@ public class EmpresaWebController {
                           @RequestParam(required = false) String registroSanitario,
                           @RequestParam(required = false) String registroMercantil,
                           @RequestParam(required = false) String web,
+                          @RequestParam(required = false) String iban,
+                          @RequestParam(required = false) String sepaCreditorId,
                           RedirectAttributes ra) {
         try {
             EmpresaConfig e = s.getConfiguracionActiva().orElse(new EmpresaConfig());
+            e.setIban(iban != null && !iban.isBlank() ? iban.replaceAll("\\s+", "").toUpperCase() : null);
+            e.setSepaCreditorId(sepaCreditorId != null && !sepaCreditorId.isBlank() ? sepaCreditorId.trim() : null);
             e.setNombreEmpresa(nombreEmpresa);
             e.setCif(cif);
             e.setDireccion(direccion);

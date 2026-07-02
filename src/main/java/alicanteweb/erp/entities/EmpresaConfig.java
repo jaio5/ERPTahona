@@ -64,6 +64,16 @@ public class EmpresaConfig {
     @Column(name = "telefono", length = 20)
     private String telefono;
 
+    // ── SEPA (remesas de adeudos) ──
+    @Size(max = 34)
+    @Column(name = "iban", length = 34)
+    private String iban;
+
+    /** Identificador de acreedor SEPA (AT-02), p.ej. ES12000B12345678. */
+    @Size(max = 35)
+    @Column(name = "sepa_creditor_id", length = 35)
+    private String sepaCreditorId;
+
     @Size(max = 255)
     @Column(name = "email")
     private String email;

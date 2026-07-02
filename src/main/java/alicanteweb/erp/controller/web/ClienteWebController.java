@@ -148,6 +148,9 @@ public class ClienteWebController extends BaseWebController {
                           @RequestParam(required = false) String direccion,
                           @RequestParam(required = false) String poblacion,
                           @RequestParam(required = false) String codigoPostal,
+                          @RequestParam(required = false) String iban,
+                          @RequestParam(required = false) String mandatoSepaReferencia,
+                          @RequestParam(required = false) java.time.LocalDate mandatoSepaFecha,
                           RedirectAttributes ra) {
         try {
             Cliente c = id != null
@@ -161,6 +164,9 @@ public class ClienteWebController extends BaseWebController {
             c.setDireccion(direccion);
             c.setPoblacion(poblacion);
             c.setCodigoPostal(codigoPostal);
+            c.setIban(iban != null && !iban.isBlank() ? iban.replaceAll("\\s+", "").toUpperCase() : null);
+            c.setMandatoSepaReferencia(mandatoSepaReferencia != null && !mandatoSepaReferencia.isBlank() ? mandatoSepaReferencia.trim() : null);
+            c.setMandatoSepaFecha(mandatoSepaFecha);
             service.save(c);
             log.info("Cliente guardado correctamente [id={}, nombre={}]", c.getId(), c.getNombre());
             ra.addFlashAttribute("exito", "Cliente guardado correctamente");

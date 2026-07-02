@@ -103,9 +103,24 @@ public class StockService {
     @Transactional
     public void registrarEntrada(Long articuloId, Long almacenId, BigDecimal cantidad,
                                  String concepto, String documentoTipo, Long documentoId) {
+        registrarEntradaConCoste(articuloId, almacenId, cantidad, null, concepto, documentoTipo, documentoId);
+    }
+
+    /**
+     * Entrada de stock con coste de adquisición: actualiza el coste medio
+     * ponderado (PMP) del artículo antes de sumar el stock.
+     */
+    @Transactional
+    public void registrarEntradaConCoste(Long articuloId, Long almacenId, BigDecimal cantidad,
+                                         BigDecimal precioUnitario,
+                                         String concepto, String documentoTipo, Long documentoId) {
         if (cantidad == null || cantidad.compareTo(BigDecimal.ZERO) <= 0) return;
         Articulo art = articuloRepository.findByIdForUpdate(articuloId)
                 .orElseThrow(() -> new IllegalArgumentException("Artículo no encontrado: " + articuloId));
+
+        if (precioUnitario != null && precioUnitario.compareTo(BigDecimal.ZERO) >= 0) {
+            art.setCosteMedio(calcularPmp(art, cantidad, precioUnitario));
+        }
 
         BigDecimal stockActual = art.getStock() != null ? art.getStock() : BigDecimal.ZERO;
         art.setStock(stockActual.add(cantidad));
@@ -123,6 +138,25 @@ public class StockService {
         mov.setConcepto(concepto + (documentoTipo != null ? " [" + documentoTipo + " " + documentoId + "]" : ""));
         mov.setFechaCreacion(LocalDateTime.now());
         movimientoStockRepository.save(mov);
+    }
+
+    /**
+     * PMP clásico: (stock_actual × pmp_actual + entrada × precio) / (stock_actual + entrada).
+     * Si no hay PMP previo se parte del coste estándar del artículo, y en su defecto
+     * del propio precio de entrada.
+     */
+    private BigDecimal calcularPmp(Articulo art, BigDecimal cantidadEntrada, BigDecimal precioUnitario) {
+        BigDecimal stockActual = art.getStock() != null && art.getStock().compareTo(BigDecimal.ZERO) > 0
+                ? art.getStock() : BigDecimal.ZERO;
+        BigDecimal pmpActual = art.getCosteMedio() != null ? art.getCosteMedio()
+                : (art.getCoste() != null ? art.getCoste() : precioUnitario);
+        BigDecimal total = stockActual.add(cantidadEntrada);
+        if (total.compareTo(BigDecimal.ZERO) <= 0) {
+            return precioUnitario.setScale(4, java.math.RoundingMode.HALF_UP);
+        }
+        return stockActual.multiply(pmpActual)
+                .add(cantidadEntrada.multiply(precioUnitario))
+                .divide(total, 4, java.math.RoundingMode.HALF_UP);
     }
 
     @Transactional

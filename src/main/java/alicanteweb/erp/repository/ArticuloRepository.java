@@ -47,8 +47,8 @@ public interface ArticuloRepository extends JpaRepository<Articulo, Long> {
 
     @Query("""
         SELECT a.id AS id, a.codigo AS codigo, a.nombre AS nombre,
-               a.stock AS stock, a.coste AS coste,
-               (a.stock * COALESCE(a.coste, 0)) AS valor
+               a.stock AS stock, COALESCE(a.costeMedio, a.coste) AS coste,
+               (a.stock * COALESCE(a.costeMedio, a.coste, 0)) AS valor
         FROM Articulo a
         WHERE a.stock IS NOT NULL AND a.stock > 0
         ORDER BY a.nombre
@@ -56,7 +56,7 @@ public interface ArticuloRepository extends JpaRepository<Articulo, Long> {
     List<ValoracionInventario> findValoracionInventario();
 
     @Query("""
-        SELECT COALESCE(SUM(a.stock * COALESCE(a.coste, 0)), 0)
+        SELECT COALESCE(SUM(a.stock * COALESCE(a.costeMedio, a.coste, 0)), 0)
         FROM Articulo a
         WHERE a.stock IS NOT NULL AND a.stock > 0
         """)

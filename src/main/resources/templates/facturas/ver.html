@@ -197,6 +197,20 @@
                     <a th:href="@{/web/facturas/{id}/pdf(id=${factura.id})}" class="btn btn-outline-primary">
                         <i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF
                     </a>
+                    <a th:if="${factura.estado == 'EMITIDA' and factura.cliente != null}"
+                       th:href="@{/web/facturas/{id}/facturae(id=${factura.id})}" class="btn btn-outline-secondary"
+                       title="XML Facturae 3.2.2 sin firmar (firmar con AutoFirma para FACe)">
+                        <i class="bi bi-filetype-xml me-2"></i>Facturae (B2G)
+                    </a>
+                    <form th:if="${factura.estado == 'EMITIDA'}"
+                          th:action="@{/web/facturas/{id}/enviar-email(id=${factura.id})}" method="post">
+                        <input type="email" name="emailDestino" class="form-control form-control-sm mb-1"
+                               th:placeholder="${factura.cliente?.email ?: 'destinatario@email.com'}"
+                               aria-label="Email destinatario (opcional)">
+                        <button class="btn btn-outline-secondary w-100" data-no-double-click>
+                            <i class="bi bi-envelope me-2"></i>Enviar por email
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

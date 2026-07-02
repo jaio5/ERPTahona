@@ -32,6 +32,17 @@ public class ExtractoBancarioRestController {
         }
     }
 
+    @PostMapping("/importar-n43")
+    public ResponseEntity<Map<String, Object>> importarNorma43(@RequestParam Long bancoId,
+                                                               @RequestParam("archivo") MultipartFile archivo) {
+        try {
+            MovimientoBancoService.ResultadoImportacionCSV resultado = movimientoBancoService.importarNorma43(bancoId, archivo);
+            return ResponseEntity.ok(Map.of("importados", resultado.importados(), "errores", resultado.errores()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("importados", 0, "errores", List.of(e.getMessage())));
+        }
+    }
+
     @PostMapping("/{id}/conciliar")
     public ResponseEntity<Void> conciliar(@PathVariable Long id) {
         movimientoBancoService.conciliar(id);

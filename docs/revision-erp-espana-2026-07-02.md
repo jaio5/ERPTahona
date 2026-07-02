@@ -2,6 +2,13 @@
 
 Fecha: 2026-07-02 · Rama: refactor-general (ba58496) · Alcance: revisión de código (servicios, entidades, controladores, migraciones, plantillas)
 
+> **Actualización (2026-07-02, misma tarde):** implementados A2/A3 (libros de IVA + borradores 303/111),
+> A4 parcial (export Facturae 3.2.2 sin firma), B1 (cartera de cobros/pagos), B2 (remesas SEPA pain.008 +
+> mandatos), B3 (import Norma 43), B4 (PMP e inventario valorado), B5 (asiento de apertura, libro mayor,
+> balance PGC/PyG), B6 (TPV mostrador con factura simplificada VeriFactu) y B7 (envío de facturas por email).
+> Queda pendiente **A1** (certificado real + validación AEAT preproducción: requiere acción del titular) y
+> la firma XAdES/FACe de Facturae (requiere el mismo certificado).
+
 ## Resumen ejecutivo
 
 La aplicación cubre con solvencia el núcleo operativo de una panadería (ventas, compras, stock, producción, trazabilidad, reparto, APPCC) y tiene una base fiscal seria (VeriFactu con huella/QR/XML oficial, Modelo 347 con fichero BOE, tipos de factura F1/F2/rectificativas, recargo de equivalencia, RGPD, auditoría). Los huecos están en: **puesta en producción real de VeriFactu (plazo legal ya vencido)**, **IVA (libros registro y Modelo 303)**, **cartera de cobros/pagos y SEPA**, **valoración de existencias**, y **venta mostrador (TPV)**.

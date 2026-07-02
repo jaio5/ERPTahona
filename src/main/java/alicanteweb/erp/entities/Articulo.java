@@ -71,6 +71,10 @@ public class Articulo {
     @Column(name = "coste", precision = 10, scale = 2)
     private BigDecimal coste;
 
+    /** Coste medio ponderado (PMP), actualizado con cada entrada de compra. */
+    @Column(name = "coste_medio", precision = 10, scale = 4)
+    private BigDecimal costeMedio;
+
     @Column(name = "stock", precision = 10, scale = 2)
     private BigDecimal stock;
 

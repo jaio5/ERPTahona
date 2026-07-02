@@ -1,0 +1,93 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Balance PGC</h4>
+            <small class="text-muted" th:text="'A fecha ' + ${#temporals.format(balance.fecha,'dd/MM/yyyy')}"></small>
+        </div>
+        <div class="page-header-actions">
+            <form method="get" th:action="@{/web/contabilidad/balance-pgc}" class="d-flex gap-2">
+                <input type="date" name="fecha" class="form-control form-control-sm" th:value="${balance.fecha}" aria-label="Fecha">
+                <button type="submit" class="btn btn-sm btn-primary">Ver</button>
+            </form>
+        </div>
+    </div>
+
+    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="row g-3">
+        <!-- Balance de situación -->
+        <div class="col-lg-6">
+            <div class="table-card">
+                <div class="card-header fw-bold px-3 pt-3">Activo</div>
+                <div class="table-responsive"><table class="table table-sm mb-0">
+                    <tbody>
+                        <tr th:each="c : ${balance.activo}">
+                            <td th:text="${c.codigo}"></td><td th:text="${c.nombre}"></td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(c.saldo)}"></td>
+                        </tr>
+                    </tbody>
+                    <tfoot><tr class="fw-bold"><td colspan="2">Total activo</td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(balance.totalActivo)}"></td></tr></tfoot>
+                </table></div>
+            </div>
+            <div class="table-card mt-3">
+                <div class="card-header fw-bold px-3 pt-3">Patrimonio neto y pasivo</div>
+                <div class="table-responsive"><table class="table table-sm mb-0">
+                    <tbody>
+                        <tr th:each="c : ${balance.pasivoYNeto}">
+                            <td th:text="${c.codigo}"></td><td th:text="${c.nombre}"></td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(c.saldo)}"></td>
+                        </tr>
+                        <tr>
+                            <td>129</td><td>Resultado del ejercicio (PyG)</td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(balance.resultado)}"></td>
+                        </tr>
+                    </tbody>
+                    <tfoot><tr class="fw-bold"><td colspan="2">Total PN y pasivo</td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(balance.totalPasivoYNetoConResultado)}"></td></tr></tfoot>
+                </table></div>
+            </div>
+        </div>
+
+        <!-- PyG -->
+        <div class="col-lg-6">
+            <div class="table-card">
+                <div class="card-header fw-bold px-3 pt-3">Cuenta de pérdidas y ganancias</div>
+                <div class="table-responsive"><table class="table table-sm mb-0">
+                    <tbody>
+                        <tr class="table-light fw-bold"><td colspan="3">Ingresos (grupo 7)</td></tr>
+                        <tr th:each="c : ${balance.ingresos}">
+                            <td th:text="${c.codigo}"></td><td th:text="${c.nombre}"></td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(c.saldo)}"></td>
+                        </tr>
+                        <tr class="fw-bold"><td colspan="2">Total ingresos</td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(balance.totalIngresos)}"></td></tr>
+                        <tr class="table-light fw-bold"><td colspan="3">Gastos (grupo 6)</td></tr>
+                        <tr th:each="c : ${balance.gastos}">
+                            <td th:text="${c.codigo}"></td><td th:text="${c.nombre}"></td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(c.saldo)}"></td>
+                        </tr>
+                        <tr class="fw-bold"><td colspan="2">Total gastos</td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(balance.totalGastos)}"></td></tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-bold fs-6"><td colspan="2">Resultado del ejercicio</td>
+                            <td class="text-end" th:classappend="${balance.resultado.signum() >= 0 ? 'text-success' : 'text-danger'}"
+                                th:text="${#numbers.formatCurrency(balance.resultado)}"></td></tr>
+                    </tfoot>
+                </table></div>
+            </div>
+
+            <div class="table-card p-3 mt-3" th:if="${@permisos.puede('contabilidad','crear')}">
+                <h6 class="fw-bold">Asiento de apertura</h6>
+                <p class="text-muted small mb-2">Genera el asiento de apertura del ejercicio con los saldos de balance a 31/12 del año anterior.</p>
+                <form th:action="@{/web/contabilidad/apertura}" method="post" class="d-flex gap-2">
+                    <input type="number" name="ejercicio" class="form-control form-control-sm" style="width:7rem"
+                           th:value="${balance.fecha.year}" min="2020" max="2100" aria-label="Ejercicio">
+                    <button type="submit" class="btn btn-sm btn-primary" data-no-double-click>Generar apertura</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

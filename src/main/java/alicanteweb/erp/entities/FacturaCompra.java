@@ -89,6 +89,11 @@ public class FacturaCompra {
     @Column(name = "fecha_pago")
     private LocalDate fechaPago;
 
+    /** Importe acumulado ya pagado (cartera de pagos, admite pagos parciales). */
+    @ColumnDefault("0.00")
+    @Column(name = "pagado", precision = 12, scale = 2)
+    private BigDecimal pagado;
+
     @Column(name = "fecha_vencimiento")
     private LocalDate fechaVencimiento;
 
@@ -178,6 +183,15 @@ public class FacturaCompra {
                 .add(importeIva)
                 .add(importeRecargo)
                 .subtract(importeRetencion);
+    }
+
+    /**
+     * Importe pendiente de pago (total menos pagos acumulados).
+     */
+    public BigDecimal getPendiente() {
+        BigDecimal t = total != null ? total : BigDecimal.ZERO;
+        BigDecimal p = pagado != null ? pagado : BigDecimal.ZERO;
+        return t.subtract(p);
     }
 
     /**

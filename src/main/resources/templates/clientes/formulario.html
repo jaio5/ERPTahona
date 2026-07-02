@@ -70,6 +70,32 @@
                 </div>
             </div>
 
+            <div class="form-section-divider">
+                <div class="form-section-title">
+                    <i class="bi bi-bank"></i> Domiciliación SEPA
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="iban">IBAN</label>
+                        <input type="text" id="iban" name="iban" class="form-control"
+                               th:value="${cliente?.iban}" placeholder="ES00 0000 0000 0000 0000 0000" maxlength="34">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="mandatoSepaReferencia">Ref. mandato</label>
+                        <input type="text" id="mandatoSepaReferencia" name="mandatoSepaReferencia" class="form-control"
+                               th:value="${cliente?.mandatoSepaReferencia}" maxlength="35">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="mandatoSepaFecha">Fecha firma mandato</label>
+                        <input type="date" id="mandatoSepaFecha" name="mandatoSepaFecha" class="form-control"
+                               th:value="${cliente?.mandatoSepaFecha}">
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted">Con IBAN y mandato configurados, las facturas del cliente pueden incluirse en remesas SEPA.</small>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary" data-no-double-click>
                     <i class="bi bi-floppy me-1"></i>Guardar cliente

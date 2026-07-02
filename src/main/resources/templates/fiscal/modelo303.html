@@ -1,0 +1,91 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Modelo 303</h4>
+            <small class="text-muted" th:text="'Ejercicio ' + ${borrador.ejercicio} + ' · T' + ${borrador.trimestre} + ' (' + ${#temporals.format(borrador.desde,'dd/MM/yyyy')} + ' – ' + ${#temporals.format(borrador.hasta,'dd/MM/yyyy')} + ')'"></small>
+        </div>
+        <div class="page-header-actions">
+            <form method="get" th:action="@{/web/fiscal/modelo303}" class="d-flex gap-2 align-items-center">
+                <input type="number" name="ejercicio" class="form-control form-control-sm" style="width:6.5rem" th:value="${borrador.ejercicio}" min="2020" max="2100" aria-label="Ejercicio">
+                <select name="trimestre" class="form-select form-select-sm" style="width:6.5rem" aria-label="Trimestre">
+                    <option th:each="t : ${#numbers.sequence(1,4)}" th:value="${t}" th:text="'T' + ${t}" th:selected="${t == borrador.trimestre}"></option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary">Ver</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-1"></i>
+        Borrador orientativo calculado desde los libros registro. La presentación oficial debe hacerse en la sede de la AEAT
+        (o vía gestoría) verificando previamente estos importes.
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="table-card">
+                <div class="card-header fw-bold px-3 pt-3">IVA devengado (ventas)</div>
+                <div class="table-responsive"><table class="table table-sm mb-0">
+                    <thead><tr><th>Tipo</th><th class="text-end">Base imponible</th><th class="text-end">Cuota</th></tr></thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(borrador.devengadoPorTipo)}"><td colspan="3" class="empty-state">Sin operaciones en el periodo</td></tr>
+                        <tr th:each="c : ${borrador.devengadoPorTipo}">
+                            <td th:text="${c.tipo} + ' %'"></td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(c.base)}"></td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(c.cuota)}"></td>
+                        </tr>
+                        <tr>
+                            <td>Recargo de equivalencia repercutido</td>
+                            <td></td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(borrador.recargoDevengado)}"></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-bold"><td colspan="2">Total cuota devengada [27]</td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(borrador.totalCuotaDevengada)}"></td></tr>
+                    </tfoot>
+                </table></div>
+            </div>
+
+            <div class="table-card mt-3">
+                <div class="card-header fw-bold px-3 pt-3">IVA deducible (compras)</div>
+                <div class="table-responsive"><table class="table table-sm mb-0">
+                    <tbody>
+                        <tr><td>Base cuotas soportadas operaciones interiores [28]</td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(borrador.baseSoportada)}"></td></tr>
+                        <tr class="fw-bold"><td>Cuotas soportadas deducibles [29]</td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(borrador.cuotaSoportada)}"></td></tr>
+                    </tbody>
+                </table></div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="table-card p-3">
+                <h6 class="fw-bold">Resultado de la liquidación</h6>
+                <div class="d-flex justify-content-between py-1"><span>Cuota devengada</span>
+                    <span th:text="${#numbers.formatCurrency(borrador.totalCuotaDevengada)}"></span></div>
+                <div class="d-flex justify-content-between py-1"><span>Cuota deducible</span>
+                    <span th:text="'− ' + ${#numbers.formatCurrency(borrador.cuotaSoportada)}"></span></div>
+                <hr>
+                <div class="d-flex justify-content-between py-1 fw-bold fs-5">
+                    <span>Resultado [71]</span>
+                    <span th:classappend="${borrador.resultado.signum() >= 0 ? 'text-danger' : 'text-success'}"
+                          th:text="${#numbers.formatCurrency(borrador.resultado)}"></span>
+                </div>
+                <small class="text-muted" th:text="${borrador.resultado.signum() >= 0 ? 'A ingresar' : 'A compensar / devolver'}"></small>
+            </div>
+
+            <div class="table-card p-3 mt-3">
+                <h6 class="fw-bold">Modelo 111 · Retenciones (borrador)</h6>
+                <div class="d-flex justify-content-between py-1"><span>Nº de perceptores</span>
+                    <span th:text="${borrador111.numeroPerceptores}"></span></div>
+                <div class="d-flex justify-content-between py-1"><span>Base de las retenciones</span>
+                    <span th:text="${#numbers.formatCurrency(borrador111.base)}"></span></div>
+                <div class="d-flex justify-content-between py-1 fw-bold"><span>Retenciones a ingresar</span>
+                    <span th:text="${#numbers.formatCurrency(borrador111.retenciones)}"></span></div>
+                <small class="text-muted">Calculado desde facturas de compra con retención IRPF en el periodo.</small>
+            </div>
+        </div>
+    </div>
+</div>

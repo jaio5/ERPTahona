@@ -81,7 +81,8 @@ public class RecepcionService {
         for (RecepcionLinea linea : lineaRepository.findByRecepcionId(id)) {
             if (linea.getArticulo() != null && linea.getCantidadRecibida() != null
                     && linea.getCantidadRecibida().compareTo(java.math.BigDecimal.ZERO) > 0) {
-                stockService.registrarEntrada(linea.getArticulo().getId(), almacenId, linea.getCantidadRecibida(),
+                stockService.registrarEntradaConCoste(linea.getArticulo().getId(), almacenId,
+                        linea.getCantidadRecibida(), linea.getPrecioUnitario(),
                         "Recepción " + r.getNumero(), "RECEPCION", r.getId());
             }
         }

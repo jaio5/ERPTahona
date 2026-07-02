@@ -27,6 +27,8 @@
             <div class="col-md-6"><label class="form-label" for="web">Web</label><input id="web" name="web" th:value="${empresa?.web}" class="form-control"></div>
             <div class="col-md-6"><label class="form-label" for="registroSanitario">Registro sanitario</label><input id="registroSanitario" name="registroSanitario" th:value="${empresa?.registroSanitario}" class="form-control"></div>
             <div class="col-md-6"><label class="form-label" for="registroMercantil">Registro mercantil</label><input id="registroMercantil" name="registroMercantil" th:value="${empresa?.registroMercantil}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label" for="iban">IBAN (remesas SEPA)</label><input id="iban" name="iban" th:value="${empresa?.iban}" class="form-control" maxlength="34" placeholder="ES00 0000 0000 0000 0000 0000"></div>
+            <div class="col-md-6"><label class="form-label" for="sepaCreditorId">Identificador acreedor SEPA</label><input id="sepaCreditorId" name="sepaCreditorId" th:value="${empresa?.sepaCreditorId}" class="form-control" maxlength="35" placeholder="ES12000B12345678"></div>
         </div>
         <div class="mt-4 d-flex gap-2">
             <button class="btn btn-primary" type="submit" data-no-double-click>Guardar</button>

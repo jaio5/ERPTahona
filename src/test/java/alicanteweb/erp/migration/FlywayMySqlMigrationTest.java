@@ -69,7 +69,13 @@ class FlywayMySqlMigrationTest {
 
         assertTrue(result.success);
         flyway.validate();
-        assertEquals("36", versionActual());
+        String ultimaVersionDisponible = java.util.Arrays.stream(flyway.info().all())
+                .map(info -> info.getVersion())
+                .filter(java.util.Objects::nonNull)
+                .max(MigrationVersion::compareTo)
+                .orElseThrow()
+                .toString();
+        assertEquals(ultimaVersionDisponible, versionActual());
     }
 
     @Test

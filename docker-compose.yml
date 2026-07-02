@@ -42,6 +42,11 @@ services:
       VERIFACTU_AEAT_ENABLED: ${VERIFACTU_AEAT_ENABLED:-false}
       VERIFACTU_AEAT_ENDPOINT: ${VERIFACTU_AEAT_ENDPOINT:-https://prewww2.aeat.es/wlpl/AVAC-FACT/ws/fe/SiiVerifactu}
       ERP_LOG_FILE: logs/erp-tahona.log
+      # ── Email (opcional): envío de facturas PDF a clientes ──
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
     volumes:
       # Conservación: backups, declaraciones responsables/PDFs y logs sobreviven al contenedor
       - erp_backups:/app/backups

@@ -37,4 +37,51 @@ public class ContabilidadWebController {
         m.addAttribute("titulo", "Balance y cierre");
         return WebController.layout(m, "contabilidad/balance");
     }
+
+    @GetMapping("/mayor")
+    public String mayor(@RequestParam(required = false) String cuenta,
+                        @RequestParam(required = false) LocalDate desde,
+                        @RequestParam(required = false) LocalDate hasta,
+                        Model m) {
+        LocalDate d = desde != null ? desde : LocalDate.now().withDayOfYear(1);
+        LocalDate h = hasta != null ? hasta : LocalDate.now();
+        m.addAttribute("moduloActivo", "contabilidad");
+        m.addAttribute("titulo", "Libro mayor");
+        m.addAttribute("cuenta", cuenta);
+        m.addAttribute("desde", d);
+        m.addAttribute("hasta", h);
+        m.addAttribute("movimientos", cuenta != null && !cuenta.isBlank()
+                ? s.obtenerLibroMayor(cuenta, d, h) : java.util.List.of());
+        m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
+                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.link("Finanzas", "#"),
+                BreadcrumbBuilder.active("Libro mayor")));
+        return WebController.layout(m, "contabilidad/mayor");
+    }
+
+    @GetMapping("/balance-pgc")
+    public String balancePgc(@RequestParam(required = false) LocalDate fecha, Model m) {
+        LocalDate f = fecha != null ? fecha : LocalDate.now();
+        m.addAttribute("moduloActivo", "contabilidad");
+        m.addAttribute("titulo", "Balance de situación y PyG");
+        m.addAttribute("balance", s.obtenerBalancePgc(f));
+        m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
+                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.link("Finanzas", "#"),
+                BreadcrumbBuilder.active("Balance PGC")));
+        return WebController.layout(m, "contabilidad/balance-pgc");
+    }
+
+    @PostMapping("/apertura")
+    @PreAuthorize("@permisos.puede('contabilidad', 'crear')")
+    public String generarApertura(@RequestParam int ejercicio,
+                                  org.springframework.web.servlet.mvc.support.RedirectAttributes ra) {
+        try {
+            var asiento = s.generarAsientoApertura(ejercicio);
+            ra.addFlashAttribute("exito", "Asiento de apertura " + asiento.getNumero() + " generado");
+        } catch (RuntimeException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/web/contabilidad/balance-pgc";
+    }
 }

@@ -1,0 +1,85 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Remesas SEPA</h4>
+        </div>
+    </div>
+
+    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <!-- Nueva remesa -->
+    <div class="table-card p-3 mb-4" th:if="${@permisos.puede('tesoreria','crear')}">
+        <h6 class="fw-bold"><i class="bi bi-plus-circle me-1"></i>Nueva remesa de adeudos</h6>
+        <form th:action="@{/web/remesas}" method="post">
+            <div class="row g-2 mb-2">
+                <div class="col-md-3">
+                    <label class="form-label" for="fechaCobro">Fecha de cobro</label>
+                    <input type="date" id="fechaCobro" name="fechaCobro" class="form-control" th:value="${fechaCobroDefecto}">
+                </div>
+                <div class="col-md-9">
+                    <label class="form-label" for="concepto">Concepto del recibo</label>
+                    <input type="text" id="concepto" name="concepto" class="form-control" maxlength="140" placeholder="Factura">
+                </div>
+            </div>
+            <div class="table-responsive" style="max-height: 40vh; overflow-y:auto">
+                <table class="table table-sm table-hover mb-0">
+                    <thead><tr><th style="width:2rem"><input type="checkbox" id="remesaTodos" aria-label="Seleccionar todas"></th><th>Factura</th><th>Cliente</th><th>IBAN</th><th class="text-end">Pendiente</th></tr></thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(elegibles)}"><td colspan="5" class="empty-state">No hay facturas elegibles (emitidas, pendientes, de clientes con IBAN y mandato SEPA)</td></tr>
+                        <tr th:each="f : ${elegibles}">
+                            <td><input type="checkbox" name="facturaIds" th:value="${f.id}" th:attr="aria-label='Incluir ' + ${f.numero}"></td>
+                            <td th:text="${f.numero}"></td>
+                            <td th:text="${f.cliente?.nombre}"></td>
+                            <td class="font-monospace small" th:text="${f.cliente?.iban}"></td>
+                            <td class="text-end" th:text="${#numbers.formatCurrency(f.total - (f.pagado ?: 0))}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button type="submit" class="btn btn-primary mt-2" th:disabled="${#lists.isEmpty(elegibles)}" data-no-double-click>
+                <i class="bi bi-file-earmark-zip me-1"></i>Generar remesa (pain.008)
+            </button>
+        </form>
+    </div>
+
+    <!-- Histórico -->
+    <h6 class="mb-2">Remesas generadas</h6>
+    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>#</th><th>Creada</th><th>Fecha cobro</th><th class="text-end">Recibos</th><th class="text-end">Total</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(remesas)}"><td colspan="7" class="empty-state"><i class="bi bi-collection"></i><div>No hay remesas</div></td></tr>
+            <tr th:each="r : ${remesas}">
+                <td th:text="${r.id}"></td>
+                <td th:text="${r.fechaCreacion != null ? #temporals.format(r.fechaCreacion, 'dd/MM/yyyy HH:mm') : '—'}"></td>
+                <td th:text="${#temporals.format(r.fechaCobro, 'dd/MM/yyyy')}"></td>
+                <td class="text-end" th:text="${r.numRecibos}"></td>
+                <td class="text-end fw-medium" th:text="${#numbers.formatCurrency(r.total)}"></td>
+                <td><span class="badge-status" th:attr="data-status=${r.estado?.toLowerCase()}" th:text="${r.estado}"></span></td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{'/web/remesas/' + ${r.id} + '/xml'}">
+                        <i class="bi bi-download me-1"></i>XML
+                    </a>
+                    <form th:if="${r.estado == 'GENERADA' and @permisos.puede('tesoreria','crear')}"
+                          th:action="@{'/web/remesas/' + ${r.id} + '/cobrar'}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-success" data-no-double-click
+                                title="Registra el cobro de todas las facturas de la remesa">
+                            <i class="bi bi-check2-circle me-1"></i>Cobrada
+                        </button>
+                    </form>
+                    <form th:if="${r.estado == 'GENERADA' and @permisos.puede('tesoreria','editar')}"
+                          th:action="@{'/web/remesas/' + ${r.id} + '/anular'}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" data-no-double-click>Anular</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table></div></div>
+
+    <script th:attr="nonce=${cspNonce}">
+        document.getElementById('remesaTodos')?.addEventListener('change', function() {
+            var marcado = this.checked;
+            document.querySelectorAll('input[name="facturaIds"]').forEach(function(cb) { cb.checked = marcado; });
+        });
+    </script>
+</div>

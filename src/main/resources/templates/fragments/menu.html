@@ -22,7 +22,7 @@
 
     <!-- Grupo: Ventas -->
     <div th:if="${@permisos.puedeVerAlguno('ventas', 'clientes')}"
-         th:with="enVentas=${moduloActivo == 'facturas' || moduloActivo == 'albaranes' || moduloActivo == 'pedidos-venta' || moduloActivo == 'presupuestos' || moduloActivo == 'clientes'}">
+         th:with="enVentas=${moduloActivo == 'tpv' || moduloActivo == 'facturas' || moduloActivo == 'albaranes' || moduloActivo == 'pedidos-venta' || moduloActivo == 'presupuestos' || moduloActivo == 'clientes'}">
         <button class="sidebar-group-toggle"
                 th:classappend="${!enVentas ? 'collapsed' : ''}"
                 data-bs-toggle="collapse" data-bs-target="#nav-ventas"
@@ -34,6 +34,10 @@
         </button>
         <div class="collapse" id="nav-ventas"
              th:classappend="${enVentas ? 'show' : ''}">
+            <a class="sidebar-link" th:href="@{/web/tpv}"
+               th:classappend="${moduloActivo == 'tpv' ? 'active' : ''}">
+                <i class="bi bi-shop"></i><span>TPV mostrador</span>
+            </a>
             <a class="sidebar-link" th:href="@{/web/facturas}"
                th:classappend="${moduloActivo == 'facturas' ? 'active' : ''}">
                 <i class="bi bi-receipt-cutoff"></i><span>Facturas</span>
@@ -191,7 +195,7 @@
 
     <!-- Grupo: Finanzas -->
     <div th:if="${@permisos.puedeVerAlguno('tesoreria', 'contabilidad')}"
-         th:with="enFinanzas=${moduloActivo == 'tesoreria' || moduloActivo == 'extractos' || moduloActivo == 'conciliacion' || moduloActivo == 'contabilidad' || moduloActivo == 'balance'}">
+         th:with="enFinanzas=${moduloActivo == 'tesoreria' || moduloActivo == 'cartera' || moduloActivo == 'remesas' || moduloActivo == 'extractos' || moduloActivo == 'conciliacion' || moduloActivo == 'contabilidad' || moduloActivo == 'balance'}">
         <button class="sidebar-group-toggle"
                 th:classappend="${!enFinanzas ? 'collapsed' : ''}"
                 data-bs-toggle="collapse" data-bs-target="#nav-finanzas"
@@ -207,6 +211,14 @@
                th:classappend="${moduloActivo == 'tesoreria' ? 'active' : ''}">
                 <i class="bi bi-wallet2"></i><span>Tesorería</span>
             </a>
+            <a class="sidebar-link" th:href="@{/web/cartera}"
+               th:classappend="${moduloActivo == 'cartera' ? 'active' : ''}">
+                <i class="bi bi-collection"></i><span>Cartera</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/remesas}"
+               th:classappend="${moduloActivo == 'remesas' ? 'active' : ''}">
+                <i class="bi bi-send"></i><span>Remesas SEPA</span>
+            </a>
             <a class="sidebar-link" th:href="@{/web/tesoreria/extractos}"
                th:classappend="${moduloActivo == 'extractos' ? 'active' : ''}">
                 <i class="bi bi-file-earmark-spreadsheet"></i><span>Extractos banco</span>
@@ -218,6 +230,14 @@
             <a class="sidebar-link" th:href="@{/web/contabilidad}"
                th:classappend="${moduloActivo == 'contabilidad' ? 'active' : ''}">
                 <i class="bi bi-calculator"></i><span>Contabilidad</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/contabilidad/mayor}"
+               th:classappend="${moduloActivo == 'mayor' ? 'active' : ''}">
+                <i class="bi bi-journal-bookmark"></i><span>Libro mayor</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/contabilidad/balance-pgc}"
+               th:classappend="${moduloActivo == 'balance-pgc' ? 'active' : ''}">
+                <i class="bi bi-clipboard-data"></i><span>Balance PGC / PyG</span>
             </a>
             <a class="sidebar-link" th:href="@{/web/contabilidad/balance}"
                th:classappend="${moduloActivo == 'balance' ? 'active' : ''}">
@@ -269,7 +289,7 @@
 
     <!-- Grupo: Fiscal -->
     <div th:if="${@permisos.puedeVerAlguno('fiscal', 'verifactu')}"
-         th:with="enFiscal=${moduloActivo == 'modelo347' || moduloActivo == 'verifactu' || moduloActivo == 'cumplimiento'}">
+         th:with="enFiscal=${moduloActivo == 'modelo347' || moduloActivo == 'verifactu' || moduloActivo == 'cumplimiento' || moduloActivo == 'libros-iva' || moduloActivo == 'modelo303'}">
         <button class="sidebar-group-toggle"
                 th:classappend="${!enFiscal ? 'collapsed' : ''}"
                 data-bs-toggle="collapse" data-bs-target="#nav-fiscal"
@@ -280,6 +300,14 @@
             <i class="bi bi-chevron-down sidebar-chevron"></i>
         </button>
         <div class="collapse" id="nav-fiscal" th:classappend="${enFiscal ? 'show' : ''}">
+            <a class="sidebar-link" th:href="@{/web/fiscal/libros-iva}"
+               th:classappend="${moduloActivo == 'libros-iva' ? 'active' : ''}">
+                <i class="bi bi-journal-text"></i><span>Libros de IVA</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/fiscal/modelo303}"
+               th:classappend="${moduloActivo == 'modelo303' ? 'active' : ''}">
+                <i class="bi bi-percent"></i><span>Modelo 303</span>
+            </a>
             <a class="sidebar-link" th:href="@{/web/modelo347}"
                th:classappend="${moduloActivo == 'modelo347' ? 'active' : ''}">
                 <i class="bi bi-file-earmark-spreadsheet"></i><span>Modelo 347</span>
