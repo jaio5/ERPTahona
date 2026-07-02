@@ -143,7 +143,7 @@ class DocumentoServiceTest {
             f.setId(5L);
             return f;
         });
-        when(articuloService.findById(10L)).thenReturn(Optional.of(articulo));
+        when(articuloService.findAllById(List.of(10L))).thenReturn(List.of(articulo));
         when(tarifaClienteService.resolverPrecio(eq(2L), eq(10L), any(BigDecimal.class)))
                 .thenReturn(new BigDecimal("10"));
         when(tarifaClienteService.resolverDescuento(2L, 10L)).thenReturn(BigDecimal.ZERO);

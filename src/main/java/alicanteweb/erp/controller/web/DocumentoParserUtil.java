@@ -19,7 +19,7 @@ public final class DocumentoParserUtil {
         for (int i = 0; i < total; i++) {
             Long articuloId = parseLong(at(articuloIds, i));
             BigDecimal cantidad = parseDecimal(at(cantidades, i));
-            if (articuloId == null || cantidad.compareTo(BigDecimal.ZERO) == 0) continue;
+            if (articuloId == null || cantidad.compareTo(BigDecimal.ZERO) <= 0) continue;
             Map<String, Object> linea = new HashMap<>();
             linea.put("articuloId", articuloId);
             linea.put("cantidad", cantidad);

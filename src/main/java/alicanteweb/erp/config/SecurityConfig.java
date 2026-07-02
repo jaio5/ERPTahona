@@ -169,7 +169,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionFixation(fix -> fix.migrateSession())
                         .maximumSessions(1)
-                        .maxSessionsPreventsLogin(true)
+                        .maxSessionsPreventsLogin(false)
                         .sessionRegistry(sessionRegistry())
                 )
                 .csrf(csrf -> csrf

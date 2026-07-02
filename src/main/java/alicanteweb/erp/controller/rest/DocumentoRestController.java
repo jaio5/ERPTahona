@@ -15,7 +15,6 @@ import alicanteweb.erp.service.UsuarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -27,6 +26,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/web")
 public class DocumentoRestController {
+
+    private static final int MAX_ALBARANES_PENDIENTES_POR_CLIENTE = 50;
 
     private final DocumentoService documentoService;
     private final AlbaranService albaranService;
@@ -108,12 +109,8 @@ public class DocumentoRestController {
 
     @PostMapping("/facturas/{id}/emitir")
     public ResponseEntity<Void> emitir(@PathVariable Long id) {
-        try {
-            facturaService.aprobarYEmitir(id);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            throw new IllegalStateException("No se pudo emitir: " + e.getMessage(), e);
-        }
+        facturaService.aprobarYEmitir(id);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/facturas/{id}/anular")
@@ -165,7 +162,8 @@ public class DocumentoRestController {
             try {
                 facturaService.aprobarYEmitir(f.getId());
             } catch (RuntimeException e) {
-                throw new IllegalStateException("Factura creada pero no se pudo emitir: " + e.getMessage(), e);
+                throw new IllegalStateException(
+                        "Factura " + f.getNumero() + " (id=" + f.getId() + ") creada pero no se pudo emitir: " + e.getMessage(), e);
             }
         }
         return ResponseEntity.ok(Map.of("id", f.getId(), "numero", f.getNumero()));
@@ -177,14 +175,13 @@ public class DocumentoRestController {
     public ResponseEntity<List<AlbaranPendienteDto>> albaranesPendientes(@PathVariable Long id) {
         clienteService.findById(id).orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado"));
         List<AlbaranPendienteDto> list = albaranService.buscarPendientesFacturarPorCliente(id).stream()
-                .limit(50)
+                .limit(MAX_ALBARANES_PENDIENTES_POR_CLIENTE)
                 .map(AlbaranPendienteDto::from)
                 .toList();
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/pendientes-facturar")
-    @Transactional(readOnly = true)
     public ResponseEntity<List<PendienteFacturarDto>> pendientesFacturar() {
         Map<Long, PendienteFacturarAcumulado> acumulados = new LinkedHashMap<>();
         for (AlbaranVenta albaran : albaranService.buscarPendientesFacturar()) {

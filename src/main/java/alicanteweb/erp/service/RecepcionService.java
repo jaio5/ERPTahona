@@ -27,7 +27,7 @@ public class RecepcionService {
     }
 
     public List<Recepcion> findAll() {
-        return repository.findAll();
+        return repository.findAllConRelaciones();
     }
 
     public List<Recepcion> findByEstado(String estado) {
@@ -38,8 +38,12 @@ public class RecepcionService {
         return repository.findById(id);
     }
 
+    public Optional<Recepcion> findDetailById(Long id) {
+        return repository.findDetailById(id);
+    }
+
     public List<RecepcionLinea> findByRecepcionId(Long id) {
-        return lineaRepository.findByRecepcionId(id);
+        return lineaRepository.findByRecepcionIdWithArticulo(id);
     }
 
     @Transactional
@@ -50,6 +54,11 @@ public class RecepcionService {
     @Transactional
     public RecepcionLinea saveLinea(RecepcionLinea linea) {
         return lineaRepository.save(linea);
+    }
+
+    @Transactional
+    public void deleteLinea(Long lineaId) {
+        lineaRepository.deleteById(lineaId);
     }
 
     @Transactional

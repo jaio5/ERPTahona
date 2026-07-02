@@ -362,6 +362,10 @@ public class PedidoService {
         }
         return true;
     }
+    public long count() {
+        return pedidoRepository.count();
+    }
+
     /** Record para entregas parciales */
     public record EntregaParcial(Long lineaPedidoId, BigDecimal cantidad) {}
 }

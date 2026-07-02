@@ -8,21 +8,29 @@ import alicanteweb.erp.repository.BancoRepository;
 import alicanteweb.erp.repository.FacturaCompraRepository;
 import alicanteweb.erp.repository.FacturaRepository;
 import alicanteweb.erp.repository.MovimientoBancoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Servicio de negocio para movimientos bancarios.
- */
 @Service
 @Transactional(readOnly = true)
 public class MovimientoBancoService {
+
+    private static final Logger log = LoggerFactory.getLogger(MovimientoBancoService.class);
+    private static final DateTimeFormatter FMT_CSV = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final MovimientoBancoRepository repository;
     private final BancoRepository bancoRepository;
@@ -140,6 +148,50 @@ public class MovimientoBancoService {
     }
 
     public record CandidatoConciliacion(String tipo, Long id, String referencia, BigDecimal importe) {}
+
+    public record ResultadoImportacionCSV(int importados, List<String> errores) {}
+
+    @Transactional
+    public ResultadoImportacionCSV importarDesdeCSV(Long bancoId, MultipartFile archivo) {
+        Banco banco = bancoRepository.findById(bancoId)
+                .orElseThrow(() -> new IllegalArgumentException("Banco no encontrado con id: " + bancoId));
+        List<String> errores = new ArrayList<>();
+        int importados = 0;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(archivo.getInputStream(), StandardCharsets.UTF_8))) {
+            reader.readLine(); // saltar cabecera
+            String linea;
+            int numeroLinea = 1;
+            while ((linea = reader.readLine()) != null) {
+                numeroLinea++;
+                String[] cols = linea.split(";|,");
+                if (cols.length < 3) continue;
+                try {
+                    MovimientoBanco mb = parsearLineaCSV(banco, cols);
+                    save(mb);
+                    importados++;
+                } catch (RuntimeException e) {
+                    log.warn("Error en línea {} del CSV: {}", numeroLinea, e.getMessage());
+                    errores.add("Línea " + numeroLinea + ": " + e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            log.error("Error leyendo archivo CSV de extracto bancario: {}", e.getMessage(), e);
+            errores.add("Error leyendo archivo: " + e.getMessage());
+        }
+        return new ResultadoImportacionCSV(importados, errores);
+    }
+
+    private MovimientoBanco parsearLineaCSV(Banco banco, String[] cols) {
+        MovimientoBanco mb = new MovimientoBanco();
+        mb.setBanco(banco);
+        mb.setFecha(LocalDate.parse(cols[0].trim(), FMT_CSV));
+        mb.setConcepto(cols.length > 1 ? cols[1].trim() : "");
+        double importe = Double.parseDouble(cols[2].trim().replace(",", "."));
+        mb.setImporte(BigDecimal.valueOf(Math.abs(importe)));
+        mb.setTipo(importe >= 0 ? "INGRESO" : "GASTO");
+        mb.setConciliado(false);
+        return mb;
+    }
 
     private void recalcularSaldosBanco(Long bancoId) {
         Banco banco = bancoRepository.findById(bancoId)

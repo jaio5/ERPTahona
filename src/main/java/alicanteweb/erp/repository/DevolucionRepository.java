@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DevolucionRepository extends JpaRepository<Devolucion, Long> {
@@ -28,4 +29,10 @@ public interface DevolucionRepository extends JpaRepository<Devolucion, Long> {
            "LOWER(d.motivo) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
            "LOWER(d.cliente.nombre) LIKE LOWER(CONCAT('%', :q, '%'))")
     List<Devolucion> buscar(@Param("q") String q);
+
+    @Query("SELECT d FROM Devolucion d LEFT JOIN FETCH d.cliente LEFT JOIN FETCH d.albaran LEFT JOIN FETCH d.factura WHERE d.id = :id")
+    Optional<Devolucion> findDetailById(@Param("id") Long id);
+
+    @Query("SELECT d FROM Devolucion d LEFT JOIN FETCH d.cliente ORDER BY d.fecha DESC")
+    List<Devolucion> findAllConCliente();
 }

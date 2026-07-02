@@ -90,7 +90,7 @@ class AdminAndPurchaseControllersCoverageTest {
         Proveedor proveedor = new Proveedor();
         proveedor.setId(2L);
         when(pedidos.findPage(any(), any(), any(Pageable.class))).thenReturn(Page.empty());
-        when(pedidos.findById(1L)).thenReturn(Optional.of(pedido));
+        when(pedidos.findByIdWithLineas(1L)).thenReturn(Optional.of(pedido));
         when(proveedores.findAll()).thenReturn(List.of(proveedor));
         when(proveedores.findById(2L)).thenReturn(Optional.of(proveedor));
         PedidoCompraWebController controller = new PedidoCompraWebController(pedidos, proveedores);
@@ -122,7 +122,7 @@ class AdminAndPurchaseControllersCoverageTest {
         Proveedor proveedor = new Proveedor();
         proveedor.setId(2L);
         when(facturas.findPage(any(), any(), any(Pageable.class))).thenReturn(Page.empty());
-        when(facturas.obtenerPorId(1L)).thenReturn(Optional.of(factura));
+        when(facturas.obtenerDetallePorId(1L)).thenReturn(Optional.of(factura));
         when(proveedores.findById(2L)).thenReturn(Optional.of(proveedor));
         FacturaCompraWebController controller = new FacturaCompraWebController(facturas, proveedores, articulos);
 
@@ -154,6 +154,7 @@ class AdminAndPurchaseControllersCoverageTest {
         when(devoluciones.findAll()).thenReturn(List.of(devolucion));
         when(devoluciones.buscar("d")).thenReturn(List.of(devolucion));
         when(devoluciones.findById(1L)).thenReturn(Optional.of(devolucion));
+        when(devoluciones.findDetailById(1L)).thenReturn(Optional.of(devolucion));
         when(clientes.findAll()).thenReturn(List.of(cliente));
         when(clientes.findById(2L)).thenReturn(Optional.of(cliente));
         DevolucionWebController controller = new DevolucionWebController(devoluciones, clientes);

@@ -68,7 +68,7 @@ public class DevolucionWebController {
 
     @GetMapping("/{id}")
     public String ver(@PathVariable Long id, Model model, RedirectAttributes ra) {
-        return devolucionService.findById(id).map(d -> {
+        return devolucionService.findDetailById(id).map(d -> {
             model.addAttribute("moduloActivo", "devoluciones");
             model.addAttribute("titulo", "Devolución " + d.getNumero());
             model.addAttribute("devolucion", d);

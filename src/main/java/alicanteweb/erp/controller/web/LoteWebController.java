@@ -80,7 +80,7 @@ public class LoteWebController {
 
     @GetMapping("/{id}")
     public String ver(@PathVariable Long id, Model m, RedirectAttributes ra) {
-        return service.findById(id).map(l -> {
+        return service.findDetailById(id).map(l -> {
             m.addAttribute("moduloActivo", "lotes");
             m.addAttribute("titulo", "Lote " + l.getCodigo());
             m.addAttribute("lote", l);

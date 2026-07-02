@@ -92,7 +92,11 @@ public class HojaRuta {
     public String toString() { return "HojaRuta{id=" + id + ", fecha=" + fecha + "}"; }
 
     public alicanteweb.erp.entities.enums.EstadoHojaRutaEnum getEstadoEnum() {
-        try { return estado != null ? alicanteweb.erp.entities.enums.EstadoHojaRutaEnum.valueOf(estado) : null; }
-        catch (IllegalArgumentException e) { return null; }
+        if (estado == null) return null;
+        try {
+            return alicanteweb.erp.entities.enums.EstadoHojaRutaEnum.valueOf(estado);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

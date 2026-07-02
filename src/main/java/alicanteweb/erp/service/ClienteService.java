@@ -39,7 +39,7 @@ public class ClienteService {
     }
 
     public Optional<Cliente> findByCif(String cif) {
-        if (cif == null || cif.trim().isEmpty()) {
+        if (cif == null || cif.isBlank()) {
             return Optional.empty();
         }
         return repository.findByCifIgnoreCase(cif.trim());
@@ -50,7 +50,7 @@ public class ClienteService {
     }
 
     public Optional<Cliente> findByNombreExacto(String nombre) {
-        if (nombre == null || nombre.trim().isEmpty()) {
+        if (nombre == null || nombre.isBlank()) {
             return Optional.empty();
         }
         return repository.findFirstByNombreIgnoreCase(nombre.trim());
@@ -65,7 +65,7 @@ public class ClienteService {
         if (cliente == null) throw new IllegalArgumentException("Cliente nulo");
 
         String codigo = cliente.getCodigo();
-        if (codigo == null || codigo.trim().isEmpty()) {
+        if (codigo == null || codigo.isBlank()) {
             throw new IllegalArgumentException("El código del cliente es obligatorio");
         }
 
@@ -86,7 +86,7 @@ public class ClienteService {
         }
 
         // Comprobar duplicados por CIF (si presente)
-        if (cliente.getCif() != null && !cliente.getCif().trim().isEmpty()) {
+        if (cliente.getCif() != null && !cliente.getCif().isBlank()) {
             var optCif = repository.findByCif(cliente.getCif().trim());
             if (optCif.isPresent()) {
                 var existente = optCif.get();

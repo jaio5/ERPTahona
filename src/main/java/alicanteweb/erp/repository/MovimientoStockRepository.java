@@ -1,6 +1,7 @@
 package alicanteweb.erp.repository;
 
 import alicanteweb.erp.entities.MovimientoStock;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -39,8 +40,9 @@ public interface MovimientoStockRepository extends JpaRepository<MovimientoStock
     List<MovimientoStock> findByArticuloIdAndTipo(Long articuloId, String tipo);
 
     /**
-     * Busca movimientos entre fechas
+     * Busca movimientos entre fechas con artículo cargado
      */
+    @EntityGraph(attributePaths = {"articulo"})
     List<MovimientoStock> findByFechaBetween(LocalDate desde, LocalDate hasta);
 }
 

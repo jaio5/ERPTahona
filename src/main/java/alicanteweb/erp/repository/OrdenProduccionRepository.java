@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -16,7 +17,8 @@ public interface OrdenProduccionRepository extends JpaRepository<OrdenProduccion
     Optional<OrdenProduccion> findByNumero(String numero);
     List<OrdenProduccion> findByEstado(String estado);
     long countByEstado(String estado);
-    List<OrdenProduccion> findByFechaBetween(LocalDate inicio, LocalDate fin);
+    @Query("SELECT o FROM OrdenProduccion o LEFT JOIN FETCH o.receta WHERE o.fecha BETWEEN :inicio AND :fin")
+    List<OrdenProduccion> findByFechaBetween(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
     List<OrdenProduccion> findByRecetaId(Long recetaId);
     List<OrdenProduccion> findByArticuloId(Long articuloId);
 

@@ -22,10 +22,11 @@
         <div class="filter-bar-filters">
             <select name="estado" class="form-select form-select-sm" style="width:150px;">
                 <option value="">Todos los estados</option>
-                <option value="BORRADOR"    th:selected="${estado == 'BORRADOR'}">Borrador</option>
-                <option value="CONFIRMADO"  th:selected="${estado == 'CONFIRMADO'}">Confirmado</option>
-                <option value="COMPLETADO"  th:selected="${estado == 'COMPLETADO'}">Completado</option>
-                <option value="CANCELADO"   th:selected="${estado == 'CANCELADO'}">Cancelado</option>
+                <option value="PENDIENTE"       th:selected="${estado == 'PENDIENTE'}">Pendiente</option>
+                <option value="CONFIRMADO"      th:selected="${estado == 'CONFIRMADO'}">Confirmado</option>
+                <option value="SERVIDO_PARCIAL" th:selected="${estado == 'SERVIDO_PARCIAL'}">Servido parcial</option>
+                <option value="SERVIDO"         th:selected="${estado == 'SERVIDO'}">Servido</option>
+                <option value="CANCELADO"       th:selected="${estado == 'CANCELADO'}">Cancelado</option>
             </select>
         </div>
         <div class="filter-bar-actions">

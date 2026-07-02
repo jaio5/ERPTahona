@@ -67,7 +67,7 @@ public class FacturaCompraWebController {
 
     @GetMapping("/{id}")
     public String ver(@PathVariable Long id, Model model, RedirectAttributes ra) {
-        return facturaCompraService.obtenerPorId(id).map(f -> {
+        return facturaCompraService.obtenerDetallePorId(id).map(f -> {
             model.addAttribute("moduloActivo", "facturas-compra");
             model.addAttribute("titulo", "Factura compra " + f.getNumero());
             model.addAttribute("factura", f);

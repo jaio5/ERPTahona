@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -362,6 +363,54 @@ public class ContabilidadService {
 
         log.info("✅ Todos los asientos están cuadrados");
         return true;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> calcularBalanceSimple(LocalDate desde, LocalDate hasta) {
+        List<AsientoContable> asientos = asientoRepository.findByFechaBetween(desde, hasta);
+        BigDecimal totalDebe = BigDecimal.ZERO;
+        BigDecimal totalHaber = BigDecimal.ZERO;
+        for (AsientoContable a : asientos) {
+            totalDebe = totalDebe.add(a.getDebe() != null ? a.getDebe() : BigDecimal.ZERO);
+            totalHaber = totalHaber.add(a.getHaber() != null ? a.getHaber() : BigDecimal.ZERO);
+        }
+        return java.util.Map.of(
+            "totalDebe", totalDebe,
+            "totalHaber", totalHaber,
+            "diferencia", totalDebe.subtract(totalHaber),
+            "asientos", asientos.size()
+        );
+    }
+
+    public Map<String, Object> cerrarEjercicio(int año) {
+        LocalDate inicio = LocalDate.of(año, 1, 1);
+        LocalDate fin = LocalDate.of(año, 12, 31);
+        List<AsientoContable> asientos = asientoRepository.findByFechaBetween(inicio, fin);
+        boolean yaExisteCierre = asientos.stream().anyMatch(a -> Boolean.TRUE.equals(a.getAsientoCierre()));
+        if (yaExisteCierre) {
+            throw new IllegalStateException("Ya existe un cierre contable para el ejercicio " + año);
+        }
+        BigDecimal totalDebe = asientos.stream()
+                .map(a -> a.getDebe() != null ? a.getDebe() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalHaber = asientos.stream()
+                .map(a -> a.getHaber() != null ? a.getHaber() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        AsientoContable cierre = new AsientoContable();
+        cierre.setNumero(generarNumeroAsiento());
+        cierre.setFecha(fin);
+        cierre.setConcepto("Cierre ejercicio " + año);
+        cierre.setTipo("CIERRE");
+        cierre.setDebe(totalHaber);
+        cierre.setHaber(totalDebe);
+        cierre.setAsientoCierre(true);
+        asientoRepository.save(cierre);
+        return java.util.Map.of(
+            "mensaje", "Cierre del ejercicio " + año + " completado",
+            "totalDebe", totalDebe,
+            "totalHaber", totalHaber,
+            "asientoCierreId", cierre.getId()
+        );
     }
 
     // Comprueba la integridad contable al iniciar

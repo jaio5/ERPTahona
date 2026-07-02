@@ -43,6 +43,11 @@ public class FacturaCompraService {
         return facturaCompraRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<FacturaCompra> obtenerDetallePorId(Long id) {
+        return facturaCompraRepository.findDetailById(id);
+    }
+
     /**
      * Obtiene una factura por número
      */

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface HorneadaRepository extends JpaRepository<Horneada, Long> {
@@ -25,4 +26,7 @@ public interface HorneadaRepository extends JpaRepository<Horneada, Long> {
            "LOWER(h.tipoHorneada) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
            "LOWER(h.resultado) LIKE LOWER(CONCAT('%', :q, '%'))")
     List<Horneada> buscar(@Param("q") String q);
+
+    @Query("SELECT h FROM Horneada h LEFT JOIN FETCH h.ordenProduccion LEFT JOIN FETCH h.usuario WHERE h.id = :id")
+    Optional<Horneada> findDetailById(@Param("id") Long id);
 }

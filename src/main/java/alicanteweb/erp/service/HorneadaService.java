@@ -29,6 +29,10 @@ public class HorneadaService {
         return repository.findById(id);
     }
 
+    public Optional<Horneada> findDetailById(Long id) {
+        return repository.findDetailById(id);
+    }
+
     public List<Horneada> findByOrdenProduccionId(Long ordenProduccionId) {
         return repository.findByOrdenProduccionId(ordenProduccionId);
     }

@@ -57,11 +57,11 @@ public class ArticuloService {
         if (articulo == null) throw new IllegalArgumentException("Articulo nulo");
 
         String codigo = articulo.getCodigo();
-        if (codigo == null || codigo.trim().isEmpty()) {
+        if (codigo == null || codigo.isBlank()) {
             throw new IllegalArgumentException("El código del artículo es obligatorio");
         }
         String nombre = articulo.getNombre();
-        if (nombre == null || nombre.trim().isEmpty()) {
+        if (nombre == null || nombre.isBlank()) {
             throw new IllegalArgumentException("El nombre del artículo es obligatorio");
         }
 
@@ -127,5 +127,13 @@ public class ArticuloService {
     @Transactional(readOnly = true)
     public List<Articulo> search(String q, int limit) {
         return buscarPaginado(q, org.springframework.data.domain.PageRequest.of(0, limit)).getContent();
+    }
+
+    public List<ArticuloRepository.ValoracionInventario> findValoracionInventario() {
+        return repository.findValoracionInventario();
+    }
+
+    public BigDecimal sumValorInventario() {
+        return repository.sumValorInventario();
     }
 }

@@ -41,7 +41,7 @@ public class VehiculoService {
     @Transactional
     public Vehiculo save(Vehiculo vehiculo) {
         if (vehiculo == null) throw new IllegalArgumentException("Vehículo nulo");
-        if (vehiculo.getMatricula() == null || vehiculo.getMatricula().trim().isEmpty()) {
+        if (vehiculo.getMatricula() == null || vehiculo.getMatricula().isBlank()) {
             throw new IllegalArgumentException("La matrícula es obligatoria");
         }
         var opt = repository.findByMatricula(vehiculo.getMatricula().trim());

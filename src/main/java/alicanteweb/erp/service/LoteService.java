@@ -85,7 +85,7 @@ public class LoteService {
     @Transactional
     public Lote save(Lote lote) {
         if (lote == null) throw new IllegalArgumentException("Lote nulo");
-        if (lote.getCodigo() == null || lote.getCodigo().trim().isEmpty()) {
+        if (lote.getCodigo() == null || lote.getCodigo().isBlank()) {
             throw new IllegalArgumentException("El código del lote es obligatorio");
         }
         var opt = loteRepository.findByCodigo(lote.getCodigo().trim());

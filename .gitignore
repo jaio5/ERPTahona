@@ -61,6 +61,10 @@ app_output.log
 certs/*
 !certs/.gitkeep
 
+# Capturas sueltas de sesiones de revisión con navegador (las curadas van en screenshots/ o audit/)
+/*.png
+.playwright-mcp/
+
 # Local config overrides
 application-local.properties
 .env.production.local

@@ -92,7 +92,11 @@ public class Lote {
     public String toString() { return "Lote{id=" + id + ", codigo='" + codigo + "'}"; }
 
     public alicanteweb.erp.entities.enums.EstadoLoteEnum getEstadoEnum() {
-        try { return estado != null ? alicanteweb.erp.entities.enums.EstadoLoteEnum.valueOf(estado) : null; }
-        catch (IllegalArgumentException e) { return null; }
+        if (estado == null) return null;
+        try {
+            return alicanteweb.erp.entities.enums.EstadoLoteEnum.valueOf(estado);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

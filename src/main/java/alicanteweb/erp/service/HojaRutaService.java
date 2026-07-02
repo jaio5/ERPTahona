@@ -123,6 +123,14 @@ public class HojaRutaService {
         return entregaRepository.findByHojaRutaIdOrderByOrden(hojaRutaId);
     }
 
+    public Optional<HojaRuta> findDetailById(Long id) {
+        return hojaRutaRepository.findDetailById(id);
+    }
+
+    public List<HojaRutaEntrega> getEntregasDetalle(Long hojaRutaId) {
+        return entregaRepository.findDetailByHojaRutaId(hojaRutaId);
+    }
+
     private Optional<HojaRuta> findRutaLegacy(LocalDate fecha, String conductor) {
         if (conductor == null || conductor.isBlank()) return Optional.empty();
         return hojaRutaRepository.findFirstByFechaAndUsuarioIsNullAndConductorIgnoreCase(fecha, conductor);

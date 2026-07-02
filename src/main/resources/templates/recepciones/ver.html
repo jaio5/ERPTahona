@@ -106,7 +106,7 @@
                         <td class="text-end text-muted" th:text="${l.cantidadPedida ?: '—'}"></td>
                         <td class="text-end fw-medium" th:text="${l.cantidadRecibida ?: '—'}"></td>
                         <td class="text-end"
-                            th:text="${l.precioUnitario != null ? #numbers.formatDecimal(l.precioUnitario,1,'COMMA',2,'DOT') + ' €' : '—'}"></td>
+                            th:text="${l.precioUnitario != null ? #numbers.formatDecimal(l.precioUnitario,1,'COMMA',2,'POINT') + ' €' : '—'}"></td>
                         <td class="text-muted small" th:text="${l.codigoLote ?: '—'}"></td>
                         <td class="text-muted small"
                             th:text="${l.fechaCaducidad != null ? #temporals.format(l.fechaCaducidad,'dd/MM/yyyy') : '—'}"></td>

@@ -53,7 +53,7 @@ public class RecetaService {
     @Transactional
     public Receta save(Receta receta) {
         if (receta == null) throw new IllegalArgumentException("Receta nula");
-        if (receta.getCodigo() == null || receta.getCodigo().trim().isEmpty()) {
+        if (receta.getCodigo() == null || receta.getCodigo().isBlank()) {
             throw new IllegalArgumentException("El código de la receta es obligatorio");
         }
         var opt = recetaRepository.findByCodigo(receta.getCodigo().trim());

@@ -7,20 +7,17 @@ import alicanteweb.erp.service.UsuarioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 @Profile("dev")
 public class DevDataInitializer {
     private static final Logger log = LoggerFactory.getLogger(DevDataInitializer.class);
-    private final AtomicBoolean initialized = new AtomicBoolean(false);
-
     private final UsuarioService usuarioService;
     private final EmpresaConfigRepository empresaConfigRepository;
     private final JdbcTemplate jdbcTemplate;
@@ -31,10 +28,8 @@ public class DevDataInitializer {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    @EventListener(ContextRefreshedEvent.class)
+    @EventListener(ApplicationReadyEvent.class)
     public void init() {
-        if (!initialized.compareAndSet(false, true)) return;
-
         // Reparar columna xml_generado si Flyway no la ha creado como LONGTEXT
         try {
             jdbcTemplate.execute("ALTER TABLE verifactu_evidence MODIFY COLUMN xml_generado LONGTEXT");

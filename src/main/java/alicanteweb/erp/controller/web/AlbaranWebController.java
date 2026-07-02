@@ -1,7 +1,6 @@
 package alicanteweb.erp.controller.web;
 
 import alicanteweb.erp.entities.*;
-import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -223,7 +222,7 @@ public class AlbaranWebController extends BaseWebController {
             return WebController.servirPdf(pdf);
         } catch (RuntimeException e) {
             log.error("Error al generar PDF de albarán {}: {}", id, e.getMessage(), e);
-            throw new ErpException("Error al generar PDF: " + e.getMessage(), e);
+            throw e;
         }
     }
 

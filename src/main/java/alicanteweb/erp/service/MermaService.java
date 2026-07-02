@@ -22,7 +22,7 @@ public class MermaService {
     }
 
     public List<Merma> findAll() {
-        return repository.findAll();
+        return repository.findAllConArticulo();
     }
 
     public List<Merma> findByFechaBetween(LocalDate inicio, LocalDate fin) {

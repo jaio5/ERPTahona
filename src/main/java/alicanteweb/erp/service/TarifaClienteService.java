@@ -1,6 +1,8 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.TarifaCliente;
+import alicanteweb.erp.repository.ArticuloRepository;
+import alicanteweb.erp.repository.ClienteRepository;
 import alicanteweb.erp.repository.TarifaClienteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +16,15 @@ import java.util.Optional;
 public class TarifaClienteService {
 
     private final TarifaClienteRepository repository;
+    private final ClienteRepository clienteRepository;
+    private final ArticuloRepository articuloRepository;
 
-    public TarifaClienteService(TarifaClienteRepository repository) {
+    public TarifaClienteService(TarifaClienteRepository repository,
+                                 ClienteRepository clienteRepository,
+                                 ArticuloRepository articuloRepository) {
         this.repository = repository;
+        this.clienteRepository = clienteRepository;
+        this.articuloRepository = articuloRepository;
     }
 
     public List<TarifaCliente> findByCliente(Long clienteId) {
@@ -25,6 +33,21 @@ public class TarifaClienteService {
 
     public Optional<TarifaCliente> findByClienteAndArticulo(Long clienteId, Long articuloId) {
         return repository.findByClienteIdAndArticuloId(clienteId, articuloId);
+    }
+
+    @Transactional
+    public TarifaCliente crearTarifa(Long clienteId, Long articuloId,
+                                     BigDecimal precioEspecial, BigDecimal descuento) {
+        var cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado: " + clienteId));
+        var articulo = articuloRepository.findById(articuloId)
+                .orElseThrow(() -> new IllegalArgumentException("Artículo no encontrado: " + articuloId));
+        TarifaCliente tarifa = new TarifaCliente();
+        tarifa.setCliente(cliente);
+        tarifa.setArticulo(articulo);
+        tarifa.setPrecioEspecial(precioEspecial);
+        tarifa.setDescuento(descuento);
+        return save(tarifa);
     }
 
     @Transactional

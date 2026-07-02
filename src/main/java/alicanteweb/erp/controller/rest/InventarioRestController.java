@@ -1,11 +1,8 @@
 package alicanteweb.erp.controller.rest;
 
-import alicanteweb.erp.entities.MovimientoStock;
-import alicanteweb.erp.repository.ArticuloRepository;
-import alicanteweb.erp.repository.MovimientoStockRepository;
+import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.StockService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -16,48 +13,31 @@ import java.util.*;
 @RequestMapping("/api/web/reportes")
 public class InventarioRestController {
 
-    private final ArticuloRepository articuloRepository;
-    private final MovimientoStockRepository movimientoStockRepository;
+    private static final int DIAS_DEFECTO_MOVIMIENTOS = 30;
+
+    private final ArticuloService articuloService;
     private final StockService stockService;
 
-    public InventarioRestController(ArticuloRepository articuloRepository,
-                                     MovimientoStockRepository movimientoStockRepository,
-                                     StockService stockService) {
-        this.articuloRepository = articuloRepository;
-        this.movimientoStockRepository = movimientoStockRepository;
+    public InventarioRestController(ArticuloService articuloService, StockService stockService) {
+        this.articuloService = articuloService;
         this.stockService = stockService;
     }
 
     @GetMapping("/inventario/valoracion")
     public ResponseEntity<Map<String, Object>> valoracion() {
-        List<ArticuloRepository.ValoracionInventario> items = articuloRepository.findValoracionInventario();
         Map<String, Object> resp = new LinkedHashMap<>();
-        resp.put("items", items);
-        resp.put("totalValor", articuloRepository.sumValorInventario());
+        resp.put("items", articuloService.findValoracionInventario());
+        resp.put("totalValor", articuloService.sumValorInventario());
         return ResponseEntity.ok(resp);
     }
 
     @GetMapping("/inventario/movimientos")
-    @Transactional(readOnly = true)
     public ResponseEntity<List<Map<String, Object>>> movimientos(
             @RequestParam(required = false) LocalDate desde,
             @RequestParam(required = false) LocalDate hasta) {
-        if (desde == null) desde = LocalDate.now().minusDays(30);
+        if (desde == null) desde = LocalDate.now().minusDays(DIAS_DEFECTO_MOVIMIENTOS);
         if (hasta == null) hasta = LocalDate.now();
-        List<Map<String, Object>> result = movimientoStockRepository.findByFechaBetween(desde, hasta).stream()
-                .map(m -> {
-                    Map<String, Object> map = new LinkedHashMap<>();
-                    map.put("id", m.getId());
-                    map.put("fecha", m.getFecha());
-                    map.put("tipo", m.getTipo());
-                    map.put("articuloId", m.getArticulo() != null ? m.getArticulo().getId() : null);
-                    map.put("articulo", m.getArticulo() != null ? Map.of("nombre", m.getArticulo().getNombre()) : null);
-                    map.put("cantidad", m.getCantidad());
-                    map.put("concepto", m.getConcepto());
-                    map.put("importe", m.getImporte());
-                    return map;
-                })
-                .toList();
+        List<Map<String, Object>> result = stockService.findMovimientosByFecha(desde, hasta);
         return ResponseEntity.ok(result);
     }
 

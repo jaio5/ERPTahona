@@ -61,7 +61,11 @@ public class Pedido {
     }
 
     public alicanteweb.erp.entities.enums.EstadoPedidoEnum getEstadoEnum() {
-        try { return estado != null ? alicanteweb.erp.entities.enums.EstadoPedidoEnum.valueOf(estado) : null; }
-        catch (IllegalArgumentException e) { return null; }
+        if (estado == null) return null;
+        try {
+            return alicanteweb.erp.entities.enums.EstadoPedidoEnum.valueOf(estado);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

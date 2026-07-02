@@ -53,9 +53,9 @@ public class HojaRutaWebController {
 
     @GetMapping("/{id}")
     public String ver(@PathVariable Long id, Model m, RedirectAttributes ra) {
-        return service.findById(id).map(h -> {
+        return service.findDetailById(id).map(h -> {
             m.addAttribute("moduloActivo","hojas-ruta"); m.addAttribute("titulo","Hoja "+h.getFecha());
-            m.addAttribute("hoja",h); m.addAttribute("entregas", service.getEntregas(id));
+            m.addAttribute("hoja",h); m.addAttribute("entregas", service.getEntregasDetalle(id));
             return WebController.layout(m, "hojas-ruta/ver");
         }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/hojas-ruta"; });
     }

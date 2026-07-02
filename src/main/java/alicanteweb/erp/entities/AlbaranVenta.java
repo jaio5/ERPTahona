@@ -74,8 +74,7 @@ public class AlbaranVenta {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AlbaranVenta)) return false;
-        AlbaranVenta that = (AlbaranVenta) o;
+        if (!(o instanceof AlbaranVenta that)) return false;
         return Objects.equals(id, that.id);
     }
 
@@ -86,7 +85,11 @@ public class AlbaranVenta {
     public String toString() { return "AlbaranVenta{id=" + id + ", numero='" + numero + "'}"; }
 
     public alicanteweb.erp.entities.enums.EstadoAlbaranEnum getEstadoEnum() {
-        try { return estado != null ? alicanteweb.erp.entities.enums.EstadoAlbaranEnum.valueOf(estado) : null; }
-        catch (IllegalArgumentException e) { return null; }
+        if (estado == null) return null;
+        try {
+            return alicanteweb.erp.entities.enums.EstadoAlbaranEnum.valueOf(estado);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

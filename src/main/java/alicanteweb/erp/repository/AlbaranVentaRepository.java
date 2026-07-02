@@ -59,7 +59,8 @@ public interface AlbaranVentaRepository extends JpaRepository<AlbaranVenta, Long
         return findByCliente_Id(clienteId);
     }
 
-    List<AlbaranVenta> findByFecha(java.time.LocalDate fecha);
+    @Query("SELECT a FROM AlbaranVenta a LEFT JOIN FETCH a.cliente WHERE a.fecha = :fecha")
+    List<AlbaranVenta> findByFecha(@Param("fecha") java.time.LocalDate fecha);
 
     @Query("SELECT DISTINCT a FROM AlbaranVenta a LEFT JOIN FETCH a.albaranVentaLineas l LEFT JOIN FETCH l.articulo WHERE a.cliente.id = :clienteId AND a.estado <> 'ANULADO' ORDER BY a.fecha DESC, a.id DESC")
     List<AlbaranVenta> findTop10ByClienteIdWithLineas(@Param("clienteId") Long clienteId, Pageable pageable);

@@ -263,7 +263,7 @@ public class UsuarioService {
      * Buscar usuarios por texto (nombre, username, email)
      */
     public List<Usuario> buscar(String texto) {
-        if (texto == null || texto.trim().isEmpty()) {
+        if (texto == null || texto.isBlank()) {
             return listarTodos();
         }
         return usuarioRepository.buscar(texto.trim());

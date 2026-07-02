@@ -166,6 +166,7 @@ class SimpleWebControllersCoverageTest {
         when(service.findAll()).thenReturn(List.of(horneada));
         when(service.buscar("pan")).thenReturn(List.of(horneada));
         when(service.findById(1L)).thenReturn(Optional.of(horneada));
+        when(service.findDetailById(1L)).thenReturn(Optional.of(horneada));
         HorneadaWebController controller = new HorneadaWebController(service);
 
         assertEquals("layout", controller.lista(new ExtendedModelMap(), null));

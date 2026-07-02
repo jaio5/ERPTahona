@@ -162,8 +162,7 @@ public class Usuario {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Usuario)) return false;
-        Usuario that = (Usuario) o;
+        if (!(o instanceof Usuario that)) return false;
         return Objects.equals(id, that.id);
     }
 

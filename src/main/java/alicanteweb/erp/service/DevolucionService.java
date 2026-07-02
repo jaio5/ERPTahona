@@ -42,11 +42,15 @@ public class DevolucionService {
     }
 
     public List<Devolucion> findAll() {
-        return devolucionRepository.findAll();
+        return devolucionRepository.findAllConCliente();
     }
 
     public Optional<Devolucion> findById(Long id) {
         return devolucionRepository.findById(id);
+    }
+
+    public Optional<Devolucion> findDetailById(Long id) {
+        return devolucionRepository.findDetailById(id);
     }
 
     public List<Devolucion> findByClienteId(Long clienteId) {
@@ -81,15 +85,19 @@ public class DevolucionService {
     @Transactional
     public Devolucion save(Devolucion devolucion) {
         if (devolucion == null) throw new IllegalArgumentException("Devolución nula");
-        BigDecimal total = BigDecimal.ZERO;
-        if (devolucion.getLineas() != null) {
+        // Solo recalcular el total si la colección está cargada; en ediciones de cabecera
+        // la entidad llega detached y acceder a las líneas lazy lanzaría LazyInitializationException
+        if (devolucion.getLineas() != null && org.hibernate.Hibernate.isInitialized(devolucion.getLineas())) {
+            BigDecimal total = BigDecimal.ZERO;
             for (DevolucionLinea linea : devolucion.getLineas()) {
                 if (linea.getImporte() != null) {
                     total = total.add(linea.getImporte());
                 }
             }
+            devolucion.setImporteTotal(total);
+        } else if (devolucion.getImporteTotal() == null) {
+            devolucion.setImporteTotal(BigDecimal.ZERO);
         }
-        devolucion.setImporteTotal(total);
         return devolucionRepository.save(devolucion);
     }
 

@@ -4,14 +4,13 @@ import alicanteweb.erp.controller.dto.ArticuloDto;
 import alicanteweb.erp.controller.dto.ClienteDto;
 import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.entities.Cliente;
-import alicanteweb.erp.repository.FacturaRepository;
-import alicanteweb.erp.repository.PedidoCompraRepository;
-import alicanteweb.erp.repository.PedidoRepository;
-import alicanteweb.erp.repository.ProveedorRepository;
 import alicanteweb.erp.service.AlbaranService;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.ClienteService;
+import alicanteweb.erp.service.FacturaService;
+import alicanteweb.erp.service.PedidoCompraService;
 import alicanteweb.erp.service.PedidoService;
+import alicanteweb.erp.service.ProveedorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
@@ -24,28 +23,25 @@ public class WebApiController {
 
     private final ClienteService clienteService;
     private final ArticuloService articuloService;
-    private final ProveedorRepository proveedorRepository;
-    private final FacturaRepository facturaRepository;
-    private final PedidoRepository pedidoRepository;
-    private final PedidoCompraRepository pedidoCompraRepository;
+    private final ProveedorService proveedorService;
+    private final FacturaService facturaService;
     private final PedidoService pedidoService;
+    private final PedidoCompraService pedidoCompraService;
     private final AlbaranService albaranService;
 
     public WebApiController(ClienteService clienteService,
                             ArticuloService articuloService,
-                            ProveedorRepository proveedorRepository,
-                            FacturaRepository facturaRepository,
-                            PedidoRepository pedidoRepository,
-                            PedidoCompraRepository pedidoCompraRepository,
+                            ProveedorService proveedorService,
+                            FacturaService facturaService,
                             PedidoService pedidoService,
+                            PedidoCompraService pedidoCompraService,
                             AlbaranService albaranService) {
         this.clienteService = clienteService;
         this.articuloService = articuloService;
-        this.proveedorRepository = proveedorRepository;
-        this.facturaRepository = facturaRepository;
-        this.pedidoRepository = pedidoRepository;
-        this.pedidoCompraRepository = pedidoCompraRepository;
+        this.proveedorService = proveedorService;
+        this.facturaService = facturaService;
         this.pedidoService = pedidoService;
+        this.pedidoCompraService = pedidoCompraService;
         this.albaranService = albaranService;
     }
 
@@ -54,10 +50,10 @@ public class WebApiController {
         return new WebResumen(
                 clienteService.count(),
                 articuloService.count(),
-                proveedorRepository.count(),
-                facturaRepository.count(),
-                pedidoRepository.count(),
-                pedidoCompraRepository.count()
+                proveedorService.count(),
+                facturaService.count(),
+                pedidoService.count(),
+                pedidoCompraService.count()
         );
     }
 

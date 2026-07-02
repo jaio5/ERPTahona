@@ -94,8 +94,8 @@ public class DocumentoService {
             linea.setIva(iva);
             linea.setDescuento(pd.descuento());
             pedido.getPedidoLineas().add(linea);
-            BigDecimal base = calcularBase(cantidad, pd.precio(), pd.descuento());
-            total = total.add(base).add(calcularIva(base, iva));
+            BigDecimal base = FinancialMath.subtotalConDescuento(cantidad, pd.precio(), pd.descuento());
+            total = total.add(base).add(FinancialMath.porcentaje(base, iva));
         }
         pedido.setTotal(total);
         pedidoRepository.save(pedido);
@@ -147,25 +147,13 @@ public class DocumentoService {
             linea.setPrecioUnitario(pd.precio());
             linea.setTipoIva(iva);
             linea.setDescuento(pd.descuento());
-            BigDecimal base = calcularBase(cantidad, pd.precio(), pd.descuento());
+            BigDecimal base = FinancialMath.subtotalConDescuento(cantidad, pd.precio(), pd.descuento());
             linea.setImporte(base);
             linea.setOrden(orden++);
-            total = total.add(base).add(calcularIva(base, iva));
+            total = total.add(base).add(FinancialMath.porcentaje(base, iva));
             pre.getLineas().add(linea);
         }
         pre.setTotal(total);
-    }
-
-    private BigDecimal calcularBase(BigDecimal cantidad, BigDecimal precio, BigDecimal descuento) {
-        BigDecimal base = cantidad.multiply(precio).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
-        if (descuento.compareTo(BigDecimal.ZERO) > 0) {
-            base = base.subtract(FinancialMath.porcentaje(base, descuento));
-        }
-        return base;
-    }
-
-    private BigDecimal calcularIva(BigDecimal base, BigDecimal iva) {
-        return iva.compareTo(BigDecimal.ZERO) > 0 ? FinancialMath.porcentaje(base, iva) : BigDecimal.ZERO;
     }
 
     // =========================== ALBARÁN ===========================
@@ -275,7 +263,7 @@ public class DocumentoService {
             linea.setDescuento(pd.descuento());
             BigDecimal subtotal = FinancialMath.subtotalConDescuento(cantidad, pd.precio(), pd.descuento());
             baseTotal = baseTotal.add(subtotal);
-            ivaTotal = ivaTotal.add(calcularIva(subtotal, iva));
+            ivaTotal = ivaTotal.add(FinancialMath.porcentaje(subtotal, iva));
             fac.getFacturaLineas().add(linea);
         }
         BigDecimal total = baseTotal.add(ivaTotal);
@@ -309,8 +297,8 @@ public class DocumentoService {
 
     private void asignarArticuloFactura(FacturaLinea linea, Long artId, Map<Long, Articulo> articuloById) {
         if (artId == null) return;
-        Articulo art = articuloById.computeIfAbsent(artId,
-                id -> articuloService.findById(id).orElseThrow(() -> new IllegalArgumentException("Artículo no encontrado: " + id)));
+        Articulo art = articuloById.get(artId);
+        if (art == null) throw new IllegalArgumentException("Artículo no encontrado: " + artId);
         linea.setArticulo(art);
         linea.setDescripcion(art.getNombre());
     }

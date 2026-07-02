@@ -292,7 +292,11 @@ public class Factura {
     private LocalDateTime verifactuFechaRegistro;
 
     public alicanteweb.erp.entities.enums.EstadoFacturaEnum getEstadoEnum() {
-        try { return estado != null ? alicanteweb.erp.entities.enums.EstadoFacturaEnum.valueOf(estado) : null; }
-        catch (IllegalArgumentException e) { return null; }
+        if (estado == null) return null;
+        try {
+            return alicanteweb.erp.entities.enums.EstadoFacturaEnum.valueOf(estado);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

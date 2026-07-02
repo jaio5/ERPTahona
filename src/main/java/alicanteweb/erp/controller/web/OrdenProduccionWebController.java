@@ -90,7 +90,7 @@ public class OrdenProduccionWebController {
 
     @GetMapping("/{id}")
     public String ver(@PathVariable Long id, Model m, RedirectAttributes ra) {
-        return service.findById(id).map(o -> {
+        return service.findDetailById(id).map(o -> {
             m.addAttribute("moduloActivo", "ordenes-produccion");
             m.addAttribute("titulo", "Orden " + o.getNumero());
             m.addAttribute("orden", o);

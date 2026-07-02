@@ -15,6 +15,7 @@ ERP Tahona es una aplicacion web con Spring Boot y Thymeleaf para gestion de una
 - [Despliegue de produccion](production-deployment.md): instalación, variables, prechequeos y arranque.
 - [Checklist de produccion](production-checklist.md): lista de verificación antes de usar datos reales.
 - [Hoja de ruta](hoja-ruta.md): fases, entregables y definición objetiva de aplicación completada.
+- [Pipeline de revision y refactorizacion asistida por IA](pipeline-refactorizacion-ia.md): fases, gates y prompts para revisar la aplicacion por secciones.
 - [Auditoria de la aplicacion del 19 de junio de 2026](auditoria-aplicacion-2026-06-19.md): auditoría fechada y riesgos detectados.
 
 ## Capacidades de produccion

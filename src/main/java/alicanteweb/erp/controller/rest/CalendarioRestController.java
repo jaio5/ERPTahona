@@ -5,7 +5,6 @@ import alicanteweb.erp.entities.Pedido;
 import alicanteweb.erp.service.OrdenProduccionService;
 import alicanteweb.erp.service.PedidoService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -25,7 +24,6 @@ public class CalendarioRestController {
     }
 
     @GetMapping("/calendario")
-    @Transactional(readOnly = true)
     public ResponseEntity<List<Map<String, Object>>> eventos(
             @RequestParam LocalDate inicio,
             @RequestParam LocalDate fin) {

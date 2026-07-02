@@ -9,9 +9,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice("alicanteweb.erp.controller.web")
@@ -57,6 +59,28 @@ public class WebErrorHandler {
         return "error";
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String typeMismatch(HttpServletRequest req, MethodArgumentTypeMismatchException e, Model model) {
+        log.warn("Parámetro de tipo incorrecto en {}: {}", req.getRequestURI(), e.getMessage());
+        model.addAttribute("titulo", "Solicitud inválida");
+        model.addAttribute("codigo", 400);
+        model.addAttribute("mensaje", "El identificador de la URL no tiene el formato esperado.");
+        model.addAttribute("url", req.getRequestURI());
+        return "error";
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String missingParameter(HttpServletRequest req, MissingServletRequestParameterException e, Model model) {
+        log.warn("Parámetro obligatorio ausente en {}: {}", req.getRequestURI(), e.getParameterName());
+        model.addAttribute("titulo", "Solicitud inválida");
+        model.addAttribute("codigo", 400);
+        model.addAttribute("mensaje", "Falta el campo obligatorio '" + e.getParameterName() + "' en el formulario.");
+        model.addAttribute("url", req.getRequestURI());
+        return "error";
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String illegalArgument(HttpServletRequest req, IllegalArgumentException e, Model model) {
@@ -76,13 +100,6 @@ public class WebErrorHandler {
         model.addAttribute("codigo", 500);
         model.addAttribute("mensaje", "Ha ocurrido un error inesperado. Por favor, contacta con el administrador.");
         model.addAttribute("url", req.getRequestURI());
-        StringBuilder msg = new StringBuilder(e.getClass().getSimpleName() + ": " + e.getMessage());
-        Throwable cause = e.getCause();
-        while (cause != null) {
-            msg.append("\nCaused by: ").append(cause.getClass().getSimpleName()).append(": ").append(cause.getMessage());
-            cause = cause.getCause();
-        }
-        model.addAttribute("message", msg.toString());
         return "error";
     }
 }

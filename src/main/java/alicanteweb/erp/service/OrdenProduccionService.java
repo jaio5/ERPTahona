@@ -83,7 +83,7 @@ public class OrdenProduccionService {
     @Transactional
     public synchronized OrdenProduccion save(OrdenProduccion orden) {
         if (orden == null) throw new IllegalArgumentException("Orden de producción nula");
-        if (orden.getNumero() == null || orden.getNumero().trim().isEmpty()) {
+        if (orden.getNumero() == null || orden.getNumero().isBlank()) {
             orden.setNumero(generarNumero());
         }
         return repository.save(orden);

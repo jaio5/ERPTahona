@@ -137,7 +137,7 @@ public class RolService {
      * Buscar roles por texto
      */
     public List<Rol> buscar(String texto) {
-        if (texto == null || texto.trim().isEmpty()) {
+        if (texto == null || texto.isBlank()) {
             return listarTodos();
         }
         return rolRepository.buscar(texto.trim());

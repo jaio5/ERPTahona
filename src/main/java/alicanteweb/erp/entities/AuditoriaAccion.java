@@ -147,8 +147,7 @@ public class AuditoriaAccion {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AuditoriaAccion)) return false;
-        AuditoriaAccion that = (AuditoriaAccion) o;
+        if (!(o instanceof AuditoriaAccion that)) return false;
         return Objects.equals(id, that.id);
     }
 

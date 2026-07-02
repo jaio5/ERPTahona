@@ -58,7 +58,7 @@ public class PedidoCompraWebController {
 
     @GetMapping("/{id}")
     public String ver(@PathVariable Long id, Model model, RedirectAttributes ra) {
-        return pedidoCompraService.findById(id).map(p -> {
+        return pedidoCompraService.findByIdWithLineas(id).map(p -> {
             model.addAttribute("moduloActivo", "pedidos-compra");
             model.addAttribute("titulo", "Pedido compra " + p.getNumero());
             model.addAttribute("pedido", p);

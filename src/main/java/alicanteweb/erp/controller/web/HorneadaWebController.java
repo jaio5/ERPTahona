@@ -52,7 +52,7 @@ public class HorneadaWebController {
 
     @GetMapping("/{id}")
     public String ver(@PathVariable Long id, Model model, RedirectAttributes ra) {
-        return horneadaService.findById(id).map(h -> {
+        return horneadaService.findDetailById(id).map(h -> {
             model.addAttribute("moduloActivo", "horneadas");
             model.addAttribute("titulo", "Horneada del " + h.getFecha());
             model.addAttribute("horneada", h);

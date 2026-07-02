@@ -52,7 +52,7 @@ public class FacturaValidacionService {
     }
 
     private void validarCamposObligatorios(Factura factura, List<String> errores) {
-        if (factura.getNumero() == null || factura.getNumero().trim().isEmpty()) {
+        if (factura.getNumero() == null || factura.getNumero().isBlank()) {
             errores.add("El número de factura es obligatorio");
         }
 
@@ -60,13 +60,13 @@ public class FacturaValidacionService {
             errores.add("La fecha de expedición es obligatoria");
         }
 
-        if (factura.getSerie() == null || factura.getSerie().trim().isEmpty()) {
+        if (factura.getSerie() == null || factura.getSerie().isBlank()) {
             errores.add("La serie de factura es obligatoria");
         } else if (!factura.getSerie().matches("^[A-Z0-9_-]{1,20}$")) {
             errores.add("La serie contiene caracteres no válidos");
         }
 
-        if (factura.getTipoFactura() == null || factura.getTipoFactura().trim().isEmpty()) {
+        if (factura.getTipoFactura() == null || factura.getTipoFactura().isBlank()) {
             errores.add("El tipo de factura es obligatorio");
         }
     }
@@ -78,13 +78,13 @@ public class FacturaValidacionService {
         }
 
         String cif = factura.getCliente().getCif();
-        if (cif == null || cif.trim().isEmpty()) {
+        if (cif == null || cif.isBlank()) {
             errores.add("El cliente debe tener CIF/NIF");
         } else if (!validarCifNif(cif)) {
             errores.add("El CIF/NIF del cliente no es válido: " + cif);
         }
 
-        if (factura.getCliente().getNombre() == null || factura.getCliente().getNombre().trim().isEmpty()) {
+        if (factura.getCliente().getNombre() == null || factura.getCliente().getNombre().isBlank()) {
             errores.add("El cliente debe tener nombre/razón social");
         }
     }
@@ -181,7 +181,7 @@ public class FacturaValidacionService {
         String tipo = factura.getTipoFactura();
 
         if ("RECTIFICATIVA".equals(tipo)) {
-            if (factura.getFacturaRectificadaNumero() == null || factura.getFacturaRectificadaNumero().trim().isEmpty()) {
+            if (factura.getFacturaRectificadaNumero() == null || factura.getFacturaRectificadaNumero().isBlank()) {
                 errores.add("Factura rectificativa: Debe indicar el número de factura original");
             }
 
@@ -189,7 +189,7 @@ public class FacturaValidacionService {
                 errores.add("Factura rectificativa: Debe indicar la fecha de factura original");
             }
 
-            if (factura.getMotivoRectificacion() == null || factura.getMotivoRectificacion().trim().isEmpty()) {
+            if (factura.getMotivoRectificacion() == null || factura.getMotivoRectificacion().isBlank()) {
                 errores.add("Factura rectificativa: Debe indicar el motivo de rectificación");
             }
         }
@@ -210,7 +210,7 @@ public class FacturaValidacionService {
     }
 
     public boolean validarCifNif(String documento) {
-        if (documento == null || documento.trim().isEmpty()) {
+        if (documento == null || documento.isBlank()) {
             return false;
         }
 

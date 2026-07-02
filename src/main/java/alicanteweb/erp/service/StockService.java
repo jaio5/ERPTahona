@@ -36,6 +36,25 @@ public class StockService {
         return articuloAlmacenRepository.findByArticuloIdWithAlmacen(articuloId);
     }
 
+    @Transactional(readOnly = true)
+    public List<java.util.Map<String, Object>> findMovimientosByFecha(LocalDate desde, LocalDate hasta) {
+        return movimientoStockRepository.findByFechaBetween(desde, hasta).stream()
+                .map(m -> {
+                    java.util.Map<String, Object> map = new java.util.LinkedHashMap<>();
+                    map.put("id", m.getId());
+                    map.put("fecha", m.getFecha());
+                    map.put("tipo", m.getTipo());
+                    map.put("articuloId", m.getArticulo() != null ? m.getArticulo().getId() : null);
+                    map.put("articulo", m.getArticulo() != null
+                            ? java.util.Map.of("nombre", m.getArticulo().getNombre()) : null);
+                    map.put("cantidad", m.getCantidad());
+                    map.put("concepto", m.getConcepto());
+                    map.put("importe", m.getImporte());
+                    return map;
+                })
+                .toList();
+    }
+
     private void actualizarStockAlmacen(Articulo art, Long almacenId, BigDecimal delta) {
         if (almacenId == null) return;
         ArticuloAlmacen aa = articuloAlmacenRepository

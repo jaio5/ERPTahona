@@ -105,8 +105,7 @@ public class Articulo {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Articulo)) return false;
-        Articulo that = (Articulo) o;
+        if (!(o instanceof Articulo that)) return false;
         return Objects.equals(id, that.id);
     }
 

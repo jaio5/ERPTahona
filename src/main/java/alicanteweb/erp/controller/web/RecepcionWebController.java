@@ -1,12 +1,9 @@
 package alicanteweb.erp.controller.web;
 
-import alicanteweb.erp.entities.Almacen;
-import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.entities.Recepcion;
 import alicanteweb.erp.entities.RecepcionLinea;
-import alicanteweb.erp.repository.AlmacenRepository;
-import alicanteweb.erp.repository.ArticuloRepository;
-import alicanteweb.erp.repository.RecepcionLineaRepository;
+import alicanteweb.erp.service.AlmacenService;
+import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.PedidoCompraService;
 import alicanteweb.erp.service.ProveedorService;
 import alicanteweb.erp.service.RecepcionService;
@@ -32,22 +29,19 @@ public class RecepcionWebController {
     private final RecepcionService recepcionService;
     private final ProveedorService proveedorService;
     private final PedidoCompraService pedidoCompraService;
-    private final AlmacenRepository almacenRepository;
-    private final ArticuloRepository articuloRepository;
-    private final RecepcionLineaRepository lineaRepository;
+    private final AlmacenService almacenService;
+    private final ArticuloService articuloService;
 
     public RecepcionWebController(RecepcionService recepcionService,
                                   ProveedorService proveedorService,
                                   PedidoCompraService pedidoCompraService,
-                                  AlmacenRepository almacenRepository,
-                                  ArticuloRepository articuloRepository,
-                                  RecepcionLineaRepository lineaRepository) {
+                                  AlmacenService almacenService,
+                                  ArticuloService articuloService) {
         this.recepcionService = recepcionService;
         this.proveedorService = proveedorService;
         this.pedidoCompraService = pedidoCompraService;
-        this.almacenRepository = almacenRepository;
-        this.articuloRepository = articuloRepository;
-        this.lineaRepository = lineaRepository;
+        this.almacenService = almacenService;
+        this.articuloService = articuloService;
     }
 
     @GetMapping
@@ -67,7 +61,7 @@ public class RecepcionWebController {
         model.addAttribute("moduloActivo", "recepciones");
         model.addAttribute("titulo", "Nueva recepción");
         model.addAttribute("proveedores", proveedorService.findAll());
-        model.addAttribute("almacenes", almacenRepository.findAll());
+        model.addAttribute("almacenes", almacenService.findAll());
         model.addAttribute("pedidosCompra", pedidoCompraService.findAll());
         return WebController.layout(model, "recepciones/formulario");
     }
@@ -82,7 +76,7 @@ public class RecepcionWebController {
         try {
             Recepcion r = new Recepcion();
             proveedorService.findById(proveedorId).ifPresent(r::setProveedor);
-            if (almacenId != null) almacenRepository.findById(almacenId).ifPresent(r::setAlmacen);
+            if (almacenId != null) almacenService.findById(almacenId).ifPresent(r::setAlmacen);
             if (pedidoCompraId != null) pedidoCompraService.findById(pedidoCompraId).ifPresent(r::setPedidoCompra);
             if (numero != null && !numero.isBlank()) r.setNumero(numero.trim());
             r.setFecha(LocalDate.now());
@@ -100,13 +94,13 @@ public class RecepcionWebController {
 
     @GetMapping("/{id}")
     public String ver(@PathVariable Long id, Model model) {
-        Recepcion r = recepcionService.findById(id)
+        Recepcion r = recepcionService.findDetailById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Recepción no encontrada: " + id));
         model.addAttribute("moduloActivo", "recepciones");
         model.addAttribute("titulo", "Recepción " + (r.getNumero() != null ? r.getNumero() : "#" + r.getId()));
         model.addAttribute("recepcion", r);
         model.addAttribute("lineas", recepcionService.findByRecepcionId(id));
-        model.addAttribute("articulos", articuloRepository.findAll());
+        model.addAttribute("articulos", articuloService.findAll());
         return WebController.layout(model, "recepciones/ver");
     }
 
@@ -121,7 +115,7 @@ public class RecepcionWebController {
         model.addAttribute("titulo", "Editar recepción");
         model.addAttribute("recepcion", r);
         model.addAttribute("proveedores", proveedorService.findAll());
-        model.addAttribute("almacenes", almacenRepository.findAll());
+        model.addAttribute("almacenes", almacenService.findAll());
         model.addAttribute("pedidosCompra", pedidoCompraService.findAll());
         return WebController.layout(model, "recepciones/formulario");
     }
@@ -141,7 +135,7 @@ public class RecepcionWebController {
                 throw new IllegalStateException("No se puede editar una recepción ya confirmada");
             }
             proveedorService.findById(proveedorId).ifPresent(r::setProveedor);
-            r.setAlmacen(almacenId != null ? almacenRepository.findById(almacenId).orElse(null) : null);
+            r.setAlmacen(almacenId != null ? almacenService.findById(almacenId).orElse(null) : null);
             r.setPedidoCompra(pedidoCompraId != null ? pedidoCompraService.findById(pedidoCompraId).orElse(null) : null);
             if (numero != null && !numero.isBlank()) r.setNumero(numero.trim());
             r.setObservaciones(observaciones);
@@ -170,7 +164,7 @@ public class RecepcionWebController {
             if ("CONFIRMADA".equals(r.getEstado())) {
                 throw new IllegalStateException("La recepción ya está confirmada");
             }
-            Articulo articulo = articuloRepository.findById(articuloId)
+            var articulo = articuloService.findById(articuloId)
                     .orElseThrow(() -> new IllegalArgumentException("Artículo no encontrado"));
             RecepcionLinea linea = new RecepcionLinea();
             linea.setRecepcion(r);
@@ -194,7 +188,7 @@ public class RecepcionWebController {
     @PostMapping("/{id}/lineas/{lineaId}/eliminar")
     public String eliminarLinea(@PathVariable Long id, @PathVariable Long lineaId, RedirectAttributes ra) {
         try {
-            lineaRepository.deleteById(lineaId);
+            recepcionService.deleteLinea(lineaId);
         } catch (RuntimeException e) {
             log.error("Error al eliminar línea {} de recepción {}: {}", lineaId, id, e.getMessage(), e);
             ra.addFlashAttribute("error", e.getMessage());

@@ -39,6 +39,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     Page<Pedido> findByNumeroContainingIgnoreCaseOrCliente_NombreContainingIgnoreCase(String numero, String nombre, Pageable pageable);
 
     List<Pedido> findByFecha(LocalDate fecha);
+
+    @EntityGraph(attributePaths = {"cliente"})
     List<Pedido> findByFechaBetween(LocalDate inicio, LocalDate fin);
 
     @Override

@@ -1,7 +1,6 @@
 package alicanteweb.erp.config;
 
-import alicanteweb.erp.exception.BadRequestException;
-import alicanteweb.erp.exception.ResourceNotFoundException;
+import alicanteweb.erp.exception.ErpException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,19 +17,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice(annotations = RestController.class)
 public class RestExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(RestExceptionHandler.class);
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiError> notFound(ResourceNotFoundException e, HttpServletRequest request) {
-        return response(HttpStatus.NOT_FOUND, "NOT_FOUND", e.getMessage(), request);
-    }
-
     @ExceptionHandler({
-            BadRequestException.class,
             IllegalArgumentException.class,
             IllegalStateException.class,
             MethodArgumentTypeMismatchException.class,
@@ -57,9 +51,21 @@ public class RestExceptionHandler {
                 "La operación entra en conflicto con datos existentes", request);
     }
 
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ApiError> notFound(NoSuchElementException e, HttpServletRequest request) {
+        return response(HttpStatus.NOT_FOUND, "NOT_FOUND", safeMessage(e, "El recurso solicitado no existe"), request);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> forbidden(AccessDeniedException e, HttpServletRequest request) {
         return response(HttpStatus.FORBIDDEN, "FORBIDDEN", "No tiene permisos para realizar esta operación", request);
+    }
+
+    @ExceptionHandler(ErpException.class)
+    public ResponseEntity<ApiError> erpError(ErpException e, HttpServletRequest request) {
+        log.error("Error interno en {}", request.getRequestURI(), e);
+        return response(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
+                "Ha ocurrido un error interno", request);
     }
 
     @ExceptionHandler(Exception.class)

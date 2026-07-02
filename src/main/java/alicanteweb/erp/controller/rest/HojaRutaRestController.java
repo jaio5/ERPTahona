@@ -1,12 +1,10 @@
 package alicanteweb.erp.controller.rest;
 
 import alicanteweb.erp.entities.AlbaranVenta;
-import alicanteweb.erp.entities.HojaRuta;
 import alicanteweb.erp.entities.HojaRutaEntrega;
 import alicanteweb.erp.service.AlbaranService;
 import alicanteweb.erp.service.HojaRutaService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -28,9 +26,8 @@ public class HojaRutaRestController {
     }
 
     @GetMapping("/hojas-ruta/{id}/entregas")
-    @Transactional(readOnly = true)
     public ResponseEntity<List<Map<String, Object>>> entregas(@PathVariable Long id) {
-        List<Map<String, Object>> result = hojaRutaService.getEntregas(id).stream()
+        List<Map<String, Object>> result = hojaRutaService.getEntregasDetalle(id).stream()
                 .map(e -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("id", e.getId());
@@ -62,7 +59,6 @@ public class HojaRutaRestController {
     }
 
     @GetMapping("/albaranes/pendientes-reparto")
-    @Transactional(readOnly = true)
     public ResponseEntity<List<Map<String, Object>>> albaranesPendientesReparto(@RequestParam LocalDate fecha) {
         List<AlbaranVenta> todos = albaranService.findByFecha(fecha);
         List<Long> yaAsignados = hojaRutaService.getAlbaranIdsAsignados();

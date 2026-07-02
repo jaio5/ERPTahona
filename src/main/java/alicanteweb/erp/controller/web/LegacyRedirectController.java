@@ -17,4 +17,10 @@ public class LegacyRedirectController {
 
     @GetMapping("/web/backup")
     public String backup() { return "redirect:/web/backups"; }
+
+    @GetMapping("/web/informes")
+    public String informes() { return "redirect:/web/reportes"; }
+
+    @GetMapping("/web/busqueda-global")
+    public String busquedaGlobal() { return "redirect:/web/buscar"; }
 }

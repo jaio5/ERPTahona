@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -39,7 +38,6 @@ public class RepartidorMovilController {
      * El repartidor se identifica con su nombre (conductor).
      */
     @GetMapping("/mi-ruta")
-    @Transactional(readOnly = true)
     public ResponseEntity<?> getMiRutaDelDia(@RequestParam(required = false) String conductor,
                                               Authentication auth) {
         if (auth == null) return forbidden();
@@ -64,7 +62,7 @@ public class RepartidorMovilController {
             ));
         }
 
-        List<HojaRutaEntrega> entregas = hojaRutaService.getEntregas(miHoja.getId());
+        List<HojaRutaEntrega> entregas = hojaRutaService.getEntregasDetalle(miHoja.getId());
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("tieneRuta", true);

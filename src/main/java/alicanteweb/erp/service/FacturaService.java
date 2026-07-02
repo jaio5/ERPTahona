@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -336,17 +337,16 @@ public class FacturaService {
     }
 
     private void recalcularTotalesDesdeLineas(Factura factura) {
-        java.math.BigDecimal baseTotal = java.math.BigDecimal.ZERO;
-        java.math.BigDecimal ivaTotal = java.math.BigDecimal.ZERO;
+        BigDecimal baseTotal = BigDecimal.ZERO;
+        BigDecimal ivaTotal = BigDecimal.ZERO;
         for (FacturaLinea linea : factura.getFacturaLineas()) {
-            java.math.BigDecimal cantidad = linea.getCantidad() != null ? linea.getCantidad() : java.math.BigDecimal.ZERO;
-            java.math.BigDecimal precio = linea.getPrecioUnitario() != null ? linea.getPrecioUnitario() : java.math.BigDecimal.ZERO;
-            java.math.BigDecimal descuento = linea.getDescuento() != null ? linea.getDescuento() : java.math.BigDecimal.ZERO;
-            java.math.BigDecimal iva = linea.getIva() != null ? linea.getIva() : java.math.BigDecimal.ZERO;
-            java.math.BigDecimal subtotal = FinancialMath.subtotalConDescuento(cantidad, precio, descuento);
-            java.math.BigDecimal ivaLinea = subtotal.multiply(iva).divide(new java.math.BigDecimal("100"), FinancialMath.SCALE, FinancialMath.ROUND);
+            BigDecimal cantidad = linea.getCantidad() != null ? linea.getCantidad() : BigDecimal.ZERO;
+            BigDecimal precio = linea.getPrecioUnitario() != null ? linea.getPrecioUnitario() : BigDecimal.ZERO;
+            BigDecimal descuento = linea.getDescuento() != null ? linea.getDescuento() : BigDecimal.ZERO;
+            BigDecimal iva = linea.getIva() != null ? linea.getIva() : BigDecimal.ZERO;
+            BigDecimal subtotal = FinancialMath.subtotalConDescuento(cantidad, precio, descuento);
             baseTotal = baseTotal.add(subtotal);
-            ivaTotal = ivaTotal.add(ivaLinea);
+            ivaTotal = ivaTotal.add(FinancialMath.porcentaje(subtotal, iva));
         }
         factura.setBaseImponible(baseTotal);
         factura.setTotalIva(ivaTotal);

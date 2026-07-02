@@ -133,4 +133,8 @@ public class PedidoCompraService {
         pedido.setEstado(nuevoEstado);
         return repository.save(pedido);
     }
+
+    public long count() {
+        return repository.count();
+    }
 }

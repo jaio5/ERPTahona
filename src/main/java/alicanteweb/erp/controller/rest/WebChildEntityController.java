@@ -26,6 +26,7 @@ import java.util.Map;
 @RequestMapping("/api/web/children")
 public class WebChildEntityController {
 
+    private static final int MAX_RESULTADOS_HIJO = 500;
     private static final Map<String, ChildDefinition> CHILDREN = Map.ofEntries(
             entry("pedido-lineas", PedidoLinea.class, Pedido.class, "pedido"),
             entry("presupuesto-lineas", PresupuestoLinea.class, Presupuesto.class, "presupuesto"),
@@ -70,7 +71,7 @@ public class WebChildEntityController {
         Root<T> root = query.from(entityClass);
         query.select(root).where(entityManager.getCriteriaBuilder()
                 .equal(root.get(parentField).get("id"), parentId));
-        return entityManager.createQuery(query).setMaxResults(500).getResultList();
+        return entityManager.createQuery(query).setMaxResults(MAX_RESULTADOS_HIJO).getResultList();
     }
 
     @PostMapping("/{child}/{parentId}")
