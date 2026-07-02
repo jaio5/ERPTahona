@@ -1,6 +1,0 @@
-- generic [ref=e2]:
-  - heading [level=1]
-  - heading [level=4]
-  - paragraph
-  - link "Volver al panel" [ref=e3] [cursor=pointer]:
-    - /url: /web/dashboard
