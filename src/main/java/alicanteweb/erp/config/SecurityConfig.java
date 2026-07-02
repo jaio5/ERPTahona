@@ -258,14 +258,20 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationSuccessHandler erpAuthenticationSuccessHandler() {
+    public AuthenticationSuccessHandler erpAuthenticationSuccessHandler(alicanteweb.erp.service.UsuarioService usuarioService) {
         return (HttpServletRequest request, HttpServletResponse response, Authentication authentication) -> {
+            boolean requiereCambio = false;
             if (authentication.getPrincipal() instanceof ErpUserPrincipal principal) {
                 var session = request.getSession(true);
                 session.setAttribute("usuarioId", principal.id());
                 session.setAttribute("usuarioNombre", principal.displayName());
+                requiereCambio = usuarioService.buscarPorId(principal.id())
+                        .map(u -> Boolean.TRUE.equals(u.getRequiereCambioPassword()))
+                        .orElse(false);
+                session.setAttribute("requiereCambioPassword", requiereCambio);
             }
-            response.sendRedirect(request.getContextPath() + "/web/dashboard");
+            response.sendRedirect(request.getContextPath()
+                    + (requiereCambio ? "/web/cambiar-password" : "/web/dashboard"));
         };
     }
 
