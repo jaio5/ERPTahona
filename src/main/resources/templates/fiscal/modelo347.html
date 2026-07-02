@@ -33,15 +33,20 @@
 
     <div class="table-card"><div class="table-responsive">
         <table class="table table-hover mb-0">
-            <thead><tr><th>NIF</th><th>Tercero</th><th>Tipo</th><th class="text-end">Base</th><th class="text-end">IVA</th><th class="text-end">Total</th></tr></thead>
+            <thead><tr><th>NIF</th><th>Tercero</th><th>Tipo</th><th>Clave</th><th class="text-end">Base</th><th class="text-end">IVA</th><th class="text-end">1T</th><th class="text-end">2T</th><th class="text-end">3T</th><th class="text-end">4T</th><th class="text-end">Total</th></tr></thead>
             <tbody>
-            <tr th:if="${#lists.isEmpty(resultado.operaciones)}"><td colspan="6" class="empty-state"><i class="bi bi-file-earmark-spreadsheet"></i><div>No hay operaciones que superen el umbral</div></td></tr>
+            <tr th:if="${#lists.isEmpty(resultado.operaciones)}"><td colspan="11" class="empty-state"><i class="bi bi-file-earmark-spreadsheet"></i><div>No hay operaciones que superen el umbral</div></td></tr>
             <tr th:each="o : ${resultado.operaciones}">
                 <td class="fw-medium" th:text="${o.nif ?: '—'}"></td>
                 <td th:text="${o.nombre}"></td>
                 <td th:text="${o.tipo}"></td>
+                <td><span class="badge bg-secondary" th:text="${o.claveOperacion}" th:title="${o.claveOperacion == 'A' ? 'Adquisiciones (compras)' : 'Entregas (ventas)'}"></span></td>
                 <td class="text-end" th:text="${#numbers.formatDecimal(o.importeOperaciones, 1, 'POINT', 2, 'COMMA')} + ' €'"></td>
                 <td class="text-end" th:text="${#numbers.formatDecimal(o.importeIVA, 1, 'POINT', 2, 'COMMA')} + ' €'"></td>
+                <td class="text-end text-muted" th:text="${#numbers.formatDecimal(o.trimestre1, 1, 'POINT', 2, 'COMMA')}"></td>
+                <td class="text-end text-muted" th:text="${#numbers.formatDecimal(o.trimestre2, 1, 'POINT', 2, 'COMMA')}"></td>
+                <td class="text-end text-muted" th:text="${#numbers.formatDecimal(o.trimestre3, 1, 'POINT', 2, 'COMMA')}"></td>
+                <td class="text-end text-muted" th:text="${#numbers.formatDecimal(o.trimestre4, 1, 'POINT', 2, 'COMMA')}"></td>
                 <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(o.totalDeclarar, 1, 'POINT', 2, 'COMMA')} + ' €'"></td>
             </tr>
             </tbody>

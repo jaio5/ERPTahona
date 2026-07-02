@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Transcripción interna del esquema oficial de AEAT SuministroInformacion.xsd (VeriFactu, tikeV1.0)
+  para validación estructural local de los registros de facturación generados.
+  La referencia normativa es el XSD publicado por AEAT; ante cualquier divergencia prevalece el oficial.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroInformacion.xsd"
+           xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroInformacion.xsd"
+           elementFormDefault="qualified">
+
+    <xs:element name="RegistroAlta" type="RegistroAltaType"/>
+    <xs:element name="RegistroAnulacion" type="RegistroAnulacionType"/>
+
+    <xs:complexType name="CabeceraType">
+        <xs:sequence>
+            <xs:element name="ObligadoEmision" type="PersonaFisicaJuridicaESType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="PersonaFisicaJuridicaESType">
+        <xs:sequence>
+            <xs:element name="NombreRazon" type="TextMax120Type"/>
+            <xs:element name="NIF" type="NIFType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="RegistroAltaType">
+        <xs:sequence>
+            <xs:element name="IDVersion" type="xs:string"/>
+            <xs:element name="IDFactura" type="IDFacturaType"/>
+            <xs:element name="NombreRazonEmisor" type="TextMax120Type"/>
+            <xs:element name="TipoFactura" type="TipoFacturaType"/>
+            <xs:element name="TipoRectificativa" type="TipoRectificativaType" minOccurs="0"/>
+            <xs:element name="FacturasRectificadas" type="FacturasRectificadasType" minOccurs="0"/>
+            <xs:element name="DescripcionOperacion" type="TextMax500Type"/>
+            <xs:element name="Destinatarios" type="DestinatariosType" minOccurs="0"/>
+            <xs:element name="Desglose" type="DesgloseType"/>
+            <xs:element name="CuotaTotal" type="ImporteSgn12.2Type"/>
+            <xs:element name="ImporteTotal" type="ImporteSgn12.2Type"/>
+            <xs:element name="Encadenamiento" type="EncadenamientoType"/>
+            <xs:element name="SistemaInformatico" type="SistemaInformaticoType"/>
+            <xs:element name="FechaHoraHusoGenRegistro" type="xs:string"/>
+            <xs:element name="TipoHuella" type="xs:string"/>
+            <xs:element name="Huella" type="TextMax64Type"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="RegistroAnulacionType">
+        <xs:sequence>
+            <xs:element name="IDVersion" type="xs:string"/>
+            <xs:element name="IDFacturaAnulada" type="IDFacturaAnuladaType"/>
+            <xs:element name="Encadenamiento" type="EncadenamientoType"/>
+            <xs:element name="SistemaInformatico" type="SistemaInformaticoType"/>
+            <xs:element name="FechaHoraHusoGenRegistro" type="xs:string"/>
+            <xs:element name="TipoHuella" type="xs:string"/>
+            <xs:element name="Huella" type="TextMax64Type"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="IDFacturaType">
+        <xs:sequence>
+            <xs:element name="IDEmisorFactura" type="NIFType"/>
+            <xs:element name="NumSerieFactura" type="TextMax60Type"/>
+            <xs:element name="FechaExpedicionFactura" type="FechaType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="IDFacturaAnuladaType">
+        <xs:sequence>
+            <xs:element name="IDEmisorFacturaAnulada" type="NIFType"/>
+            <xs:element name="NumSerieFacturaAnulada" type="TextMax60Type"/>
+            <xs:element name="FechaExpedicionFacturaAnulada" type="FechaType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="FacturasRectificadasType">
+        <xs:sequence>
+            <xs:element name="IDFacturaRectificada" type="IDFacturaType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="DestinatariosType">
+        <xs:sequence>
+            <xs:element name="IDDestinatario" type="IDDestinatarioType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="IDDestinatarioType">
+        <xs:sequence>
+            <xs:element name="NombreRazon" type="TextMax120Type"/>
+            <xs:element name="NIF" type="NIFType" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="DesgloseType">
+        <xs:sequence>
+            <xs:element name="DetalleDesglose" type="DetalleDesgloseType" maxOccurs="12"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="DetalleDesgloseType">
+        <xs:sequence>
+            <xs:element name="Impuesto" type="xs:string" minOccurs="0"/>
+            <xs:element name="ClaveRegimen" type="xs:string" minOccurs="0"/>
+            <xs:element name="CalificacionOperacion" type="xs:string"/>
+            <xs:element name="TipoImpositivo" type="Tipo3.2Type" minOccurs="0"/>
+            <xs:element name="BaseImponibleOimporteNoSujeto" type="ImporteSgn12.2Type"/>
+            <xs:element name="CuotaRepercutida" type="ImporteSgn12.2Type" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="EncadenamientoType">
+        <xs:choice>
+            <xs:element name="PrimerRegistro" type="PrimerRegistroType"/>
+            <xs:element name="RegistroAnterior" type="RegistroAnteriorType"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="RegistroAnteriorType">
+        <xs:sequence>
+            <xs:element name="IDEmisorFactura" type="NIFType"/>
+            <xs:element name="NumSerieFactura" type="TextMax60Type"/>
+            <xs:element name="FechaExpedicionFactura" type="FechaType"/>
+            <xs:element name="Huella" type="TextMax64Type"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="SistemaInformaticoType">
+        <xs:sequence>
+            <xs:element name="NombreRazon" type="TextMax120Type"/>
+            <xs:element name="NIF" type="NIFType"/>
+            <xs:element name="NombreSistemaInformatico" type="TextMax30Type"/>
+            <xs:element name="IdSistemaInformatico" type="TextMax2Type"/>
+            <xs:element name="Version" type="TextMax50Type"/>
+            <xs:element name="NumeroInstalacion" type="TextMax100Type"/>
+            <xs:element name="TipoUsoPosibleSoloVerifactu" type="SiNoType"/>
+            <xs:element name="TipoUsoPosibleMultiOT" type="SiNoType"/>
+            <xs:element name="IndicadorMultiplesOT" type="SiNoType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipos simples -->
+
+    <xs:simpleType name="NIFType">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="9"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="FechaType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="\d{2}-\d{2}-\d{4}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="TipoFacturaType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="F1"/>
+            <xs:enumeration value="F2"/>
+            <xs:enumeration value="F3"/>
+            <xs:enumeration value="R1"/>
+            <xs:enumeration value="R2"/>
+            <xs:enumeration value="R3"/>
+            <xs:enumeration value="R4"/>
+            <xs:enumeration value="R5"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="TipoRectificativaType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="S"/>
+            <xs:enumeration value="I"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="PrimerRegistroType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="S"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="SiNoType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="S"/>
+            <xs:enumeration value="N"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="ImporteSgn12.2Type">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[-+]?\d{1,12}(\.\d{0,2})?"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="Tipo3.2Type">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="\d{1,3}(\.\d{0,2})?"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="TextMax2Type">
+        <xs:restriction base="xs:string"><xs:maxLength value="2"/></xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="TextMax30Type">
+        <xs:restriction base="xs:string"><xs:maxLength value="30"/></xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="TextMax50Type">
+        <xs:restriction base="xs:string"><xs:maxLength value="50"/></xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="TextMax60Type">
+        <xs:restriction base="xs:string"><xs:maxLength value="60"/></xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="TextMax64Type">
+        <xs:restriction base="xs:string"><xs:maxLength value="64"/></xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="TextMax100Type">
+        <xs:restriction base="xs:string"><xs:maxLength value="100"/></xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="TextMax120Type">
+        <xs:restriction base="xs:string"><xs:maxLength value="120"/></xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="TextMax500Type">
+        <xs:restriction base="xs:string"><xs:maxLength value="500"/></xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

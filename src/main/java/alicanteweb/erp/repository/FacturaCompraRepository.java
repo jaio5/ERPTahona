@@ -37,7 +37,7 @@ public interface FacturaCompraRepository extends JpaRepository<FacturaCompra, Lo
     /**
      * Busca facturas por rango de fechas
      */
-    @Query("SELECT f FROM FacturaCompra f WHERE f.fecha BETWEEN :fechaInicio AND :fechaFin ORDER BY f.fecha DESC")
+    @Query("SELECT f FROM FacturaCompra f LEFT JOIN FETCH f.proveedor WHERE f.fecha BETWEEN :fechaInicio AND :fechaFin ORDER BY f.fecha DESC")
     List<FacturaCompra> findByFechaBetween(@Param("fechaInicio") LocalDate fechaInicio,
                                             @Param("fechaFin") LocalDate fechaFin);
 
@@ -68,5 +68,8 @@ public interface FacturaCompraRepository extends JpaRepository<FacturaCompra, Lo
          + "AND (:estado IS NULL OR f.estado = :estado) "
          + "ORDER BY f.fecha DESC")
     Page<FacturaCompra> findPage(@Param("q") String q, @Param("estado") String estado, Pageable pageable);
+
+    @Query("SELECT f FROM FacturaCompra f LEFT JOIN FETCH f.proveedor WHERE f.id = :id")
+    Optional<FacturaCompra> findDetailById(@Param("id") Long id);
 }
 

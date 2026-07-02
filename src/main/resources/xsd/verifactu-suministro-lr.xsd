@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Transcripción interna del esquema oficial de AEAT SuministroLR.xsd (VeriFactu, tikeV1.0)
+  para validación estructural local. Ante cualquier divergencia prevalece el XSD oficial de AEAT.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroLR.xsd"
+           xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroLR.xsd"
+           xmlns:sum1="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroInformacion.xsd"
+           elementFormDefault="qualified">
+
+    <xs:import namespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroInformacion.xsd"/>
+
+    <xs:element name="RegFactuSistemaFacturacion">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Cabecera" type="sum1:CabeceraType"/>
+                <xs:element name="RegistroFactura" maxOccurs="1000">
+                    <xs:complexType>
+                        <xs:choice>
+                            <xs:element ref="sum1:RegistroAlta"/>
+                            <xs:element ref="sum1:RegistroAnulacion"/>
+                        </xs:choice>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
