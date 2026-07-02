@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: mysql:8.0
@@ -11,30 +9,58 @@ services:
       MYSQL_USER: tahona
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-tahonapass}
     ports:
-      - "3306:3306"
+      # 3307 por defecto para no chocar con un MySQL local en 3306
+      - "${MYSQL_HOST_PORT:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   app:
     build: .
     container_name: erp-app
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/tahona?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: tahona
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-tahonapass}
       SERVER_PORT: 8080
+      # ── Secretos obligatorios: defínelos en .env (copia .env.example) ──
+      ADMIN_DEFAULT_PASSWORD: "${ADMIN_DEFAULT_PASSWORD:?Falta ADMIN_DEFAULT_PASSWORD - copia .env.example a .env y rellena los secretos}"
+      CIFRADO_AES_KEY: "${CIFRADO_AES_KEY:?Falta CIFRADO_AES_KEY - generala con openssl rand -base64 32}"
+      SECURITY_PBKDF2_SECRET: "${SECURITY_PBKDF2_SECRET:?Falta SECURITY_PBKDF2_SECRET - generalo con openssl rand -base64 32}"
+      # ── VeriFactu: vacío = firma/remisión deshabilitadas hasta tener certificado ──
+      VERIFACTU_CERT_PATH: ${VERIFACTU_CERT_PATH:-}
+      VERIFACTU_CERT_PASSWORD: ${VERIFACTU_CERT_PASSWORD:-}
+      VERIFACTU_KEY_ALIAS: ${VERIFACTU_KEY_ALIAS:-mi_certificado}
+      VERIFACTU_AEAT_ENABLED: ${VERIFACTU_AEAT_ENABLED:-false}
+      VERIFACTU_AEAT_ENDPOINT: ${VERIFACTU_AEAT_ENDPOINT:-https://prewww2.aeat.es/wlpl/AVAC-FACT/ws/fe/SiiVerifactu}
+      ERP_LOG_FILE: logs/erp-tahona.log
+    volumes:
+      # Conservación: backups, declaraciones responsables/PDFs y logs sobreviven al contenedor
+      - erp_backups:/app/backups
+      - erp_impresiones:/app/impresiones
+      - erp_logs:/app/logs
+      # Certificado VeriFactu (solo lectura); apunta VERIFACTU_CERT_PATH a certs/<fichero>.p12
+      - ./certs:/app/certs:ro
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/web/login"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
 volumes:
   mysql_data:
+  erp_backups:
+  erp_impresiones:
+  erp_logs:

@@ -2,6 +2,30 @@
 
 Este ERP gestiona facturacion, clientes, proveedores, compras, ventas, caja, contabilidad operativa, auditoria, copias y evidencias VeriFactu para una tahona/panaderia en Espana.
 
+## Arranque con Docker (recomendado: no requiere instalar nada en local)
+
+Solo hace falta Docker Desktop. La aplicacion se sirve en `http://localhost:8080`.
+
+```bash
+# 1. Copiar la plantilla de secretos y rellenarla (una sola vez)
+cp .env.example .env
+#    - ADMIN_DEFAULT_PASSWORD: contraseña inicial de admin (se exige cambiarla al entrar)
+#    - CIFRADO_AES_KEY y SECURITY_PBKDF2_SECRET: generar con  openssl rand -base64 32
+
+# 2. Levantar todo (MySQL + aplicacion; el esquema lo crea Flyway)
+docker compose up -d --build
+
+# 3. Ver estado / logs
+docker compose ps
+docker compose logs -f app
+```
+
+Notas:
+- MySQL del contenedor queda accesible en el host por el puerto 3307 (configurable con `MYSQL_HOST_PORT`) para no chocar con un MySQL local.
+- Backups, impresiones (declaraciones/PDFs) y logs persisten en volumenes (`erp_backups`, `erp_impresiones`, `erp_logs`).
+- Para VeriFactu con certificado real: copiar el `.p12` a `certs/` y definir `VERIFACTU_CERT_PATH=certs/<fichero>.p12` y su password en `.env`.
+- Los backups desde la interfaz funcionan dentro del contenedor (la imagen incluye `mysqldump`).
+
 Documentacion ampliada:
 
 - `docs/index.md`

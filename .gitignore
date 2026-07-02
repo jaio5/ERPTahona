@@ -67,5 +67,6 @@ certs/*
 
 # Local config overrides
 application-local.properties
+.env
 .env.production.local
 .env.*.local
