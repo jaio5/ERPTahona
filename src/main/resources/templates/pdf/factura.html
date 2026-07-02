@@ -27,7 +27,11 @@ table.lineas tbody td { padding: 5px 8px; border-bottom: 1px solid #eee; }
 .totales-box .total-row { font-size: 14px; font-weight: bold; color: #1a3a5c; border-top: 2px solid #1a3a5c; }
 .verifactu { margin-top: 20px; padding: 10px; background-color: #f0f7f0; border: 1px solid #4caf50; font-size: 9px; }
 .verifactu-title { font-weight: bold; color: #2e7d32; font-size: 11px; margin-bottom: 6px; }
-.qr-img { width: 100px; height: 100px; }
+/* QR tributario: 30-40 mm según Orden HAC/1177/2024 (132px ≈ 35 mm) */
+.qr-img { width: 132px; height: 132px; }
+.qr-top { text-align: center; margin: 6px 0 10px 0; }
+.qr-top .leyenda { font-size: 9px; color: #2e7d32; font-weight: bold; margin-top: 2px; }
+.rectificativa-box { margin: 8px 0; padding: 8px; border: 1px solid #e65100; background: #fff3e0; font-size: 10px; }
 .footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 8px; color: #999; text-align: center; }
 .two-col { width: 100%; border-collapse: collapse; }
 .two-col td { vertical-align: top; }
@@ -50,11 +54,33 @@ table.lineas tbody td { padding: 5px 8px; border-bottom: 1px solid #eee; }
       </div>
     </td>
     <td style="text-align:right;">
-      <div class="doc-titulo">FACTURA</div>
+      <div class="doc-titulo"
+           th:text="${#strings.equalsIgnoreCase(factura.tipoFactura, 'RECTIFICATIVA') ? 'FACTURA RECTIFICATIVA' : 'FACTURA'}">FACTURA</div>
       <div class="doc-numero" th:text="${factura.numero}"></div>
     </td>
   </tr>
 </table>
+
+<!-- QR tributario al comienzo de la factura (Orden HAC/1177/2024, art. 21) -->
+<div class="qr-top" th:if="${factura.verifactuQr != null}">
+  <img th:src="'data:image/png;base64,' + ${factura.verifactuQr}" class="qr-img" alt="QR tributario VeriFactu"/>
+  <div class="leyenda" th:if="${factura.verifactuEnviada}">VERI*FACTU — Factura verificable en la sede electrónica de la AEAT</div>
+  <div class="leyenda" th:unless="${factura.verifactuEnviada}">QR tributario del sistema de facturación</div>
+</div>
+
+<!-- Referencia de la rectificativa (RD 1619/2012, art. 15) -->
+<div class="rectificativa-box" th:if="${#strings.equalsIgnoreCase(factura.tipoFactura, 'RECTIFICATIVA')}">
+  <strong>Factura rectificativa</strong>
+  <span th:text="${factura.tipoRectificacion == 'DIFERENCIAS' ? '(por diferencias)' : '(por sustitución)'}"></span>
+  <span th:if="${factura.facturaRectificadaNumero != null}">
+    — Rectifica a la factura <strong th:text="${factura.facturaRectificadaNumero}"></strong>
+    <span th:if="${factura.facturaRectificadaFecha != null}"
+          th:text="'de fecha ' + ${#temporals.format(factura.facturaRectificadaFecha, 'dd/MM/yyyy')}"></span>
+  </span>
+  <div th:if="${factura.motivoRectificacion != null}">
+    <span style="color:#666;">Motivo:</span> <span th:text="${factura.motivoRectificacion}"></span>
+  </div>
+</div>
 
 <!-- Datos cliente + meta -->
 <table class="two-col" style="margin-bottom:12px;">
@@ -148,9 +174,6 @@ table.lineas tbody td { padding: 5px 8px; border-bottom: 1px solid #eee; }
         <p th:unless="${factura.verifactuEnviada}">Factura con huella y datos de trazabilidad generados por el sistema.</p>
         <p th:text="${datosVerificacion}" style="word-break:break-all;font-size:8px;"></p>
         <p th:if="${factura.verifactuCsv != null}"><strong>CSV:</strong> <span th:text="${factura.verifactuCsv}"></span></p>
-      </td>
-      <td th:if="${factura.verifactuQr != null}" style="text-align:right;width:120px;vertical-align:top;">
-        <img th:src="'data:image/png;base64,' + ${factura.verifactuQr}" class="qr-img" alt="QR VeriFactu"/>
       </td>
     </tr>
   </table>

@@ -1,7 +1,10 @@
 package alicanteweb.erp.controller.web;
 
 import alicanteweb.erp.entities.EmpresaConfig;
+import alicanteweb.erp.entities.SifModalidad;
+import alicanteweb.erp.service.DeclaracionResponsableService;
 import alicanteweb.erp.service.EmpresaConfigService;
+import alicanteweb.erp.service.FiscalComplianceService;
 import alicanteweb.erp.service.Modelo347Service;
 import alicanteweb.erp.service.VerifactuEvidenceService;
 import org.slf4j.Logger;
@@ -26,13 +29,19 @@ public class FiscalWebController {
     private final Modelo347Service modelo347Service;
     private final EmpresaConfigService empresaConfigService;
     private final VerifactuEvidenceService evidenceService;
+    private final FiscalComplianceService fiscalComplianceService;
+    private final DeclaracionResponsableService declaracionResponsableService;
 
     public FiscalWebController(Modelo347Service modelo347Service,
                                EmpresaConfigService empresaConfigService,
-                               VerifactuEvidenceService evidenceService) {
+                               VerifactuEvidenceService evidenceService,
+                               FiscalComplianceService fiscalComplianceService,
+                               DeclaracionResponsableService declaracionResponsableService) {
         this.modelo347Service = modelo347Service;
         this.empresaConfigService = empresaConfigService;
         this.evidenceService = evidenceService;
+        this.fiscalComplianceService = fiscalComplianceService;
+        this.declaracionResponsableService = declaracionResponsableService;
     }
 
     @GetMapping("/web/modelo347")
@@ -130,5 +139,111 @@ public class FiscalWebController {
             ra.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/web/verifactu/" + id;
+    }
+
+    // =========================== CUMPLIMIENTO FISCAL ===========================
+
+    @GetMapping("/web/fiscal/cumplimiento")
+    public String cumplimiento(Model model) {
+        EmpresaConfig config = empresaConfigService.getConfiguracionActiva().orElse(null);
+        model.addAttribute("moduloActivo", "cumplimiento");
+        model.addAttribute("titulo", "Cumplimiento fiscal");
+        model.addAttribute("report", fiscalComplianceService.diagnosticar());
+        model.addAttribute("config", config);
+        model.addAttribute("modalidades", SifModalidad.values());
+        model.addAttribute("vigente", config != null && empresaConfigService.isFuncionamientoVerifactuVigente(config));
+        model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
+                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.active("Cumplimiento fiscal")));
+        return WebController.layout(model, "fiscal/cumplimiento");
+    }
+
+    @PostMapping("/web/fiscal/cumplimiento/sif")
+    @PreAuthorize("@permisos.puede('fiscal', 'editar')")
+    public String guardarDatosSif(@RequestParam(required = false) String verifactuNifEmisor,
+                                  @RequestParam(required = false) String verifactuNombreSistema,
+                                  @RequestParam(required = false) String verifactuVersionSistema,
+                                  @RequestParam(required = false) String verifactuIdDispositivo,
+                                  @RequestParam(required = false) String sifModalidad,
+                                  @RequestParam(required = false) String productorSoftware,
+                                  @RequestParam(required = false) String nifProductorSoftware,
+                                  RedirectAttributes ra) {
+        try {
+            EmpresaConfig config = empresaConfigService.getConfiguracionActivaOrThrow();
+            config.setVerifactuNifEmisor(limpiar(verifactuNifEmisor));
+            config.setVerifactuNombreSistema(limpiar(verifactuNombreSistema));
+            config.setVerifactuVersionSistema(limpiar(verifactuVersionSistema));
+            config.setVerifactuIdDispositivo(limpiar(verifactuIdDispositivo));
+            config.setProductorSoftware(limpiar(productorSoftware));
+            config.setNifProductorSoftware(limpiar(nifProductorSoftware));
+            if (sifModalidad != null && !sifModalidad.isBlank()) {
+                config.setSifModalidad(SifModalidad.valueOf(sifModalidad));
+            }
+            empresaConfigService.save(config);
+            ra.addFlashAttribute("exito", "Datos del sistema de facturación guardados");
+        } catch (RuntimeException e) {
+            log.error("Error guardando datos SIF: {}", e.getMessage(), e);
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/web/fiscal/cumplimiento";
+    }
+
+    @PostMapping("/web/fiscal/cumplimiento/declaracion")
+    @PreAuthorize("@permisos.puede('fiscal', 'editar')")
+    public String emitirDeclaracionResponsable(RedirectAttributes ra) {
+        try {
+            var pdf = declaracionResponsableService.generarDeclaracionResponsable();
+            ra.addFlashAttribute("exito", "Declaración responsable emitida: " + pdf.getName());
+        } catch (RuntimeException e) {
+            log.error("Error generando declaración responsable: {}", e.getMessage(), e);
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/web/fiscal/cumplimiento";
+    }
+
+    @GetMapping("/web/fiscal/cumplimiento/declaracion/descargar")
+    @PreAuthorize("@permisos.puede('fiscal', 'exportar')")
+    public ResponseEntity<byte[]> descargarDeclaracionResponsable() {
+        EmpresaConfig config = empresaConfigService.getConfiguracionActivaOrThrow();
+        String ruta = config.getDeclaracionResponsableRuta();
+        if (ruta == null || ruta.isBlank()) {
+            throw new IllegalStateException("No hay declaración responsable emitida");
+        }
+        java.io.File pdf = new java.io.File(ruta);
+        if (!pdf.exists()) {
+            throw new IllegalStateException("El fichero de la declaración responsable no se encuentra en " + ruta);
+        }
+        return WebController.servirPdf(pdf);
+    }
+
+    @PostMapping("/web/fiscal/cumplimiento/iniciar")
+    @PreAuthorize("@permisos.puede('verifactu', 'enviar')")
+    public String iniciarVerifactu(RedirectAttributes ra) {
+        try {
+            EmpresaConfig config = empresaConfigService.getConfiguracionActivaOrThrow();
+            empresaConfigService.iniciarFuncionamientoVerifactu(config.getVerifactuNifEmisor());
+            ra.addFlashAttribute("exito", "Funcionamiento VERI*FACTU iniciado");
+        } catch (RuntimeException e) {
+            log.error("Error iniciando VERI*FACTU: {}", e.getMessage(), e);
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/web/fiscal/cumplimiento";
+    }
+
+    @PostMapping("/web/fiscal/cumplimiento/renuncia")
+    @PreAuthorize("@permisos.puede('verifactu', 'enviar')")
+    public String programarRenuncia(RedirectAttributes ra) {
+        try {
+            empresaConfigService.programarRenunciaVerifactuFinDeAnio();
+            ra.addFlashAttribute("exito", "Renuncia programada para el 31 de diciembre");
+        } catch (RuntimeException e) {
+            log.error("Error programando renuncia VERI*FACTU: {}", e.getMessage(), e);
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/web/fiscal/cumplimiento";
+    }
+
+    private String limpiar(String valor) {
+        return valor != null && !valor.isBlank() ? valor.trim() : null;
     }
 }

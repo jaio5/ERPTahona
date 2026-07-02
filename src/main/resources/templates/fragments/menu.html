@@ -269,7 +269,7 @@
 
     <!-- Grupo: Fiscal -->
     <div th:if="${@permisos.puedeVerAlguno('fiscal', 'verifactu')}"
-         th:with="enFiscal=${moduloActivo == 'modelo347' || moduloActivo == 'verifactu'}">
+         th:with="enFiscal=${moduloActivo == 'modelo347' || moduloActivo == 'verifactu' || moduloActivo == 'cumplimiento'}">
         <button class="sidebar-group-toggle"
                 th:classappend="${!enFiscal ? 'collapsed' : ''}"
                 data-bs-toggle="collapse" data-bs-target="#nav-fiscal"
@@ -287,6 +287,10 @@
             <a class="sidebar-link" th:href="@{/web/verifactu}"
                th:classappend="${moduloActivo == 'verifactu' ? 'active' : ''}">
                 <i class="bi bi-shield-check"></i><span>VERI*FACTU</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/fiscal/cumplimiento}"
+               th:classappend="${moduloActivo == 'cumplimiento' ? 'active' : ''}">
+                <i class="bi bi-clipboard-check"></i><span>Cumplimiento</span>
             </a>
         </div>
     </div>

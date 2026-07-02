@@ -889,8 +889,11 @@ public class VerifactuService implements InitializingBean {
 
     /** Bloque obligatorio con los datos del sistema informático de facturación (art. 9 RRSIF). */
     private void appendSistemaInformatico(StringBuilder xml, EmpresaConfig empresa) {
-        String nombreProductor = !sistemaNombreProductor.isBlank() ? sistemaNombreProductor : empresa.getNombreEmpresa();
-        String nifProductor = !sistemaNifProductor.isBlank() ? sistemaNifProductor : valorSeguro(empresa.getVerifactuNifEmisor()).trim();
+        // Prioridad: datos de productor configurados en empresa (pantalla Cumplimiento),
+        // después properties verifactu.sistema.*, y por último los datos fiscales de la empresa
+        String nombreProductor = primerValor(empresa.getProductorSoftware(), sistemaNombreProductor, empresa.getNombreEmpresa());
+        String nifProductor = primerValor(empresa.getNifProductorSoftware(), sistemaNifProductor,
+                valorSeguro(empresa.getVerifactuNifEmisor()).trim());
         String nombreSistema = empresa.getVerifactuNombreSistema() != null && !empresa.getVerifactuNombreSistema().isBlank()
                 ? empresa.getVerifactuNombreSistema() : "ERP Tahona";
         String version = empresa.getVerifactuVersionSistema() != null && !empresa.getVerifactuVersionSistema().isBlank()
@@ -1036,6 +1039,14 @@ public class VerifactuService implements InitializingBean {
 
     private String valorSeguro(String valor) {
         return valor != null ? valor : "";
+    }
+
+    /** Devuelve el primer valor no vacío de la lista. */
+    private String primerValor(String... valores) {
+        for (String v : valores) {
+            if (v != null && !v.isBlank()) return v;
+        }
+        return "";
     }
 
     private String normalizarImporte(BigDecimal importe) {
