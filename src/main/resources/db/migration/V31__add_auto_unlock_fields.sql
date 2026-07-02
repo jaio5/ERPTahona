@@ -1,2 +1,3 @@
-ALTER TABLE users ADD COLUMN IF NOT EXISTS fecha_bloqueo TIMESTAMP NULL;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS contador_bloqueos INT DEFAULT 0;
+-- Desbloqueo automático de usuarios: contador de bloqueos acumulados.
+-- (users.fecha_bloqueo ya existe desde V1)
+ALTER TABLE users ADD COLUMN contador_bloqueos INT DEFAULT 0;

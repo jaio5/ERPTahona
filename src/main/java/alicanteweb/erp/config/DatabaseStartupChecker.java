@@ -38,10 +38,20 @@ public class DatabaseStartupChecker implements EnvironmentPostProcessor {
         requireMinLength(environment, "security.pbkdf2.secret", 32);
         requireMinLength(environment, "admin.default.password", 12);
 
-        requireProdValue(environment, "verifactu.keystore.path", "VERIFACTU_CERT_PATH");
-        requireProdValue(environment, "verifactu.keystore.password", "VERIFACTU_CERT_PASSWORD");
-        requireProdValue(environment, "verifactu.key.alias", "VERIFACTU_KEY_ALIAS");
-        requireProdValue(environment, "verifactu.key.password", "VERIFACTU_KEY_PASSWORD");
+        // VeriFactu: sin VERIFACTU_CERT_PATH la firma queda deshabilitada (arranque permitido);
+        // con certificado o remisión AEAT activa se exige la configuración completa
+        String keystorePath = environment.getProperty("verifactu.keystore.path", "");
+        boolean aeatEnabled = Boolean.parseBoolean(environment.getProperty("verifactu.aeat.enabled", "false"));
+        if (keystorePath != null && !keystorePath.isBlank()) {
+            requireProdValue(environment, "verifactu.keystore.path", "VERIFACTU_CERT_PATH");
+            requireProdValue(environment, "verifactu.keystore.password", "VERIFACTU_CERT_PASSWORD");
+            requireProdValue(environment, "verifactu.key.alias", "VERIFACTU_KEY_ALIAS");
+            requireProdValue(environment, "verifactu.key.password", "VERIFACTU_KEY_PASSWORD");
+        } else if (aeatEnabled) {
+            fail("[SECURITY] verifactu.aeat.enabled=true requires a certificate: set VERIFACTU_CERT_PATH.");
+        } else {
+            log.warn("VERIFACTU_CERT_PATH vacio: firma y remision VeriFactu deshabilitadas hasta configurar el certificado.");
+        }
 
         String ddlAuto = environment.getProperty("spring.jpa.hibernate.ddl-auto", "");
         if (!"validate".equalsIgnoreCase(ddlAuto)) {
@@ -57,7 +67,6 @@ public class DatabaseStartupChecker implements EnvironmentPostProcessor {
             fail("Production profile cannot run with ERP_FALLBACK_H2_ENABLED=true.");
         }
 
-        boolean aeatEnabled = Boolean.parseBoolean(environment.getProperty("verifactu.aeat.enabled", "false"));
         if (aeatEnabled) {
             requireProdValue(environment, "verifactu.aeat.endpoint", "VERIFACTU_AEAT_ENDPOINT");
         }

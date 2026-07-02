@@ -69,7 +69,7 @@ class FlywayMySqlMigrationTest {
 
         assertTrue(result.success);
         flyway.validate();
-        assertEquals("22", versionActual());
+        assertEquals("36", versionActual());
     }
 
     @Test
