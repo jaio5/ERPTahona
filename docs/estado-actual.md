@@ -1,7 +1,7 @@
 # Estado actual de ERP Tahona
 
-**Última validación:** 20 de junio de 2026
-**Rama:** `main`
+**Última validación:** 2 de julio de 2026
+**Rama:** `refactor-general` / `desarrollo` (sincronizadas)
 
 Este documento es la referencia rápida del estado técnico actual. Las auditorías fechadas se conservan como histórico y pueden contener hallazgos ya corregidos.
 
@@ -14,12 +14,31 @@ Este documento es la referencia rápida del estado técnico actual. Las auditor�
 | Métrica | Resultado |
 |---------|-----------|
 | Build | `BUILD SUCCESS` |
-| Fuentes Java | ~285 |
-| Pruebas | 183+ |
+| Fuentes Java | ~265 |
+| Pruebas | 204 |
 | Fallos | 0 |
 | Errores | 0 |
 | Gate JaCoCo líneas | 50 % mínimo |
 | Gate JaCoCo ramas | 20 % mínimo |
+
+## Validación funcional (2 de julio de 2026)
+
+- 55 rutas web verificadas sin errores; 0 errores de consola JavaScript.
+- CRUD y transiciones de estado probados en los 22 módulos (crear, editar,
+  confirmar/entregar/facturar/aprobar/anular/rectificar según el módulo).
+- Cumplimiento fiscal operable de extremo a extremo desde
+  `Fiscal → Cumplimiento`: datos del SIF, declaración responsable con huella,
+  inicio de VERI*FACTU y diagnóstico "listo para emisión".
+- Emisión de factura verificada con registro de alta oficial de AEAT
+  (XML tikeV1.0 validado por XSD, huella Orden HAC/1177/2024, firma digital,
+  cadena de evidencias íntegra) y QR tributario en el PDF.
+- Inalterabilidad activa: las facturas emitidas no se editan ni se borran
+  (exigen rectificativa) y la emisión requiere cumplimiento fiscal completo.
+- Backups desde la interfaz y Modelo 347 con desglose trimestral y compras.
+
+Pendiente externo antes de remisión real a AEAT: validar contra el entorno de
+pruebas oficial con el certificado real de la empresa y presentar la
+declaración responsable (documento que ya genera la aplicación).
 
 ## Capacidades disponibles
 
