@@ -163,9 +163,9 @@
                     </form>
                     <!-- Cancelar (PLANIFICADA o EN_CURSO) -->
                     <form th:if="${orden.estado == 'PLANIFICADA' or orden.estado == 'EN_CURSO'}"
-                          th:action="@{/web/ordenes-produccion/{id}/cancelar(id=${orden.id})}" method="post"
-                          onsubmit="return confirm('¿Cancelar esta orden de producción?')">
-                        <button class="btn btn-outline-danger w-100">
+                          th:action="@{/web/ordenes-produccion/{id}/cancelar(id=${orden.id})}" method="post">
+                        <button class="btn btn-outline-danger w-100"
+                                data-confirm="¿Cancelar esta orden de producción?">
                             <i class="bi bi-x-circle me-2"></i>Cancelar orden
                         </button>
                     </form>

@@ -27,6 +27,12 @@ function initDeclarativeActions() {
             window.location.assign(element.dataset.navigate);
         });
     });
+    // Selects de filtro que envían su formulario al cambiar (sustituye a onchange inline, bloqueado por CSP)
+    document.querySelectorAll("select[data-autosubmit]").forEach(element => {
+        element.addEventListener("change", () => {
+            element.closest("form")?.submit();
+        });
+    });
 }
 
 /*

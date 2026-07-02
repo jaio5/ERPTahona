@@ -398,7 +398,11 @@ public class BackupService {
     private Path createDefaultsFile(Path dir, String user, String pass) throws IOException {
         if (dir == null) dir = Paths.get(System.getProperty("java.io.tmpdir"));
         Path tempFile = Files.createTempFile(dir, "mycnf", ".cnf");
-        String content = "[client]\n" + "user=" + user + "\n" + "password=" + pass + "\n";
+        // Incluir host/puerto de la URL JDBC: sin ellos mysqldump intenta el socket
+        // local y falla cuando MySQL corre en otro host (p.ej. contenedor "db")
+        String content = "[client]\n" + "user=" + user + "\n" + "password=" + pass + "\n"
+                + "host=" + resolverHost() + "\n" + "port=" + resolverPuerto() + "\n"
+                + "protocol=TCP\n";
         Files.writeString(tempFile, content, java.nio.charset.StandardCharsets.UTF_8);
 
         // Intentar establecer permisos 600 en sistemas POSIX
@@ -411,6 +415,38 @@ public class BackupService {
         }
 
         return tempFile;
+    }
+
+    /** Host de la URL JDBC (jdbc:mysql://HOST:PUERTO/db). */
+    private String resolverHost() {
+        String hostPuerto = extraerHostPuerto();
+        if (hostPuerto == null) {
+            return "localhost";
+        }
+        int puntos = hostPuerto.lastIndexOf(':');
+        return puntos > 0 ? hostPuerto.substring(0, puntos) : hostPuerto;
+    }
+
+    /** Puerto de la URL JDBC, 3306 por defecto. */
+    private String resolverPuerto() {
+        String hostPuerto = extraerHostPuerto();
+        if (hostPuerto != null) {
+            int puntos = hostPuerto.lastIndexOf(':');
+            if (puntos > 0 && puntos < hostPuerto.length() - 1) {
+                return hostPuerto.substring(puntos + 1);
+            }
+        }
+        return "3306";
+    }
+
+    private String extraerHostPuerto() {
+        if (dbUrl == null || !dbUrl.contains("//")) {
+            return null;
+        }
+        String resto = dbUrl.substring(dbUrl.indexOf("//") + 2);
+        int slash = resto.indexOf('/');
+        String hostPuerto = slash > 0 ? resto.substring(0, slash) : resto;
+        return hostPuerto.isBlank() ? null : hostPuerto;
     }
 
     private String resolverNombreBaseDatos() {

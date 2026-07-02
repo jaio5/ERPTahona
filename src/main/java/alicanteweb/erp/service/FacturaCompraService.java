@@ -24,6 +24,7 @@ public class FacturaCompraService {
     private static final Logger log = LoggerFactory.getLogger(FacturaCompraService.class);
 
     private final FacturaCompraRepository facturaCompraRepository;
+    private final ContabilidadService contabilidadService;
 
     /**
      * Obtiene todas las facturas de compra
@@ -103,6 +104,7 @@ public class FacturaCompraService {
      */
     public FacturaCompra guardar(FacturaCompra facturaCompra) {
         log.info("Guardando factura de compra: {}", facturaCompra.getId());
+        boolean nueva = facturaCompra.getId() == null;
 
         // Establecer fecha si no existe
         if (facturaCompra.getFecha() == null) {
@@ -114,7 +116,15 @@ public class FacturaCompraService {
             facturaCompra.setEstado("PENDIENTE");
         }
 
-        return facturaCompraRepository.save(facturaCompra);
+        FacturaCompra guardada = facturaCompraRepository.save(facturaCompra);
+
+        // Contabilizar la primera vez (600/472 a 400, con recargo y retención)
+        if (nueva && !Boolean.TRUE.equals(guardada.getContabilizada())) {
+            contabilidadService.generarAsientoCompra(guardada, null);
+            guardada.marcarComoContabilizada();
+            guardada = facturaCompraRepository.save(guardada);
+        }
+        return guardada;
     }
 
     /**

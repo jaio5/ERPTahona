@@ -20,6 +20,9 @@
         </div>
     </div>
 
+    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
     <div class="row g-4">
         <!-- Columna principal -->
         <div class="col-lg-8">
@@ -188,9 +191,9 @@
                     </a>
                     <!-- Anular (todos excepto ANULADA y EMITIDA ya emitida) -->
                     <form th:if="${factura.estado != 'ANULADA' and factura.estado != 'EMITIDA' and factura.estado != 'RECTIFICADA'}"
-                          th:action="@{/web/facturas/{id}/anular(id=${factura.id})}" method="post"
-                          onsubmit="return confirm('¿Seguro que quieres anular esta factura?')">
-                        <button class="btn btn-outline-danger w-100" data-no-double-click>
+                          th:action="@{/web/facturas/{id}/anular(id=${factura.id})}" method="post">
+                        <button class="btn btn-outline-danger w-100" data-no-double-click
+                                data-confirm="¿Seguro que quieres anular esta factura?">
                             <i class="bi bi-x-circle me-2"></i>Anular factura
                         </button>
                     </form>

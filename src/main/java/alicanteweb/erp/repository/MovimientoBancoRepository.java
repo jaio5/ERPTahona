@@ -15,8 +15,10 @@ import java.util.List;
 public interface MovimientoBancoRepository extends JpaRepository<MovimientoBanco, Long> {
     
     /**
-     * Encontrar movimientos por estado de conciliación
+     * Encontrar movimientos por estado de conciliación (con banco cargado:
+     * la vista de conciliación muestra banco.nombre y open-in-view está desactivado)
      */
+    @Query("SELECT m FROM MovimientoBanco m LEFT JOIN FETCH m.banco WHERE m.conciliado = :conciliado ORDER BY m.fecha ASC, m.id ASC")
     List<MovimientoBanco> findByConciliado(boolean conciliado);
     
     /**

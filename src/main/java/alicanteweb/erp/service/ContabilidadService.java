@@ -48,14 +48,14 @@ public class ContabilidadService {
         log.info("📝 Generando asiento contable para factura: {}", factura.getNumero());
 
         try {
-            if (factura.getCliente() == null) {
-                throw new IllegalArgumentException("La factura debe tener un cliente asociado");
-            }
+            // Las facturas simplificadas (venta mostrador) no llevan cliente identificado
+            String nombreCliente = factura.getCliente() != null
+                    ? factura.getCliente().getNombre() : "Venta mostrador";
 
             AsientoContable asiento = new AsientoContable();
             asiento.setNumero(generarNumeroAsiento());
             asiento.setFecha(factura.getFecha() != null ? factura.getFecha() : LocalDate.now());
-            asiento.setConcepto("Factura de venta " + factura.getNumero() + " - " + factura.getCliente().getNombre());
+            asiento.setConcepto("Factura de venta " + factura.getNumero() + " - " + nombreCliente);
             asiento.setTipo("OPERACION");
             asiento.setUsuario(usuario);
             asiento.setFactura(factura);
@@ -76,7 +76,7 @@ public class ContabilidadService {
             lineaCliente.setCuenta(cuentaClientes);
             lineaCliente.setDebe(factura.getTotal() != null ? factura.getTotal() : BigDecimal.ZERO);
             lineaCliente.setHaber(BigDecimal.ZERO);
-            lineaCliente.setConcepto("Cliente: " + factura.getCliente().getNombre());
+            lineaCliente.setConcepto("Cliente: " + nombreCliente);
             lineaCliente.setOrden(1);
 
             // Línea 2: HABER - Ventas (Base imponible)
@@ -88,12 +88,14 @@ public class ContabilidadService {
             lineaVentas.setConcepto("Venta según factura " + factura.getNumero());
             lineaVentas.setOrden(2);
 
-            // Línea 3: HABER - IVA Repercutido
+            // Línea 3: HABER - IVA repercutido (incluye recargo de equivalencia si lo hay)
+            BigDecimal ivaMasRecargo = (factura.getTotalIva() != null ? factura.getTotalIva() : BigDecimal.ZERO)
+                    .add(factura.getTotalRecargo() != null ? factura.getTotalRecargo() : BigDecimal.ZERO);
             LineaAsiento lineaIVA = new LineaAsiento();
             lineaIVA.setAsiento(asiento);
             lineaIVA.setCuenta(cuentaIVA);
             lineaIVA.setDebe(BigDecimal.ZERO);
-            lineaIVA.setHaber(factura.getTotalIva() != null ? factura.getTotalIva() : BigDecimal.ZERO);
+            lineaIVA.setHaber(ivaMasRecargo);
             lineaIVA.setConcepto("IVA repercutido");
             lineaIVA.setOrden(3);
 
@@ -101,6 +103,19 @@ public class ContabilidadService {
             asiento.getLineas().add(lineaCliente);
             asiento.getLineas().add(lineaVentas);
             asiento.getLineas().add(lineaIVA);
+
+            // Línea 4: DEBE - Retención IRPF soportada (si la factura la lleva)
+            BigDecimal retencion = factura.getRetencionIrpf() != null ? factura.getRetencionIrpf() : BigDecimal.ZERO;
+            if (retencion.compareTo(BigDecimal.ZERO) > 0) {
+                LineaAsiento lineaRetencion = new LineaAsiento();
+                lineaRetencion.setAsiento(asiento);
+                lineaRetencion.setCuenta(obtenerCuenta("473"));
+                lineaRetencion.setDebe(retencion);
+                lineaRetencion.setHaber(BigDecimal.ZERO);
+                lineaRetencion.setConcepto("Retención IRPF factura " + factura.getNumero());
+                lineaRetencion.setOrden(4);
+                asiento.getLineas().add(lineaRetencion);
+            }
 
             // Calcular totales
             asiento.calcularTotales();
@@ -360,6 +375,92 @@ public class ContabilidadService {
             log.error("❌ Error generando asiento de compra", e);
             throw new ErpException("Error al generar asiento de compra", e);
         }
+    }
+
+    /**
+     * Asiento de compra completo desde la factura de compra: contempla recargo
+     * de equivalencia soportado (a 472) y retención IRPF (a 475).
+     */
+    public AsientoContable generarAsientoCompra(alicanteweb.erp.entities.FacturaCompra facturaCompra, Usuario usuario) {
+        Objects.requireNonNull(facturaCompra, "Factura de compra no puede ser null");
+        BigDecimal base = nvlImporte(facturaCompra.getBaseImponible());
+        BigDecimal iva = nvlImporte(facturaCompra.getImporteIva());
+        BigDecimal recargo = nvlImporte(facturaCompra.getImporteRecargo());
+        BigDecimal retencion = nvlImporte(facturaCompra.getImporteRetencion());
+        BigDecimal total = nvlImporte(facturaCompra.getTotal());
+
+        log.info("🛒 Generando asiento de compra {}: Base={}, IVA={}, Recargo={}, Retención={}",
+                facturaCompra.getNumero(), base, iva, recargo, retencion);
+        try {
+            AsientoContable asiento = new AsientoContable();
+            asiento.setNumero(generarNumeroAsiento());
+            asiento.setFecha(facturaCompra.getFecha() != null ? facturaCompra.getFecha() : LocalDate.now());
+            asiento.setConcepto("Factura de compra " + facturaCompra.getNumero() + " - "
+                    + (facturaCompra.getProveedor() != null ? facturaCompra.getProveedor().getNombre() : "Proveedor"));
+            asiento.setTipo("OPERACION");
+            asiento.setUsuario(usuario);
+            asiento.setFacturaCompraId(facturaCompra.getId());
+            asiento.setLineas(new LinkedHashSet<>());
+
+            int orden = 1;
+            LineaAsiento lineaCompras = new LineaAsiento();
+            lineaCompras.setAsiento(asiento);
+            lineaCompras.setCuenta(obtenerCuenta("600"));
+            lineaCompras.setDebe(base);
+            lineaCompras.setHaber(BigDecimal.ZERO);
+            lineaCompras.setConcepto("Compra según factura " + facturaCompra.getNumero());
+            lineaCompras.setOrden(orden++);
+            asiento.getLineas().add(lineaCompras);
+
+            BigDecimal ivaMasRecargo = iva.add(recargo);
+            if (ivaMasRecargo.compareTo(BigDecimal.ZERO) > 0) {
+                LineaAsiento lineaIVA = new LineaAsiento();
+                lineaIVA.setAsiento(asiento);
+                lineaIVA.setCuenta(obtenerCuenta("472"));
+                lineaIVA.setDebe(ivaMasRecargo);
+                lineaIVA.setHaber(BigDecimal.ZERO);
+                lineaIVA.setConcepto("IVA soportado" + (recargo.compareTo(BigDecimal.ZERO) > 0 ? " + recargo" : ""));
+                lineaIVA.setOrden(orden++);
+                asiento.getLineas().add(lineaIVA);
+            }
+
+            LineaAsiento lineaProveedor = new LineaAsiento();
+            lineaProveedor.setAsiento(asiento);
+            lineaProveedor.setCuenta(obtenerCuenta("400"));
+            lineaProveedor.setDebe(BigDecimal.ZERO);
+            lineaProveedor.setHaber(total);
+            lineaProveedor.setConcepto("Proveedor: "
+                    + (facturaCompra.getProveedor() != null ? facturaCompra.getProveedor().getNombre() : "(sin proveedor)"));
+            lineaProveedor.setOrden(orden++);
+            asiento.getLineas().add(lineaProveedor);
+
+            if (retencion.compareTo(BigDecimal.ZERO) > 0) {
+                LineaAsiento lineaRetencion = new LineaAsiento();
+                lineaRetencion.setAsiento(asiento);
+                lineaRetencion.setCuenta(obtenerCuenta("475"));
+                lineaRetencion.setDebe(BigDecimal.ZERO);
+                lineaRetencion.setHaber(retencion);
+                lineaRetencion.setConcepto("Retención IRPF factura " + facturaCompra.getNumero());
+                lineaRetencion.setOrden(orden);
+                asiento.getLineas().add(lineaRetencion);
+            }
+
+            asiento.calcularTotales();
+            if (!asiento.estaCuadrado()) {
+                throw new IllegalStateException("El asiento de compra no cuadra (Debe=" + asiento.getDebe()
+                        + ", Haber=" + asiento.getHaber() + ")");
+            }
+            AsientoContable guardado = asientoRepository.save(asiento);
+            log.info("✅ Asiento de compra generado: {}", guardado.getNumero());
+            return guardado;
+        } catch (Exception e) {
+            log.error("❌ Error generando asiento de compra", e);
+            throw new ErpException("Error al generar asiento de compra", e);
+        }
+    }
+
+    private static BigDecimal nvlImporte(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 
     // ==========================================

@@ -115,9 +115,9 @@
                                 </button>
                             </form>
                             <form th:if="${f.estado != null and f.estado != 'ANULADA' and f.estado != 'RECTIFICADA'}"
-                                  th:action="@{/web/facturas/{id}/anular(id=${f.id})}" method="post" class="d-inline"
-                                  onsubmit="return confirm('¿Anular esta factura?')">
+                                  th:action="@{/web/facturas/{id}/anular(id=${f.id})}" method="post" class="d-inline">
                                 <button class="btn btn-ghost btn-sm text-danger" data-no-double-click
+                                        data-confirm="¿Anular esta factura?"
                                         th:attr="aria-label='Anular factura ' + ${f.numero}" title="Anular">
                                     <i class="bi bi-x-circle"></i>
                                 </button>

@@ -33,15 +33,18 @@ public class TpvService {
     private final ArticuloService articuloService;
     private final CarteraService carteraService;
     private final MovimientoCajaRepository movimientoCajaRepository;
+    private final StockService stockService;
 
     public TpvService(FacturaService facturaService,
                       ArticuloService articuloService,
                       CarteraService carteraService,
-                      MovimientoCajaRepository movimientoCajaRepository) {
+                      MovimientoCajaRepository movimientoCajaRepository,
+                      StockService stockService) {
         this.facturaService = facturaService;
         this.articuloService = articuloService;
         this.carteraService = carteraService;
         this.movimientoCajaRepository = movimientoCajaRepository;
+        this.stockService = stockService;
     }
 
     @Transactional(readOnly = true)
@@ -95,6 +98,24 @@ public class TpvService {
 
         carteraService.registrarCobro(emitida.getId(), LocalDate.now(), emitida.getTotal(),
                 forma, "TPV", "Venta mostrador", usuario);
+
+        // Descontar stock de los artículos vendidos. La venta de mostrador no se
+        // bloquea si el stock registrado es insuficiente (habitual en panadería):
+        // en ese caso simplemente no se genera el movimiento y queda avisado en log.
+        for (FacturaLinea linea : emitida.getFacturaLineas()) {
+            if (linea.getArticulo() == null || linea.getCantidad() == null) {
+                continue;
+            }
+            BigDecimal stockActual = linea.getArticulo().getStock() != null
+                    ? linea.getArticulo().getStock() : BigDecimal.ZERO;
+            if (stockActual.compareTo(linea.getCantidad()) >= 0) {
+                stockService.registrarSalida(linea.getArticulo().getId(), null, linea.getCantidad(),
+                        "Venta TPV " + emitida.getNumero(), "FACTURA", emitida.getId());
+            } else {
+                log.warn("Venta TPV {} sin descuento de stock para {} (stock {} < vendido {})",
+                        emitida.getNumero(), linea.getArticulo().getCodigo(), stockActual, linea.getCantidad());
+            }
+        }
 
         if ("EFECTIVO".equals(forma)) {
             MovimientoCaja movimiento = new MovimientoCaja();

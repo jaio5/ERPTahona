@@ -12,7 +12,7 @@
 
     <div class="filter-bar">
         <form method="get" class="d-flex gap-2 flex-wrap align-items-center">
-            <select name="estado" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+            <select name="estado" class="form-select form-select-sm" style="width:auto;" data-autosubmit aria-label="Filtrar por estado">
                 <option value="" th:selected="${estado == null or estado == ''}">Todos los estados</option>
                 <option value="PENDIENTE" th:selected="${estado == 'PENDIENTE'}">Pendiente</option>
                 <option value="CONFIRMADA" th:selected="${estado == 'CONFIRMADA'}">Confirmada</option>

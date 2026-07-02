@@ -182,7 +182,7 @@ class CatalogoServicesCoverageTest {
     @Test
     void facturaCompraCubreCicloCompleto() {
         FacturaCompraRepository repo = mock(FacturaCompraRepository.class);
-        FacturaCompraService service = new FacturaCompraService(repo);
+        FacturaCompraService service = new FacturaCompraService(repo, mock(ContabilidadService.class));
         FacturaCompra factura = new FacturaCompra();
         factura.setId(1L);
         when(repo.findById(1L)).thenReturn(Optional.of(factura));

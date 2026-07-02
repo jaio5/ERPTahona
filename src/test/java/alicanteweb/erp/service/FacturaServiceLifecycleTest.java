@@ -41,6 +41,9 @@ class FacturaServiceLifecycleTest {
     FiscalComplianceService fiscalComplianceService;
 
     @Mock
+    ContabilidadService contabilidadService;
+
+    @Mock
     EntityManager entityManager;
 
     @InjectMocks

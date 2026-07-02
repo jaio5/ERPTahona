@@ -31,17 +31,20 @@ public class FacturaService {
     private final VerifactuService verifactuService;
     private final FacturacionEventoService facturacionEventoService;
     private final FiscalComplianceService fiscalComplianceService;
+    private final ContabilidadService contabilidadService;
 
     public FacturaService(FacturaRepository repository,
                           FacturaSerieSequenceRepository sequenceRepository,
                           VerifactuService verifactuService,
                           FacturacionEventoService facturacionEventoService,
-                          FiscalComplianceService fiscalComplianceService) {
+                          FiscalComplianceService fiscalComplianceService,
+                          ContabilidadService contabilidadService) {
         this.repository = repository;
         this.sequenceRepository = sequenceRepository;
         this.verifactuService = verifactuService;
         this.facturacionEventoService = facturacionEventoService;
         this.fiscalComplianceService = fiscalComplianceService;
+        this.contabilidadService = contabilidadService;
     }
 
     public List<Factura> findAll() {
@@ -167,6 +170,9 @@ public class FacturaService {
         fiscalComplianceService.exigirListoParaEmision();
         verifactuService.enviarFacturaVerifactu(factura);
         Factura guardada = repository.save(factura);
+
+        // Asiento de venta (430 a 700/477); en misma transacción para coherencia contable
+        contabilidadService.generarAsientoFactura(guardada, null);
 
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("facturaId", guardada.getId());

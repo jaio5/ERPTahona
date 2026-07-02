@@ -32,6 +32,8 @@ class TpvServiceTest {
     CarteraService carteraService;
     @Mock
     MovimientoCajaRepository movimientoCajaRepository;
+    @Mock
+    StockService stockService;
 
     @InjectMocks
     TpvService service;
