@@ -19,7 +19,7 @@
         <tbody>
             <tr th:if="${#lists.isEmpty(caja)}"><td colspan="4" class="empty-state"><i class="bi bi-wallet2"></i><div>No hay movimientos de caja</div></td></tr>
             <tr th:each="m : ${caja}">
-                <td th:text="${m.fecha}"></td>
+                <td th:text="${m.fecha != null ? #temporals.format(m.fecha, 'dd/MM/yyyy') : '—'}"></td>
                 <td th:text="${m.concepto}"></td>
                 <td><span class="badge-status" th:attr="data-status=${m.tipo?.toLowerCase()}" th:text="${m.tipo}"></span></td>
                 <td class="text-end fw-medium"
@@ -35,7 +35,7 @@
         <tbody>
             <tr th:if="${#lists.isEmpty(banco)}"><td colspan="4" class="empty-state"><i class="bi bi-bank"></i><div>No hay movimientos de banco</div></td></tr>
             <tr th:each="m : ${banco}">
-                <td th:text="${m.fecha}"></td>
+                <td th:text="${m.fecha != null ? #temporals.format(m.fecha, 'dd/MM/yyyy') : '—'}"></td>
                 <td th:text="${m.concepto}"></td>
                 <td th:text="${m.tipo}"></td>
                 <td class="text-end fw-medium" th:text="${m.importe != null ? #numbers.formatCurrency(m.importe) : '-'}"></td>

@@ -110,11 +110,11 @@
                                        th:if="${l.articulo?.codigo != null}"
                                        th:text="${l.articulo.codigo}"></small>
                             </td>
-                            <td class="text-center" th:text="${l.cantidad}">0</td>
+                            <td class="text-center" th:text="${l.cantidad != null ? #numbers.formatDecimal(l.cantidad, 1, 'POINT', 2, 'COMMA') : '0'}">0</td>
                             <td class="text-end"
                                 th:text="${l.precioUnitario != null ? #numbers.formatCurrency(l.precioUnitario) : #numbers.formatCurrency(l.precio)}">0,00 €</td>
                             <td class="text-end text-muted small"
-                                th:text="${l.iva != null ? l.iva + '%' : '—'}">—</td>
+                                th:text="${l.iva != null ? #numbers.formatDecimal(l.iva, 1, 0) + '%' : '—'}">—</td>
                             <td class="text-end fw-semibold"
                                 th:text="${l.total != null ? #numbers.formatCurrency(l.total) : '—'}">—</td>
                         </tr>

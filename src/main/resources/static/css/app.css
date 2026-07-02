@@ -459,10 +459,23 @@ body {
 [data-status="EN_CURSO"],
 [data-status="PLANIFICADA"],
 [data-status="REVISION"],
+[data-status="CONFIRMADO"],
+[data-status="CONFIRMADA"],
+[data-status="ENVIADO"],
+[data-status="SERVIDO_PARCIAL"],
 [data-status="en_proceso"],
 [data-status="en_curso"],
 [data-status="planificada"],
-[data-status="revision"] { background: var(--color-info-bg); color: var(--color-info-text); }
+[data-status="revision"],
+[data-status="confirmado"],
+[data-status="confirmada"],
+[data-status="enviado"],
+[data-status="servido_parcial"] { background: var(--color-info-bg); color: var(--color-info-text); }
+
+[data-status="SERVIDO"],
+[data-status="RECIBIDO"],
+[data-status="servido"],
+[data-status="recibido"] { background: var(--color-success-bg); color: var(--color-success-text); }
 
 /* Legacy badge classes (kept for compatibility) */
 .bg-draft { background: #e2e8f0; color: #475569; }
@@ -612,7 +625,8 @@ body {
         display: block;
     }
     .main-content { margin-left: 0; padding: 16px; width: 100%; }
-    .topbar-global { padding: 0 16px; }
+    /* El margen negativo debe igualar el padding reducido del main-content en móvil */
+    .topbar-global { padding: 0 16px; margin: -16px -16px 16px; }
     .sidebar-toggle-btn { display: flex; }
     .page-header { flex-direction: column; }
     .filter-bar { flex-direction: column; align-items: stretch; }

@@ -17,8 +17,9 @@
       </a>
     </li>
 
-    <!-- Números de página — máximo 7 -->
-    <th:block th:with="start=${T(Math).max(0, page.number - 3)}, end=${T(Math).min(page.totalPages - 1, page.number + 3)}">
+    <!-- Números de página — máximo 7. Sin T(Math): Thymeleaf 3.1 bloquea T() por seguridad -->
+    <th:block th:with="start=${page.number - 3 > 0 ? page.number - 3 : 0},
+                       end=${page.number + 3 < page.totalPages - 1 ? page.number + 3 : page.totalPages - 1}">
       <li th:each="i : ${#numbers.sequence(start, end)}"
           class="page-item" th:classappend="${i == page.number} ? 'active'">
         <a class="page-link"
