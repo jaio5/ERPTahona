@@ -1,0 +1,61 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Horneadas</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/horneadas/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Registrar horneada
+            </a>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th class="text-end">T. Inicial (°C)</th>
+                        <th class="text-end">T. Final (°C)</th>
+                        <th class="text-end">Cantidad</th>
+                        <th>Resultado</th>
+                        <th class="text-end">Coste unit.</th>
+                        <th style="width:80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(horneadas)}">
+                        <td colspan="8" class="empty-state">
+                            <i class="bi bi-fire"></i>
+                            <div>No hay horneadas registradas</div>
+                        </td>
+                    </tr>
+                    <tr th:each="h : ${horneadas}">
+                        <td class="text-muted small"
+                            th:text="${h.fecha != null ? #temporals.format(h.fecha, 'dd/MM/yyyy') : '—'}"></td>
+                        <td th:text="${h.tipoHorneada ?: '—'}"></td>
+                        <td class="text-end" th:text="${h.temperaturaInicial != null ? h.temperaturaInicial + ' °C' : '—'}"></td>
+                        <td class="text-end" th:text="${h.temperaturaFinal != null ? h.temperaturaFinal + ' °C' : '—'}"></td>
+                        <td class="text-end" th:text="${h.cantidadProducida != null ? h.cantidadProducida : '—'}"></td>
+                        <td>
+                            <span class="badge-status" th:attr="data-status=${h.resultado?.toLowerCase()}"
+                                  th:text="${h.resultado ?: '—'}"></span>
+                        </td>
+                        <td class="text-end text-muted small"
+                            th:text="${h.costeUnitario() != null ? #numbers.formatDecimal(h.costeUnitario(),1,2) + ' €' : '—'}"></td>
+                        <td class="text-end">
+                            <a th:href="@{/web/horneadas/{id}(id=${h.id})}"
+                               class="btn btn-ghost btn-sm" title="Ver">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/horneadas')}"></div>
+</div>

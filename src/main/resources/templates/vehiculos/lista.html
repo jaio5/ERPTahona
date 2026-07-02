@@ -1,0 +1,53 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Vehículos</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/vehiculos/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo vehículo
+            </a>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Matrícula</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Tipo</th>
+                        <th class="text-end">Capacidad (kg)</th>
+                        <th style="width:80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(vehiculos)}">
+                        <td colspan="6" class="empty-state">
+                            <i class="bi bi-truck"></i>
+                            <div>No hay vehículos registrados</div>
+                        </td>
+                    </tr>
+                    <tr th:each="v : ${vehiculos}">
+                        <td class="fw-medium" th:text="${v.matricula}"></td>
+                        <td th:text="${v.marca ?: '—'}"></td>
+                        <td th:text="${v.modelo ?: '—'}"></td>
+                        <td class="text-muted" th:text="${v.tipo ?: '—'}"></td>
+                        <td class="text-end" th:text="${v.capacidadKg != null ? v.capacidadKg : '—'}"></td>
+                        <td class="text-end">
+                            <a th:href="@{/web/vehiculos/{id}(id=${v.id})}" class="btn btn-ghost btn-sm" title="Ver"><i class="bi bi-eye"></i></a>
+                            <a th:href="@{/web/vehiculos/{id}/editar(id=${v.id})}"
+                               class="btn btn-ghost btn-sm" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/vehiculos')}"></div>
+</div>

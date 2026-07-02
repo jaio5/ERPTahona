@@ -1,0 +1,112 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${receta.nombre}">Receta</h4>
+            <p>
+                <span class="text-muted small" th:text="${receta.codigo}"></span>
+            </p>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/recetas/{id}/editar(id=${receta.id})}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </a>
+            <a th:href="@{/web/recetas}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="form-card mb-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="doc-header-icon">
+                        <i class="bi bi-journal-code"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5" th:text="${receta.nombre}">Receta</div>
+                        <div class="text-muted small" th:text="${receta.codigo}"></div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Código</span>
+                        <div class="doc-field-value" th:text="${receta.codigo}">—</div>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Preparación</span>
+                        <div class="doc-field-value"
+                             th:text="${receta.tiempoPreparacion != null ? receta.tiempoPreparacion + ' min' : '—'}">—</div>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Horneado</span>
+                        <div class="doc-field-value"
+                             th:text="${receta.tiempoHorneado != null ? receta.tiempoHorneado + ' min' : '—'}">—</div>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Temperatura</span>
+                        <div class="doc-field-value"
+                             th:text="${receta.temperaturaHorneado != null ? receta.temperaturaHorneado + ' °C' : '—'}">—</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Rendimiento</span>
+                        <div class="doc-field-value"
+                             th:text="${receta.rendimientoCantidad != null ? receta.rendimientoCantidad + ' ' + (receta.unidadRendimiento ?: '') : '—'}">—</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="doc-field-label">Alérgenos</span>
+                        <div class="doc-field-value" th:text="${receta.alergenos ?: '—'}">—</div>
+                    </div>
+                    <div class="col-12" th:if="${receta.descripcion}">
+                        <span class="doc-field-label">Descripción</span>
+                        <div class="text-muted mt-1" th:text="${receta.descripcion}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="d-flex align-items-center justify-content-between px-4 py-3 border-separator">
+                    <span class="fw-semibold">Ingredientes</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Artículo</th>
+                                <th class="text-end">Cantidad</th>
+                                <th>Unidad</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(ingredientes)}">
+                                <td colspan="4" class="empty-state">
+                                    <i class="bi bi-journal-code"></i>
+                                    <p>No hay ingredientes definidos</p>
+                                </td>
+                            </tr>
+                            <tr th:each="i : ${ingredientes}">
+                                <td th:text="${i.articulo?.nombre ?: '—'}">—</td>
+                                <td class="text-end" th:text="${i.cantidad ?: '—'}">—</td>
+                                <td th:text="${i.unidad ?: '—'}">—</td>
+                                <td th:text="${i.notas ?: '—'}">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="form-card">
+                <div class="doc-field-label mb-3">Acciones</div>
+                <div class="d-grid gap-2">
+                    <a th:href="@{/web/recetas/{id}/editar(id=${receta.id})}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-2"></i>Editar receta
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

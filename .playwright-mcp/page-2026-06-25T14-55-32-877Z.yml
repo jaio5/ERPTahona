@@ -1,0 +1,166 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [expanded] [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - generic [ref=e22]:
+        - link " Facturas" [ref=e23] [cursor=pointer]:
+          - /url: /web/facturas
+          - generic [ref=e24]: 
+          - generic [ref=e25]: Facturas
+        - link " Albaranes" [ref=e26] [cursor=pointer]:
+          - /url: /web/albaranes
+          - generic [ref=e27]: 
+          - generic [ref=e28]: Albaranes
+        - link " Pedidos venta" [ref=e29] [cursor=pointer]:
+          - /url: /web/pedidos-venta
+          - generic [ref=e30]: 
+          - generic [ref=e31]: Pedidos venta
+        - link " Presupuestos" [ref=e32] [cursor=pointer]:
+          - /url: /web/presupuestos
+          - generic [ref=e33]: 
+          - generic [ref=e34]: Presupuestos
+        - link " Clientes" [ref=e35] [cursor=pointer]:
+          - /url: /web/clientes
+          - generic [ref=e36]: 
+          - generic [ref=e37]: Clientes
+    - generic [ref=e38]:
+      - button " Compras " [ref=e39] [cursor=pointer]:
+        - generic [ref=e40]: 
+        - generic [ref=e41]: Compras
+        - generic [ref=e42]: 
+      - text:    
+    - generic [ref=e43]:
+      - button " Almacén " [ref=e44] [cursor=pointer]:
+        - generic [ref=e45]: 
+        - generic [ref=e46]: Almacén
+        - generic [ref=e47]: 
+      - text:    
+    - generic [ref=e48]:
+      - button " Producción " [ref=e49] [cursor=pointer]:
+        - generic [ref=e50]: 
+        - generic [ref=e51]: Producción
+        - generic [ref=e52]: 
+      - text:    
+    - generic [ref=e53]:
+      - button " Reparto " [ref=e54] [cursor=pointer]:
+        - generic [ref=e55]: 
+        - generic [ref=e56]: Reparto
+        - generic [ref=e57]: 
+      - text:    
+    - generic [ref=e58]:
+      - button " Finanzas " [ref=e59] [cursor=pointer]:
+        - generic [ref=e60]: 
+        - generic [ref=e61]: Finanzas
+        - generic [ref=e62]: 
+      - text:     
+    - generic [ref=e63]:
+      - button " Administración " [ref=e64] [cursor=pointer]:
+        - generic [ref=e65]: 
+        - generic [ref=e66]: Administración
+        - generic [ref=e67]: 
+      - text:      
+    - generic [ref=e68]:
+      - button " Fiscal " [ref=e69] [cursor=pointer]:
+        - generic [ref=e70]: 
+        - generic [ref=e71]: Fiscal
+        - generic [ref=e72]: 
+      - text:  
+    - link " Informes" [ref=e73] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e74]: 
+      - generic [ref=e75]: Informes
+    - generic [ref=e77]:
+      - generic [ref=e78]: A
+      - generic [ref=e79]:
+        - generic [ref=e80]: Administrador
+        - generic [ref=e81]: Panadería Tahona
+  - main [ref=e82]:
+    - generic [ref=e83]:
+      - text: 
+      - navigation "breadcrumb" [ref=e84]:
+        - list [ref=e85]:
+          - listitem [ref=e86]:
+            - link "Inicio" [ref=e87] [cursor=pointer]:
+              - /url: /web/dashboard
+          - listitem [ref=e88]:
+            - text: /
+            - link "Clientes" [ref=e89] [cursor=pointer]:
+              - /url: /web/clientes
+          - listitem [ref=e90]: / Nuevo cliente
+      - generic [ref=e91]:
+        - link "" [ref=e92] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e93]: 
+        - button "" [ref=e95] [cursor=pointer]:
+          - generic [ref=e96]: 
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - heading "Nuevo cliente" [level=4] [ref=e101]
+        - link " Volver" [ref=e103] [cursor=pointer]:
+          - /url: /web/clientes
+          - generic [ref=e104]: 
+          - text: Volver
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - generic [ref=e108]: 
+          - text: Datos generales
+        - generic [ref=e109]:
+          - generic [ref=e110]:
+            - generic [ref=e111]: Código *
+            - textbox "Código *" [ref=e112]
+          - generic [ref=e113]:
+            - generic [ref=e114]: Razón social *
+            - textbox "Razón social *" [ref=e115]
+          - generic [ref=e116]:
+            - generic [ref=e117]: CIF / NIF
+            - textbox "CIF / NIF" [ref=e118]:
+              - /placeholder: B12345678
+          - generic [ref=e119]:
+            - generic [ref=e120]: Teléfono
+            - textbox "Teléfono" [ref=e121]
+          - generic [ref=e122]:
+            - generic [ref=e123]: Correo electrónico
+            - textbox "Correo electrónico" [ref=e124]
+        - generic [ref=e125]:
+          - generic [ref=e126]:
+            - generic [ref=e127]: 
+            - text: Dirección
+          - generic [ref=e128]:
+            - generic [ref=e129]:
+              - generic [ref=e130]: Dirección
+              - textbox "Dirección" [ref=e131]:
+                - /placeholder: Calle, número, piso...
+            - generic [ref=e132]:
+              - generic [ref=e133]: Población
+              - textbox "Población" [ref=e134]
+            - generic [ref=e135]:
+              - generic [ref=e136]: Código postal
+              - textbox "Código postal" [ref=e137]:
+                - /placeholder: "03001"
+        - generic [ref=e138]:
+          - button " Guardar cliente" [ref=e139] [cursor=pointer]:
+            - generic [ref=e140]: 
+            - text: Guardar cliente
+          - link "Cancelar" [ref=e141] [cursor=pointer]:
+            - /url: /web/clientes

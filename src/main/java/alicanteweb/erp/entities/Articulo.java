@@ -27,6 +27,10 @@ public class Articulo {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     @Size(max = 50)
     @NotNull
     @Column(name = "codigo", nullable = false, length = 50)
@@ -85,6 +89,10 @@ public class Articulo {
     @Column(name = "punto_pedido", precision = 10, scale = 2)
     private BigDecimal puntoPedido;
 
+    @Size(max = 500)
+    @Column(name = "alergenos", length = 500)
+    private String alergenos;
+
     @OneToMany(mappedBy = "articulo")
     private Set<AlbaranVentaLinea> albaranVentaLineas = new LinkedHashSet<>();
 
@@ -97,8 +105,7 @@ public class Articulo {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Articulo)) return false;
-        Articulo that = (Articulo) o;
+        if (!(o instanceof Articulo that)) return false;
         return Objects.equals(id, that.id);
     }
 

@@ -1,9 +1,10 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Factura;
-import alicanteweb.erp.repository.ClienteRepository;
+import alicanteweb.erp.entities.FacturaCompra;
+import alicanteweb.erp.repository.FacturaCompraRepository;
+import alicanteweb.erp.util.FinancialMath;
 import alicanteweb.erp.repository.FacturaRepository;
-import alicanteweb.erp.repository.ProveedorRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +21,13 @@ import java.util.Map;
 
 /**
  * Servicio para generar el Modelo 347
- * Declaración anual de operaciones con terceras personas
- * Ley 58/2003 General Tributaria
+ * Declaración anual de operaciones con terceras personas (> 3.005,06 €)
+ * Ley 58/2003 General Tributaria y RD 1065/2007.
+ *
+ * Incluye:
+ *  - Ventas a clientes (clave B) a partir de facturas EMITIDAS (excluye borradores, en revisión y anuladas).
+ *  - Compras a proveedores (clave A) a partir de facturas de compra no anuladas.
+ *  - Desglose trimestral de operaciones, obligatorio desde el ejercicio 2011 (RD 1615/2011).
  */
 @Service
 @RequiredArgsConstructor
@@ -32,9 +38,11 @@ public class Modelo347Service {
     // Umbral mínimo para declarar: 3.005,06€
     private static final BigDecimal UMBRAL_MODELO_347 = new BigDecimal("3005.06");
 
+    /** Estado de las facturas de venta que se declaran (efectivamente expedidas). */
+    private static final String ESTADO_FACTURA_DECLARABLE = "EMITIDA";
+
     private final FacturaRepository facturaRepository;
-    private final ClienteRepository clienteRepository;
-    private final ProveedorRepository proveedorRepository;
+    private final FacturaCompraRepository facturaCompraRepository;
 
     /**
      * Genera el Modelo 347 para un ejercicio fiscal
@@ -45,65 +53,54 @@ public class Modelo347Service {
         LocalDate inicioEjercicio = LocalDate.of(ejercicio, 1, 1);
         LocalDate finEjercicio = LocalDate.of(ejercicio, 12, 31);
 
-        // Obtener todas las facturas del ejercicio
-        List<Factura> facturasEjercicio = facturaRepository.findByFechaBetween(inicioEjercicio, finEjercicio);
+        Map<String, Acumulador> acumuladores = new HashMap<>();
 
-        log.info("📄 Procesando {} facturas del ejercicio {}", facturasEjercicio.size(), ejercicio);
+        // ---- Ventas (clave B): solo facturas emitidas ----
+        List<Factura> facturasVenta = facturaRepository.findByFechaBetweenAndEstado(
+                inicioEjercicio, finEjercicio, ESTADO_FACTURA_DECLARABLE);
+        log.info("📄 Procesando {} facturas de venta emitidas del ejercicio {}", facturasVenta.size(), ejercicio);
 
-        // Agrupar por cliente y calcular totales
-        Map<Long, OperacionTercero> operacionesClientes = new HashMap<>();
-
-        for (Factura factura : facturasEjercicio) {
-            if (factura.getCliente() == null) continue;
-
-            Long clienteId = factura.getCliente().getId();
-            OperacionTercero operacion = operacionesClientes.getOrDefault(clienteId,
-                new OperacionTercero(
-                    factura.getCliente().getCif(),
-                    factura.getCliente().getNombre(),
-                    "CLIENTE",
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO
-                ));
-
-            // Sumar totales
-            if (factura.getBaseImponible() != null) {
-                operacion = new OperacionTercero(
-                    operacion.nif(),
-                    operacion.nombre(),
-                    operacion.tipo(),
-                    operacion.importeOperaciones().add(factura.getBaseImponible()),
-                    operacion.importeIVA().add(factura.getTotalIva() != null ? factura.getTotalIva() : BigDecimal.ZERO),
-                    operacion.importeRetencion(),
-                    operacion.totalDeclarar().add(factura.getTotal())
-                );
-            }
-
-            operacionesClientes.put(clienteId, operacion);
+        for (Factura factura : facturasVenta) {
+            if (factura.getCliente() == null || factura.getTotal() == null) continue;
+            Acumulador acc = acumuladores.computeIfAbsent("B|" + factura.getCliente().getId(),
+                    k -> new Acumulador(factura.getCliente().getCif(), factura.getCliente().getNombre(), "CLIENTE", "B"));
+            acc.sumar(factura.getBaseImponible(), factura.getTotalIva(), factura.getTotal(), factura.getFecha());
         }
 
-        // Filtrar operaciones que superan el umbral
+        // ---- Compras (clave A): facturas de compra no anuladas ----
+        List<FacturaCompra> facturasCompra = facturaCompraRepository.findByFechaBetween(inicioEjercicio, finEjercicio);
+        log.info("📄 Procesando {} facturas de compra del ejercicio {}", facturasCompra.size(), ejercicio);
+
+        for (FacturaCompra fc : facturasCompra) {
+            if (fc.getProveedor() == null || fc.getTotal() == null) continue;
+            if ("ANULADA".equalsIgnoreCase(fc.getEstado())) continue;
+            Acumulador acc = acumuladores.computeIfAbsent("A|" + fc.getProveedor().getId(),
+                    k -> new Acumulador(fc.getProveedor().getCif(), fc.getProveedor().getNombre(), "PROVEEDOR", "A"));
+            acc.sumar(fc.getBaseImponible(), fc.getImporteIva(), fc.getTotal(), fc.getFecha());
+        }
+
+        // ---- Filtrar por umbral ----
         List<OperacionTercero> operacionesDeclarar = new ArrayList<>();
         BigDecimal totalDeclarado = BigDecimal.ZERO;
-        int totalDeclarantes = 0;
 
-        for (OperacionTercero operacion : operacionesClientes.values()) {
-            if (operacion.totalDeclarar().compareTo(UMBRAL_MODELO_347) >= 0) {
-                operacionesDeclarar.add(operacion);
-                totalDeclarado = totalDeclarado.add(operacion.totalDeclarar());
-                totalDeclarantes++;
+        for (Acumulador acc : acumuladores.values()) {
+            if (acc.totalDeclarar.compareTo(UMBRAL_MODELO_347) >= 0) {
+                operacionesDeclarar.add(acc.toOperacion());
+                totalDeclarado = totalDeclarado.add(acc.totalDeclarar);
             }
         }
+        operacionesDeclarar.sort((a, b) -> {
+            int porClave = a.claveOperacion().compareTo(b.claveOperacion());
+            return porClave != 0 ? porClave : a.nombre().compareToIgnoreCase(b.nombre());
+        });
 
-        log.info("✅ Modelo 347 generado: {} declarantes, total: {}€",
-            totalDeclarantes, totalDeclarado);
+        log.info("✅ Modelo 347 generado: {} declarados, total: {}€",
+            operacionesDeclarar.size(), totalDeclarado);
 
         return new Modelo347Result(
             ejercicio,
             operacionesDeclarar,
-            totalDeclarantes,
+            operacionesDeclarar.size(),
             totalDeclarado,
             LocalDate.now()
         );
@@ -206,19 +203,19 @@ public class Modelo347Service {
         // Posición 59: Tipo de hoja (sin valor)
         registro.append(" ");
 
-        // Posición 60: Clave de operación
-        registro.append("B");  // B = Adquisiciones
+        // Posición 60: Clave de operación (A = adquisiciones/compras, B = entregas/ventas)
+        registro.append(operacion.claveOperacion());
 
         // Posición 61-75: Importe anual de las operaciones
         registro.append(formatearImporte(operacion.importeOperaciones()));
 
-        // Posición 76-161: Desglose trimestral (4 trimestres x 15 posiciones + otros datos)
-        // Simplificado: se pone todo en el total anual
-        for (int i = 0; i < 100; i++) {
-            registro.append(" ");
-        }
+        // Posición 76-135: Desglose trimestral del importe de las operaciones (4 x 15)
+        registro.append(formatearImporte(operacion.trimestre1()));
+        registro.append(formatearImporte(operacion.trimestre2()));
+        registro.append(formatearImporte(operacion.trimestre3()));
+        registro.append(formatearImporte(operacion.trimestre4()));
 
-        // Posición 162-500: Blancos
+        // Posición 136-500: Blancos
         while (registro.length() < 500) {
             registro.append(" ");
         }
@@ -243,15 +240,21 @@ public class Modelo347Service {
         }
 
         if (modelo.operaciones() == null || modelo.operaciones().isEmpty()) {
-            errores.add("No hay operaciones a declarar");
+            log.info("Modelo 347 sin operaciones a declarar para el ejercicio {}", modelo.ejercicio());
+            return errores;
         }
 
         for (OperacionTercero operacion : modelo.operaciones()) {
-            if (operacion.nif() == null || operacion.nif().trim().isEmpty()) {
+            if (operacion.nif() == null || operacion.nif().isBlank()) {
                 errores.add("NIF vacío para: " + operacion.nombre());
             }
             if (operacion.totalDeclarar().compareTo(UMBRAL_MODELO_347) < 0) {
                 errores.add("Operación por debajo del umbral: " + operacion.nombre());
+            }
+            BigDecimal sumaTrimestres = operacion.trimestre1().add(operacion.trimestre2())
+                    .add(operacion.trimestre3()).add(operacion.trimestre4());
+            if (sumaTrimestres.compareTo(operacion.totalDeclarar()) != 0) {
+                errores.add("El desglose trimestral no cuadra con el total anual para: " + operacion.nombre());
             }
         }
 
@@ -281,7 +284,7 @@ public class Modelo347Service {
             registro.setEjercicio(ejercicio);
             registro.setNifDeclarado(operacion.nif());
             registro.setNombreDeclarado(operacion.nombre());
-            registro.setTipoOperacion("B"); // B = Entregas de bienes y servicios
+            registro.setTipoOperacion(operacion.claveOperacion());
             registro.setEsCliente("CLIENTE".equals(operacion.tipo()));
             registro.setEsProveedor("PROVEEDOR".equals(operacion.tipo()));
             registro.setImporteTotal(operacion.totalDeclarar());
@@ -300,7 +303,7 @@ public class Modelo347Service {
         if (importe == null) importe = BigDecimal.ZERO;
 
         // Formato: 13 posiciones + 2 decimales sin coma
-        long importeCentimos = importe.multiply(new BigDecimal("100")).longValue();
+        long importeCentimos = importe.multiply(FinancialMath.CIEN).longValue();
         String importeStr = String.format("%015d", Math.abs(importeCentimos));
 
         // Signo: + o -
@@ -312,6 +315,43 @@ public class Modelo347Service {
     private String truncar(String texto, int longitud) {
         if (texto == null) return "";
         return texto.length() > longitud ? texto.substring(0, longitud) : texto;
+    }
+
+    /**
+     * Acumulador mutable por tercero: totales anuales y desglose trimestral.
+     */
+    private static final class Acumulador {
+        private final String nif;
+        private final String nombre;
+        private final String tipo;
+        private final String clave;
+        private BigDecimal importeOperaciones = BigDecimal.ZERO;
+        private BigDecimal importeIVA = BigDecimal.ZERO;
+        private BigDecimal totalDeclarar = BigDecimal.ZERO;
+        private final BigDecimal[] trimestres = {BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO};
+
+        private Acumulador(String nif, String nombre, String tipo, String clave) {
+            this.nif = nif;
+            this.nombre = nombre;
+            this.tipo = tipo;
+            this.clave = clave;
+        }
+
+        private void sumar(BigDecimal base, BigDecimal iva, BigDecimal total, LocalDate fecha) {
+            importeOperaciones = importeOperaciones.add(base != null ? base : BigDecimal.ZERO);
+            importeIVA = importeIVA.add(iva != null ? iva : BigDecimal.ZERO);
+            totalDeclarar = totalDeclarar.add(total);
+            if (fecha != null) {
+                int trimestre = (fecha.getMonthValue() - 1) / 3;
+                trimestres[trimestre] = trimestres[trimestre].add(total);
+            }
+        }
+
+        private OperacionTercero toOperacion() {
+            return new OperacionTercero(nif, nombre, tipo, clave,
+                    importeOperaciones, importeIVA, BigDecimal.ZERO, totalDeclarar,
+                    trimestres[0], trimestres[1], trimestres[2], trimestres[3]);
+        }
     }
 
     // ==========================================
@@ -330,16 +370,21 @@ public class Modelo347Service {
     ) {}
 
     /**
-     * Operación con un tercero
+     * Operación con un tercero, con desglose trimestral (importe total, IVA incluido)
      */
     public record OperacionTercero(
         String nif,
         String nombre,
         String tipo,  // CLIENTE, PROVEEDOR
+        String claveOperacion, // A = adquisiciones (compras), B = entregas (ventas)
         BigDecimal importeOperaciones,
         BigDecimal importeIVA,
         BigDecimal importeRetencion,
-        BigDecimal totalDeclarar
+        BigDecimal totalDeclarar,
+        BigDecimal trimestre1,
+        BigDecimal trimestre2,
+        BigDecimal trimestre3,
+        BigDecimal trimestre4
     ) {}
 
     /**
@@ -353,4 +398,3 @@ public class Modelo347Service {
         int ejercicio
     ) {}
 }
-

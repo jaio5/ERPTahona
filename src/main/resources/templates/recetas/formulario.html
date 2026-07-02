@@ -1,0 +1,65 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Receta</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/recetas}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card" style="max-width:700px;">
+        <form th:action="@{/web/recetas}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${receta?.id}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="codigo">Código <span class="text-danger">*</span></label>
+                    <input type="text" id="codigo" name="codigo" class="form-control"
+                           th:value="${receta?.codigo}" required>
+                    <div class="invalid-feedback">El código es obligatorio.</div>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="nombre">Nombre <span class="text-danger">*</span></label>
+                    <input type="text" id="nombre" name="nombre" class="form-control"
+                           th:value="${receta?.nombre}" required>
+                    <div class="invalid-feedback">El nombre es obligatorio.</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="tiempoPrep">T. Preparación (min)</label>
+                    <input type="number" id="tiempoPrep" name="tiempoPrep" class="form-control"
+                           th:value="${receta?.tiempoPreparacion}" min="0">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="tiempoHorneado">T. Horneado (min)</label>
+                    <input type="number" id="tiempoHorneado" name="tiempoHorneado" class="form-control"
+                           th:value="${receta?.tiempoHorneado}" min="0">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="temperatura">Temperatura (°C)</label>
+                    <input type="number" id="temperatura" name="temperatura" class="form-control"
+                           th:value="${receta?.temperaturaHorneado}" min="0">
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="alergenos">Alérgenos</label>
+                    <input type="text" id="alergenos" name="alergenos" class="form-control"
+                           th:value="${receta?.alergenos}"
+                           placeholder="Gluten, Leche, Huevos...">
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="descripcion">Descripción / Instrucciones</label>
+                    <textarea id="descripcion" name="descripcion" class="form-control" rows="4"
+                              th:text="${receta?.descripcion}"
+                              placeholder="Pasos de elaboración, ingredientes, notas..."></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1"></i>Guardar receta
+                </button>
+                <a th:href="@{/web/recetas}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

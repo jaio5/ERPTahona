@@ -1,0 +1,77 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Registrar horneada</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/horneadas}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card" style="max-width:700px;">
+        <form th:action="@{/web/horneadas}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${horneada?.id}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="tipo">Tipo</label>
+                    <input type="text" id="tipo" name="tipo" class="form-control"
+                           th:value="${horneada?.tipoHorneada}" placeholder="Pan, bollería...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="tempIni">Temp. inicial (°C)</label>
+                    <input type="text" inputmode="decimal" id="tempIni" name="tempIni" class="form-control"
+                           th:value="${horneada?.temperaturaInicial}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="tempFin">Temp. final (°C)</label>
+                    <input type="text" inputmode="decimal" id="tempFin" name="tempFin" class="form-control"
+                           th:value="${horneada?.temperaturaFinal}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="cantidad">Cantidad producida</label>
+                    <input type="text" inputmode="decimal" id="cantidad" name="cantidad" class="form-control"
+                           th:value="${horneada?.cantidadProducida}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="resultado">Resultado</label>
+                    <select id="resultado" name="resultado" class="form-select">
+                        <option value="">Sin registrar</option>
+                        <option value="OK"  th:selected="${horneada?.resultado == 'OK'}">OK</option>
+                        <option value="NOK" th:selected="${horneada?.resultado == 'NOK'}">NOK</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="observaciones">Observaciones</label>
+                    <textarea id="observaciones" name="observaciones" class="form-control" rows="3"
+                              th:text="${horneada?.observaciones}"
+                              placeholder="Incidencias, ajustes realizados..."></textarea>
+                </div>
+                <!-- Costes reales de producción -->
+                <div class="col-12"><hr class="my-1"><p class="fw-semibold mb-2 mt-1">Costes reales</p></div>
+                <div class="col-md-4">
+                    <label class="form-label" for="costeManoObra">Mano de obra (€)</label>
+                    <input type="number" id="costeManoObra" name="costeManoObra" class="form-control"
+                           step="0.01" min="0" th:value="${horneada?.costeManoObra}" placeholder="0.00">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="costeEnergia">Energía (€)</label>
+                    <input type="number" id="costeEnergia" name="costeEnergia" class="form-control"
+                           step="0.01" min="0" th:value="${horneada?.costeEnergia}" placeholder="0.00">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="costeMateriales">Materiales (€)</label>
+                    <input type="number" id="costeMateriales" name="costeMateriales" class="form-control"
+                           step="0.01" min="0" th:value="${horneada?.costeMateriales}" placeholder="0.00">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1"></i>Guardar horneada
+                </button>
+                <a th:href="@{/web/horneadas}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

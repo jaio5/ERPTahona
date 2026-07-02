@@ -1,0 +1,311 @@
+<nav th:fragment="menu" class="sidebar" id="mainSidebar" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <div class="sidebar-brand">
+        <h5><i class="bi bi-fire me-2" style="color:#f97316;"></i>Tahona ERP</h5>
+        <small>Sistema de gestión de obrador</small>
+    </div>
+
+    <!-- Sección: Hoy -->
+    <div class="sidebar-section">Inicio</div>
+    <a class="sidebar-link" th:href="@{/web/dashboard}"
+       th:classappend="${moduloActivo == 'dashboard' ? 'active' : ''}">
+        <i class="bi bi-speedometer2"></i><span>Panel de trabajo</span>
+    </a>
+
+    <a class="sidebar-link" th:href="@{/web/calendario}"
+       th:classappend="${moduloActivo == 'calendario' ? 'active' : ''}">
+        <i class="bi bi-calendar-week"></i><span>Calendario</span>
+    </a>
+    <a class="sidebar-link" th:href="@{/web/planificador}"
+       th:classappend="${moduloActivo == 'planificador' ? 'active' : ''}">
+        <i class="bi bi-clipboard-data"></i><span>Planificador</span>
+    </a>
+
+    <!-- Grupo: Ventas -->
+    <div th:if="${@permisos.puedeVerAlguno('ventas', 'clientes')}"
+         th:with="enVentas=${moduloActivo == 'facturas' || moduloActivo == 'albaranes' || moduloActivo == 'pedidos-venta' || moduloActivo == 'presupuestos' || moduloActivo == 'clientes'}">
+        <button class="sidebar-group-toggle"
+                th:classappend="${!enVentas ? 'collapsed' : ''}"
+                data-bs-toggle="collapse" data-bs-target="#nav-ventas"
+                th:attr="aria-expanded=${enVentas}" aria-controls="nav-ventas"
+                type="button">
+            <i class="bi bi-receipt"></i>
+            <span>Ventas</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+        </button>
+        <div class="collapse" id="nav-ventas"
+             th:classappend="${enVentas ? 'show' : ''}">
+            <a class="sidebar-link" th:href="@{/web/facturas}"
+               th:classappend="${moduloActivo == 'facturas' ? 'active' : ''}">
+                <i class="bi bi-receipt-cutoff"></i><span>Facturas</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/albaranes}"
+               th:classappend="${moduloActivo == 'albaranes' ? 'active' : ''}">
+                <i class="bi bi-truck"></i><span>Albaranes</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/pedidos-venta}"
+               th:classappend="${moduloActivo == 'pedidos-venta' ? 'active' : ''}">
+                <i class="bi bi-cart"></i><span>Pedidos venta</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/presupuestos}"
+               th:classappend="${moduloActivo == 'presupuestos' ? 'active' : ''}">
+                <i class="bi bi-file-earmark-text"></i><span>Presupuestos</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/clientes}"
+               th:classappend="${moduloActivo == 'clientes' ? 'active' : ''}">
+                <i class="bi bi-people"></i><span>Clientes</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Grupo: Compras -->
+    <div th:if="${@permisos.puedeVerAlguno('compras', 'proveedores')}"
+         th:with="enCompras=${moduloActivo == 'proveedores' || moduloActivo == 'pedidos-compra' || moduloActivo == 'facturas-compra' || moduloActivo == 'recepciones'}">
+        <button class="sidebar-group-toggle"
+                th:classappend="${!enCompras ? 'collapsed' : ''}"
+                data-bs-toggle="collapse" data-bs-target="#nav-compras"
+                th:attr="aria-expanded=${enCompras}" aria-controls="nav-compras"
+                type="button">
+            <i class="bi bi-shop"></i>
+            <span>Compras</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+        </button>
+        <div class="collapse" id="nav-compras"
+             th:classappend="${enCompras ? 'show' : ''}">
+            <a class="sidebar-link" th:href="@{/web/proveedores}"
+               th:classappend="${moduloActivo == 'proveedores' ? 'active' : ''}">
+                <i class="bi bi-building-check"></i><span>Proveedores</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/pedidos-compra}"
+               th:classappend="${moduloActivo == 'pedidos-compra' ? 'active' : ''}">
+                <i class="bi bi-cart-check"></i><span>Pedidos compra</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/facturas-compra}"
+               th:classappend="${moduloActivo == 'facturas-compra' ? 'active' : ''}">
+                <i class="bi bi-receipt"></i><span>Facturas compra</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/recepciones}"
+               th:classappend="${moduloActivo == 'recepciones' ? 'active' : ''}">
+                <i class="bi bi-box-arrow-in-down"></i><span>Recepciones</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Grupo: Almacén -->
+    <div th:if="${@permisos.puedeVerAlguno('almacen', 'articulos')}"
+         th:with="enAlmacen=${moduloActivo == 'articulos' || moduloActivo == 'almacenes' || moduloActivo == 'lotes' || moduloActivo == 'mermas'}">
+        <button class="sidebar-group-toggle"
+                th:classappend="${!enAlmacen ? 'collapsed' : ''}"
+                data-bs-toggle="collapse" data-bs-target="#nav-almacen"
+                th:attr="aria-expanded=${enAlmacen}" aria-controls="nav-almacen"
+                type="button">
+            <i class="bi bi-boxes"></i>
+            <span>Almacén</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+        </button>
+        <div class="collapse" id="nav-almacen"
+             th:classappend="${enAlmacen ? 'show' : ''}">
+            <a class="sidebar-link" th:href="@{/web/articulos}"
+               th:classappend="${moduloActivo == 'articulos' ? 'active' : ''}">
+                <i class="bi bi-box"></i><span>Artículos</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/almacenes}"
+               th:classappend="${moduloActivo == 'almacenes' ? 'active' : ''}">
+                <i class="bi bi-building"></i><span>Almacenes</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/lotes}"
+               th:classappend="${moduloActivo == 'lotes' ? 'active' : ''}">
+                <i class="bi bi-arrow-left-right"></i><span>Lotes / Trazab.</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/mermas}"
+               th:classappend="${moduloActivo == 'mermas' ? 'active' : ''}">
+                <i class="bi bi-trash3"></i><span>Mermas</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Grupo: Producción -->
+    <div th:if="${@permisos.puede('produccion', 'ver')}"
+         th:with="enProduccion=${moduloActivo == 'recetas' || moduloActivo == 'ordenes-produccion' || moduloActivo == 'horneadas' || moduloActivo == 'appcc'}">
+        <button class="sidebar-group-toggle"
+                th:classappend="${!enProduccion ? 'collapsed' : ''}"
+                data-bs-toggle="collapse" data-bs-target="#nav-produccion"
+                th:attr="aria-expanded=${enProduccion}" aria-controls="nav-produccion"
+                type="button">
+            <i class="bi bi-fire"></i>
+            <span>Producción</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+        </button>
+        <div class="collapse" id="nav-produccion"
+             th:classappend="${enProduccion ? 'show' : ''}">
+            <a class="sidebar-link" th:href="@{/web/recetas}"
+               th:classappend="${moduloActivo == 'recetas' ? 'active' : ''}">
+                <i class="bi bi-journal-code"></i><span>Recetas</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/ordenes-produccion}"
+               th:classappend="${moduloActivo == 'ordenes-produccion' ? 'active' : ''}">
+                <i class="bi bi-gear"></i><span>Órdenes prod.</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/horneadas}"
+               th:classappend="${moduloActivo == 'horneadas' ? 'active' : ''}">
+                <i class="bi bi-thermometer-half"></i><span>Horneadas</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/appcc}"
+               th:classappend="${moduloActivo == 'appcc' ? 'active' : ''}">
+                <i class="bi bi-clipboard-check"></i><span>APPCC</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Grupo: Reparto -->
+    <div th:if="${@permisos.puede('reparto', 'ver')}"
+         th:with="enReparto=${moduloActivo == 'vehiculos' || moduloActivo == 'rutas' || moduloActivo == 'hojas-ruta' || moduloActivo == 'devoluciones'}">
+        <button class="sidebar-group-toggle"
+                th:classappend="${!enReparto ? 'collapsed' : ''}"
+                data-bs-toggle="collapse" data-bs-target="#nav-reparto"
+                th:attr="aria-expanded=${enReparto}" aria-controls="nav-reparto"
+                type="button">
+            <i class="bi bi-truck-front"></i>
+            <span>Reparto</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+        </button>
+        <div class="collapse" id="nav-reparto"
+             th:classappend="${enReparto ? 'show' : ''}">
+            <a class="sidebar-link" th:href="@{/web/vehiculos}"
+               th:classappend="${moduloActivo == 'vehiculos' ? 'active' : ''}">
+                <i class="bi bi-car-front"></i><span>Vehículos</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/rutas}"
+               th:classappend="${moduloActivo == 'rutas' ? 'active' : ''}">
+                <i class="bi bi-signpost-2"></i><span>Rutas</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/hojas-ruta}"
+               th:classappend="${moduloActivo == 'hojas-ruta' ? 'active' : ''}">
+                <i class="bi bi-map"></i><span>Hojas de ruta</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/devoluciones}"
+               th:classappend="${moduloActivo == 'devoluciones' ? 'active' : ''}">
+                <i class="bi bi-arrow-return-left"></i><span>Devoluciones</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Grupo: Finanzas -->
+    <div th:if="${@permisos.puedeVerAlguno('tesoreria', 'contabilidad')}"
+         th:with="enFinanzas=${moduloActivo == 'tesoreria' || moduloActivo == 'extractos' || moduloActivo == 'conciliacion' || moduloActivo == 'contabilidad' || moduloActivo == 'balance'}">
+        <button class="sidebar-group-toggle"
+                th:classappend="${!enFinanzas ? 'collapsed' : ''}"
+                data-bs-toggle="collapse" data-bs-target="#nav-finanzas"
+                th:attr="aria-expanded=${enFinanzas}" aria-controls="nav-finanzas"
+                type="button">
+            <i class="bi bi-cash-stack"></i>
+            <span>Finanzas</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+        </button>
+        <div class="collapse" id="nav-finanzas"
+             th:classappend="${enFinanzas ? 'show' : ''}">
+            <a class="sidebar-link" th:href="@{/web/tesoreria}"
+               th:classappend="${moduloActivo == 'tesoreria' ? 'active' : ''}">
+                <i class="bi bi-wallet2"></i><span>Tesorería</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/tesoreria/extractos}"
+               th:classappend="${moduloActivo == 'extractos' ? 'active' : ''}">
+                <i class="bi bi-file-earmark-spreadsheet"></i><span>Extractos banco</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/tesoreria/conciliacion}"
+               th:classappend="${moduloActivo == 'conciliacion' ? 'active' : ''}">
+                <i class="bi bi-check2-circle"></i><span>Conciliación</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/contabilidad}"
+               th:classappend="${moduloActivo == 'contabilidad' ? 'active' : ''}">
+                <i class="bi bi-calculator"></i><span>Contabilidad</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/contabilidad/balance}"
+               th:classappend="${moduloActivo == 'balance' ? 'active' : ''}">
+                <i class="bi bi-file-earmark-bar-graph"></i><span>Balance / Cierre</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Grupo: Admin -->
+    <div th:if="${@permisos.puedeVerAlguno('usuarios', 'backup', 'auditoria', 'configuracion')}"
+         th:with="enAdmin=${moduloActivo == 'usuarios' || moduloActivo == 'empresa' || moduloActivo == 'auditoria' || moduloActivo == 'backups' || moduloActivo == 'buscar' || moduloActivo == 'importar'}">
+        <button class="sidebar-group-toggle"
+                th:classappend="${!enAdmin ? 'collapsed' : ''}"
+                data-bs-toggle="collapse" data-bs-target="#nav-admin"
+                th:attr="aria-expanded=${enAdmin}" aria-controls="nav-admin"
+                type="button">
+            <i class="bi bi-sliders"></i>
+            <span>Administración</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+        </button>
+        <div class="collapse" id="nav-admin"
+             th:classappend="${enAdmin ? 'show' : ''}">
+            <a class="sidebar-link" th:href="@{/web/usuarios}"
+               th:classappend="${moduloActivo == 'usuarios' ? 'active' : ''}">
+                <i class="bi bi-person-badge"></i><span>Usuarios</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/empresa}"
+               th:classappend="${moduloActivo == 'empresa' ? 'active' : ''}">
+                <i class="bi bi-building-gear"></i><span>Empresa</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/auditoria}"
+               th:classappend="${moduloActivo == 'auditoria' ? 'active' : ''}">
+                <i class="bi bi-shield-check"></i><span>Auditoría</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/buscar}"
+               th:classappend="${moduloActivo == 'buscar' ? 'active' : ''}">
+                <i class="bi bi-search"></i><span>Búsqueda global</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/backups}"
+               th:classappend="${moduloActivo == 'backups' ? 'active' : ''}">
+                <i class="bi bi-cloud-download"></i><span>Backups</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/importar}"
+               th:classappend="${moduloActivo == 'importar' ? 'active' : ''}">
+                <i class="bi bi-upload"></i><span>Importar datos</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Grupo: Fiscal -->
+    <div th:if="${@permisos.puedeVerAlguno('fiscal', 'verifactu')}"
+         th:with="enFiscal=${moduloActivo == 'modelo347' || moduloActivo == 'verifactu'}">
+        <button class="sidebar-group-toggle"
+                th:classappend="${!enFiscal ? 'collapsed' : ''}"
+                data-bs-toggle="collapse" data-bs-target="#nav-fiscal"
+                th:attr="aria-expanded=${enFiscal}" aria-controls="nav-fiscal"
+                type="button">
+            <i class="bi bi-bank"></i>
+            <span>Fiscal</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+        </button>
+        <div class="collapse" id="nav-fiscal" th:classappend="${enFiscal ? 'show' : ''}">
+            <a class="sidebar-link" th:href="@{/web/modelo347}"
+               th:classappend="${moduloActivo == 'modelo347' ? 'active' : ''}">
+                <i class="bi bi-file-earmark-spreadsheet"></i><span>Modelo 347</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/verifactu}"
+               th:classappend="${moduloActivo == 'verifactu' ? 'active' : ''}">
+                <i class="bi bi-shield-check"></i><span>VERI*FACTU</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Informes (directo) -->
+    <a th:if="${@permisos.puede('reportes', 'ver')}"
+       class="sidebar-link" th:href="@{/web/reportes}"
+       th:classappend="${moduloActivo == 'reportes' ? 'active' : ''}"
+       style="margin-top: 4px;">
+        <i class="bi bi-bar-chart-line"></i><span>Informes</span>
+    </a>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-footer-user">
+            <div class="user-avatar" th:text="${#strings.substring(session.usuarioNombre ?: 'U', 0, 1)}">U</div>
+            <div>
+                <div class="user-name" th:text="${session.usuarioNombre} ?: 'Usuario'">Usuario</div>
+                <div class="user-role">Panadería Tahona</div>
+            </div>
+        </div>
+    </div>
+</nav>

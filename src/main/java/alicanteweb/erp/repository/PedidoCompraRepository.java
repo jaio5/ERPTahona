@@ -1,6 +1,8 @@
 package alicanteweb.erp.repository;
 
 import alicanteweb.erp.entities.PedidoCompra;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -41,5 +43,17 @@ public interface PedidoCompraRepository extends JpaRepository<PedidoCompra, Long
         WHERE p.id = :id
         """)
     Optional<PedidoCompra> findByIdWithLineas(@Param("id") Long id);
+
+    @Query("SELECT p FROM PedidoCompra p LEFT JOIN FETCH p.proveedor WHERE " +
+           "LOWER(p.numero) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(p.proveedor.nombre) LIKE LOWER(CONCAT('%', :q, '%'))")
+    List<PedidoCompra> buscar(@Param("q") String q);
+
+    @Query("SELECT p FROM PedidoCompra p LEFT JOIN FETCH p.proveedor WHERE "
+         + "(:q IS NULL OR LOWER(p.numero) LIKE LOWER(CONCAT('%',:q,'%')) "
+         + "OR LOWER(p.proveedor.nombre) LIKE LOWER(CONCAT('%',:q,'%'))) "
+         + "AND (:estado IS NULL OR p.estado = :estado) "
+         + "ORDER BY p.fecha DESC")
+    Page<PedidoCompra> findPage(@Param("q") String q, @Param("estado") String estado, Pageable pageable);
 }
 

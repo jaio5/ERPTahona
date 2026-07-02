@@ -18,6 +18,7 @@ import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
 import javax.xml.crypto.dsig.spec.TransformParameterSpec;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -116,9 +117,9 @@ public class VerifactuAeatSoapClient {
         SOAPPart soapPart = soapMessage.getSOAPPart();
         SOAPEnvelope envelope = soapPart.getEnvelope();
 
-        // Namespace obligatorio de AEAT
-        envelope.addNamespaceDeclaration("siiLR",
-            "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/ssii/fact/ws/SuministroLR.xsd");
+        // Namespace del servicio VeriFactu de AEAT (tikeV1.0)
+        envelope.addNamespaceDeclaration("sum",
+            "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroLR.xsd");
 
         // Crear cuerpo del mensaje
         SOAPBody soapBody = envelope.getBody();
@@ -129,7 +130,8 @@ public class VerifactuAeatSoapClient {
         // Mitigar XXE
         try {
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        } catch (Exception ignored) {
+        } catch (ParserConfigurationException e) {
+            log.warn("No se pudo habilitar la protección XXE en DocumentBuilderFactory; el parser puede ser vulnerable a ataques XXE", e);
         }
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document facturaDoc = builder.parse(new ByteArrayInputStream(xmlFactura.getBytes(StandardCharsets.UTF_8)));
@@ -194,7 +196,9 @@ public class VerifactuAeatSoapClient {
             dbf.setNamespaceAware(true);
             try {
                 dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            } catch (Exception ignored) {}
+            } catch (ParserConfigurationException e) {
+                log.warn("No se pudo habilitar la protección XXE en DocumentBuilderFactory (firma WS-Security); el parser puede ser vulnerable a ataques XXE", e);
+            }
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc;
             try (InputStream is = new ByteArrayInputStream(soapBytes)) {
@@ -256,7 +260,7 @@ public class VerifactuAeatSoapClient {
             securityElem.setAttributeNS(SOAP_ENV_NS, "soapenv:mustUnderstand", "1");
             headerElem.appendChild(securityElem);
 
-            // Añadir Timestamp (wsu:Timestamp) para compatibilidad WS-Security
+            // Añadir Timestamp (wsu:Timestamp) exigido por WS-Security
             try {
                 String created = Instant.now().toString();
                 String expires = Instant.now().plusSeconds(300).toString();

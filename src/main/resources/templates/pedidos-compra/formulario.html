@@ -1,0 +1,42 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Pedido de compra</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/pedidos-compra}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card" style="max-width:700px;">
+        <form th:action="@{/web/pedidos-compra}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${pedido?.id}">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label" for="proveedorId">Proveedor <span class="text-danger">*</span></label>
+                    <select id="proveedorId" name="proveedorId" class="form-select" required data-searchable>
+                        <option value="">Seleccionar proveedor...</option>
+                        <option th:each="p : ${proveedores}" th:value="${p.id}"
+                                th:text="${p.nombre}"
+                                th:selected="${pedido?.proveedor?.id == p.id}"></option>
+                    </select>
+                    <div class="invalid-feedback">Selecciona un proveedor.</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="observaciones">Observaciones</label>
+                    <textarea id="observaciones" name="observaciones" class="form-control" rows="3"
+                              th:text="${pedido?.observaciones}"
+                              placeholder="Condiciones especiales, plazos de entrega..."></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1"></i>Guardar pedido
+                </button>
+                <a th:href="@{/web/pedidos-compra}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

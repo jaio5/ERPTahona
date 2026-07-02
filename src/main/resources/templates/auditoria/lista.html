@@ -1,0 +1,23 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Auditoría</h4>
+        </div>
+    </div>
+    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>Fecha</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Resultado</th><th>Descripción</th></tr></thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(registros)}"><td colspan="6" class="empty-state"><i class="bi bi-shield-check"></i><div>No hay registros de auditoría</div></td></tr>
+            <tr th:each="r : ${registros}">
+                <td th:text="${r.fecha != null ? #temporals.format(r.fecha, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                <td th:text="${r.usuarioNombre}"></td>
+                <td th:text="${r.modulo ?: (r.entidadTipo ?: '-')}"></td>
+                <td th:text="${r.tipoAccion}"></td>
+                <td><span class="badge-status" th:attr="data-status=${r.resultado == 'EXITO' ? 'activo' : (r.resultado == 'ERROR' ? 'anulada' : 'borrador')}" th:text="${r.resultado}"></span></td>
+                <td th:text="${r.descripcion}"></td>
+            </tr>
+        </tbody>
+    </table></div></div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/auditoria')}"></div>
+</div>

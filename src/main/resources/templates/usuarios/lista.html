@@ -1,0 +1,61 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Usuarios</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/usuarios/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo usuario
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th style="width:100px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(usuarios)}">
+                        <td colspan="6" class="empty-state">
+                            <i class="bi bi-people"></i>
+                            <div>No hay usuarios registrados</div>
+                        </td>
+                    </tr>
+                    <tr th:each="u : ${usuarios}">
+                        <td class="fw-medium" th:text="${u.username}"></td>
+                        <td th:text="${u.nombre ?: '—'}"></td>
+                        <td class="text-muted" th:text="${u.email ?: '—'}"></td>
+                        <td class="text-muted small" th:text="${u.role ?: u.rol?.nombre ?: '—'}"></td>
+                        <td>
+                            <span th:if="${u.bloqueado}" class="badge-status" data-status="anulada">Bloqueado</span>
+                            <span th:if="${!u.bloqueado and u.enabled}" class="badge-status" data-status="activo">Activo</span>
+                            <span th:if="${!u.bloqueado and !u.enabled}" class="badge-status" data-status="borrador">Inactivo</span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{/web/usuarios/{id}(id=${u.id})}" class="btn btn-ghost btn-sm" title="Ver">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a th:href="@{/web/usuarios/{id}/editar(id=${u.id})}" class="btn btn-ghost btn-sm" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/usuarios')}"></div>
+</div>

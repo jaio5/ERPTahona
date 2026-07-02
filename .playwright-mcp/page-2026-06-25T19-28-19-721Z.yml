@@ -1,0 +1,155 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - text:     
+    - generic [ref=e22]:
+      - button " Compras " [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: 
+        - generic [ref=e25]: Compras
+        - generic [ref=e26]: 
+      - text:    
+    - generic [ref=e27]:
+      - button " Almacén " [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: 
+        - generic [ref=e30]: Almacén
+        - generic [ref=e31]: 
+      - text:    
+    - generic [ref=e32]:
+      - button " Producción " [expanded] [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 
+        - generic [ref=e35]: Producción
+        - generic [ref=e36]: 
+      - generic [ref=e37]:
+        - link " Recetas" [ref=e38] [cursor=pointer]:
+          - /url: /web/recetas
+          - generic [ref=e39]: 
+          - generic [ref=e40]: Recetas
+        - link " Órdenes prod." [ref=e41] [cursor=pointer]:
+          - /url: /web/ordenes-produccion
+          - generic [ref=e42]: 
+          - generic [ref=e43]: Órdenes prod.
+        - link " Horneadas" [ref=e44] [cursor=pointer]:
+          - /url: /web/horneadas
+          - generic [ref=e45]: 
+          - generic [ref=e46]: Horneadas
+        - link " APPCC" [ref=e47] [cursor=pointer]:
+          - /url: /web/appcc
+          - generic [ref=e48]: 
+          - generic [ref=e49]: APPCC
+    - generic [ref=e50]:
+      - button " Reparto " [ref=e51] [cursor=pointer]:
+        - generic [ref=e52]: 
+        - generic [ref=e53]: Reparto
+        - generic [ref=e54]: 
+      - text:    
+    - generic [ref=e55]:
+      - button " Finanzas " [ref=e56] [cursor=pointer]:
+        - generic [ref=e57]: 
+        - generic [ref=e58]: Finanzas
+        - generic [ref=e59]: 
+      - text:     
+    - generic [ref=e60]:
+      - button " Administración " [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: 
+        - generic [ref=e63]: Administración
+        - generic [ref=e64]: 
+      - text:      
+    - generic [ref=e65]:
+      - button " Fiscal " [ref=e66] [cursor=pointer]:
+        - generic [ref=e67]: 
+        - generic [ref=e68]: Fiscal
+        - generic [ref=e69]: 
+      - text:  
+    - link " Informes" [ref=e70] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e71]: 
+      - generic [ref=e72]: Informes
+    - generic [ref=e74]:
+      - generic [ref=e75]: A
+      - generic [ref=e76]:
+        - generic [ref=e77]: Administrador
+        - generic [ref=e78]: Panadería Tahona
+  - main [ref=e79]:
+    - generic [ref=e80]:
+      - text: 
+      - navigation "breadcrumb" [ref=e81]:
+        - list [ref=e82]:
+          - listitem [ref=e83]:
+            - link "Inicio" [ref=e84] [cursor=pointer]:
+              - /url: /web/dashboard
+          - listitem [ref=e85]:
+            - text: /
+            - link "Órdenes de producción" [ref=e86] [cursor=pointer]:
+              - /url: /web/ordenes-produccion
+          - listitem [ref=e87]: / Nueva orden
+      - generic [ref=e88]:
+        - link "" [ref=e89] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e90]: 
+        - button "" [ref=e92] [cursor=pointer]:
+          - generic [ref=e93]: 
+    - generic [ref=e95]:
+      - generic [ref=e96]:
+        - heading "Nueva orden de producción" [level=4] [ref=e98]
+        - link " Volver" [ref=e100] [cursor=pointer]:
+          - /url: /web/ordenes-produccion
+          - generic [ref=e101]: 
+          - text: Volver
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - generic [ref=e105]:
+            - generic [ref=e106]: Receta
+            - combobox [ref=e107]:
+              - option "Sin receta específica" [selected]
+            - combobox "Receta" [ref=e110] [cursor=pointer]
+          - generic [ref=e111]:
+            - generic [ref=e112]: Artículo a producir
+            - combobox [ref=e113]:
+              - option "Seleccionar artículo..." [selected]
+              - option "patatas"
+              - option "Art�culo de prueba"
+              - option "Pan de prueba"
+              - option "Barra de Pan"
+              - option "Pan de pueblo"
+              - option "articulo 1"
+              - option "Barra de Pan UI"
+              - option "Estrotoscopio"
+            - combobox "Artículo a producir" [ref=e116] [cursor=pointer]
+          - generic [ref=e117]:
+            - generic [ref=e118]: Cantidad planificada
+            - textbox "Cantidad planificada" [ref=e119]
+          - generic [ref=e120]:
+            - generic [ref=e121]: Fecha
+            - textbox "Fecha" [ref=e122]: 2026-06-25
+          - generic [ref=e123]:
+            - generic [ref=e124]: Observaciones
+            - textbox "Observaciones" [ref=e125]:
+              - /placeholder: Notas adicionales sobre la producción...
+        - generic [ref=e126]:
+          - button " Guardar orden" [ref=e127] [cursor=pointer]:
+            - generic [ref=e128]: 
+            - text: Guardar orden
+          - link "Cancelar" [ref=e129] [cursor=pointer]:
+            - /url: /web/ordenes-produccion

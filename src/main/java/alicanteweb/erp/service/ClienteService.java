@@ -6,6 +6,9 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +26,10 @@ public class ClienteService {
         return repository.findAll();
     }
 
+    public long count() {
+        return repository.count();
+    }
+
     public Optional<Cliente> findById(Long id) {
         return repository.findById(id);
     }
@@ -31,8 +38,22 @@ public class ClienteService {
         return repository.findByCodigo(codigo);
     }
 
+    public Optional<Cliente> findByCif(String cif) {
+        if (cif == null || cif.isBlank()) {
+            return Optional.empty();
+        }
+        return repository.findByCifIgnoreCase(cif.trim());
+    }
+
     public List<Cliente> searchByNombre(String texto) {
         return repository.findByNombreContainingIgnoreCase(texto);
+    }
+
+    public Optional<Cliente> findByNombreExacto(String nombre) {
+        if (nombre == null || nombre.isBlank()) {
+            return Optional.empty();
+        }
+        return repository.findFirstByNombreIgnoreCase(nombre.trim());
     }
 
     public boolean existsByCodigo(String codigo) {
@@ -44,7 +65,7 @@ public class ClienteService {
         if (cliente == null) throw new IllegalArgumentException("Cliente nulo");
 
         String codigo = cliente.getCodigo();
-        if (codigo == null || codigo.trim().isEmpty()) {
+        if (codigo == null || codigo.isBlank()) {
             throw new IllegalArgumentException("El código del cliente es obligatorio");
         }
 
@@ -65,7 +86,7 @@ public class ClienteService {
         }
 
         // Comprobar duplicados por CIF (si presente)
-        if (cliente.getCif() != null && !cliente.getCif().trim().isEmpty()) {
+        if (cliente.getCif() != null && !cliente.getCif().isBlank()) {
             var optCif = repository.findByCif(cliente.getCif().trim());
             if (optCif.isPresent()) {
                 var existente = optCif.get();
@@ -99,14 +120,14 @@ public class ClienteService {
         repository.save(cliente);
     }
 
-    @PostConstruct
-    private void markSearchUsage() {
-        // Llamada ligera y segura para marcar `searchByNombre` como usada en tiempo de ejecución.
-        // Busca una cadena improbable para minimizar resultados y coste. Capturamos excepciones por seguridad.
-        try {
-            searchByNombre("__NO_MATCH_123456__");
-        } catch (Exception ignored) {
-            // No queremos bloquear el arranque por este self-check
-        }
+    public Page<Cliente> buscarPaginado(String q, Pageable pageable) {
+        return repository.buscarPaginado(
+            (q != null && !q.isBlank()) ? q : null,
+            pageable);
+    }
+
+    public List<Cliente> buscarParaApi(String q, Pageable pageable) {
+        String normalized = q != null && !q.isBlank() ? q.trim() : null;
+        return repository.buscarParaApi(normalized, pageable);
     }
 }

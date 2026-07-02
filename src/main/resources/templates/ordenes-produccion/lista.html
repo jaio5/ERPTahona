@@ -1,0 +1,81 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Órdenes de producción</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/ordenes-produccion/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nueva orden
+            </a>
+        </div>
+    </div>
+
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/ordenes-produccion}">
+        <div class="filter-bar-filters">
+            <select name="estado" class="form-select form-select-sm" style="width:170px;">
+                <option value="">Todos los estados</option>
+                <option value="PLANIFICADA"  th:selected="${estado == 'PLANIFICADA'}">Planificada</option>
+                <option value="EN_CURSO"     th:selected="${estado == 'EN_CURSO'}">En curso</option>
+                <option value="FINALIZADA"   th:selected="${estado == 'FINALIZADA'}">Finalizada</option>
+                <option value="CANCELADA"    th:selected="${estado == 'CANCELADA'}">Cancelada</option>
+            </select>
+        </div>
+        <div class="filter-bar-actions">
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-funnel me-1"></i>Filtrar
+            </button>
+            <a th:href="@{/web/ordenes-produccion}" class="btn btn-ghost btn-sm">Limpiar</a>
+        </div>
+    </form>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Fecha</th>
+                        <th>Receta</th>
+                        <th>Artículo</th>
+                        <th class="text-end">Cantidad</th>
+                        <th>Estado</th>
+                        <th style="width:80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(ordenes)}">
+                        <td colspan="7" class="empty-state">
+                            <i class="bi bi-gear"></i>
+                            <div>No hay órdenes de producción</div>
+                            <small th:if="${estado != null and !estado.isEmpty()}">No hay órdenes con ese estado</small>
+                        </td>
+                    </tr>
+                    <tr th:each="o : ${ordenes}">
+                        <td class="fw-medium" th:text="${o.numero}"></td>
+                        <td class="text-muted small"
+                            th:text="${o.fecha != null ? #temporals.format(o.fecha, 'dd/MM/yyyy') : '—'}"></td>
+                        <td th:text="${o.receta?.nombre ?: '—'}"></td>
+                        <td th:text="${o.articulo?.nombre ?: '—'}"></td>
+                        <td class="text-end" th:text="${o.cantidadPlanificada != null ? o.cantidadPlanificada : '—'}"></td>
+                        <td>
+                            <span class="badge-status" th:attr="data-status=${o.estado?.toLowerCase()}"
+                                  th:text="${o.estado ?: '—'}"></span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{/web/ordenes-produccion/{id}(id=${o.id})}"
+                               class="btn btn-ghost btn-sm" title="Ver detalle">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a th:href="@{/web/ordenes-produccion/{id}/editar(id=${o.id})}"
+                               class="btn btn-ghost btn-sm" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/ordenes-produccion')}"></div>
+</div>

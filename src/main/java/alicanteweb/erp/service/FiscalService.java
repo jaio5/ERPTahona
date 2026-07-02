@@ -1,11 +1,11 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.util.FinancialMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 /**
  * Servicio para cálculos fiscales españoles
@@ -20,6 +20,11 @@ public class FiscalService {
     private static final BigDecimal IVA_SUPER_REDUCIDO = new BigDecimal("0.04");
     private static final BigDecimal IVA_EXENTO = BigDecimal.ZERO;
 
+    // Recargo de equivalencia español (Art. 155 Ley 37/1992)
+    private static final BigDecimal RECARGO_GENERAL = new BigDecimal("0.052");
+    private static final BigDecimal RECARGO_REDUCIDO = new BigDecimal("0.014");
+    private static final BigDecimal RECARGO_SUPER_REDUCIDO = new BigDecimal("0.005");
+
     /**
      * Calcula el IVA basado en el tipo
      */
@@ -27,7 +32,7 @@ public class FiscalService {
         log.debug("Calculando IVA: {} - Tipo: {}", base, tipoIVA);
 
         BigDecimal porcentaje = obtenerPorcentajeIVA(tipoIVA);
-        BigDecimal iva = base.multiply(porcentaje).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal iva = base.multiply(porcentaje).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
 
         log.debug("IVA calculado: {}", iva);
         return iva;
@@ -55,7 +60,7 @@ public class FiscalService {
      */
     public BigDecimal calcularRetencionIRPF(BigDecimal base, BigDecimal porcentaje) {
         log.debug("Calculando IRPF: {} - Porcentaje: {}", base, porcentaje);
-        return base.multiply(porcentaje).setScale(2, RoundingMode.HALF_UP);
+        return base.multiply(porcentaje).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
     }
 
     /**
@@ -63,7 +68,7 @@ public class FiscalService {
      */
     public BigDecimal calcularTotalFactura(BigDecimal base, String tipoIVA, BigDecimal retencion) {
         BigDecimal iva = calcularIVA(base, tipoIVA);
-        BigDecimal total = base.add(iva).subtract(retencion).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = base.add(iva).subtract(retencion).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
 
         log.debug("Total factura: Base={}, IVA={}, Retención={}, Total={}",
             base, iva, retencion, total);
@@ -111,6 +116,27 @@ public class FiscalService {
     public String generarNumeroAlbaran() {
         long timestamp = System.currentTimeMillis();
         return String.format("ALB-%d", timestamp);
+    }
+
+    /**
+     * Calcula el recargo de equivalencia según el tipo de IVA aplicado.
+     * Aplica a comerciantes minoristas en régimen de recargo (Art. 155 Ley 37/1992).
+     */
+    public BigDecimal calcularRecargoEquivalencia(BigDecimal base, String tipoIVA) {
+        if (base == null || base.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
+        BigDecimal porcentaje = obtenerPorcentajeRecargo(tipoIVA);
+        return base.multiply(porcentaje).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
+    }
+
+    private BigDecimal obtenerPorcentajeRecargo(String tipoIVA) {
+        if (tipoIVA == null) return RECARGO_GENERAL;
+        return switch (tipoIVA.toUpperCase()) {
+            case "GENERAL", "21", "21%" -> RECARGO_GENERAL;
+            case "REDUCIDO", "10", "10%" -> RECARGO_REDUCIDO;
+            case "SUPER_REDUCIDO", "4", "4%" -> RECARGO_SUPER_REDUCIDO;
+            case "EXENTO", "0", "0%" -> BigDecimal.ZERO;
+            default -> RECARGO_GENERAL;
+        };
     }
 }
 

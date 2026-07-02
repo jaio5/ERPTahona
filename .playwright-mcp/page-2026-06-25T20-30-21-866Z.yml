@@ -1,0 +1,176 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - text:     
+    - generic [ref=e22]:
+      - button " Compras " [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: 
+        - generic [ref=e25]: Compras
+        - generic [ref=e26]: 
+      - text:    
+    - generic [ref=e27]:
+      - button " Almacén " [expanded] [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: 
+        - generic [ref=e30]: Almacén
+        - generic [ref=e31]: 
+      - generic [ref=e32]:
+        - link " Artículos" [ref=e33] [cursor=pointer]:
+          - /url: /web/articulos
+          - generic [ref=e34]: 
+          - generic [ref=e35]: Artículos
+        - link " Almacenes" [ref=e36] [cursor=pointer]:
+          - /url: /web/almacenes
+          - generic [ref=e37]: 
+          - generic [ref=e38]: Almacenes
+        - link " Lotes / Trazab." [ref=e39] [cursor=pointer]:
+          - /url: /web/lotes
+          - generic [ref=e40]: 
+          - generic [ref=e41]: Lotes / Trazab.
+        - link " Mermas" [ref=e42] [cursor=pointer]:
+          - /url: /web/mermas
+          - generic [ref=e43]: 
+          - generic [ref=e44]: Mermas
+    - generic [ref=e45]:
+      - button " Producción " [ref=e46] [cursor=pointer]:
+        - generic [ref=e47]: 
+        - generic [ref=e48]: Producción
+        - generic [ref=e49]: 
+      - text:    
+    - generic [ref=e50]:
+      - button " Reparto " [ref=e51] [cursor=pointer]:
+        - generic [ref=e52]: 
+        - generic [ref=e53]: Reparto
+        - generic [ref=e54]: 
+      - text:    
+    - generic [ref=e55]:
+      - button " Finanzas " [ref=e56] [cursor=pointer]:
+        - generic [ref=e57]: 
+        - generic [ref=e58]: Finanzas
+        - generic [ref=e59]: 
+      - text:     
+    - generic [ref=e60]:
+      - button " Administración " [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: 
+        - generic [ref=e63]: Administración
+        - generic [ref=e64]: 
+      - text:      
+    - generic [ref=e65]:
+      - button " Fiscal " [ref=e66] [cursor=pointer]:
+        - generic [ref=e67]: 
+        - generic [ref=e68]: Fiscal
+        - generic [ref=e69]: 
+      - text:  
+    - link " Informes" [ref=e70] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e71]: 
+      - generic [ref=e72]: Informes
+    - generic [ref=e74]:
+      - generic [ref=e75]: A
+      - generic [ref=e76]:
+        - generic [ref=e77]: Administrador
+        - generic [ref=e78]: Panadería Tahona
+  - main [ref=e79]:
+    - generic [ref=e80]:
+      - text: 
+      - navigation "breadcrumb" [ref=e81]:
+        - list [ref=e82]:
+          - listitem [ref=e83]:
+            - link "Inicio" [ref=e84] [cursor=pointer]:
+              - /url: /web/dashboard
+          - listitem [ref=e85]:
+            - text: /
+            - link "Artículos" [ref=e86] [cursor=pointer]:
+              - /url: /web/articulos
+          - listitem [ref=e87]: / patatas
+      - generic [ref=e88]:
+        - link "" [ref=e89] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e90]: 
+        - button "" [ref=e92] [cursor=pointer]:
+          - generic [ref=e93]: 
+    - generic [ref=e95]:
+      - generic [ref=e96]:
+        - generic [ref=e97]:
+          - heading "patatas" [level=4] [ref=e98]
+          - paragraph [ref=e99]: "1"
+        - generic [ref=e100]:
+          - link " Editar" [ref=e101] [cursor=pointer]:
+            - /url: /web/articulos/1/editar
+            - generic [ref=e102]: 
+            - text: Editar
+          - link " Volver" [ref=e103] [cursor=pointer]:
+            - /url: /web/articulos
+            - generic [ref=e104]: 
+            - text: Volver
+      - generic [ref=e105]:
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - generic [ref=e110]: 
+            - generic [ref=e111]:
+              - generic [ref=e112]: patatas
+              - generic [ref=e113]: "1"
+          - generic [ref=e114]:
+            - generic [ref=e115]: 
+            - text: Precios
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - generic [ref=e118]: PVP
+              - generic [ref=e119]: 1,20 €
+            - generic [ref=e120]:
+              - generic [ref=e121]: IVA
+              - generic [ref=e122]: 10.00%
+            - generic [ref=e123]:
+              - generic [ref=e124]: Coste
+              - generic [ref=e125]: —
+          - generic [ref=e126]:
+            - generic [ref=e127]: 
+            - text: Stock e identificación
+          - generic [ref=e128]:
+            - generic [ref=e129]:
+              - generic [ref=e130]: Stock actual
+              - generic [ref=e131]: 193.00 ud.
+            - generic [ref=e132]:
+              - generic [ref=e133]: Unidad
+              - generic [ref=e134]: —
+            - generic [ref=e135]:
+              - generic [ref=e136]: Estado
+              - generic [ref=e137]: Activo
+          - generic [ref=e138]:
+            - generic [ref=e139]: 
+            - text: Información alimentaria
+          - generic [ref=e140]:
+            - generic [ref=e141]: 
+            - text: Sin alérgenos declarados
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - generic [ref=e144]: Precio de venta
+            - generic [ref=e145]: 1,20 €
+            - generic [ref=e146]: IVA articulo.iva% incluido
+          - generic [ref=e147]:
+            - generic [ref=e148]: Acciones
+            - link " Editar artículo" [ref=e150] [cursor=pointer]:
+              - /url: /web/articulos/1/editar
+              - generic [ref=e151]: 
+              - text: Editar artículo

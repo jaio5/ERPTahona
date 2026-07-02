@@ -18,7 +18,7 @@ public class AlbaranVentaFacturaId implements Serializable {
     @Serial
     private static final long serialVersionUID = 8149121220522206594L;
     @NotNull
-    @Column(name = "albaranesVentas_id", nullable = false)
+    @Column(name = "albaranes_ventas_id", nullable = false)
     private Long albaranesventasId;
 
     @NotNull

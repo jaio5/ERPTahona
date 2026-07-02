@@ -105,7 +105,7 @@ public class Modelo347Registro {
      * Verifica si supera el límite de declaración (3.005,06€)
      */
     public boolean superaLimite() {
-        return importeTotal.compareTo(new BigDecimal("3005.06")) > 0;
+        return importeTotal.compareTo(new BigDecimal("3005.06")) >= 0;
     }
 
     /**

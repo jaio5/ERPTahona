@@ -48,10 +48,22 @@ echo │  PASO 2: CONFIGURAR BASE DE DATOS                                      
 echo └─────────────────────────────────────────────────────────────────────────┘
 echo.
 
-REM Leer credenciales de application.properties
-set DB_USER=root
-set DB_PASS=Iirne322*
-set DB_NAME=tahona
+REM Leer credenciales desde entorno, sin valores reales en el repositorio.
+if "%DB_USER%"=="" set DB_USER=%SPRING_DATASOURCE_USERNAME%
+if "%DB_PASS%"=="" set DB_PASS=%SPRING_DATASOURCE_PASSWORD%
+if "%DB_NAME%"=="" set DB_NAME=tahona
+
+if "%DB_USER%"=="" (
+    echo ❌ Define DB_USER o SPRING_DATASOURCE_USERNAME antes de ejecutar este script
+    pause
+    exit /b 1
+)
+
+if "%DB_PASS%"=="" (
+    echo ❌ Define DB_PASS o SPRING_DATASOURCE_PASSWORD antes de ejecutar este script
+    pause
+    exit /b 1
+)
 
 echo Configurando empresa en base de datos...
 mysql -u %DB_USER% -p%DB_PASS% -e "USE %DB_NAME%; INSERT INTO empresa_config (nombre_empresa, cif, direccion, codigo_postal, poblacion, provincia, telefono, email, verifactu_habilitado, verifactu_nif_emisor, verifactu_nombre_sistema, verifactu_version_sistema, verifactu_id_dispositivo, activo) VALUES ('GRUPO BABO, S.Coop.V.L.', 'F54059985', 'C/ EJEMPLO, 123', '03001', 'Alicante', 'Alicante', '965123456', 'info@grupobabo.es', TRUE, 'F54059985', 'ERP Panadería Tahona', '1.0.0', 'DISP001', TRUE) ON DUPLICATE KEY UPDATE verifactu_habilitado=VALUES(verifactu_habilitado), verifactu_nif_emisor=VALUES(verifactu_nif_emisor), verifactu_nombre_sistema=VALUES(verifactu_nombre_sistema), verifactu_version_sistema=VALUES(verifactu_version_sistema);" 2>nul
@@ -178,14 +190,14 @@ if exist "%CERT_PATH%" (
     echo       verifactu.key.alias=f54059985
     echo    4. Para PRODUCCIÓN, cambia:
     echo       verifactu.aeat.enabled=true
-    echo    5. Ejecuta: mvn javafx:run
+    echo    5. Ejecuta: mvn spring-boot:run
 ) else (
     echo    1. Obtén un certificado digital (ver opciones arriba)
     echo    2. Cópialo a: %CERT_PATH%
     echo    3. Ejecuta este script nuevamente
     echo    O
     echo    4. Ejecuta sin certificado (solo evidencias locales):
-    echo       mvn javafx:run
+    echo       mvn spring-boot:run
 )
 echo.
 echo    📖 Ver documentación completa:

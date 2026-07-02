@@ -1,0 +1,67 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Horneada</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/horneadas}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+    <div class="form-card" style="max-width:640px;">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <span class="doc-field-label">Fecha</span>
+                <div class="doc-field-value" th:text="${horneada.fecha}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Hora inicio</span>
+                <div class="doc-field-value" th:text="${horneada.horaInicio} ?: '—'">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Hora fin</span>
+                <div class="doc-field-value" th:text="${horneada.horaFin} ?: '—'">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Tipo</span>
+                <div class="doc-field-value" th:text="${horneada.tipoHorneada} ?: '—'">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Temp. inicial</span>
+                <div class="doc-field-value" th:text="${horneada.temperaturaInicial != null ? horneada.temperaturaInicial + ' °C' : '—'}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Temp. final</span>
+                <div class="doc-field-value" th:text="${horneada.temperaturaFinal != null ? horneada.temperaturaFinal + ' °C' : '—'}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Cantidad producida</span>
+                <div class="doc-field-value" th:text="${horneada.cantidadProducida} ?: '—'">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Merma</span>
+                <div class="doc-field-value" th:text="${horneada.merma} ?: '—'">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Resultado</span>
+                <div class="doc-field-value">
+                    <span class="badge-status" th:attr="data-status=${horneada.resultado?.toLowerCase()}"
+                          th:text="${horneada.resultado} ?: '—'">—</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <span class="doc-field-label">Orden de producción</span>
+                <div class="doc-field-value" th:text="${horneada.ordenProduccion?.id} ?: '—'">—</div>
+            </div>
+            <div class="col-md-6">
+                <span class="doc-field-label">Responsable</span>
+                <div class="doc-field-value" th:text="${horneada.usuario?.nombre} ?: '—'">—</div>
+            </div>
+            <div class="col-12" th:if="${horneada.observaciones}">
+                <span class="doc-field-label">Observaciones</span>
+                <div class="doc-field-value text-muted" th:text="${horneada.observaciones}">—</div>
+            </div>
+        </div>
+    </div>
+</div>

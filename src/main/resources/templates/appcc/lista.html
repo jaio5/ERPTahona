@@ -1,0 +1,33 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Controles APPCC</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/appcc/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo control
+            </a>
+        </div>
+    </div>
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>Fecha</th><th>Punto crítico</th><th>Temperatura</th><th>Límite</th><th>Resultado</th><th>Responsable</th><th style="width:80px;"></th></tr></thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(controles)}"><td colspan="7" class="empty-state"><i class="bi bi-clipboard-check"></i><div>No hay controles APPCC registrados</div></td></tr>
+            <tr th:each="c : ${controles}">
+                <td th:text="${c.fecha}"></td><td th:text="${c.puntoCritico} ?: '-'"></td>
+                <td th:text="${c.temperatura != null ? c.temperatura + ' °C' : '-'}"></td>
+                <td th:text="${c.limiteCritico != null ? c.limiteCritico + ' °C' : '-'}"></td>
+                <td><span class="badge-status" th:attr="data-status=${c.resultado == 'OK' ? 'activo' : 'anulada'}" th:text="${c.resultado} ?: '-'"></span></td>
+                <td th:text="${c.responsable} ?: '-'"></td>
+                <td class="text-end">
+                    <a th:href="@{/web/appcc/{id}(id=${c.id})}" class="btn btn-ghost btn-sm" title="Ver">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table></div></div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/appcc')}"></div>
+</div>

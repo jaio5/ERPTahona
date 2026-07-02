@@ -1,62 +1,47 @@
 package alicanteweb.erp.util;
 
+import alicanteweb.erp.exception.ErpException;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
-/**
- * Utilidades de hashing (SHA-256) y codificación.
- */
 public final class HashUtils {
     private static final String ALGORITHM = "SHA-256";
 
     private HashUtils() {}
 
-    public static byte[] sha256(byte[] input) throws Exception {
-        MessageDigest digest = MessageDigest.getInstance(ALGORITHM);
-        return digest.digest(input);
+    public static byte[] sha256(byte[] input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance(ALGORITHM);
+            return digest.digest(input);
+        } catch (NoSuchAlgorithmException e) {
+            throw new ErpException("Algoritmo SHA-256 no disponible", e);
+        }
     }
 
-    public static byte[] sha256(String input) throws Exception {
+    public static byte[] sha256(String input) {
         return sha256(input.getBytes(StandardCharsets.UTF_8));
     }
 
-    /**
-     * SHA-256 + Base64 (standard)
-     */
-    public static String sha256Base64(String input) throws Exception {
-        byte[] hash = sha256(input);
-        return Base64.getEncoder().encodeToString(hash);
+    public static String sha256Base64(String input) {
+        return Base64.getEncoder().encodeToString(sha256(input));
     }
 
-    /**
-     * SHA-256 + Base64 (standard) from bytes
-     */
-    public static String sha256Base64(byte[] input) throws Exception {
-        byte[] hash = sha256(input);
-        return Base64.getEncoder().encodeToString(hash);
+    public static String sha256Base64(byte[] input) {
+        return Base64.getEncoder().encodeToString(sha256(input));
     }
 
-    /**
-     * SHA-256 + Base64 URL-safe (no padding) from String
-     */
-    public static String sha256Base64UrlSafe(String input) throws Exception {
-        byte[] hash = sha256(input);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
+    public static String sha256Base64UrlSafe(String input) {
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(sha256(input));
     }
 
-    /**
-     * SHA-256 + Base64 URL-safe (no padding) from bytes
-     */
-    public static String sha256Base64UrlSafe(byte[] input) throws Exception {
-        byte[] hash = sha256(input);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
+    public static String sha256Base64UrlSafe(byte[] input) {
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(sha256(input));
     }
 
-    /**
-     * Hex representation (lowercase)
-     */
-    public static String sha256Hex(String input) throws Exception {
+    public static String sha256Hex(String input) {
         byte[] hash = sha256(input);
         return toHex(hash);
     }

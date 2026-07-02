@@ -1,0 +1,59 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Control APPCC</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/appcc}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+    <div class="form-card" style="max-width:640px;">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <span class="doc-field-label">Fecha</span>
+                <div class="doc-field-value" th:text="${control.fecha}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Hora</span>
+                <div class="doc-field-value" th:text="${control.hora}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Resultado</span>
+                <div class="doc-field-value">
+                    <span class="badge-status" th:attr="data-status=${control.resultado == 'OK' ? 'activo' : 'anulada'}"
+                          th:text="${control.resultado} ?: '—'"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <span class="doc-field-label">Punto crítico</span>
+                <div class="doc-field-value" th:text="${control.puntoCritico} ?: '—'">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Temperatura</span>
+                <div class="doc-field-value" th:text="${control.temperatura != null ? control.temperatura + ' ' + control.unidadTemperatura : '—'}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Límite crítico</span>
+                <div class="doc-field-value" th:text="${control.limiteCritico != null ? control.limiteCritico + ' ' + control.unidadTemperatura : '—'}">—</div>
+            </div>
+            <div class="col-md-6">
+                <span class="doc-field-label">Responsable</span>
+                <div class="doc-field-value" th:text="${control.responsable} ?: '—'">—</div>
+            </div>
+            <div class="col-md-6">
+                <span class="doc-field-label">Lote</span>
+                <div class="doc-field-value" th:text="${control.lote?.codigo} ?: '—'">—</div>
+            </div>
+            <div class="col-12" th:if="${control.descripcion}">
+                <span class="doc-field-label">Descripción</span>
+                <div class="doc-field-value text-muted" th:text="${control.descripcion}">—</div>
+            </div>
+            <div class="col-12" th:if="${control.accionCorrectiva}">
+                <span class="doc-field-label">Acción correctiva</span>
+                <div class="doc-field-value text-muted" th:text="${control.accionCorrectiva}">—</div>
+            </div>
+        </div>
+    </div>
+</div>

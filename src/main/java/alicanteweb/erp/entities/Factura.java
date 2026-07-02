@@ -23,6 +23,10 @@ public class Factura {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Size(max = 50)
     @NotNull
     @Column(name = "numero", nullable = false, length = 50)
@@ -191,6 +195,9 @@ public class Factura {
     @Column(name = "total_iva", precision = 10, scale = 2)
     private BigDecimal totalIva;
 
+    @Column(name = "tipo_impositivo", precision = 5, scale = 2)
+    private BigDecimal tipoImpositivo;
+
     /**
      * Total Recargo de Equivalencia
      */
@@ -227,7 +234,7 @@ public class Factura {
     @OneToMany(mappedBy = "facturas")
     private Set<AlbaranVentaFactura> albaranesVentaFacturas = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "factura")
+    @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<FacturaLinea> facturaLineas = new LinkedHashSet<>();
 
     @PrePersist
@@ -284,25 +291,12 @@ public class Factura {
     @Column(name = "verifactu_fecha_registro")
     private LocalDateTime verifactuFechaRegistro;
 
-    // ============================================
-    // Aliases de compatibilidad (deprecados)
-    // ============================================
-
-    /** @deprecated Usar {@link #getTotalIva()} directamente. */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public BigDecimal getIva() {
-        return this.totalIva;
-    }
-
-    /** @deprecated Usar {@link #setTotalIva(BigDecimal)} directamente. */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public void setIva(BigDecimal iva) {
-        this.totalIva = iva;
-    }
-
-    /** @deprecated Usar {@link #getFacturaLineas()} directamente. */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public Set<FacturaLinea> getLineas() {
-        return this.facturaLineas;
+    public alicanteweb.erp.entities.enums.EstadoFacturaEnum getEstadoEnum() {
+        if (estado == null) return null;
+        try {
+            return alicanteweb.erp.entities.enums.EstadoFacturaEnum.valueOf(estado);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

@@ -23,13 +23,6 @@ public interface EmpresaConfigRepository extends JpaRepository<EmpresaConfig, Lo
     List<EmpresaConfig> findByActivoTrue();
 
     /**
-     * Alias para compatibilidad con código existente
-     */
-    default Optional<EmpresaConfig> findActive() {
-        return findFirstByActivoTrue();
-    }
-
-    /**
      * Verifica si existe una configuración activa
      */
     @Query("SELECT COUNT(e) > 0 FROM EmpresaConfig e WHERE e.activo = true")

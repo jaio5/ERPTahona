@@ -1,0 +1,81 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Cliente</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/clientes}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card" style="max-width:760px;">
+        <form th:action="@{/web/clientes}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${cliente?.id}">
+
+            <div class="form-section-title">
+                <i class="bi bi-info-circle"></i> Datos generales
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label" for="codigo">Código *</label>
+                    <input type="text" id="codigo" name="codigo" class="form-control"
+                           th:value="${cliente?.codigo}" required>
+                    <div class="invalid-feedback">El código es obligatorio.</div>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="nombre">Razón social *</label>
+                    <input type="text" id="nombre" name="nombre" class="form-control"
+                           th:value="${cliente?.nombre}" required>
+                    <div class="invalid-feedback">La razón social es obligatoria.</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="cif">CIF / NIF</label>
+                    <input type="text" id="cif" name="cif" class="form-control"
+                           th:value="${cliente?.cif}" placeholder="B12345678">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="telefono">Teléfono</label>
+                    <input type="text" id="telefono" name="telefono" class="form-control"
+                           th:value="${cliente?.telefono}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="email">Correo electrónico</label>
+                    <input type="email" id="email" name="email" class="form-control"
+                           th:value="${cliente?.email}">
+                </div>
+            </div>
+
+            <div class="form-section-divider">
+                <div class="form-section-title">
+                    <i class="bi bi-geo-alt"></i> Dirección
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="direccion">Dirección</label>
+                        <input type="text" id="direccion" name="direccion" class="form-control"
+                               th:value="${cliente?.direccion}" placeholder="Calle, número, piso...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="poblacion">Población</label>
+                        <input type="text" id="poblacion" name="poblacion" class="form-control"
+                               th:value="${cliente?.poblacion}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="codigoPostal">Código postal</label>
+                        <input type="text" id="codigoPostal" name="codigoPostal" class="form-control"
+                               th:value="${cliente?.codigoPostal}" placeholder="03001">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1"></i>Guardar cliente
+                </button>
+                <a th:href="@{/web/clientes}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

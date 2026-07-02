@@ -1,5 +1,6 @@
 package alicanteweb.erp.config;
 
+import alicanteweb.erp.exception.ErpException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.crypto.SecretKeyFactory;
@@ -41,7 +42,7 @@ public class CustomPbkdf2PasswordEncoder implements PasswordEncoder {
 
             return saltB64 + "$" + derivedB64;
         } catch (Exception e) {
-            throw new RuntimeException("Error generando hash PBKDF2", e);
+            throw new ErpException("Error generando hash PBKDF2", e);
         }
     }
 

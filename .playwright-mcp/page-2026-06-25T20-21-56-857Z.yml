@@ -1,0 +1,116 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - text:     
+    - generic [ref=e22]:
+      - button " Compras " [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: 
+        - generic [ref=e25]: Compras
+        - generic [ref=e26]: 
+      - text:    
+    - generic [ref=e27]:
+      - button " Almacén " [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: 
+        - generic [ref=e30]: Almacén
+        - generic [ref=e31]: 
+      - text:    
+    - generic [ref=e32]:
+      - button " Producción " [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 
+        - generic [ref=e35]: Producción
+        - generic [ref=e36]: 
+      - text:    
+    - generic [ref=e37]:
+      - button " Reparto " [ref=e38] [cursor=pointer]:
+        - generic [ref=e39]: 
+        - generic [ref=e40]: Reparto
+        - generic [ref=e41]: 
+      - text:    
+    - generic [ref=e42]:
+      - button " Finanzas " [ref=e43] [cursor=pointer]:
+        - generic [ref=e44]: 
+        - generic [ref=e45]: Finanzas
+        - generic [ref=e46]: 
+      - text:     
+    - generic [ref=e47]:
+      - button " Administración " [ref=e48] [cursor=pointer]:
+        - generic [ref=e49]: 
+        - generic [ref=e50]: Administración
+        - generic [ref=e51]: 
+      - text:      
+    - generic [ref=e52]:
+      - button " Fiscal " [ref=e53] [cursor=pointer]:
+        - generic [ref=e54]: 
+        - generic [ref=e55]: Fiscal
+        - generic [ref=e56]: 
+      - text:  
+    - link " Informes" [ref=e57] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e58]: 
+      - generic [ref=e59]: Informes
+    - generic [ref=e61]:
+      - generic [ref=e62]: A
+      - generic [ref=e63]:
+        - generic [ref=e64]: Administrador
+        - generic [ref=e65]: Panadería Tahona
+  - main [ref=e66]:
+    - generic [ref=e67]:
+      - text: 
+      - generic [ref=e68]:
+        - link "" [ref=e69] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e70]: 
+        - button "" [ref=e72] [cursor=pointer]:
+          - generic [ref=e73]: 
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - heading "Planificador diario" [level=4] [ref=e78]
+        - generic [ref=e79]:
+          - textbox [ref=e80]: 2026-06-25
+          - button "Hoy" [ref=e81] [cursor=pointer]
+      - generic [ref=e82]:
+        - generic [ref=e84]:
+          - heading "Pedidos (0)" [level=6] [ref=e85]
+          - generic [ref=e86]: Sin pedidos
+        - generic [ref=e88]:
+          - heading "Albaranes (0)" [level=6] [ref=e89]
+          - generic [ref=e90]: Sin albaranes
+        - generic [ref=e92]:
+          - heading "Ordenes prod. (0)" [level=6] [ref=e93]
+          - generic [ref=e94]: Sin ordenes
+      - generic [ref=e95]:
+        - heading "Necesidades de materia prima" [level=6] [ref=e96]
+        - generic [ref=e98]:
+          - generic: 
+          - searchbox "Buscar..." [ref=e99]
+        - table [ref=e100]:
+          - rowgroup [ref=e101]:
+            - row "Articulo Necesario Stock Diferencia" [ref=e102]:
+              - columnheader "Articulo" [ref=e103]
+              - columnheader "Necesario" [ref=e104]
+              - columnheader "Stock" [ref=e105]
+              - columnheader "Diferencia" [ref=e106]
+          - rowgroup
+        - generic [ref=e107]: Sin necesidades calculadas

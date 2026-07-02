@@ -1,0 +1,176 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="'Orden ' + ${orden.numero}">Orden de producción</h4>
+            <p>
+                <span class="badge-status"
+                      th:attr="data-status=${orden.estado?.toLowerCase()}"
+                      th:text="${orden.estado ?: 'Sin estado'}">-</span>
+                <span class="text-muted small ms-2"
+                      th:text="${orden.fecha != null ? #temporals.format(orden.fecha,'dd/MM/yyyy') : ''}"></span>
+            </p>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/ordenes-produccion/{id}/editar(id=${orden.id})}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </a>
+            <a th:href="@{/web/ordenes-produccion}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="form-card mb-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="doc-header-icon">
+                        <i class="bi bi-gear"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5" th:text="${orden.numero}">Orden</div>
+                        <div class="text-muted small">
+                            <span th:text="${orden.receta?.nombre ?: 'Sin receta'}"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Número</span>
+                        <div class="doc-field-value" th:text="${orden.numero}">—</div>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Estado</span>
+                        <div class="mt-1">
+                            <span class="badge-status"
+                                  th:attr="data-status=${orden.estado?.toLowerCase()}"
+                                  th:text="${orden.estado ?: '—'}">—</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Fecha</span>
+                        <div class="doc-field-value"
+                             th:text="${orden.fecha != null ? #temporals.format(orden.fecha,'dd/MM/yyyy') : '—'}">—</div>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Receta</span>
+                        <div class="doc-field-value">
+                            <a th:if="${orden.receta != null}"
+                               th:href="@{/web/recetas/{id}(id=${orden.receta.id})}"
+                               th:text="${orden.receta.nombre}"></a>
+                            <span th:if="${orden.receta == null}">—</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Planificada</span>
+                        <div class="doc-field-value" th:text="${orden.cantidadPlanificada ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Producida</span>
+                        <div class="doc-field-value" th:text="${orden.cantidadProducida ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Merma</span>
+                        <div class="doc-field-value" th:text="${orden.merma ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-3">
+                        <span class="doc-field-label">Artículo</span>
+                        <div class="doc-field-value" th:text="${orden.articulo?.nombre ?: '—'}">—</div>
+                    </div>
+                    <div class="col-12" th:if="${orden.observaciones}">
+                        <span class="doc-field-label">Observaciones</span>
+                        <div class="text-muted mt-1" th:text="${orden.observaciones}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="d-flex align-items-center justify-content-between px-4 py-3 border-separator">
+                    <span class="fw-semibold">Horneadas y avance</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th class="text-end">Producido</th>
+                                <th class="text-end">Merma</th>
+                                <th>Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(horneadas)}">
+                                <td colspan="6" class="empty-state">
+                                    <i class="bi bi-fire"></i>
+                                    <p>No hay horneadas registradas</p>
+                                </td>
+                            </tr>
+                            <tr th:each="h : ${horneadas}">
+                                <td>
+                                    <a th:href="@{/web/horneadas/{id}(id=${h.id})}" th:text="${h.fecha}"></a>
+                                </td>
+                                <td th:text="${h.horaInicio ?: '—'}">—</td>
+                                <td th:text="${h.horaFin ?: '—'}">—</td>
+                                <td class="text-end" th:text="${h.cantidadProducida ?: '—'}">—</td>
+                                <td class="text-end" th:text="${h.merma ?: '—'}">—</td>
+                                <td>
+                                    <span class="badge-status"
+                                          th:attr="data-status=${h.resultado?.toLowerCase()}"
+                                          th:text="${h.resultado ?: '—'}">—</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="form-card">
+                <div class="doc-field-label mb-3">Acciones</div>
+                <div class="d-grid gap-2">
+                    <!-- PLANIFICADA: editar e iniciar -->
+                    <a th:if="${orden.estado == 'PLANIFICADA'}"
+                       th:href="@{/web/ordenes-produccion/{id}/editar(id=${orden.id})}"
+                       class="btn btn-ghost">
+                        <i class="bi bi-pencil me-2"></i>Editar orden
+                    </a>
+                    <form th:if="${orden.estado == 'PLANIFICADA'}"
+                          th:action="@{/web/ordenes-produccion/{id}/iniciar(id=${orden.id})}" method="post">
+                        <button class="btn btn-success w-100" data-no-double-click>
+                            <i class="bi bi-play-fill me-2"></i>Iniciar producción
+                        </button>
+                    </form>
+                    <!-- EN_CURSO: finalizar -->
+                    <form th:if="${orden.estado == 'EN_CURSO'}"
+                          th:action="@{/web/ordenes-produccion/{id}/finalizar(id=${orden.id})}" method="post">
+                        <div class="mb-2">
+                            <label class="form-label small text-muted">Cantidad producida</label>
+                            <input type="number" name="cantidadProducida" class="form-control form-control-sm"
+                                   th:value="${orden.cantidadPlanificada}" step="0.001" min="0">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small text-muted">Merma</label>
+                            <input type="number" name="merma" class="form-control form-control-sm"
+                                   value="0" step="0.001" min="0">
+                        </div>
+                        <button class="btn btn-primary w-100" data-no-double-click>
+                            <i class="bi bi-check2-all me-2"></i>Finalizar producción
+                        </button>
+                    </form>
+                    <!-- Cancelar (PLANIFICADA o EN_CURSO) -->
+                    <form th:if="${orden.estado == 'PLANIFICADA' or orden.estado == 'EN_CURSO'}"
+                          th:action="@{/web/ordenes-produccion/{id}/cancelar(id=${orden.id})}" method="post"
+                          onsubmit="return confirm('¿Cancelar esta orden de producción?')">
+                        <button class="btn btn-outline-danger w-100">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar orden
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

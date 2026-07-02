@@ -1,0 +1,6 @@
+- generic [ref=e2]:
+  - heading "500" [level=1] [ref=e3]
+  - heading "Ha ocurrido un error inesperado. Por favor, contacta con el administrador." [level=4] [ref=e4]
+  - paragraph [ref=e5]: /web/albaranes/nueva
+  - link "Volver al panel" [ref=e6] [cursor=pointer]:
+    - /url: /web/dashboard

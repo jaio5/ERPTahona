@@ -55,8 +55,7 @@ public class Almacen {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Almacen)) return false;
-        Almacen that = (Almacen) o;
+        if (!(o instanceof Almacen that)) return false;
         return Objects.equals(id, that.id);
     }
 

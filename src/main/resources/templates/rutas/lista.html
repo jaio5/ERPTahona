@@ -1,0 +1,51 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Rutas</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/rutas/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nueva ruta
+            </a>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Conductor</th>
+                        <th>Descripción</th>
+                        <th style="width:80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(rutas)}">
+                        <td colspan="5" class="empty-state">
+                            <i class="bi bi-map"></i>
+                            <div>No hay rutas registradas</div>
+                        </td>
+                    </tr>
+                    <tr th:each="r : ${rutas}">
+                        <td class="fw-medium" th:text="${r.codigo}"></td>
+                        <td th:text="${r.nombre}"></td>
+                        <td class="text-muted" th:text="${r.conductor ?: '—'}"></td>
+                        <td class="text-muted small" th:text="${r.descripcion ?: '—'}"></td>
+                        <td class="text-end">
+                            <a th:href="@{/web/rutas/{id}(id=${r.id})}" class="btn btn-ghost btn-sm" title="Ver"><i class="bi bi-eye"></i></a>
+                            <a th:href="@{/web/rutas/{id}/editar(id=${r.id})}"
+                               class="btn btn-ghost btn-sm" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/rutas')}"></div>
+</div>

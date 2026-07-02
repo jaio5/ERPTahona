@@ -7,8 +7,9 @@ import alicanteweb.erp.service.UsuarioService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -17,17 +18,25 @@ import java.time.LocalDateTime;
 @Profile("dev")
 public class DevDataInitializer {
     private static final Logger log = LoggerFactory.getLogger(DevDataInitializer.class);
-
     private final UsuarioService usuarioService;
     private final EmpresaConfigRepository empresaConfigRepository;
+    private final JdbcTemplate jdbcTemplate;
 
-    public DevDataInitializer(UsuarioService usuarioService, EmpresaConfigRepository empresaConfigRepository) {
+    public DevDataInitializer(UsuarioService usuarioService, EmpresaConfigRepository empresaConfigRepository, JdbcTemplate jdbcTemplate) {
         this.usuarioService = usuarioService;
         this.empresaConfigRepository = empresaConfigRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    @EventListener(ContextRefreshedEvent.class)
+    @EventListener(ApplicationReadyEvent.class)
     public void init() {
+        // Reparar columna xml_generado si Flyway no la ha creado como LONGTEXT
+        try {
+            jdbcTemplate.execute("ALTER TABLE verifactu_evidence MODIFY COLUMN xml_generado LONGTEXT");
+            log.info("Dev schema fix: xml_generado → LONGTEXT");
+        } catch (Exception e) {
+            log.debug("Dev schema fix skipped (xml_generado ya es LONGTEXT o tabla no existe): {}", e.getMessage());
+        }
         try {
             String adminUser = "admin";
             if (usuarioService.buscarPorUsername(adminUser).isEmpty()) {

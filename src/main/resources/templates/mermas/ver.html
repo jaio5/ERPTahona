@@ -1,0 +1,42 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title"><h4 th:text="${titulo}">Detalle de merma</h4></div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/mermas}" class="btn btn-ghost btn-sm">Volver</a>
+        </div>
+    </div>
+    <div class="form-card">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <span class="doc-field-label">Fecha</span>
+                <div class="doc-field-value" th:text="${#temporals.format(merma.fecha, 'dd/MM/yyyy')}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Artículo</span>
+                <div class="doc-field-value" th:text="${merma.articulo?.nombre ?: '—'}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Cantidad</span>
+                <div class="doc-field-value" th:text="${merma.cantidad ?: '—'}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Tipo</span>
+                <div class="doc-field-value">
+                    <span class="badge-status" th:attr="data-status=${merma.tipo?.toLowerCase()}" th:text="${merma.tipo} ?: '—'"></span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Motivo</span>
+                <div class="doc-field-value" th:text="${merma.motivo ?: '—'}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Responsable</span>
+                <div class="doc-field-value" th:text="${merma.responsable ?: '—'}">—</div>
+            </div>
+            <div class="col-12" th:if="${merma.observaciones}">
+                <span class="doc-field-label">Observaciones</span>
+                <div class="doc-field-value text-muted" th:text="${merma.observaciones}">—</div>
+            </div>
+        </div>
+    </div>
+</div>

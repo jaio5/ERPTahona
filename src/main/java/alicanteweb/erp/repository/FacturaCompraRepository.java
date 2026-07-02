@@ -1,6 +1,8 @@
 package alicanteweb.erp.repository;
 
 import alicanteweb.erp.entities.FacturaCompra;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -35,7 +37,7 @@ public interface FacturaCompraRepository extends JpaRepository<FacturaCompra, Lo
     /**
      * Busca facturas por rango de fechas
      */
-    @Query("SELECT f FROM FacturaCompra f WHERE f.fecha BETWEEN :fechaInicio AND :fechaFin ORDER BY f.fecha DESC")
+    @Query("SELECT f FROM FacturaCompra f LEFT JOIN FETCH f.proveedor WHERE f.fecha BETWEEN :fechaInicio AND :fechaFin ORDER BY f.fecha DESC")
     List<FacturaCompra> findByFechaBetween(@Param("fechaInicio") LocalDate fechaInicio,
                                             @Param("fechaFin") LocalDate fechaFin);
 
@@ -59,5 +61,15 @@ public interface FacturaCompraRepository extends JpaRepository<FacturaCompra, Lo
      */
     @Query("SELECT f FROM FacturaCompra f ORDER BY f.fecha DESC")
     List<FacturaCompra> findAllOrdenadas();
+
+    @Query("SELECT f FROM FacturaCompra f LEFT JOIN FETCH f.proveedor WHERE "
+         + "(:q IS NULL OR LOWER(f.numero) LIKE LOWER(CONCAT('%',:q,'%')) "
+         + "OR LOWER(f.proveedor.nombre) LIKE LOWER(CONCAT('%',:q,'%'))) "
+         + "AND (:estado IS NULL OR f.estado = :estado) "
+         + "ORDER BY f.fecha DESC")
+    Page<FacturaCompra> findPage(@Param("q") String q, @Param("estado") String estado, Pageable pageable);
+
+    @Query("SELECT f FROM FacturaCompra f LEFT JOIN FETCH f.proveedor WHERE f.id = :id")
+    Optional<FacturaCompra> findDetailById(@Param("id") Long id);
 }
 

@@ -1,0 +1,137 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - text:     
+    - generic [ref=e22]:
+      - button " Compras " [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: 
+        - generic [ref=e25]: Compras
+        - generic [ref=e26]: 
+      - text:    
+    - generic [ref=e27]:
+      - button " Almacén " [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: 
+        - generic [ref=e30]: Almacén
+        - generic [ref=e31]: 
+      - text:    
+    - generic [ref=e32]:
+      - button " Producción " [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 
+        - generic [ref=e35]: Producción
+        - generic [ref=e36]: 
+      - text:    
+    - generic [ref=e37]:
+      - button " Reparto " [ref=e38] [cursor=pointer]:
+        - generic [ref=e39]: 
+        - generic [ref=e40]: Reparto
+        - generic [ref=e41]: 
+      - text:    
+    - generic [ref=e42]:
+      - button " Finanzas " [expanded] [ref=e43] [cursor=pointer]:
+        - generic [ref=e44]: 
+        - generic [ref=e45]: Finanzas
+        - generic [ref=e46]: 
+      - generic [ref=e47]:
+        - link " Tesorería" [ref=e48] [cursor=pointer]:
+          - /url: /web/tesoreria
+          - generic [ref=e49]: 
+          - generic [ref=e50]: Tesorería
+        - link " Extractos banco" [ref=e51] [cursor=pointer]:
+          - /url: /web/tesoreria/extractos
+          - generic [ref=e52]: 
+          - generic [ref=e53]: Extractos banco
+        - link " Conciliación" [ref=e54] [cursor=pointer]:
+          - /url: /web/tesoreria/conciliacion
+          - generic [ref=e55]: 
+          - generic [ref=e56]: Conciliación
+        - link " Contabilidad" [ref=e57] [cursor=pointer]:
+          - /url: /web/contabilidad
+          - generic [ref=e58]: 
+          - generic [ref=e59]: Contabilidad
+        - link " Balance / Cierre" [ref=e60] [cursor=pointer]:
+          - /url: /web/contabilidad/balance
+          - generic [ref=e61]: 
+          - generic [ref=e62]: Balance / Cierre
+    - generic [ref=e63]:
+      - button " Administración " [ref=e64] [cursor=pointer]:
+        - generic [ref=e65]: 
+        - generic [ref=e66]: Administración
+        - generic [ref=e67]: 
+      - text:      
+    - generic [ref=e68]:
+      - button " Fiscal " [ref=e69] [cursor=pointer]:
+        - generic [ref=e70]: 
+        - generic [ref=e71]: Fiscal
+        - generic [ref=e72]: 
+      - text:  
+    - link " Informes" [ref=e73] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e74]: 
+      - generic [ref=e75]: Informes
+    - generic [ref=e77]:
+      - generic [ref=e78]: A
+      - generic [ref=e79]:
+        - generic [ref=e80]: Administrador
+        - generic [ref=e81]: Panadería Tahona
+  - main [ref=e82]:
+    - generic [ref=e83]:
+      - text: 
+      - navigation "breadcrumb" [ref=e84]:
+        - list [ref=e85]:
+          - listitem [ref=e86]:
+            - link "Inicio" [ref=e87] [cursor=pointer]:
+              - /url: /web/dashboard
+          - listitem [ref=e88]:
+            - text: /
+            - link "Finanzas" [ref=e89] [cursor=pointer]:
+              - /url: "#"
+          - listitem [ref=e90]: / Contabilidad
+      - generic [ref=e91]:
+        - link "" [ref=e92] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e93]: 
+        - button "" [ref=e95] [cursor=pointer]:
+          - generic [ref=e96]: 
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - heading "Contabilidad" [level=4] [ref=e101]
+        - link " Balance" [ref=e103] [cursor=pointer]:
+          - /url: /web/contabilidad/balance
+          - generic [ref=e104]: 
+          - text: Balance
+      - generic [ref=e106]:
+        - generic: 
+        - searchbox "Buscar..." [ref=e107]
+      - table [ref=e110]:
+        - rowgroup [ref=e111]:
+          - row "Fecha Numero Concepto Debe Haber" [ref=e112]:
+            - columnheader "Fecha" [ref=e113]
+            - columnheader "Numero" [ref=e114]
+            - columnheader "Concepto" [ref=e115]
+            - columnheader "Debe" [ref=e116]
+            - columnheader "Haber" [ref=e117]
+        - rowgroup [ref=e118]:
+          - row "No hay asientos contables" [ref=e119]:
+            - cell "No hay asientos contables" [ref=e120]

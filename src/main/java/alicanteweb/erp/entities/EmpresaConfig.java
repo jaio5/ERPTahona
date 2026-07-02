@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -80,9 +81,15 @@ public class EmpresaConfig {
     private String registroSanitario;
 
     // Configuración Verifactu
-    @ColumnDefault("TRUE")
+    @ColumnDefault("FALSE")
     @Column(name = "verifactu_habilitado")
     private Boolean verifactuHabilitado;
+
+    @Column(name = "verifactu_fecha_inicio")
+    private LocalDate verifactuFechaInicio;
+
+    @Column(name = "verifactu_fecha_renuncia")
+    private LocalDate verifactuFechaRenuncia;
 
     @Size(max = 20)
     @Column(name = "verifactu_nif_emisor", length = 20)
@@ -150,7 +157,7 @@ public class EmpresaConfig {
             activo = true;
         }
         if (verifactuHabilitado == null) {
-            verifactuHabilitado = true;
+            verifactuHabilitado = false;
         }
         if (sifModalidad == null) {
             sifModalidad = SifModalidad.VERIFACTU;

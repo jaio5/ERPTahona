@@ -39,7 +39,7 @@ public interface AsientoContableRepository extends JpaRepository<AsientoContable
     /**
      * Obtener último número de asiento del año
      */
-    @Query("SELECT MAX(CAST(SUBSTRING(a.numero, 5) AS int)) FROM AsientoContable a WHERE a.numero LIKE :pattern")
+    @Query("SELECT MAX(CAST(SUBSTRING(a.numero, 6) AS int)) FROM AsientoContable a WHERE a.numero LIKE :pattern")
     Integer findMaxNumeroByYear(String pattern);
 
     /**

@@ -1,0 +1,32 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Devoluciones</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/devoluciones/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nueva devolución
+            </a>
+        </div>
+    </div>
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>Número</th><th>Fecha</th><th>Cliente</th><th>Motivo</th><th>Estado</th><th style="width:80px;"></th></tr></thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(devoluciones)}"><td colspan="6" class="empty-state"><i class="bi bi-arrow-return-left"></i><div>No hay devoluciones</div></td></tr>
+            <tr th:each="d : ${devoluciones}">
+                <td th:text="${d.numero} ?: '-'"></td><td th:text="${d.fecha}"></td>
+                <td th:text="${d.cliente?.nombre} ?: '-'"></td><td th:text="${d.motivo} ?: '-'"></td>
+                <td><span class="badge-status" th:attr="data-status=${d.estado?.toLowerCase()}" th:text="${d.estado}"></span></td>
+                <td class="text-end">
+                    <a th:href="@{/web/devoluciones/{id}(id=${d.id})}" class="btn btn-ghost btn-sm" title="Ver">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table></div></div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/devoluciones')}"></div>
+</div>

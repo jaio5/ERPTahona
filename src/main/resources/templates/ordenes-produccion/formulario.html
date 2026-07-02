@@ -1,0 +1,60 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Orden de producción</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/ordenes-produccion}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card" style="max-width:700px;">
+        <form th:action="@{/web/ordenes-produccion}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${orden?.id}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="recetaId">Receta</label>
+                    <select id="recetaId" name="recetaId" class="form-select" data-searchable>
+                        <option value="">Sin receta específica</option>
+                        <option th:each="r : ${recetas}" th:value="${r.id}"
+                                th:text="${r.nombre}"
+                                th:selected="${orden?.receta?.id == r.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="articuloId">Artículo a producir</label>
+                    <select id="articuloId" name="articuloId" class="form-select" data-searchable>
+                        <option value="">Seleccionar artículo...</option>
+                        <option th:each="a : ${articulos}" th:value="${a.id}"
+                                th:text="${a.nombre}"
+                                th:selected="${orden?.articulo?.id == a.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="cantidad">Cantidad planificada</label>
+                    <input type="text" inputmode="decimal" id="cantidad" name="cantidad" class="form-control"
+                           th:value="${orden?.cantidadPlanificada != null ? #numbers.formatDecimal(orden.cantidadPlanificada, 1, 'COMMA', 2, 'POINT') : ''}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="fechaStr">Fecha</label>
+                    <input type="date" id="fechaStr" name="fechaStr" class="form-control"
+                           th:value="${orden?.fecha != null ? orden.fecha : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="observaciones">Observaciones</label>
+                    <textarea id="observaciones" name="observaciones" class="form-control" rows="3"
+                              th:text="${orden?.observaciones}"
+                              placeholder="Notas adicionales sobre la producción..."></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1"></i>Guardar orden
+                </button>
+                <a th:href="@{/web/ordenes-produccion}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

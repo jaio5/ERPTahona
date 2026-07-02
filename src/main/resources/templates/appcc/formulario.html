@@ -1,0 +1,31 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Control APPCC</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/appcc}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+    <div class="form-card" style="max-width:700px;">
+    <form th:action="@{/web/appcc}" method="post" class="needs-validation" novalidate>
+        <input type="hidden" name="id" th:value="${control?.id}">
+        <div class="row g-3">
+            <div class="col-md-5"><label class="form-label" for="puntoCritico">Punto critico</label><input id="puntoCritico" name="puntoCritico" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label" for="temperatura">Temperatura</label><input id="temperatura" name="temperatura" type="text" inputmode="decimal" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label" for="limiteCritico">Limite critico</label><input id="limiteCritico" name="limiteCritico" type="text" inputmode="decimal" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label" for="resultado">Resultado</label><input id="resultado" name="resultado" class="form-control" placeholder="OK / NOK"></div>
+            <div class="col-md-4"><label class="form-label" for="responsable">Responsable</label><input id="responsable" name="responsable" class="form-control"></div>
+            <div class="col-12"><label class="form-label" for="accionCorrectiva">Accion correctiva</label><textarea id="accionCorrectiva" name="accionCorrectiva" class="form-control" rows="3"></textarea></div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" data-no-double-click>
+                <i class="bi bi-floppy me-1"></i>Guardar control
+            </button>
+            <a th:href="@{/web/appcc}" class="btn btn-ghost">Cancelar</a>
+        </div>
+    </form>
+    </div>
+</div>

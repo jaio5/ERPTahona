@@ -1,0 +1,83 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Rentabilidad por producto</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/reportes}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="form-card text-center">
+                <div class="text-muted small">Productos analizados</div>
+                <div class="h4 mb-0" th:text="${numArticulos}">0</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-card text-center">
+                <div class="text-muted small">Con coste configurado</div>
+                <div class="h4 mb-0" th:text="${numConCoste}">0</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-card text-center">
+                <div class="text-muted small">Sin coste (pendiente)</div>
+                <div class="h4 mb-0" th:text="${numArticulos - numConCoste}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${numConCoste == 0}" class="alert alert-warning">
+        Ningun articulo tiene coste configurado. Ve a <strong>Articulos</strong> y rellena el campo "Coste" en cada producto para ver los margenes reales.
+    </div>
+
+    <div class="table-card" th:if="${not #lists.isEmpty(rentabilidad)}">
+        <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Codigo</th>
+                    <th>Producto</th>
+                    <th>Categoria</th>
+                    <th class="text-end">PVP</th>
+                    <th class="text-end">Coste</th>
+                    <th class="text-end">Margen</th>
+                    <th class="text-end">Margen %</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="r : ${rentabilidad}">
+                    <td class="text-muted small" th:text="${r.codigo}">-</td>
+                    <td th:text="${r.nombre}">-</td>
+                    <td><span class="badge bg-light text-dark" th:text="${r.categoria}">-</span></td>
+                    <td class="text-end" th:text="${r.pvp != null ? #numbers.formatCurrency(r.pvp) : '—'}">0</td>
+                    <td class="text-end">
+                        <span th:if="${r.tieneCoste}" th:text="${#numbers.formatCurrency(r.coste)}">0</span>
+                        <span th:unless="${r.tieneCoste}" class="text-warning small">sin coste</span>
+                    </td>
+                    <td class="text-end fw-bold"
+                        th:classappend="${r.margen != null and r.margen.signum() >= 0 ? 'text-success' : 'text-danger'}"
+                        th:text="${r.margen != null ? #numbers.formatCurrency(r.margen) : '—'}">0</td>
+                    <td class="text-end">
+                        <span th:if="${r.tieneCoste}"
+                              th:classappend="${r.margenPct != null and r.margenPct.signum() >= 0 ? 'badge bg-success' : 'badge bg-danger'}"
+                              th:text="${r.margenPct} + '%'">0%</span>
+                        <span th:unless="${r.tieneCoste}" class="text-muted">-</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(rentabilidad)}" class="form-card text-center py-5">
+        <div class="empty-state">
+            <i class="bi bi-graph-up"></i>
+            <div>No hay articulos activos con PVP configurado.</div>
+        </div>
+    </div>
+</div>

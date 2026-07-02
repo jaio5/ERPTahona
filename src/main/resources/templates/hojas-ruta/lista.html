@@ -1,0 +1,34 @@
+﻿<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Hojas de ruta</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/hojas-ruta/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nueva hoja de ruta
+            </a>
+        </div>
+    </div>
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>Fecha</th><th>Conductor</th><th>Estado</th><th style="width:100px;"></th></tr></thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(hojas)}">
+                <td colspan="4" class="empty-state">
+                    <i class="bi bi-map"></i>
+                    <div>No hay hojas de ruta</div>
+                </td>
+            </tr>
+            <tr th:each="h : ${hojas}">
+            <td th:text="${h.fecha}"></td><td th:text="${h.conductor}"></td>
+            <td><span class="badge-status" th:attr="data-status=${h.estado?.toLowerCase()}" th:text="${h.estado}"></span></td>
+            <td class="text-end">
+                <a th:href="@{/web/hojas-ruta/{id}(id=${h.id})}" class="btn btn-ghost btn-sm" title="Ver">
+                    <i class="bi bi-eye"></i>
+                </a>
+            </td>
+        </tr></tbody>
+    </table></div></div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/hojas-ruta')}"></div>
+</div>

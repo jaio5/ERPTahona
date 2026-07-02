@@ -33,6 +33,10 @@ public class AlmacenService {
         return repository.existsByCodigo(codigo);
     }
 
+    public List<Almacen> buscar(String q) {
+        return repository.buscar(q);
+    }
+
     @Transactional
     public Almacen save(Almacen almacen) {
         // Validaciones de negocio centralizadas

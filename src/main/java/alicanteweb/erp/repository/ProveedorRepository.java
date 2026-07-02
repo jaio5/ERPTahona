@@ -1,8 +1,11 @@
 package alicanteweb.erp.repository;
 
 import alicanteweb.erp.entities.Proveedor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -35,6 +38,8 @@ public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
      * Busca proveedores por CIF
      */
     Optional<Proveedor> findByCif(String cif);
+    Optional<Proveedor> findByCifIgnoreCase(String cif);
+    Optional<Proveedor> findFirstByNombreIgnoreCase(String nombre);
 
     /**
      * Busca proveedores por múltiples criterios
@@ -54,5 +59,12 @@ public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {
      * Busca proveedores activos
      */
     List<Proveedor> findByActivoTrue();
+
+    @Query("SELECT p FROM Proveedor p WHERE "
+         + "(:q IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%',:q,'%')) "
+         + "OR LOWER(p.codigo) LIKE LOWER(CONCAT('%',:q,'%')) "
+         + "OR LOWER(p.cif) LIKE LOWER(CONCAT('%',:q,'%'))) "
+         + "ORDER BY p.nombre")
+    Page<Proveedor> buscarPaginado(@Param("q") String q, Pageable pageable);
 }
 

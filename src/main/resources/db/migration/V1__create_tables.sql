@@ -133,6 +133,7 @@ CREATE TABLE IF NOT EXISTS facturas (
   tipo_rectificacion VARCHAR(20),
   base_imponible DECIMAL(10,2) DEFAULT 0.00,
   total_iva DECIMAL(10,2) DEFAULT 0.00,
+  tipo_impositivo DECIMAL(5,2),
   total_recargo DECIMAL(10,2) DEFAULT 0.00,
   observaciones TEXT,
   verifactu_qr TEXT,
@@ -154,12 +155,6 @@ CREATE TABLE IF NOT EXISTS factura_lineas (
   iva DECIMAL(5,2),
   total DECIMAL(10,2)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Relaciones
-ALTER TABLE users ADD CONSTRAINT fk_users_rol_id FOREIGN KEY (rol_id) REFERENCES roles(id);
-ALTER TABLE facturas ADD CONSTRAINT fk_facturas_cliente FOREIGN KEY (cliente_id) REFERENCES clientes(id);
-ALTER TABLE factura_lineas ADD CONSTRAINT fk_factura_lineas_factura FOREIGN KEY (factura_id) REFERENCES facturas(id);
-ALTER TABLE factura_lineas ADD CONSTRAINT fk_factura_lineas_articulo FOREIGN KEY (articulo_id) REFERENCES articulos(id);
 
 -- Inserts iniciales de datos (solo para entorno de desarrollo)
 INSERT INTO roles (nombre, descripcion, activo, es_sistema) VALUES

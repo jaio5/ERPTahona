@@ -1,6 +1,8 @@
 package alicanteweb.erp.repository;
 
 import alicanteweb.erp.entities.Usuario;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,6 +45,13 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
            "LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))")
     List<Usuario> buscar(@Param("search") String search);
+
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.rol WHERE "
+         + "(:q IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%',:q,'%')) "
+         + "OR LOWER(u.nombre) LIKE LOWER(CONCAT('%',:q,'%')) "
+         + "OR LOWER(u.email) LIKE LOWER(CONCAT('%',:q,'%'))) "
+         + "ORDER BY u.username")
+    Page<Usuario> findPage(@Param("q") String q, Pageable pageable);
 }
 
 

@@ -79,7 +79,7 @@ public class VerifactuEvidence {
     private String tipoRegistro;
 
     @Lob
-    @Column(name = "xml_generado")
+    @Column(name = "xml_generado", columnDefinition = "LONGTEXT")
     private String xmlGenerado;
 
     @Column(name = "fecha_generacion_registro")

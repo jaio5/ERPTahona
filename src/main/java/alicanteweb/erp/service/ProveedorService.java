@@ -3,6 +3,8 @@ package alicanteweb.erp.service;
 import alicanteweb.erp.entities.Proveedor;
 import alicanteweb.erp.repository.ProveedorRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +55,27 @@ public class ProveedorService {
         return proveedorRepository.findByCodigo(codigo);
     }
 
+    public Optional<Proveedor> findByCif(String cif) {
+        if (cif == null || cif.isBlank()) {
+            return Optional.empty();
+        }
+        return proveedorRepository.findByCifIgnoreCase(cif.trim());
+    }
+
+    public Optional<Proveedor> findByNombreExacto(String nombre) {
+        if (nombre == null || nombre.isBlank()) {
+            return Optional.empty();
+        }
+        return proveedorRepository.findFirstByNombreIgnoreCase(nombre.trim());
+    }
+
+    public List<Proveedor> searchByNombre(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return List.of();
+        }
+        return proveedorRepository.findByNombreContainingIgnoreCase(texto.trim());
+    }
+
     /**
      * Guarda o actualiza un proveedor
      */
@@ -66,7 +89,7 @@ public class ProveedorService {
 
         // Validaciones básicas
         String codigo = proveedor.getCodigo();
-        if (codigo == null || codigo.trim().isEmpty()) {
+        if (codigo == null || codigo.isBlank()) {
             throw new IllegalArgumentException("El código del proveedor es obligatorio");
         }
 
@@ -80,7 +103,7 @@ public class ProveedorService {
         }
 
         // Comprobar duplicado por CIF si se ha introducido
-        if (proveedor.getCif() != null && !proveedor.getCif().trim().isEmpty()) {
+        if (proveedor.getCif() != null && !proveedor.getCif().isBlank()) {
             var optCif = proveedorRepository.findByCif(proveedor.getCif().trim());
             if (optCif.isPresent()) {
                 Proveedor existente = optCif.get();
@@ -139,6 +162,13 @@ public class ProveedorService {
         return proveedorRepository.buscarPorCriterio(criterio);
     }
 
+    public Page<Proveedor> buscarPaginado(String q, Pageable pageable) {
+        if (q == null || q.isBlank()) {
+            return proveedorRepository.findAll(pageable);
+        }
+        return proveedorRepository.buscarPaginado(q, pageable);
+    }
+
     /**
      * Genera un código único para un proveedor nuevo
      */
@@ -160,6 +190,10 @@ public class ProveedorService {
         }
 
         return String.format("PROV%04d", maxNumero + 1);
+    }
+
+    public long count() {
+        return proveedorRepository.count();
     }
 }
 

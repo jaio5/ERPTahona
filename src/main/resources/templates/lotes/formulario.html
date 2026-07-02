@@ -1,0 +1,68 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Lote</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/lotes}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card" style="max-width:700px;">
+        <form th:action="@{/web/lotes}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${lote?.id}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="codigo">Código <span class="text-danger">*</span></label>
+                    <input type="text" id="codigo" name="codigo" class="form-control"
+                           th:value="${lote?.codigo}" required>
+                    <div class="invalid-feedback">El código es obligatorio.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="articuloId">Artículo</label>
+                    <select id="articuloId" name="articuloId" class="form-select" data-searchable>
+                        <option value="">Seleccionar artículo...</option>
+                        <option th:each="a : ${articulos}" th:value="${a.id}"
+                                th:text="${a.nombre}"
+                                th:selected="${lote?.articulo?.id == a.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="fechaProd">Fecha de producción <span class="text-danger">*</span></label>
+                    <input type="date" id="fechaProd" name="fechaProd" class="form-control" required
+                           th:value="${lote?.fechaProduccion != null ? lote.fechaProduccion : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                    <div class="invalid-feedback">La fecha de producción es obligatoria.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="fechaCad">Fecha de caducidad <span class="text-danger">*</span></label>
+                    <input type="date" id="fechaCad" name="fechaCad" class="form-control" required
+                           th:value="${lote?.fechaCaducidad}">
+                    <div class="invalid-feedback">La fecha de caducidad es obligatoria.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="cantidad">Cantidad inicial</label>
+                    <input type="text" inputmode="decimal" id="cantidad" name="cantidad" class="form-control"
+                           th:value="${lote?.cantidadInicial != null ? #numbers.formatDecimal(lote.cantidadInicial, 1, 'COMMA', 2, 'POINT') : ''}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="origen">Origen</label>
+                    <input type="text" id="origen" name="origen" class="form-control"
+                           th:value="${lote?.origen}" placeholder="Proveedor, producción propia...">
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="registroSanitario">Registro sanitario</label>
+                    <input type="text" id="registroSanitario" name="registroSanitario" class="form-control"
+                           th:value="${lote?.numeroRegistroSanitario}">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1"></i>Guardar lote
+                </button>
+                <a th:href="@{/web/lotes}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

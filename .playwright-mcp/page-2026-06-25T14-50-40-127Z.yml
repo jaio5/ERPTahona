@@ -1,0 +1,246 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - heading " Tahona ERP" [level=5] [ref=e5]:
+        - generic [ref=e6]: 
+        - text: Tahona ERP
+      - text: Sistema de gestión de obrador
+    - generic [ref=e7]: Inicio
+    - link " Panel de trabajo" [ref=e8] [cursor=pointer]:
+      - /url: /web/dashboard
+      - generic [ref=e9]: 
+      - generic [ref=e10]: Panel de trabajo
+    - link " Calendario" [ref=e11] [cursor=pointer]:
+      - /url: /web/calendario
+      - generic [ref=e12]: 
+      - generic [ref=e13]: Calendario
+    - link " Planificador" [ref=e14] [cursor=pointer]:
+      - /url: /web/planificador
+      - generic [ref=e15]: 
+      - generic [ref=e16]: Planificador
+    - generic [ref=e17]:
+      - button " Ventas " [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: 
+        - generic [ref=e20]: Ventas
+        - generic [ref=e21]: 
+      - text:     
+    - generic [ref=e22]:
+      - button " Compras " [ref=e23] [cursor=pointer]:
+        - generic [ref=e24]: 
+        - generic [ref=e25]: Compras
+        - generic [ref=e26]: 
+      - text:    
+    - generic [ref=e27]:
+      - button " Almacén " [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: 
+        - generic [ref=e30]: Almacén
+        - generic [ref=e31]: 
+      - text:    
+    - generic [ref=e32]:
+      - button " Producción " [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: 
+        - generic [ref=e35]: Producción
+        - generic [ref=e36]: 
+      - text:    
+    - generic [ref=e37]:
+      - button " Reparto " [ref=e38] [cursor=pointer]:
+        - generic [ref=e39]: 
+        - generic [ref=e40]: Reparto
+        - generic [ref=e41]: 
+      - text:    
+    - generic [ref=e42]:
+      - button " Finanzas " [ref=e43] [cursor=pointer]:
+        - generic [ref=e44]: 
+        - generic [ref=e45]: Finanzas
+        - generic [ref=e46]: 
+      - text:     
+    - generic [ref=e47]:
+      - button " Administración " [ref=e48] [cursor=pointer]:
+        - generic [ref=e49]: 
+        - generic [ref=e50]: Administración
+        - generic [ref=e51]: 
+      - text:      
+    - generic [ref=e52]:
+      - button " Fiscal " [ref=e53] [cursor=pointer]:
+        - generic [ref=e54]: 
+        - generic [ref=e55]: Fiscal
+        - generic [ref=e56]: 
+      - text:  
+    - link " Informes" [ref=e57] [cursor=pointer]:
+      - /url: /web/reportes
+      - generic [ref=e58]: 
+      - generic [ref=e59]: Informes
+    - generic [ref=e61]:
+      - generic [ref=e62]: A
+      - generic [ref=e63]:
+        - generic [ref=e64]: Administrador
+        - generic [ref=e65]: Panadería Tahona
+  - main [ref=e66]:
+    - generic [ref=e67]:
+      - text: 
+      - navigation "breadcrumb" [ref=e68]:
+        - list [ref=e69]:
+          - listitem [ref=e70]: Inicio
+      - generic [ref=e71]:
+        - link "" [ref=e72] [cursor=pointer]:
+          - /url: /web/dashboard
+          - generic [ref=e73]: 
+        - button "" [ref=e75] [cursor=pointer]:
+          - generic [ref=e76]: 
+    - generic [ref=e78]:
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - heading "Panel de trabajo" [level=4] [ref=e81]
+          - text: Hoy, jueves 25 junio 2026
+        - link " Informes" [ref=e82] [cursor=pointer]:
+          - /url: /web/reportes
+          - generic [ref=e83]: 
+          - text: Informes
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - generic [ref=e86]: 
+          - generic [ref=e87]:
+            - strong [ref=e88]: 1 pedido(s) pendiente(s)
+            - generic [ref=e89]: Hay pedidos sin servir
+          - button [ref=e90] [cursor=pointer]
+        - generic [ref=e91]:
+          - generic [ref=e92]: 
+          - generic [ref=e93]:
+            - strong [ref=e94]: "Factura vencida: F-GEN-2026-0004"
+            - generic [ref=e95]: "Vencimiento: 2026-06-19, Total: 0.00"
+          - button [ref=e96] [cursor=pointer]
+        - generic [ref=e97]:
+          - generic [ref=e98]: 
+          - generic [ref=e99]:
+            - strong [ref=e100]: "Factura vencida: F-GEN-2026-0005"
+            - generic [ref=e101]: "Vencimiento: 2026-06-19, Total: 2.64"
+          - button [ref=e102] [cursor=pointer]
+        - generic [ref=e103]:
+          - generic [ref=e104]: 
+          - generic [ref=e105]:
+            - strong [ref=e106]: "Factura vencida: F-GEN-2026-0006"
+            - generic [ref=e107]: "Vencimiento: 2026-06-19, Total: 2.64"
+          - button [ref=e108] [cursor=pointer]
+        - generic [ref=e109]:
+          - generic [ref=e110]: 
+          - generic [ref=e111]:
+            - strong [ref=e112]: "Factura vencida: F-GEN-2026-0008"
+            - generic [ref=e113]: "Vencimiento: 2026-06-21, Total: 4.62"
+          - button [ref=e114] [cursor=pointer]
+      - generic [ref=e115]:
+        - generic [ref=e117]:
+          - generic [ref=e119]: 
+          - generic [ref=e120]:
+            - generic [ref=e121]: "8"
+            - generic [ref=e122]: Facturas totales
+        - generic [ref=e124]:
+          - generic [ref=e126]: 
+          - generic [ref=e127]:
+            - generic [ref=e128]: "3"
+            - generic [ref=e129]: Clientes activos
+        - generic [ref=e131]:
+          - generic [ref=e133]: 
+          - generic [ref=e134]:
+            - generic [ref=e135]: "8"
+            - generic [ref=e136]: Artículos catálogo
+        - generic [ref=e138]:
+          - generic [ref=e140]: 
+          - generic [ref=e141]:
+            - generic [ref=e142]: "0"
+            - generic [ref=e143]: Recetas activas
+      - generic [ref=e144]:
+        - generic [ref=e146]:
+          - generic [ref=e148]: 
+          - generic [ref=e149]:
+            - generic [ref=e150]: "0"
+            - generic [ref=e151]: Órdenes en producción
+        - generic [ref=e153]:
+          - generic [ref=e155]: 
+          - generic [ref=e156]:
+            - generic [ref=e157]: "0"
+            - generic [ref=e158]: Lotes por caducar
+            - generic [ref=e160]: Todo en orden
+        - generic [ref=e162]:
+          - generic [ref=e164]: 
+          - generic [ref=e165]:
+            - generic [ref=e166]: "0"
+            - generic [ref=e167]: Rutas activas hoy
+      - generic [ref=e168]:
+        - generic [ref=e170]:
+          - heading " Acciones rápidas" [level=6] [ref=e171]:
+            - generic [ref=e172]: 
+            - text: Acciones rápidas
+          - generic [ref=e173]:
+            - link " Nueva factura" [ref=e174] [cursor=pointer]:
+              - /url: /web/facturas/nueva
+              - generic [ref=e175]: 
+              - generic [ref=e176]: Nueva factura
+            - link " Albarán" [ref=e177] [cursor=pointer]:
+              - /url: /web/albaranes/nuevo
+              - generic [ref=e178]: 
+              - generic [ref=e179]: Albarán
+            - link " Cliente" [ref=e180] [cursor=pointer]:
+              - /url: /web/clientes/nuevo
+              - generic [ref=e181]: 
+              - generic [ref=e182]: Cliente
+            - link " Artículo" [ref=e183] [cursor=pointer]:
+              - /url: /web/articulos/nuevo
+              - generic [ref=e184]: 
+              - generic [ref=e185]: Artículo
+            - link " Orden prod." [ref=e186] [cursor=pointer]:
+              - /url: /web/ordenes-produccion/nuevo
+              - generic [ref=e187]: 
+              - generic [ref=e188]: Orden prod.
+            - link " Hoja ruta" [ref=e189] [cursor=pointer]:
+              - /url: /web/hojas-ruta/nuevo
+              - generic [ref=e190]: 
+              - generic [ref=e191]: Hoja ruta
+        - generic [ref=e193]:
+          - heading " Producción" [level=6] [ref=e194]:
+            - generic [ref=e195]: 
+            - text: Producción
+          - generic [ref=e196]:
+            - link " Órdenes de producción" [ref=e197] [cursor=pointer]:
+              - /url: /web/ordenes-produccion
+              - generic [ref=e198]: 
+              - text: Órdenes de producción
+            - link " Registro de horneadas" [ref=e199] [cursor=pointer]:
+              - /url: /web/horneadas
+              - generic [ref=e200]: 
+              - text: Registro de horneadas
+            - link " Gestión de recetas" [ref=e201] [cursor=pointer]:
+              - /url: /web/recetas
+              - generic [ref=e202]: 
+              - text: Gestión de recetas
+            - link " Trazabilidad de lotes" [ref=e203] [cursor=pointer]:
+              - /url: /web/lotes
+              - generic [ref=e204]: 
+              - text: Trazabilidad de lotes
+        - generic [ref=e206]:
+          - heading " Reparto" [level=6] [ref=e207]:
+            - generic [ref=e208]: 
+            - text: Reparto
+          - generic [ref=e209]:
+            - link " Hojas de ruta del día" [ref=e210] [cursor=pointer]:
+              - /url: /web/hojas-ruta
+              - generic [ref=e211]: 
+              - text: Hojas de ruta del día
+            - link " Albaranes pendientes" [ref=e212] [cursor=pointer]:
+              - /url: /web/albaranes
+              - generic [ref=e213]: 
+              - text: Albaranes pendientes
+            - link " Rutas maestras" [ref=e214] [cursor=pointer]:
+              - /url: /web/rutas
+              - generic [ref=e215]: 
+              - text: Rutas maestras
+            - link " Devoluciones" [ref=e216] [cursor=pointer]:
+              - /url: /web/devoluciones
+              - generic [ref=e217]: 
+              - text: Devoluciones
+      - generic [ref=e218]:
+        - heading " Ventas últimos 6 meses" [level=6] [ref=e221]:
+          - generic [ref=e222]: 
+          - text: Ventas últimos 6 meses
+        - heading " Estado producción" [level=6] [ref=e226]:
+          - generic [ref=e227]: 
+          - text: Estado producción

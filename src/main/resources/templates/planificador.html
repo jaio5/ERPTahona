@@ -1,0 +1,97 @@
+<div th:fragment="content" x-data="planificadorApp" x-cloak>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4>Planificador diario</h4>
+        </div>
+        <div class="page-header-actions">
+            <input type="date" class="form-control form-control-sm" x-model="fecha" @change="cargar()" style="width:auto;">
+            <button class="btn btn-primary btn-sm" @click="irHoy()">Hoy</button>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h6 class="mb-2">Pedidos (<span x-text="pedidos.length"></span>)</h6>
+                <template x-for="p in pedidos" :key="p.id">
+                    <div class="mb-1 p-1 border rounded small">
+                        <div class="fw-bold" x-text="p.numero"></div>
+                        <div x-text="(p.cliente || 'Sin cliente') + ' - ' + (p.estado || '')"></div>
+                    </div>
+                </template>
+                <div x-show="pedidos.length === 0" class="text-muted small">Sin pedidos</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h6 class="mb-2">Albaranes (<span x-text="albaranes.length"></span>)</h6>
+                <template x-for="a in albaranes" :key="a.id">
+                    <div class="mb-1 p-1 border rounded small">
+                        <div class="fw-bold" x-text="a.numero"></div>
+                        <div x-text="a.cliente || 'Sin cliente'"></div>
+                    </div>
+                </template>
+                <div x-show="albaranes.length === 0" class="text-muted small">Sin albaranes</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h6 class="mb-2">Órdenes prod. (<span x-text="ordenes.length"></span>)</h6>
+                <template x-for="o in ordenes" :key="o.id">
+                    <div class="mb-1 p-1 border rounded small">
+                        <div class="fw-bold" x-text="o.numero"></div>
+                        <div x-text="(o.receta || 'Sin receta') + ' - ' + (o.estado || '')"></div>
+                    </div>
+                </template>
+                <div x-show="ordenes.length === 0" class="text-muted small">Sin órdenes</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <h6 class="mb-3">Necesidades de materia prima</h6>
+        <table class="table table-sm">
+            <thead><tr><th>Articulo</th><th class="text-end">Necesario</th><th class="text-end">Stock</th><th class="text-end">Diferencia</th></tr></thead>
+            <tbody>
+                <template x-for="n in necesidades" :key="n.articuloId">
+                    <tr>
+                        <td x-text="n.nombre"></td>
+                        <td class="text-end" x-text="n.necesario"></td>
+                        <td class="text-end" x-text="n.stock"></td>
+                        <td class="text-end" :class="n.diferencia < 0 ? 'text-danger fw-bold' : 'text-success'" x-text="n.diferencia"></td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+        <div x-show="necesidades.length === 0" class="text-muted small">Sin necesidades calculadas</div>
+    </div>
+
+    <script th:attr="nonce=${cspNonce}">
+        document.addEventListener('alpine:init', function () {
+            Alpine.data('planificadorApp', function () {
+                return {
+                fecha: new Date().toISOString().split('T')[0],
+                pedidos: [],
+                albaranes: [],
+                ordenes: [],
+                necesidades: [],
+                init() { this.cargar(); },
+                irHoy() {
+                    this.fecha = new Date().toISOString().split('T')[0];
+                    this.cargar();
+                },
+                cargar() {
+                    fetch(`/api/web/planificador?fecha=${this.fecha}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            this.pedidos = data.pedidos || [];
+                            this.albaranes = data.albaranes || [];
+                            this.ordenes = data.ordenes || [];
+                            this.necesidades = data.necesidades || [];
+                        });
+                }
+                };
+            });
+        });
+    </script>
+</div>
