@@ -65,6 +65,51 @@ public class WebEntityController {
 
     private static final Set<String> ALWAYS_BLOCKED = Set.of("id", "version", "password", "rol", "role");
 
+    /**
+     * Módulo del modelo de permisos granulares (roles.permisos, ver RolService.tienePermiso)
+     * que gobierna cada módulo genérico. GET→ver, POST→crear, PUT→editar, DELETE→eliminar.
+     * Los ADMIN mantienen acceso total (PermisoEvaluador.puede devuelve true para ellos).
+     */
+    private static final Map<String, String> PERMISO_POR_MODULO = Map.ofEntries(
+            Map.entry("proveedores", "proveedores"),
+            Map.entry("pedidos-venta", "ventas"),
+            Map.entry("pedidos-compra", "compras"),
+            Map.entry("facturas", "ventas"),
+            Map.entry("facturas-compra", "compras"),
+            Map.entry("albaranes", "ventas"),
+            Map.entry("presupuestos", "ventas"),
+            Map.entry("almacenes", "almacen"),
+            Map.entry("usuarios", "usuarios"),
+            Map.entry("asientos", "contabilidad"),
+            Map.entry("plan-contable", "contabilidad"),
+            Map.entry("plan-cuentas", "contabilidad"),
+            Map.entry("movimientos-caja", "tesoreria"),
+            Map.entry("cajas", "tesoreria"),
+            Map.entry("caja-movimientos", "tesoreria"),
+            Map.entry("movimientos-banco", "tesoreria"),
+            Map.entry("bancos", "tesoreria"),
+            Map.entry("roles", "usuarios"),
+            Map.entry("direcciones-envio", "clientes"),
+            Map.entry("modelo347", "fiscal"),
+            Map.entry("auditoria", "auditoria"),
+            Map.entry("verifactu-evidencias", "verifactu"),
+            Map.entry("recetas", "produccion"),
+            Map.entry("ordenes-produccion", "produccion"),
+            Map.entry("horneadas", "produccion"),
+            Map.entry("lotes", "almacen"),
+            Map.entry("appcc", "produccion"),
+            Map.entry("vehiculos", "reparto"),
+            Map.entry("rutas-reparto", "reparto"),
+            Map.entry("hojas-ruta", "reparto"),
+            Map.entry("devoluciones", "ventas"),
+            Map.entry("empresa", "configuracion"),
+            Map.entry("tarifas-cliente", "clientes"),
+            Map.entry("mermas", "almacen"),
+            Map.entry("recepciones", "compras"),
+            Map.entry("recepcion-lineas", "compras"),
+            Map.entry("fianzas", "ventas")
+    );
+
     private static final Map<String, Class<?>> MODULES = Map.ofEntries(
             Map.entry("proveedores", Proveedor.class),
             Map.entry("pedidos-venta", Pedido.class),
@@ -108,11 +153,14 @@ public class WebEntityController {
     private final EntityManager entityManager;
     private final UsuarioService usuarioService;
     private final Validator validator;
+    private final alicanteweb.erp.config.PermisoEvaluador permisos;
 
-    public WebEntityController(EntityManager entityManager, UsuarioService usuarioService, Validator validator) {
+    public WebEntityController(EntityManager entityManager, UsuarioService usuarioService, Validator validator,
+                               alicanteweb.erp.config.PermisoEvaluador permisos) {
         this.entityManager = entityManager;
         this.usuarioService = usuarioService;
         this.validator = validator;
+        this.permisos = permisos;
     }
 
     @GetMapping
@@ -123,7 +171,7 @@ public class WebEntityController {
     @GetMapping("/{module}")
     public ResponseEntity<List<Map<String, Object>>> list(@PathVariable String module,
                                                           @RequestParam(required = false) String q) {
-        requireAccess(module);
+        requireAccess(module, "ver");
         Class<?> entityClass = entityClass(module);
         if (entityClass == null) {
             return ResponseEntity.notFound().build();
@@ -136,7 +184,7 @@ public class WebEntityController {
 
     @GetMapping("/{module}/{id}")
     public ResponseEntity<Map<String, Object>> get(@PathVariable String module, @PathVariable Long id) {
-        requireAccess(module);
+        requireAccess(module, "ver");
         Class<?> entityClass = entityClass(module);
         if (entityClass == null) {
             return ResponseEntity.notFound().build();
@@ -149,7 +197,7 @@ public class WebEntityController {
     @Transactional
     public ResponseEntity<Map<String, Object>> create(@PathVariable String module,
                                                       @RequestBody Map<String, Object> data) {
-        requireAccess(module);
+        requireAccess(module, "crear");
         requireWritable(module);
         Class<?> entityClass = entityClass(module);
         if (entityClass == null) {
@@ -179,7 +227,7 @@ public class WebEntityController {
     public ResponseEntity<Map<String, Object>> update(@PathVariable String module,
                                                       @PathVariable Long id,
                                                       @RequestBody Map<String, Object> data) {
-        requireAccess(module);
+        requireAccess(module, "editar");
         requireWritable(module);
         Class<?> entityClass = entityClass(module);
         if (entityClass == null) {
@@ -208,7 +256,7 @@ public class WebEntityController {
     @PostMapping("/{module}/{id}/baja")
     @Transactional
     public ResponseEntity<Void> disable(@PathVariable String module, @PathVariable Long id) {
-        requireAccess(module);
+        requireAccess(module, "editar");
         requireWritable(module);
         return setActive(module, id, false);
     }
@@ -216,7 +264,7 @@ public class WebEntityController {
     @PostMapping("/{module}/{id}/activar")
     @Transactional
     public ResponseEntity<Void> enable(@PathVariable String module, @PathVariable Long id) {
-        requireAccess(module);
+        requireAccess(module, "editar");
         requireWritable(module);
         return setActive(module, id, true);
     }
@@ -224,7 +272,7 @@ public class WebEntityController {
     @DeleteMapping("/{module}/{id}")
     @Transactional
     public ResponseEntity<Void> delete(@PathVariable String module, @PathVariable Long id) {
-        requireAccess(module);
+        requireAccess(module, "eliminar");
         requireWritable(module);
         Class<?> entityClass = entityClass(module);
         if (entityClass == null) {
@@ -465,7 +513,7 @@ public class WebEntityController {
         }
     }
 
-    private void requireAccess(String module) {
+    private void requireAccess(String module, String accion) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             throw new AccessDeniedException("No autenticado");
@@ -479,6 +527,15 @@ public class WebEntityController {
             throw new AccessDeniedException("Acceso denegado al módulo " + module);
         }
         if (FINANCE_MODULES.contains(module) && !isContable) {
+            throw new AccessDeniedException("Acceso denegado al módulo " + module);
+        }
+        if (isAdmin) {
+            return; // comportamiento actual: los admin conservan acceso total
+        }
+        // Permisos granulares del rol: los grupos de arriba son la primera barrera,
+        // el modelo por módulo/acción decide el resto
+        String permisoModulo = PERMISO_POR_MODULO.get(module);
+        if (permisoModulo == null || !permisos.puede(permisoModulo, accion)) {
             throw new AccessDeniedException("Acceso denegado al módulo " + module);
         }
     }

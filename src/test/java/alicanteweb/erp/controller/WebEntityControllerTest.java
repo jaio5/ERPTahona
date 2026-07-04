@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller;
 
+import alicanteweb.erp.config.PermisoEvaluador;
 import alicanteweb.erp.controller.rest.WebEntityController;
 import alicanteweb.erp.entities.Cliente;
 import alicanteweb.erp.entities.Proveedor;
@@ -32,11 +33,14 @@ class WebEntityControllerTest {
     @Mock EntityManager entityManager;
     @Mock UsuarioService usuarioService;
     @Mock Validator validator;
+    @Mock PermisoEvaluador permisos;
     WebEntityController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new WebEntityController(entityManager, usuarioService, validator);
+        // Autenticado como ADMIN: el guard granular no interviene (bypass admin);
+        // la autorización por rol se cubre en RestApiPermisosTest.
+        controller = new WebEntityController(entityManager, usuarioService, validator, permisos);
         var auth = new UsernamePasswordAuthenticationToken(
                 "admin", "pass", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
         SecurityContextHolder.getContext().setAuthentication(auth);

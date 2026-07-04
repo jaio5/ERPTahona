@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web")
+@PreAuthorize("@permisos.puede('dashboard', 'ver')")
 public class AlertaRestController {
 
     private final AlertaService alertaService;

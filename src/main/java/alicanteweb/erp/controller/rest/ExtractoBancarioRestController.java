@@ -8,9 +8,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web/extractos")
+@PreAuthorize("@permisos.puede('tesoreria', 'ver')")
 public class ExtractoBancarioRestController {
 
     private static final int MESES_DEFECTO_EXTRACTO = 1;
@@ -22,6 +24,7 @@ public class ExtractoBancarioRestController {
     }
 
     @PostMapping("/importar")
+    @PreAuthorize("@permisos.puede('tesoreria', 'crear')")
     public ResponseEntity<Map<String, Object>> importar(@RequestParam Long bancoId,
                                                          @RequestParam("archivo") MultipartFile archivo) {
         try {
@@ -32,6 +35,7 @@ public class ExtractoBancarioRestController {
         }
     }
 
+    @PreAuthorize("@permisos.puede('tesoreria', 'crear')")
     @PostMapping("/importar-n43")
     public ResponseEntity<Map<String, Object>> importarNorma43(@RequestParam Long bancoId,
                                                                @RequestParam("archivo") MultipartFile archivo) {
@@ -44,6 +48,7 @@ public class ExtractoBancarioRestController {
     }
 
     @PostMapping("/{id}/conciliar")
+    @PreAuthorize("@permisos.puede('tesoreria', 'crear')")
     public ResponseEntity<Void> conciliar(@PathVariable Long id) {
         movimientoBancoService.conciliar(id);
         return ResponseEntity.ok().build();

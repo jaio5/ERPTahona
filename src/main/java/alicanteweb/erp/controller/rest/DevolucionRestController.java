@@ -12,9 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/devoluciones")
+@PreAuthorize("@permisos.puede('ventas', 'ver')")
 public class DevolucionRestController {
 
     private final DevolucionService devolucionService;
@@ -47,11 +49,13 @@ public class DevolucionRestController {
     }
 
     @PostMapping
+    @PreAuthorize("@permisos.puede('ventas', 'crear')")
     public Devolucion createDevolucion(@RequestBody Devolucion devolucion) {
         return devolucionService.save(devolucion);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Devolucion> updateDevolucion(@PathVariable Long id, @RequestBody Devolucion devolucion) {
         return devolucionService.findById(id)
                 .map(existing -> {
@@ -62,17 +66,20 @@ public class DevolucionRestController {
     }
 
     @PostMapping("/{id}/aceptar")
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Devolucion> aceptar(@PathVariable Long id) {
         return ResponseEntity.ok(devolucionService.aceptarDevolucion(id));
     }
 
     @PostMapping(value = "/{id}/rechazar", consumes = "application/json")
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Devolucion> rechazar(@PathVariable Long id,
                                                 @Valid @RequestBody RechazarDevolucionRequest request) {
         return ResponseEntity.ok(devolucionService.rechazarDevolucion(id, request.motivo()));
     }
 
     @PostMapping(value = "/{id}/rechazar", params = "motivo")
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Devolucion> rechazarCompat(@PathVariable Long id,
                                                       @RequestParam @NotBlank String motivo) {
         return ResponseEntity.ok(devolucionService.rechazarDevolucion(id, motivo));

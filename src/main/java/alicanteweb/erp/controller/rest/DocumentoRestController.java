@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web")
@@ -54,6 +55,7 @@ public class DocumentoRestController {
 
     @PostMapping("/documentos/pedido")
     @ResponseBody
+    @PreAuthorize("@permisos.puede('ventas', 'crear')")
     public ResponseEntity<Map<String, Object>> crearPedido(@RequestBody Map<String, Object> datos) {
         Pedido p = documentoService.guardarPedido(null, datos);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", p.getId(), "numero", p.getNumero()));
@@ -61,6 +63,7 @@ public class DocumentoRestController {
 
     @PutMapping("/documentos/pedido/{id}")
     @ResponseBody
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Map<String, Object>> actualizarPedido(@PathVariable Long id, @RequestBody Map<String, Object> datos) {
         Pedido p = documentoService.guardarPedido(id, datos);
         return ResponseEntity.ok(Map.of("id", p.getId(), "numero", p.getNumero()));
@@ -68,6 +71,7 @@ public class DocumentoRestController {
 
     @PostMapping("/documentos/albaran")
     @ResponseBody
+    @PreAuthorize("@permisos.puede('ventas', 'crear')")
     public ResponseEntity<Map<String, Object>> crearAlbaran(@RequestBody Map<String, Object> datos) {
         AlbaranVenta a = documentoService.guardarAlbaran(null, datos);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", a.getId(), "numero", a.getNumero()));
@@ -75,6 +79,7 @@ public class DocumentoRestController {
 
     @PutMapping("/documentos/albaran/{id}")
     @ResponseBody
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Map<String, Object>> actualizarAlbaran(@PathVariable Long id, @RequestBody Map<String, Object> datos) {
         AlbaranVenta a = documentoService.guardarAlbaran(id, datos);
         return ResponseEntity.ok(Map.of("id", a.getId(), "numero", a.getNumero()));
@@ -82,6 +87,7 @@ public class DocumentoRestController {
 
     @PostMapping("/documentos/factura")
     @ResponseBody
+    @PreAuthorize("@permisos.puede('ventas', 'crear')")
     public ResponseEntity<Map<String, Object>> crearFactura(@RequestBody Map<String, Object> datos) {
         Factura f = documentoService.guardarFactura(null, datos);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", f.getId(), "numero", f.getNumero()));
@@ -89,6 +95,7 @@ public class DocumentoRestController {
 
     @PutMapping("/documentos/factura/{id}")
     @ResponseBody
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Map<String, Object>> actualizarFactura(@PathVariable Long id, @RequestBody Map<String, Object> datos) {
         Factura f = documentoService.guardarFactura(id, datos);
         return ResponseEntity.ok(Map.of("id", f.getId(), "numero", f.getNumero()));
@@ -97,6 +104,7 @@ public class DocumentoRestController {
     // =================== ACCIONES FACTURA ===================
 
     @PostMapping("/facturas/{id}/enviar-revision")
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Void> enviarRevision(@PathVariable Long id) {
         Factura f = facturaService.findById(id).orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
         if (!"BORRADOR".equalsIgnoreCase(f.getEstado())) {
@@ -108,18 +116,21 @@ public class DocumentoRestController {
     }
 
     @PostMapping("/facturas/{id}/emitir")
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Void> emitir(@PathVariable Long id) {
         facturaService.aprobarYEmitir(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/facturas/{id}/anular")
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Void> anular(@PathVariable Long id, @RequestParam String motivo) {
         facturaService.anularFactura(id, motivo);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/facturas/{id}/anular-rectificativa")
+    @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public ResponseEntity<Void> anularRectificativa(@PathVariable Long id,
                                                      @RequestParam String motivo,
                                                      @RequestParam String numeroRectificativa) {
@@ -130,6 +141,7 @@ public class DocumentoRestController {
     // =================== ACCIONES ALBARÁN ===================
 
     @PostMapping("/albaranes/{id}/convertir")
+    @PreAuthorize("@permisos.puede('ventas', 'crear')")
     public ResponseEntity<Map<String, Object>> convertirAlbaran(@PathVariable Long id,
                                                                  @RequestBody Map<String, Object> body,
                                                                  Authentication authentication) {
@@ -143,6 +155,7 @@ public class DocumentoRestController {
     }
 
     @PostMapping("/documentos/factura-desde-albaranes")
+    @PreAuthorize("@permisos.puede('ventas', 'crear')")
     public ResponseEntity<Map<String, Object>> facturarDesdeAlbaranes(@RequestBody Map<String, Object> body,
                                                                       Authentication authentication) {
         List<?> rawIds = (List<?>) body.get("albaranIds");
@@ -172,6 +185,7 @@ public class DocumentoRestController {
     // =================== ALBARANES PENDIENTES CLIENTE ===================
 
     @GetMapping("/clientes/{id}/albaranes-pendientes")
+    @PreAuthorize("@permisos.puede('ventas', 'ver')")
     public ResponseEntity<List<AlbaranPendienteDto>> albaranesPendientes(@PathVariable Long id) {
         clienteService.findById(id).orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado"));
         List<AlbaranPendienteDto> list = albaranService.buscarPendientesFacturarPorCliente(id).stream()
@@ -182,6 +196,7 @@ public class DocumentoRestController {
     }
 
     @GetMapping("/pendientes-facturar")
+    @PreAuthorize("@permisos.puede('ventas', 'ver')")
     public ResponseEntity<List<PendienteFacturarDto>> pendientesFacturar() {
         Map<Long, PendienteFacturarAcumulado> acumulados = new LinkedHashMap<>();
         for (AlbaranVenta albaran : albaranService.buscarPendientesFacturar()) {

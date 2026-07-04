@@ -7,9 +7,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/dashboard")
+@PreAuthorize("@permisos.puede('dashboard', 'ver')")
 public class DashboardRestController {
 
     private final DashboardService dashboardService;

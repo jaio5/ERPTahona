@@ -13,9 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/produccion")
+@PreAuthorize("@permisos.puede('produccion', 'ver')")
 public class ProduccionRestController {
 
     private final RecetaService recetaService;
@@ -48,11 +50,13 @@ public class ProduccionRestController {
     }
 
     @PostMapping("/recetas")
+    @PreAuthorize("@permisos.puede('produccion', 'crear')")
     public Receta createReceta(@RequestBody Receta receta) {
         return recetaService.save(receta);
     }
 
     @PutMapping("/recetas/{id}")
+    @PreAuthorize("@permisos.puede('produccion', 'editar')")
     public ResponseEntity<Receta> updateReceta(@PathVariable Long id, @RequestBody Receta receta) {
         return recetaService.findById(id)
                 .map(existing -> {
@@ -81,11 +85,13 @@ public class ProduccionRestController {
     }
 
     @PostMapping("/ordenes")
+    @PreAuthorize("@permisos.puede('produccion', 'crear')")
     public OrdenProduccion createOrden(@RequestBody OrdenProduccion orden) {
         return ordenProduccionService.save(orden);
     }
 
     @PutMapping("/ordenes/{id}")
+    @PreAuthorize("@permisos.puede('produccion', 'editar')")
     public ResponseEntity<OrdenProduccion> updateOrden(@PathVariable Long id, @RequestBody OrdenProduccion orden) {
         return ordenProduccionService.findById(id)
                 .map(existing -> {
@@ -96,17 +102,20 @@ public class ProduccionRestController {
     }
 
     @PostMapping("/ordenes/{id}/iniciar")
+    @PreAuthorize("@permisos.puede('produccion', 'editar')")
     public ResponseEntity<OrdenProduccion> iniciarOrden(@PathVariable Long id) {
         return ResponseEntity.ok(ordenProduccionService.iniciarProduccion(id));
     }
 
     @PostMapping(value = "/ordenes/{id}/finalizar", consumes = "application/json")
+    @PreAuthorize("@permisos.puede('produccion', 'editar')")
     public ResponseEntity<OrdenProduccion> finalizarOrden(@PathVariable Long id,
                                                            @Valid @RequestBody FinalizarOrdenRequest request) {
         return ResponseEntity.ok(ordenProduccionService.finalizarProduccion(id, request.cantidad(), request.merma()));
     }
 
     @PostMapping(value = "/ordenes/{id}/finalizar", params = {"cantidad", "merma"})
+    @PreAuthorize("@permisos.puede('produccion', 'editar')")
     public ResponseEntity<OrdenProduccion> finalizarOrdenCompat(@PathVariable Long id,
                                                                 @RequestParam @DecimalMin("0.01") java.math.BigDecimal cantidad,
                                                                 @RequestParam @DecimalMin("0.00") java.math.BigDecimal merma) {
@@ -125,6 +134,7 @@ public class ProduccionRestController {
     }
 
     @PostMapping("/horneadas")
+    @PreAuthorize("@permisos.puede('produccion', 'crear')")
     public Horneada createHorneada(@RequestBody Horneada horneada) {
         return horneadaService.save(horneada);
     }

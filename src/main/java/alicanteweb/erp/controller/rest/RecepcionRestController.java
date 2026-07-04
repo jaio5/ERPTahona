@@ -7,9 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web")
+@PreAuthorize("@permisos.puede('compras', 'ver')")
 public class RecepcionRestController {
 
     private final RecepcionService recepcionService;
@@ -24,6 +26,7 @@ public class RecepcionRestController {
     }
 
     @PostMapping("/recepciones/{id}/confirmar")
+    @PreAuthorize("@permisos.puede('compras', 'editar')")
     public ResponseEntity<Recepcion> confirmar(@PathVariable Long id) {
         return ResponseEntity.ok(recepcionService.confirmar(id));
     }

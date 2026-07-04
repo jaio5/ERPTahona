@@ -6,9 +6,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.Map;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web/contabilidad")
+@PreAuthorize("@permisos.puede('contabilidad', 'ver')")
 public class CierreContableRestController {
 
     private final ContabilidadService contabilidadService;
@@ -30,6 +32,7 @@ public class CierreContableRestController {
     }
 
     @PostMapping("/cierre")
+    @PreAuthorize("@permisos.puede('contabilidad', 'crear')")
     public ResponseEntity<Map<String, Object>> cierreEjercicio(@RequestParam int año) {
         return ResponseEntity.ok(contabilidadService.cerrarEjercicio(año));
     }

@@ -40,9 +40,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - sobre un borrador sí, y los totales de la cabecera quedan recalculados;
  * - las facturas de compra contabilizadas/pagadas tampoco admiten cambios de líneas.
  */
+// ADMIN: este test cubre la inalterabilidad RRSIF, no la autorización granular
+// (cubierta en RestApiPermisosTest); ni siquiera un admin altera una emitida.
 @SpringBootTest(classes = ErpWebApplication.class)
 @AutoConfigureMockMvc
-@WithMockUser
+@WithMockUser(roles = "ADMIN")
 class WebChildFacturaLineasInalterabilidadTest {
 
     @Autowired

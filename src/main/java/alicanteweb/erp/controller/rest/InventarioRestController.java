@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web/reportes")
+@PreAuthorize("@permisos.puede('reportes', 'ver')")
 public class InventarioRestController {
 
     private static final int DIAS_DEFECTO_MOVIMIENTOS = 30;

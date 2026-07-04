@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web")
+@PreAuthorize("@permisos.puede('produccion', 'ver')")
 public class PlanificadorRestController {
 
     private final PedidoService pedidoService;

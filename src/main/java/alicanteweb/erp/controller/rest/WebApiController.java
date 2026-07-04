@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web")
@@ -46,6 +47,7 @@ public class WebApiController {
     }
 
     @GetMapping("/resumen")
+    @PreAuthorize("@permisos.puede('dashboard', 'ver')")
     public WebResumen resumen() {
         return new WebResumen(
                 clienteService.count(),
@@ -58,6 +60,7 @@ public class WebApiController {
     }
 
     @GetMapping("/clientes")
+    @PreAuthorize("@permisos.puede('clientes', 'ver')")
     public List<ClienteDto> clientes(@RequestParam(required = false) String q,
                                      @RequestParam(defaultValue = "100") int limit) {
         int safeLimit = Math.max(1, Math.min(limit, 500));
@@ -67,6 +70,7 @@ public class WebApiController {
     }
 
     @GetMapping("/clientes/{id}")
+    @PreAuthorize("@permisos.puede('clientes', 'ver')")
     public ResponseEntity<ClienteDto> cliente(@PathVariable Long id) {
         return clienteService.findById(id)
                 .map(ClienteDto::from)
@@ -75,11 +79,13 @@ public class WebApiController {
     }
 
     @PostMapping("/clientes")
+    @PreAuthorize("@permisos.puede('clientes', 'crear')")
     public ClienteDto crearCliente(@RequestBody ClienteDto dto) {
         return ClienteDto.from(clienteService.save(dto.toEntity(new Cliente())));
     }
 
     @PutMapping("/clientes/{id}")
+    @PreAuthorize("@permisos.puede('clientes', 'editar')")
     public ResponseEntity<ClienteDto> actualizarCliente(@PathVariable Long id, @RequestBody ClienteDto dto) {
         return clienteService.findById(id)
                 .map(cliente -> {
@@ -90,18 +96,21 @@ public class WebApiController {
     }
 
     @PostMapping("/clientes/{id}/baja")
+    @PreAuthorize("@permisos.puede('clientes', 'editar')")
     public ResponseEntity<Void> bajaCliente(@PathVariable Long id) {
         clienteService.darDeBaja(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/clientes/{id}/activar")
+    @PreAuthorize("@permisos.puede('clientes', 'editar')")
     public ResponseEntity<Void> activarCliente(@PathVariable Long id) {
         clienteService.activar(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/articulos")
+    @PreAuthorize("@permisos.puede('articulos', 'ver')")
     public List<ArticuloDto> articulos(@RequestParam(required = false) String q,
                                        @RequestParam(required = false) Boolean activo,
                                        @RequestParam(defaultValue = "500") int limit) {
@@ -112,6 +121,7 @@ public class WebApiController {
     }
 
     @GetMapping("/articulos/{id}")
+    @PreAuthorize("@permisos.puede('articulos', 'ver')")
     public ResponseEntity<ArticuloDto> articulo(@PathVariable Long id) {
         return articuloService.findById(id)
                 .map(ArticuloDto::from)
@@ -120,11 +130,13 @@ public class WebApiController {
     }
 
     @PostMapping("/articulos")
+    @PreAuthorize("@permisos.puede('articulos', 'crear')")
     public ArticuloDto crearArticulo(@RequestBody ArticuloDto dto) {
         return ArticuloDto.from(articuloService.save(dto.toEntity(new Articulo())));
     }
 
     @PutMapping("/articulos/{id}")
+    @PreAuthorize("@permisos.puede('articulos', 'editar')")
     public ResponseEntity<ArticuloDto> actualizarArticulo(@PathVariable Long id, @RequestBody ArticuloDto dto) {
         return articuloService.findById(id)
                 .map(articulo -> {
@@ -135,18 +147,21 @@ public class WebApiController {
     }
 
     @PostMapping("/articulos/{id}/baja")
+    @PreAuthorize("@permisos.puede('articulos', 'editar')")
     public ResponseEntity<Void> bajaArticulo(@PathVariable Long id) {
         articuloService.darDeBaja(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/articulos/{id}/activar")
+    @PreAuthorize("@permisos.puede('articulos', 'editar')")
     public ResponseEntity<Void> activarArticulo(@PathVariable Long id) {
         articuloService.activar(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/clientes/{clienteId}/albaranes-recientes")
+    @PreAuthorize("@permisos.puede('ventas', 'ver')")
     public List<AlbaranResumen> albaranesRecientes(@PathVariable Long clienteId) {
         return albaranService.obtenerRecientesPorCliente(clienteId).stream()
                 .map(a -> new AlbaranResumen(

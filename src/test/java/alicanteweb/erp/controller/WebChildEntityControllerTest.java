@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller;
 
+import alicanteweb.erp.config.PermisoEvaluador;
 import alicanteweb.erp.controller.rest.WebChildEntityController;
 import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.entities.Pedido;
@@ -22,11 +23,15 @@ import static org.mockito.Mockito.*;
 class WebChildEntityControllerTest {
 
     @Mock EntityManager entityManager;
+    @Mock PermisoEvaluador permisos;
     WebChildEntityController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new WebChildEntityController(entityManager);
+        // Este test unitario cubre la mecánica reflectiva, no la autorización
+        // (cubierta en RestApiPermisosTest): todos los permisos concedidos.
+        lenient().when(permisos.puede(anyString(), anyString())).thenReturn(true);
+        controller = new WebChildEntityController(entityManager, permisos);
     }
 
     @Test

@@ -43,10 +43,42 @@ public class WebChildEntityController {
             entry("lote-insumos", LoteInsumo.class, Lote.class, "loteProducto")
     );
 
-    private final EntityManager entityManager;
+    /**
+     * Módulo del modelo de permisos granulares que gobierna cada colección hija:
+     * las líneas heredan el módulo de su documento padre. GET→ver; POST/PUT→editar
+     * (añadir o cambiar líneas es editar el documento existente); DELETE→eliminar.
+     * Los ADMIN mantienen acceso total (PermisoEvaluador.puede devuelve true).
+     */
+    private static final Map<String, String> PERMISO_POR_HIJO = Map.ofEntries(
+            Map.entry("pedido-lineas", "ventas"),
+            Map.entry("presupuesto-lineas", "ventas"),
+            Map.entry("albaran-lineas", "ventas"),
+            Map.entry("factura-lineas", "ventas"),
+            Map.entry("pedido-compra-lineas", "compras"),
+            Map.entry("factura-compra-lineas", "compras"),
+            Map.entry("receta-ingredientes", "produccion"),
+            Map.entry("ruta-paradas", "reparto"),
+            Map.entry("hoja-ruta-entregas", "reparto"),
+            Map.entry("devolucion-lineas", "ventas"),
+            Map.entry("asiento-lineas", "contabilidad"),
+            Map.entry("lote-insumos", "almacen")
+    );
 
-    public WebChildEntityController(EntityManager entityManager) {
+    private final EntityManager entityManager;
+    private final alicanteweb.erp.config.PermisoEvaluador permisos;
+
+    public WebChildEntityController(EntityManager entityManager,
+                                    alicanteweb.erp.config.PermisoEvaluador permisos) {
         this.entityManager = entityManager;
+        this.permisos = permisos;
+    }
+
+    private void requireAccess(String child, String accion) {
+        String modulo = PERMISO_POR_HIJO.get(child);
+        if (modulo != null && !permisos.puede(modulo, accion)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Acceso denegado a " + child);
+        }
     }
 
     @GetMapping
@@ -60,7 +92,11 @@ public class WebChildEntityController {
     public ResponseEntity<List<Map<String, Object>>> list(@PathVariable String child,
                                                           @PathVariable Long parentId) {
         ChildDefinition definition = CHILDREN.get(child);
-        if (definition == null || entityManager.find(definition.parentClass(), parentId) == null) {
+        if (definition == null) {
+            return ResponseEntity.notFound().build();
+        }
+        requireAccess(child, "ver");
+        if (entityManager.find(definition.parentClass(), parentId) == null) {
             return ResponseEntity.notFound().build();
         }
         List<?> rows = findByParent(definition.entityClass(), definition.parentField(), parentId);
@@ -168,6 +204,7 @@ public class WebChildEntityController {
         if (definition == null) {
             return ResponseEntity.notFound().build();
         }
+        requireAccess(child, "editar");
         Object parent = entityManager.find(definition.parentClass(), parentId);
         if (parent == null) {
             return ResponseEntity.notFound().build();
@@ -197,6 +234,7 @@ public class WebChildEntityController {
         if (definition == null) {
             return ResponseEntity.notFound().build();
         }
+        requireAccess(child, "editar");
         Object entity = entityManager.find(definition.entityClass(), id);
         Object parent = entityManager.find(definition.parentClass(), parentId);
         if (entity == null || parent == null || !parentId.equals(parentIdOf(definition, entity))) {
@@ -219,6 +257,7 @@ public class WebChildEntityController {
         if (definition == null) {
             return ResponseEntity.notFound().build();
         }
+        requireAccess(child, "eliminar");
         Object entity = entityManager.find(definition.entityClass(), id);
         if (entity == null || !parentId.equals(parentIdOf(definition, entity))) {
             return ResponseEntity.notFound().build();

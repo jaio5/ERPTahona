@@ -6,9 +6,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/trazabilidad")
+@PreAuthorize("@permisos.puede('almacen', 'ver')")
 public class TrazabilidadRestController {
 
     private final LoteService loteService;
@@ -37,11 +39,13 @@ public class TrazabilidadRestController {
     }
 
     @PostMapping("/lotes")
+    @PreAuthorize("@permisos.puede('almacen', 'crear')")
     public Lote createLote(@RequestBody Lote lote) {
         return loteService.save(lote);
     }
 
     @PutMapping("/lotes/{id}")
+    @PreAuthorize("@permisos.puede('almacen', 'editar')")
     public ResponseEntity<Lote> updateLote(@PathVariable Long id, @RequestBody Lote lote) {
         return loteService.findById(id)
                 .map(existing -> {
@@ -69,6 +73,7 @@ public class TrazabilidadRestController {
     }
 
     @PostMapping("/lotes/{id}/insumos")
+    @PreAuthorize("@permisos.puede('almacen', 'editar')")
     public ResponseEntity<LoteInsumo> addInsumo(@PathVariable Long id, @RequestBody LoteInsumo insumo) {
         return ResponseEntity.ok(loteService.addInsumo(insumo));
     }

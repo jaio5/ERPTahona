@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * API específica para la app móvil del repartidor.
@@ -23,6 +24,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/movil")
+@PreAuthorize("@permisos.puede('reparto', 'ver')")
 public class RepartidorMovilController {
 
     private static final Logger log = LoggerFactory.getLogger(RepartidorMovilController.class);
@@ -82,6 +84,7 @@ public class RepartidorMovilController {
      * El repartidor confirma una entrega desde el móvil.
      */
     @PostMapping("/confirmar/{entregaId}")
+    @PreAuthorize("@permisos.puede('reparto', 'editar')")
     public ResponseEntity<?> confirmarParada(@PathVariable Long entregaId,
                                               @RequestParam(required = false) String personaRecepcion,
                                               @RequestParam(required = false) String incidencia,
@@ -114,6 +117,7 @@ public class RepartidorMovilController {
      * El repartidor marca una parada con incidencia (no entregado).
      */
     @PostMapping("/incidencia/{entregaId}")
+    @PreAuthorize("@permisos.puede('reparto', 'editar')")
     public ResponseEntity<?> marcarIncidencia(@PathVariable Long entregaId,
                                                @RequestParam String motivo,
                                                @RequestParam(required = false) Double latitud,
@@ -141,6 +145,7 @@ public class RepartidorMovilController {
      * El repartidor inicia su ruta (marca hora de salida).
      */
     @PostMapping("/iniciar-ruta/{hojaId}")
+    @PreAuthorize("@permisos.puede('reparto', 'editar')")
     public ResponseEntity<?> iniciarRuta(@PathVariable Long hojaId, Authentication auth) {
         if (!puedeGestionarHoja(hojaId, auth)) return forbidden();
         try {
@@ -160,6 +165,7 @@ public class RepartidorMovilController {
      * El repartidor finaliza su ruta (marca hora de llegada, km finales).
      */
     @PostMapping("/finalizar-ruta/{hojaId}")
+    @PreAuthorize("@permisos.puede('reparto', 'editar')")
     public ResponseEntity<?> finalizarRuta(@PathVariable Long hojaId,
                                             @RequestParam BigDecimal kmFin,
                                             @RequestParam(required = false) String incidencias,

@@ -11,9 +11,11 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web")
+@PreAuthorize("@permisos.puede('reparto', 'ver')")
 public class HojaRutaRestController {
 
     private final HojaRutaService hojaRutaService;
@@ -52,6 +54,7 @@ public class HojaRutaRestController {
     }
 
     @PostMapping("/hojas-ruta/{id}/vincular-albaranes")
+    @PreAuthorize("@permisos.puede('reparto', 'editar')")
     public ResponseEntity<Void> vincularAlbaranes(@PathVariable Long id,
                                                    @RequestBody List<Long> albaranIds) {
         hojaRutaService.vincularAlbaranes(id, albaranIds);

@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web")
+@PreAuthorize("@permisos.puede('dashboard', 'ver')")
 public class CalendarioRestController {
 
     private final PedidoService pedidoService;
