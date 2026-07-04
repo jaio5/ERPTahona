@@ -6,6 +6,7 @@ import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.entities.MovimientoCaja;
 import alicanteweb.erp.entities.Usuario;
 import alicanteweb.erp.repository.MovimientoCajaRepository;
+import alicanteweb.erp.util.FinancialMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -48,9 +49,14 @@ public class TpvService {
     }
 
     @Transactional(readOnly = true)
-    public List<Articulo> articulosVendibles() {
+    public List<ArticuloTpv> articulosVendibles() {
         return articuloService.findByActivo(true).stream()
                 .filter(a -> a.getPvp() != null && a.getPvp().compareTo(BigDecimal.ZERO) > 0)
+                .map(a -> {
+                    BigDecimal iva = a.getIva() != null ? a.getIva() : BigDecimal.ZERO;
+                    return new ArticuloTpv(a.getId(), a.getNombre(), a.getCategoria(),
+                            a.getPvp(), iva, a.getPvp().add(FinancialMath.porcentaje(a.getPvp(), iva)));
+                })
                 .toList();
     }
 
@@ -133,6 +139,11 @@ public class TpvService {
     }
 
     public record LineaTpv(Long articuloId, BigDecimal cantidad) {
+    }
+
+    /** Artículo de la parrilla del TPV con el precio final IVA incluido (lo que paga el cliente). */
+    public record ArticuloTpv(Long id, String nombre, String categoria,
+                              BigDecimal pvp, BigDecimal iva, BigDecimal pvpConIva) {
     }
 
     public record ResultadoVenta(Long facturaId, String numero, BigDecimal total) {

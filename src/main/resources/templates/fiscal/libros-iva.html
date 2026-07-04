@@ -45,9 +45,9 @@
                         <td class="text-end" th:text="${l.tipoIva}"></td>
                         <td class="text-end" th:text="${#numbers.formatCurrency(l.base)}"></td>
                         <td class="text-end" th:text="${#numbers.formatCurrency(l.cuotaIva)}"></td>
-                        <td class="text-end" th:text="${#numbers.formatCurrency(l.cuotaRecargo)}"></td>
-                        <td class="text-end" th:text="${#numbers.formatCurrency(l.retencion)}"></td>
-                        <td class="text-end" th:text="${#numbers.formatCurrency(l.total)}"></td>
+                        <td class="text-end" th:text="${l.cuotaRecargo != null ? #numbers.formatCurrency(l.cuotaRecargo) : '—'}"></td>
+                        <td class="text-end" th:text="${l.retencion != null ? #numbers.formatCurrency(l.retencion) : '—'}"></td>
+                        <td class="text-end" th:text="${l.total != null ? #numbers.formatCurrency(l.total) : '—'}"></td>
                     </tr>
                 </tbody>
                 <tfoot th:unless="${#lists.isEmpty(emitidas)}">
@@ -55,9 +55,9 @@
                         <td colspan="6">Totales</td>
                         <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![base]))}"></td>
                         <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![cuotaIva]))}"></td>
-                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![cuotaRecargo]))}"></td>
-                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![retencion]))}"></td>
-                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![total]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![cuotaRecargo ?: 0]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![retencion ?: 0]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![total ?: 0]))}"></td>
                     </tr>
                 </tfoot>
             </table></div></div>

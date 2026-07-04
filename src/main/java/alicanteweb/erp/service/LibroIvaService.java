@@ -43,6 +43,9 @@ public class LibroIvaService {
         List<LineaLibro> lineas = new ArrayList<>();
         for (Factura factura : facturaRepository.findByFechaBetweenAndEstado(desde, hasta, "EMITIDA")) {
             Map<BigDecimal, BigDecimal[]> porTipo = desglosePorTipo(factura.getFacturaLineas());
+            // En facturas con varios tipos impositivos el recargo, la retención y el
+            // total de la factura solo van en la primera línea del desglose; en las
+            // siguientes quedan a null (— en pantalla, vacío en CSV) para no sumar doble.
             boolean primera = true;
             for (Map.Entry<BigDecimal, BigDecimal[]> e : porTipo.entrySet()) {
                 lineas.add(new LineaLibro(
@@ -54,9 +57,9 @@ public class LibroIvaService {
                         e.getKey(),
                         e.getValue()[0],
                         e.getValue()[1],
-                        primera ? nvl(factura.getTotalRecargo()) : BigDecimal.ZERO,
-                        primera ? nvl(factura.getRetencionIrpf()) : BigDecimal.ZERO,
-                        primera ? nvl(factura.getTotal()) : BigDecimal.ZERO));
+                        primera ? nvl(factura.getTotalRecargo()) : null,
+                        primera ? nvl(factura.getRetencionIrpf()) : null,
+                        primera ? nvl(factura.getTotal()) : null));
                 primera = false;
             }
         }
@@ -221,7 +224,7 @@ public class LibroIvaService {
     }
 
     private static String dec(BigDecimal value) {
-        return value != null ? value.toPlainString().replace('.', ',') : "0,00";
+        return value != null ? value.toPlainString().replace('.', ',') : "";
     }
 
     // ───────────────────────── Tipos ─────────────────────────
