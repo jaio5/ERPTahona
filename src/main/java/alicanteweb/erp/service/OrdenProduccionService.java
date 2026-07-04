@@ -1,10 +1,12 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.OrdenProduccion;
+import alicanteweb.erp.entities.OrdenProduccionSerieSequence;
 import alicanteweb.erp.entities.Pedido;
 import alicanteweb.erp.entities.PedidoLinea;
 import alicanteweb.erp.entities.Receta;
 import alicanteweb.erp.repository.OrdenProduccionRepository;
+import alicanteweb.erp.repository.OrdenProduccionSerieSequenceRepository;
 import alicanteweb.erp.repository.RecetaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,18 +24,23 @@ import org.springframework.data.domain.Pageable;
 @Transactional(readOnly = true)
 public class OrdenProduccionService {
 
+    private static final String SERIE = "OP";
+
     private final OrdenProduccionRepository repository;
+    private final OrdenProduccionSerieSequenceRepository sequenceRepository;
     private final ArticuloService articuloService;
     private final AlmacenService almacenService;
     private final RecetaRepository recetaRepository;
     private final StockService stockService;
 
     public OrdenProduccionService(OrdenProduccionRepository repository,
+                                   OrdenProduccionSerieSequenceRepository sequenceRepository,
                                    ArticuloService articuloService,
                                    AlmacenService almacenService,
                                    RecetaRepository recetaRepository,
                                    StockService stockService) {
         this.repository = repository;
+        this.sequenceRepository = sequenceRepository;
         this.articuloService = articuloService;
         this.almacenService = almacenService;
         this.recetaRepository = recetaRepository;
@@ -81,7 +88,7 @@ public class OrdenProduccionService {
     }
 
     @Transactional
-    public synchronized OrdenProduccion save(OrdenProduccion orden) {
+    public OrdenProduccion save(OrdenProduccion orden) {
         if (orden == null) throw new IllegalArgumentException("Orden de producción nula");
         if (orden.getNumero() == null || orden.getNumero().isBlank()) {
             orden.setNumero(generarNumero());
@@ -94,10 +101,35 @@ public class OrdenProduccionService {
         repository.deleteById(id);
     }
 
-    public synchronized String generarNumero() {
-        String prefijo = "OP-" + LocalDate.now().getYear();
-        int maxSeq = repository.findMaxNumeroSecuencialBySerie(prefijo);
-        return prefijo + "-" + String.format("%04d", maxSeq + 1);
+    /**
+     * Numeración por secuencia con lock pesimista (mismo patrón que
+     * FacturaService/FacturaSerieSequenceRepository): correcta con varias
+     * instancias de la app, al contrario que el antiguo MAX(numero) bajo
+     * synchronized, que solo serializaba dentro de una JVM.
+     */
+    @Transactional
+    public String generarNumero() {
+        int ejercicio = LocalDate.now().getYear();
+        OrdenProduccionSerieSequence sequence = sequenceRepository
+            .findBySerieAndEjercicio(SERIE, ejercicio)
+            .orElseGet(() -> crearSecuencia(ejercicio));
+
+        long siguienteNumero = sequence.getUltimoNumero() + 1L;
+        sequence.setUltimoNumero(siguienteNumero);
+        sequenceRepository.saveAndFlush(sequence);
+
+        return String.format("%s-%d-%04d", SERIE, ejercicio, siguienteNumero);
+    }
+
+    private OrdenProduccionSerieSequence crearSecuencia(int ejercicio) {
+        // La migración V42 siembra los ejercicios con órdenes previas; este camino
+        // cubre el primer uso de un ejercicio nuevo. Se parte del máximo existente
+        // por si hubiera órdenes creadas fuera de la secuencia.
+        OrdenProduccionSerieSequence nueva = new OrdenProduccionSerieSequence();
+        nueva.setSerie(SERIE);
+        nueva.setEjercicio(ejercicio);
+        nueva.setUltimoNumero((long) repository.findMaxNumeroSecuencialBySerie(SERIE + "-" + ejercicio));
+        return nueva;
     }
 
     @Transactional
