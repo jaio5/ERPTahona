@@ -78,8 +78,10 @@ class BackupServiceTest {
     }
 
     @Test
-    void deleteBackup_retornaFalso_cuandoArchivoNoExiste() {
-        assertFalse(service.deleteBackup("/ruta/inexistente/backup.sql"));
+    void deleteBackup_retornaFalso_cuandoArchivoNoExiste(@TempDir Path tempDir) {
+        ReflectionTestUtils.setField(service, "backupDirectory", tempDir.toString());
+
+        assertFalse(service.deleteBackup("backup_inexistente.sql"));
     }
 
     @Test
@@ -92,6 +94,75 @@ class BackupServiceTest {
 
         assertTrue(result);
         assertFalse(Files.exists(backup));
+    }
+
+    // ── Guard anti-path-traversal (validarRutaBackup) ────────────────────────
+
+    @Test
+    void validarRutaBackup_rechazaRutaConTraversal(@TempDir Path tempDir) {
+        ReflectionTestUtils.setField(service, "backupDirectory", tempDir.toString());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.validarRutaBackup("../../etc/backup_malicioso.sql"));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.validarRutaBackup("..\\..\\Windows\\backup_malicioso.sql"));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.validarRutaBackup("subdir/../../backup_fuera.sql"));
+    }
+
+    @Test
+    void validarRutaBackup_rechazaRutaAbsolutaFueraDelDirectorio(@TempDir Path tempDir) {
+        ReflectionTestUtils.setField(service, "backupDirectory", tempDir.resolve("backups").toString());
+
+        Path fuera = tempDir.resolve("backup_fuera.sql");
+        assertThrows(IllegalArgumentException.class,
+                () -> service.validarRutaBackup(fuera.toString()));
+    }
+
+    @Test
+    void validarRutaBackup_rechazaNombresQueNoSonBackupSql(@TempDir Path tempDir) {
+        ReflectionTestUtils.setField(service, "backupDirectory", tempDir.toString());
+
+        assertThrows(IllegalArgumentException.class, () -> service.validarRutaBackup("credenciales.cnf"));
+        assertThrows(IllegalArgumentException.class, () -> service.validarRutaBackup("cualquiera.sql"));
+        assertThrows(IllegalArgumentException.class, () -> service.validarRutaBackup("backup_.sql.sh"));
+        assertThrows(IllegalArgumentException.class, () -> service.validarRutaBackup(""));
+        assertThrows(IllegalArgumentException.class, () -> service.validarRutaBackup(null));
+    }
+
+    @Test
+    void validarRutaBackup_aceptaNombreValido_yRutaAbsolutaDentroDelDirectorio(@TempDir Path tempDir) {
+        ReflectionTestUtils.setField(service, "backupDirectory", tempDir.toString());
+
+        Path porNombre = service.validarRutaBackup("backup_tahona_20260704_020000.sql");
+        assertEquals(tempDir.toAbsolutePath().normalize(), porNombre.getParent());
+
+        Path absolutaDentro = tempDir.resolve("backup_tahona_20260704_020000.sql");
+        assertEquals(porNombre, service.validarRutaBackup(absolutaDentro.toString()));
+    }
+
+    @Test
+    void restaurarBackup_rechazaTraversal_sinTocarElSistema(@TempDir Path tempDir) {
+        ReflectionTestUtils.setField(service, "backupDirectory", tempDir.toString());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.restaurarBackup("../backup_fuera.sql"));
+        verifyNoInteractions(facturacionEventoService);
+    }
+
+    @Test
+    void deleteBackup_rechazaTraversal(@TempDir Path tempDir) throws IOException {
+        ReflectionTestUtils.setField(service, "backupDirectory", tempDir.toString());
+        // Fichero real fuera del directorio de backups: el guard debe impedir borrarlo
+        Path victima = tempDir.getParent().resolve("backup_victima.sql");
+        Files.writeString(victima, "-- fuera del directorio");
+        try {
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.deleteBackup("../" + victima.getFileName()));
+            assertTrue(Files.exists(victima));
+        } finally {
+            Files.deleteIfExists(victima);
+        }
     }
 
     @Test

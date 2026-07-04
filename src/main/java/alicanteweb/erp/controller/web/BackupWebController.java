@@ -54,4 +54,38 @@ public class BackupWebController {
         }
         return "redirect:/web/backups";
     }
+
+    /**
+     * Restaura la base de datos desde un backup. Operación destructiva: solo ADMIN,
+     * y exige repetir el nombre del fichero como confirmación explícita. El servicio
+     * valida la ruta (anti-traversal) y registra la restauración en auditoría.
+     */
+    @PostMapping("/restaurar")
+    @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR')")
+    public String restaurar(@RequestParam String archivo,
+                            @RequestParam String confirmacion,
+                            RedirectAttributes ra) {
+        if (!archivo.equals(confirmacion == null ? "" : confirmacion.trim())) {
+            ra.addFlashAttribute("error",
+                "Confirmación incorrecta: escribe exactamente el nombre del fichero (" + archivo + ") para restaurar");
+            return "redirect:/web/backups";
+        }
+        log.warn("Restauración de backup solicitada: {} ", archivo);
+        try {
+            s.restaurarBackup(archivo);
+            ra.addFlashAttribute("exito", "Base de datos restaurada desde " + archivo
+                + ". Revisa los datos y reinicia sesión el resto de usuarios.");
+        } catch (IllegalArgumentException e) {
+            log.warn("Restauración rechazada para '{}': {}", archivo, e.getMessage());
+            ra.addFlashAttribute("error", e.getMessage());
+        } catch (java.io.IOException e) {
+            log.error("Error al restaurar backup {}: {}", archivo, e.getMessage(), e);
+            ra.addFlashAttribute("error", e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Restauración interrumpida para {}", archivo, e);
+            ra.addFlashAttribute("error", "Restauración interrumpida: " + e.getMessage());
+        }
+        return "redirect:/web/backups";
+    }
 }

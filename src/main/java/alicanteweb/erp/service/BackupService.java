@@ -57,6 +57,9 @@ public class BackupService {
     @Value("${backup.mysqldump-path:}")
     private String mysqldumpPath;
 
+    @Value("${backup.mysql-path:}")
+    private String mysqlPath;
+
     private final FacturacionEventoService facturacionEventoService;
     private final EmailService emailService;
 
@@ -131,7 +134,7 @@ public class BackupService {
         // Crear fichero temporal con credenciales para no pasarlas en la línea de comandos
         Path tempCredFile = null;
         try {
-            tempCredFile = createDefaultsFile(backupPath, dbUsername, dbPassword);
+            tempCredFile = createDefaultsFile(dbUsername, dbPassword);
 
             // Comando mysqldump
             List<String> comando = new ArrayList<>();
@@ -192,28 +195,31 @@ public class BackupService {
     }
 
     /**
-     * Restaura la base de datos desde un archivo de backup
+     * Restaura la base de datos desde un archivo de backup.
+     * Acepta el nombre del fichero o una ruta, siempre dentro de backup.directory
+     * (ver {@link #validarRutaBackup(String)}).
      */
     @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR')")
     public void restaurarBackup(String rutaArchivo) throws IOException, InterruptedException {
-        log.info("🔄 Restaurando backup desde: {}", rutaArchivo);
+        Path rutaValidada = validarRutaBackup(rutaArchivo);
 
-        String restoringUser = System.getProperty("user.name");
-        log.info("🔄 Restaurando backup desde: {} (usuario={}, hora={})", rutaArchivo, restoringUser, LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        String restoringUser = usuarioActual();
+        log.info("🔄 Restaurando backup desde: {} (usuario={}, hora={})", rutaValidada, restoringUser,
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
 
-        File backupFile = new File(rutaArchivo);
+        File backupFile = rutaValidada.toFile();
         if (!backupFile.exists()) {
-            throw new IOException("Archivo de backup no encontrado: " + rutaArchivo);
+            throw new IOException("Archivo de backup no encontrado: " + rutaValidada.getFileName());
         }
 
         // Usar fichero temporal con credenciales y --defaults-extra-file
         Path tempCredFile = null;
         try {
             String dbName = resolverNombreBaseDatos();
-            tempCredFile = createDefaultsFile(backupFile.toPath().getParent(), dbUsername, dbPassword);
+            tempCredFile = createDefaultsFile(dbUsername, dbPassword);
 
             List<String> comando = new ArrayList<>();
-            comando.add("mysql");
+            comando.add(resolverEjecutableMysql());
             comando.add("--defaults-extra-file=" + tempCredFile.toString());
             comando.add(dbName);
 
@@ -225,7 +231,7 @@ public class BackupService {
 
             if (exitCode == 0) {
                 log.info("✅ Backup restaurado exitosamente");
-                registrarEventoBackup("RESTAURACION_BACKUP", rutaArchivo, java.util.Map.of(
+                registrarEventoBackup("RESTAURACION_BACKUP", rutaValidada.toString(), java.util.Map.of(
                     "usuario", restoringUser,
                     "baseDatos", dbName
                 ));
@@ -366,6 +372,17 @@ public class BackupService {
     }
 
     /**
+     * Devuelve la ruta al cliente mysql (restauración): usa backup.mysql-path si está
+     * configurado, o "mysql" para resolverlo desde el PATH del sistema.
+     */
+    private String resolverEjecutableMysql() {
+        if (mysqlPath != null && !mysqlPath.isBlank()) {
+            return mysqlPath;
+        }
+        return "mysql";
+    }
+
+    /**
      * Verifica que mysqldump esté disponible
      */
     public boolean verificarDisponibilidad() {
@@ -401,30 +418,79 @@ public class BackupService {
     }
 
     /**
-     * Elimina un backup por ruta completa
+     * Elimina un backup por nombre de fichero o ruta, siempre dentro de
+     * backup.directory (ver {@link #validarRutaBackup(String)}).
+     *
+     * @throws IllegalArgumentException si la ruta escapa del directorio de backups
+     *                                  o no es un fichero backup_*.sql
      */
+    @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR')")
     public boolean deleteBackup(String rutaCompleta) {
+        Path ruta = validarRutaBackup(rutaCompleta);
         try {
-            File file = new File(rutaCompleta);
+            File file = ruta.toFile();
             if (file.exists()) {
                 boolean deleted = file.delete();
                 if (deleted) {
-                    log.info("Backup eliminado: {}", rutaCompleta);
-                    registrarEventoBackup("ELIMINACION_BACKUP_MANUAL", rutaCompleta, java.util.Map.of(
-                        "ruta", rutaCompleta
+                    log.info("Backup eliminado: {}", ruta);
+                    registrarEventoBackup("ELIMINACION_BACKUP_MANUAL", ruta.toString(), java.util.Map.of(
+                        "ruta", ruta.toString(),
+                        "usuario", usuarioActual()
                     ));
                 } else {
-                    log.warn("No se pudo eliminar backup: {}", rutaCompleta);
+                    log.warn("No se pudo eliminar backup: {}", ruta);
                 }
                 return deleted;
             } else {
-                log.warn("Archivo de backup no existe: {}", rutaCompleta);
+                log.warn("Archivo de backup no existe: {}", ruta);
                 return false;
             }
         } catch (Exception e) {
-            log.error("Error eliminando backup {}", rutaCompleta, e);
+            log.error("Error eliminando backup {}", ruta, e);
             return false;
         }
+    }
+
+    /**
+     * Defensa ante path traversal: resuelve la entrada (nombre de fichero o ruta)
+     * contra backup.directory, la normaliza y rechaza cualquier resultado que
+     * escape del directorio de backups. Solo se admiten ficheros backup_*.sql,
+     * el patrón con el que este servicio genera los backups.
+     *
+     * @throws IllegalArgumentException si la ruta escapa del directorio o el
+     *                                  nombre no es un fichero de backup válido
+     */
+    Path validarRutaBackup(String entrada) {
+        if (entrada == null || entrada.isBlank()) {
+            throw new IllegalArgumentException("Nombre de backup vacío");
+        }
+        Path directorio = Paths.get(backupDirectory).toAbsolutePath().normalize();
+        Path candidata = Paths.get(entrada);
+        Path resuelta = (candidata.isAbsolute() ? candidata : directorio.resolve(candidata))
+                .toAbsolutePath().normalize();
+
+        if (!resuelta.startsWith(directorio) || resuelta.equals(directorio)) {
+            log.warn("Rechazada ruta de backup fuera del directorio permitido: {}", entrada);
+            throw new IllegalArgumentException("Ruta de backup fuera del directorio permitido");
+        }
+        String nombre = resuelta.getFileName().toString();
+        if (!nombre.startsWith("backup_") || !nombre.endsWith(".sql")
+                || !resuelta.getParent().equals(directorio)) {
+            log.warn("Rechazado nombre de backup no válido: {}", entrada);
+            throw new IllegalArgumentException("Solo se admiten ficheros backup_*.sql del directorio de backups");
+        }
+        return resuelta;
+    }
+
+    /** Usuario autenticado que ejecuta la operación (para auditoría). */
+    private String usuarioActual() {
+        var auth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+        if (auth != null && auth.getName() != null) {
+            return auth.getName();
+        }
+        // Sin contexto de seguridad (tarea programada, arranque): usuario del proceso
+        return System.getProperty("user.name");
     }
 
     /**
@@ -451,10 +517,13 @@ public class BackupService {
      * [client]
      * user=usuario
      * password=pass
+     *
+     * Se crea SIEMPRE en java.io.tmpdir (efímero, dentro del contenedor), nunca en el
+     * directorio de backups: ese directorio se persiste en un volumen y un fichero de
+     * credenciales huérfano (crash entre creación y borrado) sobreviviría al contenedor.
      */
-    private Path createDefaultsFile(Path dir, String user, String pass) throws IOException {
-        if (dir == null) dir = Paths.get(System.getProperty("java.io.tmpdir"));
-        Path tempFile = Files.createTempFile(dir, "mycnf", ".cnf");
+    private Path createDefaultsFile(String user, String pass) throws IOException {
+        Path tempFile = Files.createTempFile("mycnf", ".cnf");
         // Incluir host/puerto de la URL JDBC: sin ellos mysqldump intenta el socket
         // local y falla cuando MySQL corre en otro host (p.ej. contenedor "db")
         String content = "[client]\n" + "user=" + user + "\n" + "password=" + pass + "\n"

@@ -105,7 +105,10 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                // Resto del actuator (metrics...): solo ADMIN.
+                                // /actuator/health ya quedó permitido arriba (primer matcher gana)
+                                "/actuator/**"
                         ).hasAnyRole("ADMIN", "ADMINISTRADOR")
                         .requestMatchers(
                                 "/web/usuarios/**",

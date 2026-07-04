@@ -25,8 +25,10 @@ services:
     build: .
     container_name: erp-app
     restart: unless-stopped
-    ports:
-      - "${APP_PORT:-8080}:8080"
+    # Sin "ports": la app solo es alcanzable desde la red interna del compose;
+    # todo el tráfico externo entra por el proxy TLS (servicio "proxy")
+    expose:
+      - "8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/tahona?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
@@ -44,8 +46,9 @@ services:
       VERIFACTU_AEAT_ENABLED: ${VERIFACTU_AEAT_ENABLED:-false}
       VERIFACTU_AEAT_ENDPOINT: ${VERIFACTU_AEAT_ENDPOINT:-https://prewww2.aeat.es/wlpl/AVAC-FACT/ws/fe/SiiVerifactu}
       ERP_LOG_FILE: logs/erp-tahona.log
-      # ── TLS: al poner un reverse proxy HTTPS delante, activa la cookie segura ──
-      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      # ── TLS: el proxy Caddy sirve HTTPS, así que la cookie segura va activa.
+      # Solo tendría sentido ponerla a false si se quitara el proxy (no recomendado).
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
       # ── Email (opcional): envío de facturas PDF a clientes ──
       MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
       MAIL_PORT: ${MAIL_PORT:-587}
@@ -69,8 +72,30 @@ services:
       retries: 10
       start_period: 60s
 
+  proxy:
+    image: caddy:2-alpine
+    container_name: erp-caddy
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      # Dominio del sitio y modo TLS: ver deploy/Caddyfile y .env.example
+      ERP_DOMAIN: ${ERP_DOMAIN:-localhost}
+      ERP_TLS_MODE: ${ERP_TLS_MODE:-internal}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # /data guarda certificados y la CA interna: debe sobrevivir al contenedor
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+
 volumes:
   mysql_data:
   erp_backups:
   erp_impresiones:
   erp_logs:
+  caddy_data:
+  caddy_config:

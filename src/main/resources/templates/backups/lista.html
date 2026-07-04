@@ -6,7 +6,22 @@
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
     <table class="table table-sm table-hover">
-        <thead><tr><th>Nombre</th><th>Tamano MB</th><th>Fecha</th></tr></thead>
-        <tbody><tr th:each="b : ${backups}"><td th:text="${b.nombre}"></td><td th:text="${b.tamanoMB}"></td><td th:text="${b.fechaFormateada}"></td></tr></tbody>
+        <thead><tr><th>Nombre</th><th>Tamano MB</th><th>Fecha</th><th>Restaurar</th></tr></thead>
+        <tbody><tr th:each="b : ${backups}">
+            <td th:text="${b.nombre}"></td>
+            <td th:text="${b.tamanoMB}"></td>
+            <td th:text="${b.fechaFormateada}"></td>
+            <td>
+                <!-- Operación destructiva: exige teclear el nombre exacto del fichero como confirmación -->
+                <form th:action="@{/web/backups/restaurar}" method="post" class="d-flex gap-1">
+                    <input type="hidden" name="archivo" th:value="${b.nombre}">
+                    <input type="text" name="confirmacion" class="form-control form-control-sm" style="max-width: 22rem"
+                           th:placeholder="'Escribe ' + ${b.nombre} + ' para confirmar'" autocomplete="off">
+                    <!-- Sin confirm() inline: el CSP (script-src con nonce) bloquea manejadores
+                         onclick; la confirmación explícita es teclear el nombre del fichero -->
+                    <button class="btn btn-outline-danger btn-sm" type="submit">Restaurar</button>
+                </form>
+            </td>
+        </tr></tbody>
     </table>
 </section>
