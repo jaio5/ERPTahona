@@ -92,4 +92,38 @@ public class EmailService {
             throw new IllegalStateException("No se pudo enviar el email: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Envía un aviso operativo (fallo de backup, etc.) al email de la empresa.
+     * No lanza excepciones: si el correo no está configurado o falla el envío,
+     * lo deja en el log y devuelve false, para no tapar el error original.
+     */
+    public boolean enviarAvisoAdministrador(String asunto, String cuerpo) {
+        if (!estaConfigurado()) {
+            log.warn("Aviso no enviado por email (correo sin configurar): {}", asunto);
+            return false;
+        }
+        String destino = empresaConfigService.getConfiguracionActiva()
+                .map(alicanteweb.erp.entities.EmpresaConfig::getEmail)
+                .filter(e -> e != null && !e.isBlank())
+                .orElse(null);
+        if (destino == null) {
+            log.warn("Aviso no enviado por email (la empresa no tiene email configurado): {}", asunto);
+            return false;
+        }
+        try {
+            MimeMessage mensaje = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mensaje, false, "UTF-8");
+            helper.setFrom(System.getenv("MAIL_USERNAME"));
+            helper.setTo(destino.trim());
+            helper.setSubject("[ERP Tahona] " + asunto);
+            helper.setText(cuerpo, false);
+            mailSender.send(mensaje);
+            log.info("Aviso enviado por email a {}: {}", destino, asunto);
+            return true;
+        } catch (Exception e) {
+            log.error("No se pudo enviar el aviso '{}' por email: {}", asunto, e.getMessage());
+            return false;
+        }
+    }
 }

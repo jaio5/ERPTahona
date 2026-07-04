@@ -231,11 +231,7 @@ public class CifradoService {
         // Verificación usando el PasswordEncoder configurado (BCrypt / PBKDF2)
         // NO se permite comparación directa en texto plano por seguridad.
         try {
-            boolean match = passwordEncoder.matches(password, hash);
-            if (!match) {
-                log.warn("NO MATCH - Las credenciales no coinciden");
-            }
-            return match;
+            return passwordEncoder.matches(password, hash);
         } catch (Exception e) {
             log.error("Error verificando password: {}", e.getMessage());
             return false;
@@ -310,14 +306,8 @@ public class CifradoService {
                 }
             }
 
-            // Asegurar longitud 32 bytes para AES-256
-            if (keyBytes.length != 32) {
-                // Si es 16 o 24, no cambiamos; pero preferimos 32
-                byte[] tmp = new byte[32];
-                System.arraycopy(keyBytes, 0, tmp, 0, Math.min(keyBytes.length, 32));
-                keyBytes = tmp;
-            }
-
+            // Claves Base64 de 16/24/32 bytes se usan tal cual (AES-128/192/256);
+            // rellenarlas con ceros hasta 32 alteraría la clave en silencio.
             return new SecretKeySpec(keyBytes, "AES");
         } catch (Exception e) {
             throw new ErpException("Error obteniendo clave AES", e);

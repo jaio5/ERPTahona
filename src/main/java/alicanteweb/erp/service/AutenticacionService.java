@@ -15,10 +15,20 @@ public class AutenticacionService {
 
     private final UsuarioService usuarioService;
     private final AuditoriaService auditoriaService;
+    private final CifradoService cifradoService;
 
-    public AutenticacionService(UsuarioService usuarioService, AuditoriaService auditoriaService) {
+    /**
+     * Hash de sacrificio para igualar el tiempo de respuesta cuando el usuario no
+     * existe o no puede autenticarse: sin él, la ausencia del cómputo PBKDF2
+     * (~cientos de ms) delata por timing qué usuarios existen.
+     */
+    private volatile String hashSacrificio;
+
+    public AutenticacionService(UsuarioService usuarioService, AuditoriaService auditoriaService,
+                                CifradoService cifradoService) {
         this.usuarioService = usuarioService;
         this.auditoriaService = auditoriaService;
+        this.cifradoService = cifradoService;
     }
 
     /**
@@ -35,6 +45,7 @@ public class AutenticacionService {
 
         if (usuarioOpt.isEmpty()) {
             log.warn("Usuario no encontrado: {}", redactUsername(username));
+            igualarTiempoDeRespuesta(password);
             // Redactado también en auditoría: un usuario inexistente puede ser una
             // contraseña tecleada por error en el campo de usuario, y no debe persistirse.
             auditoriaService.registrarError(null, "Usuario", redactUsername(username),
@@ -47,6 +58,7 @@ public class AutenticacionService {
         // Verificar si está activo (enabled)
         if (!Boolean.TRUE.equals(usuario.getEnabled())) {
             log.warn("Usuario deshabilitado: {}", redactUsername(username));
+            igualarTiempoDeRespuesta(password);
             auditoriaService.registrarError(usuario, "Usuario", usuario.getId().toString(),
                     "Intento de login - usuario deshabilitado");
             return null;
@@ -55,6 +67,7 @@ public class AutenticacionService {
         // Verificar si está bloqueado
         if (Boolean.TRUE.equals(usuario.getBloqueado())) {
             log.warn("Usuario bloqueado: {}", redactUsername(username));
+            igualarTiempoDeRespuesta(password);
             auditoriaService.registrarError(usuario, "Usuario", usuario.getId().toString(),
                     "Intento de login - usuario bloqueado");
             return null;
@@ -81,6 +94,21 @@ public class AutenticacionService {
 
     private String redactUsername(String username) {
         return username.substring(0, Math.min(2, username.length())) + "***";
+    }
+
+    /** Verifica la contraseña contra un hash de sacrificio para que las ramas que no
+     *  autentican tarden lo mismo que una verificación real. El resultado se descarta. */
+    private void igualarTiempoDeRespuesta(String password) {
+        try {
+            String hash = hashSacrificio;
+            if (hash == null) {
+                hash = cifradoService.hashPassword("igualador-de-tiempo-no-usar");
+                hashSacrificio = hash;
+            }
+            cifradoService.verificarPassword(password != null ? password : "", hash);
+        } catch (Exception e) {
+            log.debug("No se pudo igualar el tiempo de respuesta: {}", e.getMessage());
+        }
     }
 }
 

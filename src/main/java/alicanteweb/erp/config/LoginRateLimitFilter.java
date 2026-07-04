@@ -65,10 +65,10 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String xff = request.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isBlank()) {
-            return xff.split(",")[0].trim();
-        }
+        // No leer X-Forwarded-For directamente: cualquiera puede falsificarlo y saltarse
+        // el límite (o bloquear IPs ajenas). Detrás de un proxy, configura
+        // server.forward-headers-strategy (ya en application-prod.properties) para que
+        // el contenedor resuelva la IP real solo desde proxies de confianza.
         return request.getRemoteAddr();
     }
 

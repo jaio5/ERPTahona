@@ -74,4 +74,24 @@ public class FacturaLinea {
 
         return subtotal;
     }
+
+    /**
+     * Inalterabilidad RRSIF: las líneas de una factura ya emitida no se modifican,
+     * añaden ni borran (las correcciones van por factura rectificativa). Se compara
+     * contra el estado persistido de la factura para no interferir con la propia
+     * transacción de emisión.
+     */
+    @PreUpdate
+    @PreRemove
+    @PrePersist
+    private void protegerLineaDeFacturaEmitida() {
+        if (factura == null) {
+            return;
+        }
+        String estado = factura.getEstadoPersistido();
+        if (estado != null && java.util.Set.of("EMITIDA", "PAGADA", "VENCIDA", "ANULADA", "RECTIFICADA").contains(estado)) {
+            throw new IllegalStateException("La factura " + factura.getNumero()
+                    + " está " + estado + ": sus líneas son inalterables (RRSIF). Emita una rectificativa.");
+        }
+    }
 }

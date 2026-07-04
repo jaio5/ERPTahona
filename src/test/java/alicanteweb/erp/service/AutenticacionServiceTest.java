@@ -23,6 +23,9 @@ class AutenticacionServiceTest {
     @Mock
     AuditoriaService auditoriaService;
 
+    @Mock
+    CifradoService cifradoService;
+
     @InjectMocks
     AutenticacionService service;
 

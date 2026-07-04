@@ -299,4 +299,81 @@ public class Factura {
             return null;
         }
     }
+
+    // ========== INALTERABILIDAD POST-EMISIÓN (RRSIF, RD 1007/2023) ==========
+    //
+    // Una vez emitida, la factura forma parte del registro de facturación VeriFactu:
+    // su contenido fiscal (número, fechas, cliente, importes) no puede cambiar por
+    // ninguna vía (servicios, APIs genéricas, etc.); solo se admiten el cobro, las
+    // transiciones de estado post-emisión y los metadatos VeriFactu. Las correcciones
+    // se hacen con factura rectificativa. Nota: los UPDATE/DELETE masivos por JPQL o
+    // SQL nativo no pasan por estos callbacks.
+
+    /** Estados en los que la factura ya está en el registro de facturación. */
+    private static final java.util.Set<String> ESTADOS_INALTERABLES =
+            java.util.Set.of("EMITIDA", "PAGADA", "VENCIDA", "ANULADA", "RECTIFICADA");
+
+    /** Estado tal y como está persistido en BD (no el valor en memoria aún sin flush). */
+    @Transient
+    @Getter(lombok.AccessLevel.PACKAGE)
+    @Setter(lombok.AccessLevel.NONE)
+    private transient String estadoPersistido;
+
+    @Transient
+    @Getter(lombok.AccessLevel.NONE)
+    @Setter(lombok.AccessLevel.NONE)
+    private transient String contenidoFiscalPersistido;
+
+    @PostLoad
+    @PostPersist
+    @PostUpdate
+    private void capturarEstadoPersistido() {
+        this.estadoPersistido = this.estado;
+        this.contenidoFiscalPersistido = contenidoFiscal();
+    }
+
+    private String contenidoFiscal() {
+        return String.join("|",
+                texto(numero), texto(serie), texto(fecha), texto(fechaOperacion), texto(tipoFactura),
+                texto(cliente != null ? cliente.getId() : null),
+                importe(total), importe(baseImponible), importe(totalIva), importe(totalRecargo),
+                importe(retencionIrpf), importe(porcentajeRetencion), importe(tipoImpositivo));
+    }
+
+    private static String texto(Object valor) {
+        return valor == null ? "" : String.valueOf(valor);
+    }
+
+    private static String importe(BigDecimal valor) {
+        return valor == null ? "" : valor.stripTrailingZeros().toPlainString();
+    }
+
+    @PreUpdate
+    private void protegerContenidoFiscal() {
+        if (estadoPersistido == null || !ESTADOS_INALTERABLES.contains(estadoPersistido)) {
+            return;
+        }
+        if (!contenidoFiscal().equals(contenidoFiscalPersistido)) {
+            throw new IllegalStateException("La factura " + numero + " está " + estadoPersistido
+                    + " y su contenido fiscal es inalterable (RRSIF). Emita una factura rectificativa.");
+        }
+        if (!java.util.Objects.equals(estado, estadoPersistido)) {
+            boolean transicionPermitida = !"ANULADA".equals(estadoPersistido)
+                    && estado != null && ESTADOS_INALTERABLES.contains(estado);
+            if (!transicionPermitida) {
+                throw new IllegalStateException("Transición de estado no permitida en la factura "
+                        + numero + ": " + estadoPersistido + " -> " + estado);
+            }
+        }
+    }
+
+    @PreRemove
+    private void protegerBorrado() {
+        boolean protegida = (estado != null && ESTADOS_INALTERABLES.contains(estado))
+                || Boolean.TRUE.equals(verifactuEnviada);
+        if (protegida) {
+            throw new IllegalStateException("La factura " + numero
+                    + " forma parte del registro de facturación y no puede borrarse (RRSIF). Emita una rectificativa.");
+        }
+    }
 }

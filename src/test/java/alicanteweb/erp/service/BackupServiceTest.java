@@ -23,6 +23,9 @@ class BackupServiceTest {
     @Mock
     FacturacionEventoService facturacionEventoService;
 
+    @Mock
+    EmailService emailService;
+
     @InjectMocks
     BackupService service;
 

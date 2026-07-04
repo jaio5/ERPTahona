@@ -8,16 +8,21 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -53,6 +58,12 @@ public class BackupService {
     private String mysqldumpPath;
 
     private final FacturacionEventoService facturacionEventoService;
+    private final EmailService emailService;
+
+    // Límites de ejecución: un mysqldump/mysql colgado no debe retener el hilo indefinidamente
+    private static final Duration TIMEOUT_BACKUP = Duration.ofMinutes(15);
+    private static final Duration TIMEOUT_RESTAURACION = Duration.ofMinutes(30);
+    private static final Duration TIMEOUT_VERSION = Duration.ofSeconds(15);
 
     /**
      * Backup automático diario a las 2:00 AM
@@ -83,7 +94,17 @@ public class BackupService {
             limpiarBackupsAntiguos();
 
         } catch (Exception e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             log.error("❌ Error en backup automático", e);
+            registrarEventoBackup("BACKUP_FALLIDO", "backup-automatico", java.util.Map.of(
+                "error", String.valueOf(e.getMessage())
+            ));
+            // Un backup que falla en silencio no protege nada: avisar al administrador
+            emailService.enviarAvisoAdministrador("Fallo en el backup automático",
+                    "El backup automático de la base de datos ha fallado.\n\nError: " + e.getMessage()
+                    + "\n\nRevisa los logs de la aplicación y el estado de mysqldump.");
         }
     }
 
@@ -139,8 +160,7 @@ public class BackupService {
             ProcessBuilder pb = new ProcessBuilder(comando);
             pb.redirectErrorStream(true);
 
-            Process process = pb.start();
-            int exitCode = process.waitFor();
+            int exitCode = ejecutarProceso(pb, TIMEOUT_BACKUP, "mysqldump");
 
             if (exitCode == 0) {
                 File backupFile = new File(rutaCompleta);
@@ -201,8 +221,7 @@ public class BackupService {
             pb.redirectErrorStream(true);
             pb.redirectInput(backupFile);
 
-            Process process = pb.start();
-            int exitCode = process.waitFor();
+            int exitCode = ejecutarProceso(pb, TIMEOUT_RESTAURACION, "mysql (restauración)");
 
             if (exitCode == 0) {
                 log.info("✅ Backup restaurado exitosamente");
@@ -298,6 +317,44 @@ public class BackupService {
     }
 
     /**
+     * Ejecuta un proceso externo con límite de tiempo, consumiendo su salida en un hilo
+     * aparte (si nadie lee el pipe y el proceso escribe mucho, se bloquea; y si el
+     * proceso se cuelga sin escribir, un readLine en este hilo bloquearía el waitFor).
+     */
+    private int ejecutarProceso(ProcessBuilder pb, Duration timeout, String descripcion)
+            throws IOException, InterruptedException {
+        Process process = pb.start();
+        StringBuilder salida = new StringBuilder();
+        Thread lector = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String linea;
+                while ((linea = reader.readLine()) != null) {
+                    if (salida.length() < 8192) {
+                        salida.append(linea).append('\n');
+                    }
+                }
+            } catch (IOException ignored) {
+                // El stream se cierra al morir el proceso; no hay nada que hacer
+            }
+        }, "backup-process-output");
+        lector.setDaemon(true);
+        lector.start();
+
+        if (!process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
+            process.destroyForcibly();
+            throw new IOException(descripcion + " excedió el tiempo máximo de "
+                    + timeout.toMinutes() + " min y fue cancelado");
+        }
+        lector.join(5_000);
+        int exitCode = process.exitValue();
+        if (exitCode != 0 && salida.length() > 0) {
+            log.warn("Salida de {} (exit {}): {}", descripcion, exitCode, salida.toString().trim());
+        }
+        return exitCode;
+    }
+
+    /**
      * Devuelve la ruta al ejecutable mysqldump: usa backup.mysqldump-path si está configurado,
      * o simplemente "mysqldump" para resolverlo desde el PATH del sistema.
      */
@@ -324,8 +381,8 @@ public class BackupService {
             comando.add("--version");
 
             ProcessBuilder pb = new ProcessBuilder(comando);
-            Process process = pb.start();
-            int exitCode = process.waitFor();
+            pb.redirectErrorStream(true);
+            int exitCode = ejecutarProceso(pb, TIMEOUT_VERSION, "mysqldump --version");
 
             boolean disponible = exitCode == 0;
 
