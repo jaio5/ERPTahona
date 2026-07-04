@@ -197,11 +197,18 @@ public class CifradoService {
         }
         String hashed = passwordEncoder.encode(password);
 
-        // Registramos la longitud en DEBUG y un prefijo limitado para depuración
+        // Registramos en DEBUG solo longitud y prefijo de algoritmo ({pbkdf2}, {bcrypt}...):
+        // nunca contenido del hash, ni siquiera parcial
         try {
             int len = hashed != null ? hashed.length() : 0;
-            String prefix = hashed != null ? hashed.substring(0, Math.min(hashed.length(), 200)) : "null";
-            log.debug("Generated password hash length={} prefix={}", len, prefix);
+            String algoritmo = "desconocido";
+            if (hashed != null && hashed.startsWith("{")) {
+                int cierre = hashed.indexOf('}');
+                if (cierre > 0) {
+                    algoritmo = hashed.substring(0, cierre + 1);
+                }
+            }
+            log.debug("Generated password hash length={} algorithm={}", len, algoritmo);
 
             // Validación: asegurarnos que cabe en la columna 'password'
             if (len > MAX_PASSWORD_COLUMN_LENGTH) {
