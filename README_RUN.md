@@ -115,6 +115,34 @@ $env:SPRING_PROFILES_ACTIVE="dev"
 
 Si MySQL local no esta disponible en perfiles no productivos, el lanzador reintenta con H2 en memoria. En `prod` este fallback esta siempre bloqueado.
 
+## Regenerar la base de datos local
+
+Desde julio de 2026 el perfil `dev` funciona como `prod`: Flyway activo y
+`ddl-auto=validate` (Hibernate ya no crea ni altera tablas; solo valida). Asi el
+drift de esquema se detecta en desarrollo y no en el arranque de produccion.
+
+Si tu base local es anterior a este cambio (la creo Hibernate con `update`) o
+Flyway falla al validar, regenerala desde cero:
+
+```powershell
+# 1. Borrar y recrear la base (pide la password de root del MySQL local)
+mysql -u root -p -e "DROP DATABASE IF EXISTS tahona; CREATE DATABASE tahona CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 2. Arrancar en dev: Flyway aplica V0..Vn y deja el esquema canonico
+$env:SPRING_PROFILES_ACTIVE="dev"
+.\mvnw.cmd spring-boot:run
+```
+
+Notas:
+
+- Los datos locales se pierden; si los necesitas, haz antes un backup desde la
+  aplicacion o con `mysqldump`.
+- Para saltarte temporalmente la validacion (no recomendado):
+  `$env:SPRING_JPA_DDL_AUTO="update"` y/o `$env:SPRING_FLYWAY_ENABLED="false"`.
+- Si tocas una entidad JPA, escribe la migracion Flyway correspondiente en
+  `src/main/resources/db/migration`; `validate` fallara hasta que lo hagas
+  (ese es el objetivo).
+
 Arranque de produccion:
 
 ```powershell
