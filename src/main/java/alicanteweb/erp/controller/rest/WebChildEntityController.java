@@ -1,6 +1,7 @@
 package alicanteweb.erp.controller.rest;
 
 import alicanteweb.erp.entities.*;
+import alicanteweb.erp.util.FinancialMath;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
@@ -67,11 +68,95 @@ public class WebChildEntityController {
     }
 
     private <T> List<T> findByParent(Class<T> entityClass, String parentField, Long parentId) {
+        return findByParent(entityClass, parentField, parentId, MAX_RESULTADOS_HIJO);
+    }
+
+    private <T> List<T> findByParent(Class<T> entityClass, String parentField, Long parentId, int maxResults) {
         CriteriaQuery<T> query = entityManager.getCriteriaBuilder().createQuery(entityClass);
         Root<T> root = query.from(entityClass);
         query.select(root).where(entityManager.getCriteriaBuilder()
                 .equal(root.get(parentField).get("id"), parentId));
-        return entityManager.createQuery(query).setMaxResults(MAX_RESULTADOS_HIJO).getResultList();
+        return entityManager.createQuery(query).setMaxResults(maxResults).getResultList();
+    }
+
+    /**
+     * Id del padre de una línea sin inicializar el proxy lazy: leer el campo @Id por
+     * reflexión sobre un proxy de Hibernate devuelve null (los datos viven en el
+     * target), lo que hacía fallar la comprobación de pertenencia con un 404.
+     */
+    private Long parentIdOf(ChildDefinition definition, Object entity) {
+        Object parentRef = get(firstField(definition.entityClass(), definition.parentField()), entity);
+        if (parentRef == null) {
+            return null;
+        }
+        if (parentRef instanceof org.hibernate.proxy.HibernateProxy proxy) {
+            Object id = proxy.getHibernateLazyInitializer().getIdentifier();
+            return id == null ? null : Long.valueOf(String.valueOf(id));
+        }
+        return idValue(parentRef);
+    }
+
+    /**
+     * Inalterabilidad (RRSIF, RD 1007/2023): las líneas de una factura que ya forma
+     * parte del registro de facturación no se crean, editan ni borran; las correcciones
+     * exigen factura rectificativa. Refuerza en el controlador el guard JPA de
+     * FacturaLinea (que actúa en el flush) para responder un 4xx claro, y cubre las
+     * facturas de compra, que no tienen guard de entidad. Espejo del READ_ONLY_MODULES
+     * de WebEntityController.
+     */
+    private void requirePadreModificable(Object parent) {
+        if (parent instanceof Factura factura) {
+            String estado = factura.getEstado() == null || factura.getEstado().isBlank()
+                    ? "BORRADOR" : factura.getEstado().trim().toUpperCase();
+            boolean editable = ("BORRADOR".equals(estado) || "REVISION".equals(estado))
+                    && !Boolean.TRUE.equals(factura.getVerifactuEnviada());
+            if (!editable) {
+                throw new IllegalStateException("La factura " + factura.getNumero() + " está " + estado
+                        + ": sus líneas son inalterables (RRSIF). Emita una factura rectificativa.");
+            }
+        } else if (parent instanceof FacturaCompra compra) {
+            String estado = compra.getEstado() == null || compra.getEstado().isBlank()
+                    ? "PENDIENTE" : compra.getEstado().trim().toUpperCase();
+            if (!"PENDIENTE".equals(estado) || Boolean.TRUE.equals(compra.getContabilizada())) {
+                throw new IllegalStateException("La factura de compra " + compra.getNumero() + " está " + estado
+                        + ": sus líneas no pueden modificarse una vez contabilizada o pagada.");
+            }
+        }
+    }
+
+    /**
+     * Mantiene los totales de la cabecera coherentes con sus líneas tras crear, editar
+     * o borrar una línea (mismos redondeos que DocumentoService.guardarLineasFactura).
+     * Sin límite de resultados: recortar líneas aquí produciría totales incorrectos.
+     */
+    private void recalcularTotalesPadre(Object parent) {
+        if (parent instanceof Factura factura) {
+            BigDecimal base = BigDecimal.ZERO;
+            BigDecimal iva = BigDecimal.ZERO;
+            for (FacturaLinea linea : findByParent(FacturaLinea.class, "factura", factura.getId(), Integer.MAX_VALUE)) {
+                BigDecimal subtotal = FinancialMath.subtotalConDescuento(
+                        linea.getCantidad(), linea.getPrecioUnitario(), linea.getDescuento());
+                base = base.add(subtotal);
+                iva = iva.add(FinancialMath.porcentaje(subtotal, linea.getIva()));
+            }
+            factura.setBaseImponible(base);
+            factura.setTotalIva(iva);
+            factura.setTotal(base.add(iva));
+            entityManager.flush();
+        } else if (parent instanceof FacturaCompra compra) {
+            BigDecimal base = BigDecimal.ZERO;
+            BigDecimal iva = BigDecimal.ZERO;
+            for (FacturaCompraLinea linea : findByParent(FacturaCompraLinea.class, "facturaCompra", compra.getId(), Integer.MAX_VALUE)) {
+                BigDecimal subtotal = FinancialMath.subtotalConDescuento(
+                        linea.getCantidad(), linea.getPrecioUnitario(), linea.getDescuento());
+                base = base.add(subtotal);
+                iva = iva.add(FinancialMath.porcentaje(subtotal, linea.getTipoIva()));
+            }
+            compra.setBaseImponible(base);
+            compra.setImporteIva(iva);
+            compra.calcularTotal();
+            entityManager.flush();
+        }
     }
 
     @PostMapping("/{child}/{parentId}")
@@ -87,6 +172,7 @@ public class WebChildEntityController {
         if (parent == null) {
             return ResponseEntity.notFound().build();
         }
+        requirePadreModificable(parent);
         try {
             Object entity = definition.entityClass().getDeclaredConstructor().newInstance();
             set(firstField(definition.entityClass(), definition.parentField()), entity, parent);
@@ -94,6 +180,7 @@ public class WebChildEntityController {
             calculate(entity);
             entityManager.persist(entity);
             entityManager.flush();
+            recalcularTotalesPadre(parent);
             return ResponseEntity.ok(toDto(entity));
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("No se pudo crear " + child, e);
@@ -112,12 +199,14 @@ public class WebChildEntityController {
         }
         Object entity = entityManager.find(definition.entityClass(), id);
         Object parent = entityManager.find(definition.parentClass(), parentId);
-        if (entity == null || parent == null || !parentId.equals(idValue(get(firstField(definition.entityClass(), definition.parentField()), entity)))) {
+        if (entity == null || parent == null || !parentId.equals(parentIdOf(definition, entity))) {
             return ResponseEntity.notFound().build();
         }
+        requirePadreModificable(parent);
         apply(entity, data, definition.parentField());
         calculate(entity);
         entityManager.flush();
+        recalcularTotalesPadre(parent);
         return ResponseEntity.ok(toDto(entity));
     }
 
@@ -131,11 +220,14 @@ public class WebChildEntityController {
             return ResponseEntity.notFound().build();
         }
         Object entity = entityManager.find(definition.entityClass(), id);
-        if (entity == null || !parentId.equals(idValue(get(firstField(definition.entityClass(), definition.parentField()), entity)))) {
+        if (entity == null || !parentId.equals(parentIdOf(definition, entity))) {
             return ResponseEntity.notFound().build();
         }
+        Object parent = entityManager.find(definition.parentClass(), parentId);
+        requirePadreModificable(parent);
         entityManager.remove(entity);
         entityManager.flush();
+        recalcularTotalesPadre(parent);
         return ResponseEntity.noContent().build();
     }
 

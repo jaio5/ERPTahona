@@ -71,6 +71,22 @@ public class DatabaseStartupChecker implements EnvironmentPostProcessor {
             requireProdValue(environment, "verifactu.aeat.endpoint", "VERIFACTU_AEAT_ENDPOINT");
         }
 
+        // VeriFactu: en producción, la remisión real no puede apuntar al entorno de
+        // pruebas de AEAT (prewww*). Las facturas se registrarían en la plataforma de
+        // pruebas y no tendrían validez fiscal.
+        String aeatEndpoint = environment.getProperty("verifactu.aeat.endpoint", "");
+        boolean endpointDePruebas = aeatEndpoint.toLowerCase().contains("prewww");
+        if (aeatEnabled && endpointDePruebas) {
+            fail("[FISCAL] Endpoint de pruebas AEAT con remisión real habilitada: verifactu.aeat.enabled=true"
+                    + " pero verifactu.aeat.endpoint apunta a '" + aeatEndpoint
+                    + "'. Configura VERIFACTU_AEAT_ENDPOINT con la URL de producción o desactiva VERIFACTU_AEAT_ENABLED.");
+        }
+        String qrBaseUrl = environment.getProperty("verifactu.qr.base-url", "");
+        if (endpointDePruebas && !qrBaseUrl.isBlank() && !qrBaseUrl.toLowerCase().contains("prewww")) {
+            log.warn("[FISCAL] verifactu.qr.base-url apunta a producción ({}) mientras verifactu.aeat.endpoint"
+                    + " es el de pruebas ({}): los QR de cotejo no encontrarán las facturas.", qrBaseUrl, aeatEndpoint);
+        }
+
         String url = environment.getProperty("spring.datasource.url", "");
         String password = environment.getProperty("spring.datasource.password", "");
 
