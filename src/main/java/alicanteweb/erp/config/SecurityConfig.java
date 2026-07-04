@@ -307,7 +307,10 @@ public class SecurityConfig {
                     usuario.getNombre() != null && !usuario.getNombre().isBlank()
                             ? usuario.getNombre()
                             : usuario.getUsername(),
-                    usuario.getPassword(),
+                    // Nunca retener el hash de la contraseña en el principal (vive en la
+                    // sesión HTTP): la autenticación ya la validó AutenticacionService y
+                    // nadie consume getPassword() sobre el principal
+                    null,
                     Boolean.TRUE.equals(usuario.getEnabled()),
                     !Boolean.TRUE.equals(usuario.getBloqueado()),
                     authoritiesFor(usuario)
