@@ -269,7 +269,7 @@ public class CifradoService {
     private SecretKey getSecretKey() {
         try {
             if (aesKeyString == null || aesKeyString.isBlank() || aesKeyString.equals("DEFAULT_KEY_32_CHARACTERS_MIN!!")) {
-                log.warn("⚠️ Usando clave AES por defecto o no configurada. CONFIGURA una clave segura (Base64) en application.properties");
+                log.warn("[AVISO] Usando clave AES por defecto o no configurada. CONFIGURA una clave segura (Base64) en application.properties");
                 log.warn("   Genera una con: CifradoService.generarKeyAES()");
             }
 

@@ -48,7 +48,7 @@ public class Modelo347Service {
      * Genera el Modelo 347 para un ejercicio fiscal
      */
     public Modelo347Result generarModelo347(int ejercicio) {
-        log.info("📊 Generando Modelo 347 para el ejercicio {}", ejercicio);
+        log.info("[347] Generando Modelo 347 para el ejercicio {}", ejercicio);
 
         LocalDate inicioEjercicio = LocalDate.of(ejercicio, 1, 1);
         LocalDate finEjercicio = LocalDate.of(ejercicio, 12, 31);
@@ -58,7 +58,7 @@ public class Modelo347Service {
         // ---- Ventas (clave B): solo facturas emitidas ----
         List<Factura> facturasVenta = facturaRepository.findByFechaBetweenAndEstado(
                 inicioEjercicio, finEjercicio, ESTADO_FACTURA_DECLARABLE);
-        log.info("📄 Procesando {} facturas de venta emitidas del ejercicio {}", facturasVenta.size(), ejercicio);
+        log.info("[347] Procesando {} facturas de venta emitidas del ejercicio {}", facturasVenta.size(), ejercicio);
 
         for (Factura factura : facturasVenta) {
             if (factura.getCliente() == null || factura.getTotal() == null) continue;
@@ -69,7 +69,7 @@ public class Modelo347Service {
 
         // ---- Compras (clave A): facturas de compra no anuladas ----
         List<FacturaCompra> facturasCompra = facturaCompraRepository.findByFechaBetween(inicioEjercicio, finEjercicio);
-        log.info("📄 Procesando {} facturas de compra del ejercicio {}", facturasCompra.size(), ejercicio);
+        log.info("[347] Procesando {} facturas de compra del ejercicio {}", facturasCompra.size(), ejercicio);
 
         for (FacturaCompra fc : facturasCompra) {
             if (fc.getProveedor() == null || fc.getTotal() == null) continue;
@@ -94,7 +94,7 @@ public class Modelo347Service {
             return porClave != 0 ? porClave : a.nombre().compareToIgnoreCase(b.nombre());
         });
 
-        log.info("✅ Modelo 347 generado: {} declarados, total: {}€",
+        log.info("[OK] Modelo 347 generado: {} declarados, total: {}€",
             operacionesDeclarar.size(), totalDeclarado);
 
         return new Modelo347Result(
@@ -122,7 +122,7 @@ public class Modelo347Service {
             fichero.append(generarRegistroTipo2(operacion, declarante.ejercicio()));
         }
 
-        log.info("✅ Fichero BOE generado con {} registros", modelo347.operaciones().size() + 1);
+        log.info("[OK] Fichero BOE generado con {} registros", modelo347.operaciones().size() + 1);
 
         return fichero.toString();
     }
@@ -259,9 +259,9 @@ public class Modelo347Service {
         }
 
         if (errores.isEmpty()) {
-            log.info("✅ Modelo 347 validado correctamente");
+            log.info("[OK] Modelo 347 validado correctamente");
         } else {
-            log.warn("⚠️ Errores en validación del Modelo 347: {}", errores.size());
+            log.warn("[AVISO] Errores en validación del Modelo 347: {}", errores.size());
         }
 
         return errores;

@@ -122,14 +122,14 @@ public class ContabilidadService {
 
             // Verificar cuadre
             if (!asiento.estaCuadrado()) {
-                log.error("❌ El asiento no cuadra: Debe={}, Haber={}", asiento.getDebe(), asiento.getHaber());
+                log.error("[ERROR] El asiento no cuadra: Debe={}, Haber={}", asiento.getDebe(), asiento.getHaber());
                 throw new IllegalStateException("El asiento contable no cuadra");
             }
 
             // Guardar asiento
             AsientoContable guardado = asientoRepository.save(asiento);
 
-            log.info("✅ Asiento contable generado: {} - Debe={}, Haber={}",
+            log.info("[OK] Asiento contable generado: {} - Debe={}, Haber={}",
                 guardado.getNumero(), guardado.getDebe(), guardado.getHaber());
 
             // Auditar
@@ -143,7 +143,7 @@ public class ContabilidadService {
             return guardado;
 
         } catch (Exception e) {
-            log.error("❌ Error generando asiento de factura", e);
+            log.error("[ERROR] Error generando asiento de factura", e);
             throw new ErpException("Error al generar asiento contable", e);
         }
     }
@@ -212,12 +212,12 @@ public class ContabilidadService {
 
             // Guardar
             AsientoContable guardado = asientoRepository.save(asiento);
-            log.info("✅ Asiento de pago generado: {}", guardado.getNumero());
+            log.info("[OK] Asiento de pago generado: {}", guardado.getNumero());
 
             return guardado;
 
         } catch (Exception e) {
-            log.error("❌ Error generando asiento de pago", e);
+            log.error("[ERROR] Error generando asiento de pago", e);
             throw new ErpException("Error al generar asiento de pago", e);
         }
     }
@@ -279,11 +279,11 @@ public class ContabilidadService {
             }
 
             AsientoContable guardado = asientoRepository.save(asiento);
-            log.info("✅ Asiento de pago a proveedor generado: {}", guardado.getNumero());
+            log.info("[OK] Asiento de pago a proveedor generado: {}", guardado.getNumero());
             return guardado;
 
         } catch (Exception e) {
-            log.error("❌ Error generando asiento de pago a proveedor", e);
+            log.error("[ERROR] Error generando asiento de pago a proveedor", e);
             throw new ErpException("Error al generar asiento de pago a proveedor", e);
         }
     }
@@ -360,7 +360,7 @@ public class ContabilidadService {
 
             // Guardar
             AsientoContable guardado = asientoRepository.save(asiento);
-            log.info("✅ Asiento de compra generado: {}", guardado.getNumero());
+            log.info("[OK] Asiento de compra generado: {}", guardado.getNumero());
 
             // Auditar (solo si usuario proporcionado)
             if (auditoriaService != null && usuario != null) {
@@ -372,7 +372,7 @@ public class ContabilidadService {
             return guardado;
 
         } catch (Exception e) {
-            log.error("❌ Error generando asiento de compra", e);
+            log.error("[ERROR] Error generando asiento de compra", e);
             throw new ErpException("Error al generar asiento de compra", e);
         }
     }
@@ -451,10 +451,10 @@ public class ContabilidadService {
                         + ", Haber=" + asiento.getHaber() + ")");
             }
             AsientoContable guardado = asientoRepository.save(asiento);
-            log.info("✅ Asiento de compra generado: {}", guardado.getNumero());
+            log.info("[OK] Asiento de compra generado: {}", guardado.getNumero());
             return guardado;
         } catch (Exception e) {
-            log.error("❌ Error generando asiento de compra", e);
+            log.error("[ERROR] Error generando asiento de compra", e);
             throw new ErpException("Error al generar asiento de compra", e);
         }
     }
@@ -523,12 +523,12 @@ public class ContabilidadService {
 
         for (AsientoContable asiento : asientos) {
             if (!asiento.estaCuadrado()) {
-                log.warn("⚠️ Asiento descuadrado: {}", asiento.getNumero());
+                log.warn("[AVISO] Asiento descuadrado: {}", asiento.getNumero());
                 return false;
             }
         }
 
-        log.info("✅ Todos los asientos están cuadrados");
+        log.info("[OK] Todos los asientos están cuadrados");
         return true;
     }
 
@@ -648,7 +648,7 @@ public class ContabilidadService {
             throw new IllegalStateException("El asiento de apertura no cuadra");
         }
         AsientoContable guardado = asientoRepository.save(apertura);
-        log.info("✅ Asiento de apertura {} generado ({} líneas)", guardado.getNumero(), guardado.getLineas().size());
+        log.info("[OK] Asiento de apertura {} generado ({} líneas)", guardado.getNumero(), guardado.getLineas().size());
         return guardado;
     }
 

@@ -724,17 +724,17 @@ public class VerifactuService implements InitializingBean {
             String respuesta = aeatSoapClient.enviarFacturaAeat(xml, firma);
 
             log.info("═══════════════════════════════════════════════════════════════");
-            log.info("   ✅ RESPUESTA RECIBIDA DE LA AEAT");
+            log.info("   [OK] RESPUESTA RECIBIDA DE LA AEAT");
             log.info("═══════════════════════════════════════════════════════════════");
             log.info("Resultado: {}", respuesta);
 
             return respuesta;
 
         } catch (ErpException e) {
-            log.error("❌ Error al enviar a AEAT: {}", e.getMessage());
+            log.error("[ERROR] Error al enviar a AEAT: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("❌ Error al enviar a AEAT: {}", e.getMessage());
+            log.error("[ERROR] Error al enviar a AEAT: {}", e.getMessage());
             throw new ErpException("Error de comunicación con AEAT", e);
         }
     }

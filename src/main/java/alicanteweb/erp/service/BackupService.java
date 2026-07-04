@@ -78,17 +78,17 @@ public class BackupService {
             return;
         }
 
-        log.info("🔄 Iniciando backup automático...");
+        log.info("[BACKUP] Iniciando backup automático...");
 
         // Comprobar disponibilidad de mysqldump antes de intentar el backup
         if (!verificarDisponibilidad()) {
-            log.warn("⚠️ mysqldump no está disponible; se omite el backup automático");
+            log.warn("[AVISO] mysqldump no está disponible; se omite el backup automático");
             return;
         }
 
         try {
             String archivoBackup = realizarBackup();
-            log.info("✅ Backup completado exitosamente: {}", archivoBackup);
+            log.info("[OK] Backup completado exitosamente: {}", archivoBackup);
             registrarEventoBackup("BACKUP_AUTOMATICO", archivoBackup, java.util.Map.of(
                 "baseDatos", resolverNombreBaseDatos()
             ));
@@ -100,7 +100,7 @@ public class BackupService {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            log.error("❌ Error en backup automático", e);
+            log.error("[ERROR] Error en backup automático", e);
             registrarEventoBackup("BACKUP_FALLIDO", "backup-automatico", java.util.Map.of(
                 "error", String.valueOf(e.getMessage())
             ));
@@ -116,7 +116,7 @@ public class BackupService {
      */
     @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR')")
     public String realizarBackup() throws IOException, InterruptedException {
-        log.info("📦 Creando backup de la base de datos...");
+        log.info("[BACKUP] Creando backup de la base de datos...");
 
         // Crear directorio de backups si no existe
         Path backupPath = Paths.get(backupDirectory);
@@ -169,7 +169,7 @@ public class BackupService {
                 File backupFile = new File(rutaCompleta);
                 if (backupFile.exists() && backupFile.length() > 0) {
                     long sizeMB = backupFile.length() / (1024 * 1024);
-                    log.info("✅ Backup creado exitosamente: {} ({} MB)", nombreArchivo, sizeMB);
+                    log.info("[OK] Backup creado exitosamente: {} ({} MB)", nombreArchivo, sizeMB);
                     registrarEventoBackup("BACKUP_GENERADO", rutaCompleta, java.util.Map.of(
                         "nombreArchivo", nombreArchivo,
                         "tamanoBytes", backupFile.length(),
@@ -204,7 +204,7 @@ public class BackupService {
         Path rutaValidada = validarRutaBackup(rutaArchivo);
 
         String restoringUser = usuarioActual();
-        log.info("🔄 Restaurando backup desde: {} (usuario={}, hora={})", rutaValidada, restoringUser,
+        log.info("[BACKUP] Restaurando backup desde: {} (usuario={}, hora={})", rutaValidada, restoringUser,
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
 
         File backupFile = rutaValidada.toFile();
@@ -230,7 +230,7 @@ public class BackupService {
             int exitCode = ejecutarProceso(pb, TIMEOUT_RESTAURACION, "mysql (restauración)");
 
             if (exitCode == 0) {
-                log.info("✅ Backup restaurado exitosamente");
+                log.info("[OK] Backup restaurado exitosamente");
                 registrarEventoBackup("RESTAURACION_BACKUP", rutaValidada.toString(), java.util.Map.of(
                     "usuario", restoringUser,
                     "baseDatos", dbName
@@ -289,7 +289,7 @@ public class BackupService {
      * Elimina backups más antiguos que el período de retención
      */
     public void limpiarBackupsAntiguos() {
-        log.info("🧹 Limpiando backups antiguos (> {} días)...", retentionDays);
+        log.info("[BACKUP] Limpiando backups antiguos (> {} días)...", retentionDays);
 
         LocalDateTime fechaLimite = LocalDateTime.now().minusDays(retentionDays);
 
@@ -312,7 +312,7 @@ public class BackupService {
             }
 
             if (eliminados > 0) {
-                log.info("✅ {} backups antiguos eliminados", eliminados);
+                log.info("[OK] {} backups antiguos eliminados", eliminados);
             } else {
                 log.info("No hay backups antiguos para eliminar");
             }
@@ -404,15 +404,15 @@ public class BackupService {
             boolean disponible = exitCode == 0;
 
             if (disponible) {
-                log.info("✅ mysqldump disponible");
+                log.info("[OK] mysqldump disponible");
             } else {
-                log.warn("⚠️ mysqldump no disponible");
+                log.warn("[AVISO] mysqldump no disponible");
             }
 
             return disponible;
 
         } catch (Exception e) {
-            log.warn("⚠️ No se pudo verificar mysqldump: {}", e.getMessage());
+            log.warn("[AVISO] No se pudo verificar mysqldump: {}", e.getMessage());
             return false;
         }
     }

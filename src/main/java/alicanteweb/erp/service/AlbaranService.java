@@ -190,7 +190,7 @@ public class AlbaranService {
     public Factura convertirAFactura(Long albaranId, Usuario usuario,
                                      String fechaStr, String medioCobro,
                                      String fechaVencimientoStr, String observacionesExtra) {
-        log.info("🔄 Convirtiendo albarán {} a factura", albaranId);
+        log.info("[CONVERSION] Convirtiendo albarán {} a factura", albaranId);
 
         AlbaranVenta albaran = albaranRepository.findById(albaranId)
             .orElseThrow(() -> new IllegalArgumentException("Albarán no encontrado"));
@@ -254,7 +254,7 @@ public class AlbaranService {
         albaran.setEstado("FACTURADO");
         albaranRepository.save(albaran);
 
-        log.info("✅ Albarán convertido a factura: {} -> {}", albaran.getNumero(), facturaGuardada.getNumero());
+        log.info("[OK] Albarán convertido a factura: {} -> {}", albaran.getNumero(), facturaGuardada.getNumero());
 
         // Auditar
         if (auditoriaService != null) {
@@ -271,7 +271,7 @@ public class AlbaranService {
      */
     @Transactional
     public Factura convertirVariosAFactura(List<Long> albaranIds, Usuario usuario) {
-        log.info("🔄 Convirtiendo {} albaranes a una factura", albaranIds.size());
+        log.info("[CONVERSION] Convirtiendo {} albaranes a una factura", albaranIds.size());
 
         if (albaranIds.isEmpty()) {
             throw new IllegalArgumentException("Debe seleccionar al menos un albarán");
@@ -365,7 +365,7 @@ public class AlbaranService {
             albaranRepository.save(albaran);
         }
 
-        log.info("✅ {} albaranes convertidos a factura: {}", albaranes.size(), facturaGuardada.getNumero());
+        log.info("[OK] {} albaranes convertidos a factura: {}", albaranes.size(), facturaGuardada.getNumero());
 
         // Registrar auditoría usando el usuario proporcionado (si existe)
         if (auditoriaService != null && usuario != null) {
@@ -410,7 +410,7 @@ public class AlbaranService {
         calcularTotal(duplicado);
 
         AlbaranVenta guardado = albaranRepository.save(duplicado);
-        log.info("✅ Albarán duplicado: {}", guardado.getNumero());
+        log.info("[OK] Albarán duplicado: {}", guardado.getNumero());
 
         return guardado;
     }

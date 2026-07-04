@@ -187,7 +187,7 @@ public class PedidoService {
      * Convierte un pedido en albarán de venta
      */
     public AlbaranVenta convertirAAlbaran(Long pedidoId, Usuario usuario) {
-        log.info("🔄 Convirtiendo pedido {} a albarán", pedidoId);
+        log.info("[CONVERSION] Convirtiendo pedido {} a albarán", pedidoId);
 
         Pedido pedido = pedidoRepository.findById(pedidoId)
             .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado"));
@@ -230,7 +230,7 @@ public class PedidoService {
         pedido.setEstado("SERVIDO");
         pedidoRepository.save(pedido);
 
-        log.info("✅ Pedido convertido a albarán: {} -> {}", pedido.getNumero(), albaranGuardado.getNumero());
+        log.info("[OK] Pedido convertido a albarán: {} -> {}", pedido.getNumero(), albaranGuardado.getNumero());
 
         // Auditar
         if (auditoriaService != null) {
@@ -246,7 +246,7 @@ public class PedidoService {
      * Convierte un pedido en albarán con entrega parcial
      */
     public AlbaranVenta convertirAAlbaranParcial(Long pedidoId, List<EntregaParcial> entregas, Usuario usuario) {
-        log.info("🔄 Convirtiendo pedido {} a albarán parcial", pedidoId);
+        log.info("[CONVERSION] Convirtiendo pedido {} a albarán parcial", pedidoId);
 
         Pedido pedido = pedidoRepository.findById(pedidoId)
             .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado"));
@@ -292,7 +292,7 @@ public class PedidoService {
         }
         pedidoRepository.save(pedido);
 
-        log.info("✅ Pedido convertido a albarán parcial: {} -> {}", pedido.getNumero(), albaranGuardado.getNumero());
+        log.info("[OK] Pedido convertido a albarán parcial: {} -> {}", pedido.getNumero(), albaranGuardado.getNumero());
 
         return albaranGuardado;
     }
@@ -328,7 +328,7 @@ public class PedidoService {
         }
 
         Pedido guardado = pedidoRepository.save(duplicado);
-        log.info("✅ Pedido duplicado: {}", guardado.getNumero());
+        log.info("[OK] Pedido duplicado: {}", guardado.getNumero());
 
         return guardado;
     }

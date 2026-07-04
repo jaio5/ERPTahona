@@ -220,7 +220,7 @@ public class PresupuestoService {
      * Convierte un presupuesto en factura
      */
     public Factura convertirAFactura(Long presupuestoId, Usuario usuario) {
-        log.info("🔄 Convirtiendo presupuesto {} a factura", presupuestoId);
+        log.info("[CONVERSION] Convirtiendo presupuesto {} a factura", presupuestoId);
 
         Presupuesto presupuesto = presupuestoRepository.findById(presupuestoId)
             .orElseThrow(() -> new IllegalArgumentException("Presupuesto no encontrado"));
@@ -280,7 +280,7 @@ public class PresupuestoService {
         presupuesto.setEstado("FACTURADO");
         presupuestoRepository.save(presupuesto);
 
-        log.info("✅ Presupuesto convertido a factura: {} -> {}", presupuesto.getNumero(), facturaGuardada.getNumero());
+        log.info("[OK] Presupuesto convertido a factura: {} -> {}", presupuesto.getNumero(), facturaGuardada.getNumero());
 
         return facturaGuardada;
     }
@@ -320,7 +320,7 @@ public class PresupuestoService {
         }
 
         Presupuesto guardado = presupuestoRepository.save(duplicado);
-        log.info("✅ Presupuesto duplicado: {}", guardado.getNumero());
+        log.info("[OK] Presupuesto duplicado: {}", guardado.getNumero());
 
         return guardado;
     }
@@ -344,7 +344,7 @@ public class PresupuestoService {
             }
         }
 
-        log.info("✅ {} presupuestos marcados como caducados", caducados);
+        log.info("[OK] {} presupuestos marcados como caducados", caducados);
         return caducados;
     }
 }

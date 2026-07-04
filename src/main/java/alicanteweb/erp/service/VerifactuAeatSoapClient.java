@@ -98,12 +98,12 @@ public class VerifactuAeatSoapClient {
             // 4. Procesar respuesta
             String resultado = procesarRespuesta(respuesta);
 
-            log.info("✅ Respuesta AEAT recibida: {}", resultado.substring(0, Math.min(100, resultado.length())));
+            log.info("[OK] Respuesta AEAT recibida: {}", resultado.substring(0, Math.min(100, resultado.length())));
 
             return resultado;
 
         } catch (Exception e) {
-            log.error("❌ Error enviando a AEAT: {}", e.getMessage(), e);
+            log.error("[ERROR] Error enviando a AEAT: {}", e.getMessage(), e);
             throw new Exception("Error en comunicación con AEAT: " + e.getMessage(), e);
         }
     }
@@ -410,7 +410,7 @@ public class VerifactuAeatSoapClient {
             String faultCode = fault.getFaultCode();
             String faultString = fault.getFaultString();
 
-            log.error("❌ SOAP Fault recibido: {} - {}", faultCode, faultString);
+            log.error("[ERROR] SOAP Fault recibido: {} - {}", faultCode, faultString);
             throw new Exception("Error SOAP de AEAT: " + faultString);
         }
 
@@ -418,24 +418,24 @@ public class VerifactuAeatSoapClient {
         if (xmlRespuesta.contains("<EstadoRegistro>Correcto</EstadoRegistro>") ||
             xmlRespuesta.contains("<EstadoEnvio>Correcto</EstadoEnvio>")) {
 
-            log.info("✅ Factura ACEPTADA por AEAT");
+            log.info("[OK] Factura ACEPTADA por AEAT");
             return "ACEPTADA";
 
         } else if (xmlRespuesta.contains("<EstadoRegistro>AceptadoConErrores</EstadoRegistro>")) {
 
             String errores = extraerErrores(xmlRespuesta);
-            log.warn("⚠️ Factura ACEPTADA CON ERRORES: {}", errores);
+            log.warn("[AVISO] Factura ACEPTADA CON ERRORES: {}", errores);
             return "ACEPTADA_CON_ERRORES: " + errores;
 
         } else if (xmlRespuesta.contains("<EstadoRegistro>Rechazado</EstadoRegistro>")) {
 
             String errores = extraerErrores(xmlRespuesta);
-            log.error("❌ Factura RECHAZADA por AEAT: {}", errores);
+            log.error("[ERROR] Factura RECHAZADA por AEAT: {}", errores);
             throw new Exception("Factura rechazada por AEAT: " + errores);
 
         } else {
             // Respuesta inesperada
-            log.warn("⚠️ Respuesta inesperada de AEAT (primeros 500 caracteres):\n{}",
+            log.warn("[AVISO] Respuesta inesperada de AEAT (primeros 500 caracteres):\n{}",
                     xmlRespuesta.substring(0, Math.min(500, xmlRespuesta.length())));
             return "RESPUESTA_INESPERADA";
         }
@@ -554,15 +554,15 @@ public class VerifactuAeatSoapClient {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             int status = response.statusCode();
             if (status < 200 || status >= 300) {
-                log.error("❌ Respuesta inesperada de AEAT (HEAD request): {}", status);
+                log.error("[ERROR] Respuesta inesperada de AEAT (HEAD request): {}", status);
                 return false;
             }
 
-            log.info("✅ Conexión con AEAT verificada correctamente");
+            log.info("[OK] Conexión con AEAT verificada correctamente");
             return true;
 
         } catch (Exception e) {
-            log.error("❌ No se pudo conectar con AEAT: {}", e.getMessage());
+            log.error("[ERROR] No se pudo conectar con AEAT: {}", e.getMessage());
             return false;
         }
     }
