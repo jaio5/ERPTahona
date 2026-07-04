@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.time.Instant;
 
 /**
@@ -46,6 +47,9 @@ import java.time.Instant;
 @ConditionalOnProperty(prefix = "verifactu.aeat", name = "enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class VerifactuAeatSoapClient {
+
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
 
     @Value("${verifactu.aeat.endpoint:}")
     private String aeatEndpoint;
@@ -360,9 +364,14 @@ public class VerifactuAeatSoapClient {
         byte[] requestBytes = baos.toByteArray();
 
         // Enviar usando java.net.http.HttpClient en lugar de SOAPConnection (evita APIs deprecated)
-        HttpClient client = HttpClient.newBuilder().build();
+        // Timeouts obligatorios: sin ellos, un endpoint AEAT colgado bloquearía el hilo
+        // (y con él la emisión de facturas) indefinidamente.
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(CONNECT_TIMEOUT)
+                .build();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(aeatEndpoint))
+                .timeout(REQUEST_TIMEOUT)
                 .header("Content-Type", "text/xml; charset=utf-8")
                 .POST(HttpRequest.BodyPublishers.ofByteArray(requestBytes))
                 .build();
@@ -533,9 +542,12 @@ public class VerifactuAeatSoapClient {
             log.info("Verificando conexión con AEAT...");
 
             // Intentar crear una conexión simple
-            HttpClient client = HttpClient.newBuilder().build();
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(CONNECT_TIMEOUT)
+                    .build();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(aeatEndpoint))
+                    .timeout(REQUEST_TIMEOUT)
                     .method("HEAD", HttpRequest.BodyPublishers.noBody())
                     .build();
 

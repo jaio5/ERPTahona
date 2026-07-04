@@ -4,17 +4,19 @@ services:
     container_name: erp-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      # Sin valores por defecto: obliga a definir las contraseñas en .env (copia .env.example)
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD - copia .env.example a .env y rellena los secretos}"
       MYSQL_DATABASE: tahona
       MYSQL_USER: tahona
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-tahonapass}
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:?Falta MYSQL_PASSWORD - copia .env.example a .env y rellena los secretos}"
     ports:
       # 3307 por defecto para no chocar con un MySQL local en 3306
       - "${MYSQL_HOST_PORT:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+      # MYSQL_PWD evita que la contraseña aparezca en la línea de comandos (visible con ps)
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h localhost -u root"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -29,7 +31,7 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/tahona?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: tahona
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-tahonapass}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       SERVER_PORT: 8080
       # ── Secretos obligatorios: defínelos en .env (copia .env.example) ──
       ADMIN_DEFAULT_PASSWORD: "${ADMIN_DEFAULT_PASSWORD:?Falta ADMIN_DEFAULT_PASSWORD - copia .env.example a .env y rellena los secretos}"
@@ -58,7 +60,8 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/web/login"]
+      # /actuator/health comprueba app + conexión a BD (no solo que Tomcat responda)
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 10

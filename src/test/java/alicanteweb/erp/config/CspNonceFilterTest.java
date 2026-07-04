@@ -25,7 +25,11 @@ class CspNonceFilterTest {
                 policy.indexOf(';', policy.indexOf("script-src")));
         assertThat(policy)
                 .contains("script-src 'self' 'nonce-")
-                .contains("object-src 'none'");
+                .contains("object-src 'none'")
+                // Todos los assets se sirven como webjars: ningún host externo en la política
+                .doesNotContain("cdn.jsdelivr.net")
+                .doesNotContain("fonts.googleapis.com")
+                .doesNotContain("fonts.gstatic.com");
         // 'unsafe-eval' is required for Alpine.js CDN build (uses eval() internally)
         // 'unsafe-inline' is still prohibited; nonce mechanism is used instead
         assertThat(scriptPolicy)

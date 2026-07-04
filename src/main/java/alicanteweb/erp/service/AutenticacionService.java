@@ -35,7 +35,9 @@ public class AutenticacionService {
 
         if (usuarioOpt.isEmpty()) {
             log.warn("Usuario no encontrado: {}", redactUsername(username));
-            auditoriaService.registrarError(null, "Usuario", username,
+            // Redactado también en auditoría: un usuario inexistente puede ser una
+            // contraseña tecleada por error en el campo de usuario, y no debe persistirse.
+            auditoriaService.registrarError(null, "Usuario", redactUsername(username),
                     "Intento de login - usuario no encontrado");
             return null;
         }

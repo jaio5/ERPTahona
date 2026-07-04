@@ -121,6 +121,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- Actuator: healthcheck real (app + BD) para docker compose y monitorización -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -147,6 +152,27 @@
             <groupId>org.webjars.npm</groupId>
             <artifactId>bootstrap-icons</artifactId>
             <version>1.11.3</version>
+        </dependency>
+        <!-- Assets servidos localmente (sin CDN): CSP sin hosts externos y app usable sin Internet -->
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>tom-select</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>alpinejs</artifactId>
+            <version>3.14.9</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>chart.js</artifactId>
+            <version>4.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>fontsource__inter</artifactId>
+            <version>5.2.5</version>
         </dependency>
         <!-- Spring Security Crypto (BCrypt para contraseñas) - usar versión gestionada por Spring Boot parent -->
         <dependency>

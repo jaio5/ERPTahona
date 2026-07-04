@@ -98,7 +98,8 @@ public class SecurityConfig {
                                 "/app-config.js",
                                 "/erp-core.js",
                                 "/erp-crud.js",
-
+                                // Healthcheck de docker compose / monitorización (sin detalles para anónimos)
+                                "/actuator/health",
                                 "/webjars/**"
                         ).permitAll()
                         .requestMatchers(
@@ -199,6 +200,16 @@ public class SecurityConfig {
     @Bean
     public SessionRegistry sessionRegistry() {
         return new SessionRegistryImpl();
+    }
+
+    /**
+     * Publica los eventos de creación/destrucción de sesión HTTP hacia Spring Security.
+     * Sin él, el SessionRegistry no se entera de logouts ni expiraciones y el control
+     * de sesiones concurrentes (maximumSessions) trabaja con sesiones fantasma.
+     */
+    @Bean
+    public org.springframework.security.web.session.HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new org.springframework.security.web.session.HttpSessionEventPublisher();
     }
 
     @Bean

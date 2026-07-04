@@ -115,6 +115,21 @@ class WebEntityControllerTest {
     }
 
     @Test
+    void lasFacturasNoAdmitenEscrituraGenerica() {
+        // Inalterabilidad RRSIF/VeriFactu: las facturas solo se tocan por sus servicios propios
+        assertThrows(IllegalStateException.class,
+                () -> controller.create("facturas", Map.of()));
+        assertThrows(IllegalStateException.class,
+                () -> controller.update("facturas", 1L, Map.of("total", "999.99")));
+        assertThrows(IllegalStateException.class,
+                () -> controller.delete("facturas", 1L));
+        assertThrows(IllegalStateException.class,
+                () -> controller.update("facturas-compra", 1L, Map.of()));
+        assertThrows(IllegalStateException.class,
+                () -> controller.delete("facturas-compra", 1L));
+    }
+
+    @Test
     void activaDesactivaYEliminaEntidades() {
         Proveedor proveedor = new Proveedor();
         proveedor.setId(1L);

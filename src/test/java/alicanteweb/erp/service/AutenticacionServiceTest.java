@@ -33,7 +33,9 @@ class AutenticacionServiceTest {
         Usuario usuario = service.login("ghost", "secret");
 
         assertNull(usuario);
-        verify(auditoriaService).registrarError(null, "Usuario", "ghost", "Intento de login - usuario no encontrado");
+        // El username se redacta también en auditoría: podría ser una contraseña
+        // tecleada por error en el campo de usuario
+        verify(auditoriaService).registrarError(null, "Usuario", "gh***", "Intento de login - usuario no encontrado");
     }
 
     @Test

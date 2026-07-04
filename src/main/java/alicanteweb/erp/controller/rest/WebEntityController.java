@@ -37,8 +37,13 @@ public class WebEntityController {
 
     private static final Logger log = LoggerFactory.getLogger(WebEntityController.class);
 
+    /**
+     * Módulos sin escritura genérica. Las facturas se gestionan exclusivamente por sus
+     * controladores/servicios propios: modificarlas o borrarlas por esta vía reflectiva
+     * saltaría el registro VeriFactu y rompería la inalterabilidad exigida por el RRSIF.
+     */
     private static final Set<String> READ_ONLY_MODULES = Set.of(
-            "auditoria", "verifactu-evidencias", "modelo347"
+            "auditoria", "verifactu-evidencias", "modelo347", "facturas", "facturas-compra"
     );
 
     /** Módulos que requieren rol ADMIN o ADMINISTRADOR */

@@ -24,11 +24,14 @@ public class CspNonceFilter extends OncePerRequestFilter {
         String nonce = Base64.getUrlEncoder().withoutPadding().encodeToString(nonceBytes);
 
         request.setAttribute("cspNonce", nonce);
+        // Sin hosts externos: todos los assets (bootstrap, tom-select, alpine, chart.js, Inter)
+        // se sirven como webjars. 'unsafe-eval' sigue siendo necesario porque el build CDN de
+        // Alpine.js evalúa expresiones; solo aplica a scripts ya permitidos por 'self'/nonce.
         response.setHeader("Content-Security-Policy",
                 "default-src 'self'; "
-                        + "script-src 'self' 'nonce-" + nonce + "' 'unsafe-eval' https://cdn.jsdelivr.net; "
-                        + "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
-                        + "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+                        + "script-src 'self' 'nonce-" + nonce + "' 'unsafe-eval'; "
+                        + "style-src 'self' 'unsafe-inline'; "
+                        + "font-src 'self'; "
                         + "img-src 'self' data:; "
                         + "connect-src 'self'; "
                         + "object-src 'none'; "

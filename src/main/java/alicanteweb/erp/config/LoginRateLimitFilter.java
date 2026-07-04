@@ -19,6 +19,8 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     private static final int MAX_ATTEMPTS = 10;
     private static final long WINDOW_MS = 60_000;   // 1 minuto
     private static final long COOLDOWN_MS = 60_000;  // 1 minuto de bloqueo
+    // Umbral a partir del cual se purgan entradas inactivas (evita crecimiento sin límite del mapa)
+    private static final int CLEANUP_THRESHOLD = 10_000;
 
     private final ConcurrentHashMap<String, AttemptWindow> attemptsByIp = new ConcurrentHashMap<>();
 
@@ -33,17 +35,13 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
 
         String ip = getClientIp(request);
         long now = System.currentTimeMillis();
+        if (attemptsByIp.size() > CLEANUP_THRESHOLD) {
+            attemptsByIp.values().removeIf(w -> now - w.lastAttempt > WINDOW_MS + COOLDOWN_MS);
+        }
         AttemptWindow window = attemptsByIp.computeIfAbsent(ip, k -> new AttemptWindow(now));
 
         synchronized (window) {
-            if (now - window.blockedUntil > 0) {
-                // Ventana caducada o cooldown terminado: resetear
-                window.reset(now);
-            }
-            if (window.count >= MAX_ATTEMPTS) {
-                if (window.blockedUntil == 0) {
-                    window.blockedUntil = now + COOLDOWN_MS;
-                }
+            if (window.blockedUntil > 0) {
                 if (now < window.blockedUntil) {
                     response.setStatus(429);
                     response.setContentType("application/json;charset=UTF-8");
@@ -52,12 +50,14 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
                 }
                 // Cooldown terminado: resetear
                 window.reset(now);
+            } else if (now - window.windowStart > WINDOW_MS) {
+                // Ventana caducada: resetear
+                window.reset(now);
             }
             window.count++;
             window.lastAttempt = now;
-            if (now - window.windowStart > WINDOW_MS) {
-                window.windowStart = now;
-                window.count = 1;
+            if (window.count >= MAX_ATTEMPTS) {
+                window.blockedUntil = now + COOLDOWN_MS;
             }
         }
 
