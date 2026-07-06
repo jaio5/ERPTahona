@@ -12,6 +12,7 @@
       5. Abre el navegador en la aplicacion.
 
     No necesita JDK, Maven ni internet si la imagen viene pre-construida en el paquete.
+    Nota: solo caracteres ASCII, para que funcione bajo Windows PowerShell 5.1.
 #>
 $ErrorActionPreference = "Stop"
 
@@ -20,7 +21,7 @@ function Write-Ok($msg)   { Write-Host "    $msg" -ForegroundColor Green }
 function Write-Warn2($msg){ Write-Host "    $msg" -ForegroundColor Yellow }
 function Fail($msg)       { Write-Host ""; Write-Host "ERROR: $msg" -ForegroundColor Red; Read-Host "Pulsa Enter para cerrar"; exit 1 }
 
-# ── Localizar la carpeta con docker-compose.yml (subiendo desde el script) ──
+# --- Localizar la carpeta con docker-compose.yml (subiendo desde el script) ---
 $dir = $PSScriptRoot
 $composeDir = $null
 for ($i = 0; $i -lt 5 -and $dir; $i++) {
@@ -31,7 +32,7 @@ if (-not $composeDir) { Fail "No encuentro docker-compose.yml junto al lanzador.
 Set-Location $composeDir
 Write-Step "Carpeta de la aplicacion: $composeDir"
 
-# ── 1. Docker disponible y arrancado ───────────────────────────────────────
+# --- 1. Docker disponible y arrancado ---
 Write-Step "Comprobando Docker..."
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     Fail "Docker no esta instalado. Instala Docker Desktop desde https://www.docker.com/products/docker-desktop y vuelve a ejecutar."
@@ -51,7 +52,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Ok "Docker operativo."
 
-# ── 2. .env: generar en el primer arranque (nunca sobrescribir) ─────────────
+# --- 2. .env: generar en el primer arranque (nunca sobrescribir) ---
 $envPath = Join-Path $composeDir ".env"
 if (-not (Test-Path $envPath)) {
     Write-Step "Primer arranque: generando .env con secretos aleatorios..."
@@ -79,16 +80,16 @@ if (-not (Test-Path $envPath)) {
     [System.IO.File]::WriteAllText($envPath, ($lines -join "`n") + "`n", (New-Object System.Text.UTF8Encoding($false)))
     Write-Ok ".env creado."
     Write-Host ""
-    Write-Host "  ┌───────────────────────────────────────────────────────────┐" -ForegroundColor Magenta
-    Write-Host "  │  CONTRASENA INICIAL DE ADMIN (anotala, se pedira cambiarla) │" -ForegroundColor Magenta
-    Write-Host ("  │      usuario: admin     contrasena: {0,-20}│" -f $adminPass) -ForegroundColor Magenta
-    Write-Host "  └───────────────────────────────────────────────────────────┘" -ForegroundColor Magenta
+    Write-Host "  ============================================================" -ForegroundColor Magenta
+    Write-Host "   CONTRASENA INICIAL DE ADMIN (anotala, se pedira cambiarla)" -ForegroundColor Magenta
+    Write-Host ("      usuario: admin     contrasena: {0}" -f $adminPass) -ForegroundColor Magenta
+    Write-Host "  ============================================================" -ForegroundColor Magenta
     Write-Host ""
 } else {
     Write-Ok ".env existente: se conservan los secretos actuales."
 }
 
-# ── 3. Imagen pre-construida ────────────────────────────────────────────────
+# --- 3. Imagen pre-construida ---
 Write-Step "Comprobando la imagen de la aplicacion..."
 docker image inspect erp-tahona:latest *> $null
 if ($LASTEXITCODE -ne 0) {
@@ -103,7 +104,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Ok "Imagen lista."
 
-# ── 4. Levantar el stack y esperar salud ───────────────────────────────────
+# --- 4. Levantar el stack y esperar salud ---
 Write-Step "Levantando la aplicacion (MySQL + app + proxy)..."
 docker compose up -d
 if ($LASTEXITCODE -ne 0) { Fail "Fallo al levantar el stack. Revisa 'docker compose logs'." }
@@ -119,7 +120,7 @@ do {
 if ($estado -ne "healthy") { Fail "La aplicacion no arranco a tiempo. Revisa 'docker compose logs app'." }
 Write-Ok "Aplicacion lista."
 
-# ── 5. Abrir el navegador ──────────────────────────────────────────────────
+# --- 5. Abrir el navegador ---
 $dominio = "localhost"
 $m = Select-String -Path $envPath -Pattern '^ERP_DOMAIN=(.+)$'
 if ($m) { $dominio = $m.Matches[0].Groups[1].Value.Trim() }
