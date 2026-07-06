@@ -12,6 +12,10 @@ public class DatabaseStartupChecker implements EnvironmentPostProcessor {
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+        // Anti-drift (todos los perfiles): si Flyway gestiona el esquema, Hibernate no
+        // debe poder alterarlo. Se aplica antes que las comprobaciones de producción.
+        enforceNoSchemaDrift(environment);
+
         String[] profiles = environment.getActiveProfiles();
         boolean prodActive = false;
         if (profiles != null) {
@@ -98,6 +102,28 @@ public class DatabaseStartupChecker implements EnvironmentPostProcessor {
             if (password == null || password.isBlank()) {
                 fail("[SECURITY] Production profile active but 'spring.datasource.password' is not set.");
             }
+        }
+    }
+
+    /**
+     * Evita el drift de esquema: cuando Flyway gestiona las migraciones, Hibernate
+     * no debe crear ni alterar tablas por su cuenta. Rechaza el arranque —en
+     * cualquier perfil— si {@code spring.jpa.hibernate.ddl-auto} es un valor que
+     * muta el esquema ({@code create}, {@code create-drop} o {@code update}) mientras
+     * Flyway está habilitado. Con Flyway deshabilitado (p. ej. tests con H2) Hibernate
+     * construye el esquema legítimamente y no se aplica la restricción.
+     */
+    private void enforceNoSchemaDrift(Environment environment) {
+        boolean flywayEnabled = Boolean.parseBoolean(environment.getProperty("spring.flyway.enabled", "true"));
+        if (!flywayEnabled) {
+            return;
+        }
+        String ddlAuto = environment.getProperty("spring.jpa.hibernate.ddl-auto", "");
+        String normalized = ddlAuto == null ? "" : ddlAuto.trim().toLowerCase();
+        if (normalized.equals("create") || normalized.equals("create-drop") || normalized.equals("update")) {
+            fail("[SCHEMA] Con Flyway habilitado, spring.jpa.hibernate.ddl-auto='" + ddlAuto
+                    + "' permitiria que Hibernate alterase el esquema (riesgo de drift)."
+                    + " Usa 'validate' o 'none' y define los cambios de esquema como migraciones Flyway.");
         }
     }
 

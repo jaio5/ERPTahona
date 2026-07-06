@@ -80,4 +80,45 @@ class DatabaseStartupCheckerVerifactuTest {
         assertThatCode(() -> checker.postProcessEnvironment(env, null))
                 .doesNotThrowAnyException();
     }
+
+    @Test
+    void conFlywayActivoUnDdlAutoQueMutaElEsquemaImpideElArranque() {
+        for (String ddlPeligroso : new String[]{"update", "create", "create-drop"}) {
+            MockEnvironment env = new MockEnvironment();
+            env.setActiveProfiles("dev");
+            env.setProperty("spring.flyway.enabled", "true");
+            env.setProperty("spring.jpa.hibernate.ddl-auto", ddlPeligroso);
+
+            assertThatThrownBy(() -> checker.postProcessEnvironment(env, null))
+                    .as("ddl-auto=%s con Flyway activo debe bloquear el arranque", ddlPeligroso)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("drift");
+        }
+    }
+
+    @Test
+    void conFlywayActivoValidateYNoneArrancan() {
+        for (String ddlSeguro : new String[]{"validate", "none"}) {
+            MockEnvironment env = new MockEnvironment();
+            env.setActiveProfiles("dev");
+            env.setProperty("spring.flyway.enabled", "true");
+            env.setProperty("spring.jpa.hibernate.ddl-auto", ddlSeguro);
+
+            assertThatCode(() -> checker.postProcessEnvironment(env, null))
+                    .as("ddl-auto=%s con Flyway activo debe permitir el arranque", ddlSeguro)
+                    .doesNotThrowAnyException();
+        }
+    }
+
+    @Test
+    void conFlywayDeshabilitadoSePermiteQueHibernateCreeElEsquema() {
+        // Escenario de tests: H2 en memoria, Flyway off, Hibernate construye el esquema.
+        MockEnvironment env = new MockEnvironment();
+        env.setActiveProfiles("test");
+        env.setProperty("spring.flyway.enabled", "false");
+        env.setProperty("spring.jpa.hibernate.ddl-auto", "create-drop");
+
+        assertThatCode(() -> checker.postProcessEnvironment(env, null))
+                .doesNotThrowAnyException();
+    }
 }
