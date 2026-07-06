@@ -19,7 +19,7 @@ class VerifactuAeatSoapClientTest {
     void setUp() {
         client = new VerifactuAeatSoapClient();
         ReflectionTestUtils.setField(client, "aeatEnabled", false);
-        ReflectionTestUtils.setField(client, "aeatEndpoint", "https://prewww2.aeat.es/wlpl/AVAC-FACT/ws/fe/SiiVerifactu");
+        ReflectionTestUtils.setField(client, "aeatEndpoint", "https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP");
         ReflectionTestUtils.setField(client, "keystorePath", "");
         ReflectionTestUtils.setField(client, "keystorePassword", "");
         ReflectionTestUtils.setField(client, "keyAlias", "mi_certificado");
