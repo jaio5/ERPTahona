@@ -2,6 +2,12 @@
 
 Fecha: 2026-07-02 · Rama: refactor-general (ba58496) · Alcance: revisión de código (servicios, entidades, controladores, migraciones, plantillas)
 
+> **Corrección de plazo (2026-07-04):** este documento asumía el plazo `2026-07-01` (RD 254/2025). El
+> **Real Decreto-ley 15/2025** pospuso los plazos VeriFactu a **2027-01-01** (art. 3.1.a, Impuesto sobre
+> Sociedades) y **2027-07-01** (resto de obligados). Por tanto A1 ya **no está vencido**: se lanza con
+> remisión AEAT deshabilitada y hay margen hasta 2027. Ver [estado-actual](estado-actual.md) y
+> [plan-lanzamiento](plan-lanzamiento.md) §4.
+>
 > **Actualización (2026-07-02, misma tarde):** implementados A2/A3 (libros de IVA + borradores 303/111),
 > A4 parcial (export Facturae 3.2.2 sin firma), B1 (cartera de cobros/pagos), B2 (remesas SEPA pain.008 +
 > mandatos), B3 (import Norma 43), B4 (PMP e inventario valorado), B5 (asiento de apertura, libro mayor,
@@ -15,8 +21,8 @@ La aplicación cubre con solvencia el núcleo operativo de una panadería (venta
 
 ## A. Cumplimiento legal — bloqueante
 
-### A1. VeriFactu en producción (URGENTE: plazo vencido el 2026-07-01)
-El propio `FiscalComplianceService` define `LIMITE_RESTO_OBLIGADOS = 2026-07-01` (RD 1007/2023 + RD 254/2025): desde ayer todos los obligados deben operar con un SIF conforme. El código está preparado (registro de facturación, huella encadenada, QR tributario, XML oficial, registro de anulación, cliente SOAP AEAT, declaración responsable), pero falta:
+### A1. VeriFactu en producción (plazo 2027-07-01 tras RD-ley 15/2025 — ver nota inicial)
+El plazo del resto de obligados es **2027-07-01** (RD 1007/2023 consolidado, RD-ley 15/2025); no está vencido. El código está preparado (registro de facturación, huella encadenada, QR tributario, XML oficial, registro de anulación, cliente SOAP AEAT, declaración responsable), pero falta:
 - Certificado digital real (`VERIFACTU_CERT_PATH` vacío en el despliegue actual → firma deshabilitada).
 - Validación end-to-end contra el entorno de preproducción AEAT (endpoint `prewww2` ya configurado por defecto).
 - Activar `VERIFACTU_AEAT_ENABLED=true` tras validar.

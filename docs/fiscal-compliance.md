@@ -5,14 +5,14 @@ Estado: base tecnica de cumplimiento incorporada, pendiente de validacion final 
 ## Referencias normativas
 
 - Ley 58/2003, articulo 29.2.j: los sistemas deben garantizar integridad, conservacion, accesibilidad, legibilidad, trazabilidad e inalterabilidad.
-- Real Decreto 1007/2023 y modificacion por Real Decreto 254/2025.
+- Real Decreto 1007/2023 (texto consolidado), modificado por el Real Decreto-ley 15/2025.
 - Orden HAC/1177/2024: especificaciones tecnicas, funcionales y de contenido.
 - AEAT, Sistemas Informaticos de Facturacion (SIF) y VERI*FACTU: informacion general y tecnica.
 
-Fechas de adaptacion segun RD 254/2025:
+Plazos vigentes segun el texto consolidado del RD 1007/2023 (RD-ley 15/2025):
 
-- 2026-01-01: contribuyentes del Impuesto sobre Sociedades.
-- 2026-07-01: resto de obligados tributarios afectados.
+- 2027-01-01: obligados del articulo 3.1.a) del reglamento (normalmente contribuyentes del Impuesto sobre Sociedades).
+- 2027-07-01: resto de obligados del articulo 3.1.
 
 ## Modalidades soportadas
 

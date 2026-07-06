@@ -226,7 +226,7 @@ En modo dev:
 | BUG-011: Columna `xml_generado` TINYTEXT en dev | Alta | ✅ Corregido |
 | BUG-012: Total de factura rectificativa = 0,00 € | Media | ⚠️ Pendiente |
 
-Ver detalle en `docs/frontend-issues.md` (BUG-008 a BUG-012).
+> Nota (2026-07): tabla histórica de la revisión del 2026-06-30; BUG-009/010/011 quedaron corregidos.
 
 ---
 
@@ -252,7 +252,7 @@ Ver detalle en `docs/frontend-issues.md` (BUG-008 a BUG-012).
 ## 11. Pendiente / mejoras futuras
 
 - **BUG-012**: Recalcular totales en `FacturaService.crearRectificativa()` (total = 0 en rectificativas)
-- **Toast BUG-009**: Los mensajes flash no se muestran en redirects (BUG global, ver `docs/frontend-issues.md`)
+- **Toast BUG-009**: Los mensajes flash no se muestran en redirects (BUG global de frontend)
 - **Reenvío automático**: No hay scheduler que reintente PENDIENTE/ERROR → requiere intervención manual
 - **Verificación AEAT**: `verificarEstadoAEAT` solo actualiza estado local, no hace llamada SOAP real
 - **Integridad de cadena**: `validarCadenaIntegridad()` existe pero no se llama automáticamente; solo disponible via código

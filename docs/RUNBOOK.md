@@ -142,6 +142,15 @@ el test `BackupRestoreIntegrationTest` lo ensaya en CI contra un MySQL efímero,
 pero un ensayo real en el servidor (restaurar el último backup en una BD de
 prueba) sigue siendo la única prueba completa.
 
+### 4.3 Registro de ensayos de restore
+
+Anota aquí cada ensayo real (requisito de la checklist de lanzamiento: sin al
+menos un ensayo con fecha, el restore se considera no probado).
+
+| Fecha | Backup restaurado | Entorno | Resultado | Quién |
+|-------|-------------------|---------|-----------|-------|
+| _pendiente_ | — | — | — | — |
+
 ---
 
 ## 5. Actualización de versión

@@ -11,7 +11,6 @@ La aplicación es web. La interfaz principal se encuentra bajo `/web` y requiere
 | Área | Ruta principal | Funciones principales |
 |------|---------------|----------------------|
 | Panel | `/web/dashboard` | Resumen de KPIs, alertas y gráficos de ventas/producción |
-
 | Clientes | `/web/clientes` | Alta, edición, consulta, exportación CSV/JSON, tarifas especiales |
 | Proveedores | `/web/proveedores` | Maestro de proveedores |
 | Artículos | `/web/articulos` | Catálogo, precios, IVA, stock, alérgenos y tarifas por cliente |
@@ -24,10 +23,11 @@ La aplicación es web. La interfaz principal se encuentra bajo `/web` y requiere
 | Inventario | `/web/reportes` | Almacenes, valoración de inventario, movimientos, lotes, ajustes manuales |
 | Trazabilidad | `/web/lotes` | Seguimiento de lotes hacia materias primas y productos |
 | Reparto | `/web/hojas-ruta` | Vehículos, rutas, hojas de ruta, entregas e incidencias. API móvil `/api/movil` |
-| Tesorería | `/web/tesoreria` | Caja, bancos, movimientos e importación de extractos CSV |
-| Extractos | `/web/tesoreria/extractos` | Extractos bancarios, importación CSV y conciliación con facturas |
-| Contabilidad | `/web/contabilidad` | Plan contable, asientos manuales/automáticos, balance y cierre de ejercicio |
-| Fiscal | `/web/modelo347`, `/web/verifactu` | Modelo 347 y evidencias VeriFactu |
+| Tesorería | `/web/tesoreria` | Caja, bancos, movimientos, importación CSV y Norma 43, cartera de cobros/pagos, remesas SEPA (pain.008) y mandatos |
+| Extractos | `/web/tesoreria/extractos` | Extractos bancarios, importación CSV/N43 y conciliación asistida con facturas |
+| Contabilidad | `/web/contabilidad` | Plan PGC, asientos manuales/automáticos, libro mayor, balance, PyG, apertura y cierre de ejercicio |
+| Fiscal | `/web/modelo347`, `/web/verifactu` | VeriFactu, Modelo 347, libros de IVA, borradores 303/111 y export Facturae 3.2.2 |
+| TPV | `/web/tpv` | Venta de mostrador con factura simplificada VeriFactu |
 | APPCC | `/web/appcc` | Controles alimentarios y acciones correctivas |
 | Administración | `/web/usuarios`, `/web/backups` | Empresa, usuarios, roles, auditoría y backups |
 
@@ -187,7 +187,6 @@ El área `/web/reportes` incluye: valoración de inventario, movimientos de stoc
 | Ruta | Uso |
 |------|-----|
 | `/web/dashboard` | Panel principal |
-
 | `/web/clientes` | Clientes |
 | `/web/articulos` | Artículos |
 | `/web/pedidos-venta` | Pedidos de venta |
@@ -197,9 +196,12 @@ El área `/web/reportes` incluye: valoración de inventario, movimientos de stoc
 | `/web/ordenes-produccion` | Órdenes de producción |
 | `/web/horneadas` | Horneadas |
 | `/web/hojas-ruta` | Hojas de ruta de reparto |
+| `/web/tpv` | TPV de mostrador |
 | `/web/tesoreria` | Tesorería |
 | `/web/tesoreria/extractos` | Extractos y conciliación bancaria |
 | `/web/tesoreria/conciliacion` | Conciliación asistida |
+| `/web/cartera` | Cartera de cobros/pagos |
+| `/web/remesas` | Remesas SEPA y mandatos |
 | `/web/reportes` | Informes e inventario |
 | `/web/contabilidad` | Contabilidad |
 | `/web/contabilidad/balance` | Balance y cierre contable |

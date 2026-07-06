@@ -23,6 +23,12 @@
 *Condición de entrada: ninguna. Hacer esto primero.*
 
 ### 0.1 · Eliminar `'unsafe-eval'` de la CSP
+> **Resultado (2026-07):** ⚠️ **Excepción aceptada, no eliminada.** La migración al build `@alpinejs/csp`
+> se abortó porque 6 plantillas dependen de expresiones inline no soportadas por ese build. La CSP mantiene
+> `'unsafe-eval'` en `script-src` como desviación conocida y documentada (ver [estado-actual](estado-actual.md)
+> y [architecture](architecture.md)). El resto de la CSP usa nonce por petición. Lo de abajo queda como
+> registro del intento.
+
 **Archivo:** `src/main/java/alicanteweb/erp/config/CspNonceFilter.java:29`  
 **Problema:** El test `CspNonceFilterTest` falla porque espera que la CSP NO contenga `'unsafe-eval'`, pero sí lo contiene. Además anula la protección XSS del nonce.  
 **Acción:**
@@ -393,7 +399,7 @@ backup.mysqldump-path=C:/Program Files/...  # ← Windows, falla en Linux
 backup.directory=${ERP_BACKUP_DIR:/var/backups/erptahona}
 backup.mysqldump-path=${MYSQLDUMP_PATH:mysqldump}
 ```
-Documentar las variables de entorno en `docs/configuration.md`.
+Documentar las variables de entorno en `.env.example` y en el [RUNBOOK](RUNBOOK.md) §2 (rotación de secretos).
 
 ---
 
@@ -416,6 +422,17 @@ Documentar las variables de entorno en `docs/configuration.md`.
 6. **Nota de plazo:** Según RD 1007/2023 modificado, obligatorio para software de facturación a partir del **01/07/2027** para empresas en régimen general. Hay margen, pero mejor validar cuanto antes.
 
 **Criterio de aceptación:** Al menos 10 facturas de prueba enviadas al sandbox con respuesta `AceptadoConErrores` o `Correcto`.
+
+**Decisión de lanzamiento (checklist "Validación VeriFactu"):** se lanza con la
+remisión a AEAT **deshabilitada explícitamente** (`VERIFACTU_AEAT_ENABLED=false`,
+default del compose y de `application-prod.properties`; el guard de arranque
+`DatabaseStartupChecker` impide activar la remisión apuntando al sandbox). Las
+facturas siguen generando su registro, hash encadenado y QR en local.
+
+- **Fecha límite interna para completar la validación sandbox:** `__PENDIENTE — fijar al lanzar__`
+  (debe ser muy anterior al plazo legal del punto 6: 01/07/2027).
+- **Responsable:** `__PENDIENTE__`
+- Al completar la validación: seguir los pasos 4-5 de arriba y actualizar esta sección.
 
 ---
 

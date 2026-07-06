@@ -4,31 +4,38 @@ Aplicacion web Spring Boot + Thymeleaf para gestion ERP con soporte de facturaci
 
 ## Requisitos
 
-- JDK 17 a JDK 23
-- Maven 3.9+
-- MySQL 8+ para uso normal
+- **Despliegue (recomendado):** solo Docker Desktop / Docker Engine con Compose.
+- **Desarrollo local:** JDK 17 a JDK 23, Maven Wrapper incluido (`mvnw`), MySQL 8+.
+
+## Despliegue con Docker (via soportada)
+
+El despliegue soportado es Docker Compose: MySQL 8 + aplicacion + proxy Caddy con TLS. La app no publica puertos; todo entra por HTTPS a traves de Caddy. Guia completa de operacion en el [RUNBOOK](docs/RUNBOOK.md).
+
+```powershell
+Copy-Item .env.example .env    # rellenar TODOS los secretos (openssl rand -base64 32)
+docker compose config -q       # valida el compose y que no falte ningun secreto
+docker compose up -d --build
+docker compose ps              # esperar a que db y app esten "healthy"
+```
+
+La aplicacion queda en `https://<ERP_DOMAIN>` (por defecto `https://localhost`).
 
 ## Documentacion
 
-- [Indice de documentacion](docs/index.md)
-- [Estado actual](docs/estado-actual.md)
-- [Hoja de ruta hasta completar la aplicacion](docs/hoja-ruta.md)
-- [Despliegue de produccion](docs/production-deployment.md)
-- [Checklist de produccion](docs/production-checklist.md)
-- [Operacion diaria](docs/operations.md)
-- [Configuracion](docs/configuration.md)
+- [Indice de documentacion](docs/index.md) — punto de entrada a toda la documentacion.
+- [Estado actual](docs/estado-actual.md) — build, capacidades y pendientes antes del lanzamiento.
+- [RUNBOOK de operacion](docs/RUNBOOK.md) — **guia canonica** de despliegue Docker + Caddy, backups, restore y actualizacion.
+- [Plan de lanzamiento](docs/plan-lanzamiento.md) — fases, checklist GO/NO-GO y decision VeriFactu.
 - [Seguridad y autorizacion](docs/security-and-authorization.md)
-- [VERI*FACTU](docs/verifactu.md)
-- [Arquitectura](docs/architecture.md)
 - [Manual de la aplicacion](docs/manual-aplicacion.md)
-- [Auditoria actual (19 de junio de 2026)](docs/auditoria-aplicacion-2026-06-19.md)
+- [Referencia de API REST](docs/api-reference.md)
+- [Arquitectura](docs/architecture.md)
+- [VERI*FACTU](docs/verifactu.md) · [Arquitectura VeriFactu](docs/verifactu-arquitectura.md) · [Cumplimiento fiscal](docs/fiscal-compliance.md)
 
-Estado técnico validado:
+Estado técnico validado (auditoria GO/NO-GO 2026-07-04):
 
-- 209 pruebas, sin fallos.
-- 50,27 % de cobertura de líneas.
-- 29,92 % de cobertura de ramas.
-- Gate JaCoCo mínimo: 50 % de líneas y 20 % de ramas.
+- 267 pruebas, sin fallos (`.\mvnw.cmd verify`).
+- Gate JaCoCo cumplido (líneas y ramas).
 
 ## Arranque local
 
