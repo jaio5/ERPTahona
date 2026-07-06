@@ -13,8 +13,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class DatabaseStartupCheckerVerifactuTest {
 
-    private static final String ENDPOINT_PRUEBAS = "https://prewww2.aeat.es/wlpl/AVAC-FACT/ws/fe/SiiVerifactu";
-    private static final String ENDPOINT_PRODUCCION = "https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/SistemaFacturacion";
+    private static final String ENDPOINT_PRUEBAS = "https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP";
+    private static final String ENDPOINT_PRODUCCION = "https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP";
 
     private final DatabaseStartupChecker checker = new DatabaseStartupChecker();
 

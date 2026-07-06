@@ -211,6 +211,16 @@ begin
                'En produccion debe ser la URL real; la aplicacion se niega a arrancar' + #13#10 +
                'con remision activa apuntando a pruebas.', mbError, MB_OK);
         Result := False;
+      end
+      else if Pos('agenciatributaria.gob.es', Lowercase(PageVfData.Values[2])) = 0 then
+      begin
+        if MsgBox('La URL no parece la oficial de la AEAT (no contiene "agenciatributaria.gob.es").' + #13#10 + #13#10 +
+                  'La de produccion suele ser:' + #13#10 +
+                  '  https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP' + #13#10 +
+                  '  (o www10 si usas certificado de sello).' + #13#10 + #13#10 +
+                  'Quieres continuar con la URL que has escrito de todas formas?',
+                  mbConfirmation, MB_YESNO) = IDNO then
+          Result := False;
       end;
     end;
   end;

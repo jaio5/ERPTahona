@@ -78,7 +78,7 @@ public class VerifactuService implements InitializingBean {
     @Value("${verifactu.aeat.enabled:false}")
     private boolean aeatEnabled;
 
-    @Value("${verifactu.aeat.endpoint:https://www2.agenciatributaria.gob.es/wlpl/AVAC-FACT/ws/fe/SiiVerifactu}")
+    @Value("${verifactu.aeat.endpoint:https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP}")
     private String aeatEndpoint;
 
     // Datos del bloque obligatorio <SistemaInformatico> (art. 9 RRSIF). Si el productor
