@@ -43,7 +43,10 @@ public class InventarioRestController {
         return ResponseEntity.ok(result);
     }
 
+    // Escritura de stock: no basta el reportes/ver de la clase; exige el mismo
+    // permiso que el resto de operaciones de almacén (lotes, mermas).
     @PostMapping("/inventario/ajustar")
+    @PreAuthorize("@permisos.puede('almacen', 'editar')")
     public ResponseEntity<Void> ajustar(@RequestParam Long articuloId,
                                          @RequestParam BigDecimal cantidadNueva,
                                          @RequestParam(required = false) String motivo) {

@@ -59,6 +59,8 @@ class RestApiPermisosTest {
     private Long rolVentasId;      // ventas: ver + crear + editar
     private Long rolLectorId;      // ventas: solo ver
     private Long rolRepartoId;     // reparto: ver + editar (sin ventas)
+    private Long rolReportesId;    // reportes: solo ver (sin almacen)
+    private Long rolAlmacenId;     // almacen: ver + editar
     private Long clienteId;
     private Long facturaBorradorId;
     private final List<Long> facturasCreadas = new ArrayList<>();
@@ -73,6 +75,10 @@ class RestApiPermisosTest {
                     Map.of("ventas", Map.of("ver", true)));
             rolRepartoId = crearRol("TESTPERM_REPARTO",
                     Map.of("reparto", Map.of("ver", true, "editar", true)));
+            rolReportesId = crearRol("TESTPERM_REPORTES",
+                    Map.of("reportes", Map.of("ver", true)));
+            rolAlmacenId = crearRol("TESTPERM_ALMACEN",
+                    Map.of("almacen", Map.of("ver", true, "editar", true)));
 
             Cliente cliente = new Cliente();
             cliente.setCodigo("CLI-TPM-1");
@@ -119,8 +125,12 @@ class RestApiPermisosTest {
 
     /** Usuario autenticado no-admin cuyo rol granular es el indicado. */
     private RequestPostProcessor usuarioConRol(Long rolId) {
+        return usuarioConRol(rolId, "ROLE_USUARIO");
+    }
+
+    private RequestPostProcessor usuarioConRol(Long rolId, String authority) {
         var principal = new SecurityConfig.ErpUserPrincipal(9999L, rolId, "tester", "Tester",
-                null, true, true, List.of(new SimpleGrantedAuthority("ROLE_USUARIO")));
+                null, true, true, List.of(new SimpleGrantedAuthority(authority)));
         return user(principal);
     }
 
@@ -189,6 +199,35 @@ class RestApiPermisosTest {
                         .contentType("application/json")
                         .content(linea))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void ajustarInventarioExigeAlmacenEditarNoBastaReportesVer() throws Exception {
+        // Un usuario raso no pasa ni la regla de URL (requiere CONTABLE/ADMIN)
+        mockMvc.perform(post("/api/web/reportes/inventario/ajustar")
+                        .with(usuarioConRol(rolAlmacenId))
+                        .with(csrf())
+                        .param("articuloId", "999999")
+                        .param("cantidadNueva", "5"))
+                .andExpect(status().isForbidden());
+
+        // Un CONTABLE cuyo rol granular solo tiene reportes:ver tampoco: ajustar
+        // stock es escritura de almacén, no lectura de informes
+        mockMvc.perform(post("/api/web/reportes/inventario/ajustar")
+                        .with(usuarioConRol(rolReportesId, "ROLE_CONTABLE"))
+                        .with(csrf())
+                        .param("articuloId", "999999")
+                        .param("cantidadNueva", "5"))
+                .andExpect(status().isForbidden());
+
+        // Con CONTABLE + almacen:editar la autorización pasa y la petición
+        // falla por artículo inexistente: 400, no 403.
+        mockMvc.perform(post("/api/web/reportes/inventario/ajustar")
+                        .with(usuarioConRol(rolAlmacenId, "ROLE_CONTABLE"))
+                        .with(csrf())
+                        .param("articuloId", "999999")
+                        .param("cantidadNueva", "5"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
