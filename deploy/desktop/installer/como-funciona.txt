@@ -38,6 +38,20 @@ Uso diario
   - CERRAR:   menu Inicio > ERP Tahona > "Detener ERP Tahona"
               (o simplemente apaga el equipo; los datos se conservan).
 
+Facturacion VeriFactu (certificado de la AEAT)
+----------------------------------------------
+Durante la instalacion se te preguntara como quieres dejar la facturacion:
+
+  - No configurar ahora: la aplicacion funciona igualmente; podras aportar el
+    certificado mas adelante (con tu gestor).
+  - Modo PRUEBAS (recomendado para empezar): con tu certificado, la aplicacion
+    firma las facturas y genera el QR, pero NO las remite todavia a la AEAT.
+  - Modo PRODUCCION: remision real a la AEAT. Requiere el certificado y la URL
+    del servicio que te facilita tu gestor.
+
+Los datos fiscales de la empresa (NIF, razon social, direccion) se introducen
+DENTRO de la aplicacion, en la pantalla "Empresa", la primera vez que entres.
+
 Tus datos
 ---------
 La base de datos, las copias de seguridad y los PDF se guardan de forma segura en

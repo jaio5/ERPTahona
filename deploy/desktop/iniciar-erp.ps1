@@ -21,6 +21,20 @@ function Write-Ok($msg)   { Write-Host "    $msg" -ForegroundColor Green }
 function Write-Warn2($msg){ Write-Host "    $msg" -ForegroundColor Yellow }
 function Fail($msg)       { Write-Host ""; Write-Host "ERROR: $msg" -ForegroundColor Red; Read-Host "Pulsa Enter para cerrar"; exit 1 }
 
+# Inserta o actualiza claves KEY=valor en un fichero .env conservando el resto.
+function Set-EnvValues([string]$path, [System.Collections.IDictionary]$kv) {
+    $lines = @()
+    if (Test-Path $path) { $lines = @(Get-Content -LiteralPath $path) }
+    foreach ($key in $kv.Keys) {
+        $newline = "$key=$($kv[$key])"
+        $pattern = "^\s*$([regex]::Escape($key))="
+        $idx = -1
+        for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i] -match $pattern) { $idx = $i; break } }
+        if ($idx -ge 0) { $lines[$idx] = $newline } else { $lines += $newline }
+    }
+    [System.IO.File]::WriteAllText($path, ($lines -join "`n") + "`n", (New-Object System.Text.UTF8Encoding($false)))
+}
+
 # --- Localizar la carpeta con docker-compose.yml (subiendo desde el script) ---
 $dir = $PSScriptRoot
 $composeDir = $null
@@ -87,6 +101,40 @@ if (-not (Test-Path $envPath)) {
     Write-Host ""
 } else {
     Write-Ok ".env existente: se conservan los secretos actuales."
+}
+
+# --- 2b. VeriFactu: aplicar la configuracion elegida en el instalador (verifactu.conf) ---
+# El instalador (opcional) deja verifactu.conf con el certificado y el modo. Aqui se
+# traslada al .env que lee docker-compose. Es idempotente: se puede reejecutar.
+$confPath = Join-Path $composeDir "verifactu.conf"
+if (Test-Path $confPath) {
+    $conf = @{}
+    foreach ($l in Get-Content -LiteralPath $confPath) {
+        if ($l -match '^\s*#') { continue }
+        if ($l -match '^\s*([^=]+?)\s*=\s*(.*)$') { $conf[$matches[1].Trim()] = $matches[2].Trim() }
+    }
+    if ($conf['CERT_FILE']) {
+        $certFile = Join-Path (Join-Path $composeDir "certs") $conf['CERT_FILE']
+        if (-not (Test-Path $certFile)) {
+            Write-Warn2 "verifactu.conf apunta a un certificado que no existe en certs\: $($conf['CERT_FILE']). Se omite VeriFactu."
+        } else {
+            $vf = [ordered]@{
+                "VERIFACTU_CERT_PATH"     = "certs/$($conf['CERT_FILE'])"
+                "VERIFACTU_CERT_PASSWORD" = $conf['CERT_PASSWORD']
+                "VERIFACTU_KEY_ALIAS"     = $(if ($conf['KEY_ALIAS']) { $conf['KEY_ALIAS'] } else { "mi_certificado" })
+            }
+            if ($conf['MODE'] -eq "produccion" -and $conf['AEAT_ENDPOINT']) {
+                $vf["VERIFACTU_AEAT_ENABLED"]  = "true"
+                $vf["VERIFACTU_AEAT_ENDPOINT"] = $conf['AEAT_ENDPOINT']
+                Write-Step "VeriFactu en modo PRODUCCION (remision real a la AEAT)."
+            } else {
+                $vf["VERIFACTU_AEAT_ENABLED"]  = "false"
+                Write-Step "VeriFactu en modo PRUEBAS (firma y QR activos; sin remision a la AEAT)."
+            }
+            Set-EnvValues $envPath $vf
+            Write-Ok "Certificado VeriFactu aplicado al .env."
+        }
+    }
 }
 
 # --- 3. Imagen pre-construida ---

@@ -39,6 +39,29 @@ instalador de Windows. El asistente:
 El icono de escritorio ejecuta `iniciar-erp.cmd`, que **arranca Docker si está
 apagado, levanta la aplicación y abre el navegador** cuando está lista.
 
+### Configuración de VeriFactu durante la instalación
+
+El asistente incluye un paso opcional para dejar la **facturación electrónica**
+lista. El cliente elige uno de tres modos:
+
+| Modo | Qué hace | Requisitos |
+|---|---|---|
+| **No configurar** | La app funciona; VeriFactu queda inactivo | — |
+| **Pruebas** (recomendado) | Firma facturas y genera QR/huella/XML, **sin** remisión real a la AEAT | Certificado `.p12` + contraseña |
+| **Producción** | **Remisión real** a la AEAT | Certificado `.p12` + contraseña + **URL del servicio AEAT** |
+
+Cómo se materializa (sin romper la generación de secretos del primer arranque):
+
+1. El instalador copia el certificado a `certs\` y escribe `verifactu.conf` en la
+   carpeta de instalación (modo, fichero, contraseña, alias y endpoint).
+2. `iniciar-erp.ps1`, al generar el `.env`, **traslada** esos valores a las
+   variables `VERIFACTU_*` que lee `docker-compose.yml`. Es idempotente.
+
+El guard de arranque de la app (`DatabaseStartupChecker`) impide combinaciones
+inseguras: producción con endpoint de pruebas (`prewww`) **no arranca**, por eso
+el asistente valida la URL. Los **datos fiscales de la empresa** (NIF, razón
+social) se siguen introduciendo en la pantalla **Empresa** dentro de la app.
+
 ### Compilarlo (desarrollador)
 
 Requiere **Inno Setup 6** una sola vez:
