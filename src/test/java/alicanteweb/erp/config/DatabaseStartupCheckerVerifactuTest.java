@@ -38,6 +38,23 @@ class DatabaseStartupCheckerVerifactuTest {
     }
 
     @Test
+    void placeholdersDelEnvExampleImpidenElArranqueEnProduccion() {
+        // Contraseña de BD tal cual viene en .env.example
+        MockEnvironment env1 = entornoProdValido();
+        env1.setProperty("spring.datasource.password", "cambia-esta-app");
+        assertThatThrownBy(() -> checker.postProcessEnvironment(env1, null))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("spring.datasource.password");
+
+        // ADMIN_DEFAULT_PASSWORD tal cual viene en .env.example
+        MockEnvironment env2 = entornoProdValido();
+        env2.setProperty("admin.default.password", "CambiaEstaClave123");
+        assertThatThrownBy(() -> checker.postProcessEnvironment(env2, null))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("admin.default.password");
+    }
+
+    @Test
     void remisionRealConEndpointDePruebasImpideElArranque() {
         MockEnvironment env = entornoProdValido();
         env.setProperty("verifactu.aeat.enabled", "true");

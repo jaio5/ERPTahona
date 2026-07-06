@@ -142,6 +142,9 @@ public class DatabaseStartupChecker implements EnvironmentPostProcessor {
         String normalized = value.trim().toLowerCase();
         return normalized.contains("change-me")
                 || normalized.contains("changeme")
+                // Placeholders que trae .env.example: rechazar si se despliegan sin cambiar
+                || normalized.contains("cambia-esta")
+                || normalized.contains("cambiaestaclave")
                 || normalized.contains("mysql-host")
                 || normalized.contains("<")
                 || normalized.equals("base64-32-byte-key")
