@@ -1,0 +1,46 @@
+ERP Tahona - Como funciona
+===========================
+
+Que estas instalando
+---------------------
+ERP Tahona es la aplicacion de gestion de tu panaderia. Se instala en tu equipo
+y funciona como un programa de escritorio normal: tras la instalacion tendras un
+icono "ERP Tahona" en el escritorio. Un doble clic lo pone todo en marcha y abre
+la aplicacion en tu navegador.
+
+Requisito unico: Docker Desktop
+-------------------------------
+La aplicacion se ejecuta sobre Docker Desktop, un motor gratuito que debe estar
+instalado en el equipo. No necesitas saber usarlo: el icono de ERP Tahona arranca
+Docker por ti si estuviera apagado.
+
+  - Si YA tienes Docker Desktop instalado: continua, no hay que hacer nada mas.
+  - Si NO lo tienes: el instalador te ofrecera abrir la pagina de descarga.
+    Instalalo (siguiente-siguiente), reinicia si te lo pide y vuelve a lanzar
+    ERP Tahona.
+
+Descarga de Docker Desktop: https://www.docker.com/products/docker-desktop
+
+Que ocurre la primera vez que abras la aplicacion
+-------------------------------------------------
+  1. Se arranca Docker Desktop automaticamente si no estaba en marcha.
+  2. Se generan las claves de seguridad de tu instalacion (solo la 1a vez) y se
+     muestra en pantalla la CONTRASENA INICIAL del usuario "admin".
+     >>> ANOTALA. Se te pedira cambiarla al entrar por primera vez. <<<
+  3. Se arranca la aplicacion y, cuando esta lista, se abre sola en el navegador
+     en la direccion https://localhost
+  4. Si el navegador avisa del certificado (candado), es normal en modo local:
+     acepta continuar.
+
+Uso diario
+----------
+  - ABRIR:    doble clic en el icono "ERP Tahona" del escritorio.
+  - CERRAR:   menu Inicio > ERP Tahona > "Detener ERP Tahona"
+              (o simplemente apaga el equipo; los datos se conservan).
+
+Tus datos
+---------
+La base de datos, las copias de seguridad y los PDF se guardan de forma segura en
+tu equipo y sobreviven a apagados y a futuras actualizaciones de la aplicacion.
+
+Pulsa "Siguiente" para continuar con la instalacion.
