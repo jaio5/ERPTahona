@@ -38,7 +38,7 @@ public class TpvWebController extends BaseWebController {
         m.addAttribute("titulo", "TPV · Venta mostrador");
         m.addAttribute("articulos", tpvService.articulosVendibles());
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Ventas", "#"),
                 BreadcrumbBuilder.active("TPV")));
         return WebController.layout(m, "tpv/index");

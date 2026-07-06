@@ -61,7 +61,7 @@ public class RutaRepartoWebController {
             model.addAttribute("titulo", "Ruta " + r.getNombre());
             model.addAttribute("ruta", r);
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                    BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                    BreadcrumbBuilder.inicio(),
                     BreadcrumbBuilder.link("Rutas", "/web/rutas"),
                     BreadcrumbBuilder.active(r.getNombre())));
             return WebController.layout(model, "rutas/ver");

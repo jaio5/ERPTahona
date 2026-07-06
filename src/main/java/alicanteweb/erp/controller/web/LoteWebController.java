@@ -46,7 +46,7 @@ public class LoteWebController {
         m.addAttribute("q", q);
         m.addAttribute("estado", estado);
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.active("Lotes")));
         return WebController.layout(m, "lotes/lista");
     }
@@ -57,7 +57,7 @@ public class LoteWebController {
         m.addAttribute("titulo", "Nuevo lote");
         m.addAttribute("articulos", articuloService.findAll());
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Lotes", "/web/lotes"),
             BreadcrumbBuilder.active("Nuevo lote")));
         return WebController.layout(m, "lotes/formulario");
@@ -71,7 +71,7 @@ public class LoteWebController {
             m.addAttribute("lote", l);
             m.addAttribute("articulos", articuloService.findAll());
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Lotes", "/web/lotes"),
                 BreadcrumbBuilder.active("Editar " + l.getCodigo())));
             return WebController.layout(m, "lotes/formulario");
@@ -87,7 +87,7 @@ public class LoteWebController {
             m.addAttribute("insumos", service.findInsumosDeProductoDetail(id));
             m.addAttribute("usos", service.findProductosQueUsaronInsumoDetail(id));
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                    BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                    BreadcrumbBuilder.inicio(),
                     BreadcrumbBuilder.link("Lotes", "/web/lotes"),
                     BreadcrumbBuilder.active(l.getCodigo())));
             return WebController.layout(m, "lotes/ver");

@@ -71,7 +71,7 @@ public class PresupuestoWebController {
         model.addAttribute("articulos", articuloService.findAll());
         model.addAttribute("lineasJson", "[]");
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Presupuestos", "/web/presupuestos"),
             BreadcrumbBuilder.active("Nuevo presupuesto")));
         return WebController.layout(model, "presupuestos/formulario");
@@ -95,7 +95,7 @@ public class PresupuestoWebController {
             model.addAttribute("articulos", articuloService.findAll());
             model.addAttribute("lineasJson", lineasJson);
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Presupuestos", "/web/presupuestos"),
                 BreadcrumbBuilder.active("Editar " + p.getNumero())));
             return WebController.layout(model, "presupuestos/formulario");
@@ -109,7 +109,7 @@ public class PresupuestoWebController {
             model.addAttribute("titulo", "Presupuesto " + p.getNumero());
             model.addAttribute("presupuesto", p);
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Presupuestos", "/web/presupuestos"),
                 BreadcrumbBuilder.active(p.getNumero())));
             return WebController.layout(model, "presupuestos/ver");

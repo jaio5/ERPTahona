@@ -30,7 +30,7 @@ public class ImportWebController {
         m.addAttribute("moduloActivo", "importar");
         m.addAttribute("titulo", "Importar datos");
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Administración", "#"),
             BreadcrumbBuilder.active("Importar datos")));
         return WebController.layout(m, "importar/form");

@@ -35,7 +35,7 @@ public class AlmacenWebController {
         m.addAttribute("almacenes", items);
         m.addAttribute("q", q);
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.active("Almacenes")));
         return WebController.layout(m, "almacenes/lista");
     }
@@ -45,7 +45,7 @@ public class AlmacenWebController {
         m.addAttribute("moduloActivo", "almacenes");
         m.addAttribute("titulo", "Nuevo almacén");
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Almacenes", "/web/almacenes"),
             BreadcrumbBuilder.active("Nuevo almacén")));
         return WebController.layout(m, "almacenes/formulario");
@@ -58,7 +58,7 @@ public class AlmacenWebController {
             m.addAttribute("titulo", "Editar almacén");
             m.addAttribute("almacen", a);
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Almacenes", "/web/almacenes"),
                 BreadcrumbBuilder.active("Editar " + a.getNombre())));
             return WebController.layout(m, "almacenes/formulario");
@@ -72,7 +72,7 @@ public class AlmacenWebController {
             m.addAttribute("titulo", "Almacén " + a.getNombre());
             m.addAttribute("almacen", a);
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                    BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                    BreadcrumbBuilder.inicio(),
                     BreadcrumbBuilder.link("Almacenes", "/web/almacenes"),
                     BreadcrumbBuilder.active(a.getNombre())));
             return WebController.layout(m, "almacenes/ver");

@@ -34,7 +34,7 @@ public class RecetaWebController {
         m.addAttribute("recetas", items);
         m.addAttribute("q", q);
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.active("Recetas")));
         return WebController.layout(m, "recetas/lista");
     }
@@ -44,7 +44,7 @@ public class RecetaWebController {
         m.addAttribute("moduloActivo", "recetas");
         m.addAttribute("titulo", "Nueva receta");
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Recetas", "/web/recetas"),
             BreadcrumbBuilder.active("Nueva receta")));
         return WebController.layout(m, "recetas/formulario");
@@ -57,7 +57,7 @@ public class RecetaWebController {
             m.addAttribute("titulo", "Editar receta");
             m.addAttribute("receta", r);
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Recetas", "/web/recetas"),
                 BreadcrumbBuilder.active("Editar " + r.getNombre())));
             return WebController.layout(m, "recetas/formulario");
@@ -72,7 +72,7 @@ public class RecetaWebController {
             m.addAttribute("receta", r);
             m.addAttribute("ingredientes", service.getIngredientes(id));
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                    BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                    BreadcrumbBuilder.inicio(),
                     BreadcrumbBuilder.link("Recetas", "/web/recetas"),
                     BreadcrumbBuilder.active(r.getNombre())));
             return WebController.layout(m, "recetas/ver");

@@ -54,7 +54,7 @@ public class OrdenProduccionWebController {
         m.addAttribute("ordenes", pageResult.getContent());
         m.addAttribute("estado", estado);
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.active("Órdenes de producción")));
         return WebController.layout(m, "ordenes-produccion/lista");
     }
@@ -66,7 +66,7 @@ public class OrdenProduccionWebController {
         m.addAttribute("recetas", recetaService.findByActivo(true));
         m.addAttribute("articulos", articuloService.findAll());
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Órdenes de producción", "/web/ordenes-produccion"),
             BreadcrumbBuilder.active("Nueva orden")));
         return WebController.layout(m, "ordenes-produccion/formulario");
@@ -81,7 +81,7 @@ public class OrdenProduccionWebController {
             m.addAttribute("recetas", recetaService.findByActivo(true));
             m.addAttribute("articulos", articuloService.findAll());
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Órdenes de producción", "/web/ordenes-produccion"),
                 BreadcrumbBuilder.active("Editar " + o.getNumero())));
             return WebController.layout(m, "ordenes-produccion/formulario");
@@ -96,7 +96,7 @@ public class OrdenProduccionWebController {
             m.addAttribute("orden", o);
             m.addAttribute("horneadas", horneadaService.findByOrdenProduccionId(id));
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                    BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                    BreadcrumbBuilder.inicio(),
                     BreadcrumbBuilder.link("Órdenes de producción", "/web/ordenes-produccion"),
                     BreadcrumbBuilder.active(o.getNumero())));
             return WebController.layout(m, "ordenes-produccion/ver");

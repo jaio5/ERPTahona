@@ -32,7 +32,7 @@ public class EmpresaWebController {
         m.addAttribute("titulo", "Configuración de empresa");
         m.addAttribute("empresa", s.getConfiguracionActiva().orElse(null));
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Administración", "#"),
             BreadcrumbBuilder.active("Empresa")));
         return WebController.layout(m, "empresa/formulario");

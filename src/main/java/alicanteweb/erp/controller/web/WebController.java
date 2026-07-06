@@ -1,20 +1,12 @@
 package alicanteweb.erp.controller.web;
 
 import alicanteweb.erp.service.*;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.time.LocalDate;
 
 @Controller
@@ -118,20 +110,5 @@ public class WebController {
     public static String redirectWithError(RedirectAttributes ra, String error) {
         ra.addFlashAttribute("error", error);
         return "redirect:../";
-    }
-
-    public static ResponseEntity<byte[]> servirPdf(File pdf) {
-        try {
-            return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-                    .filename(pdf.getName())
-                    .build()
-                    .toString())
-                .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(Files.readAllBytes(pdf.toPath()));
-        } catch (IOException e) {
-            throw new UncheckedIOException("Error al leer el PDF: " + pdf.getName(), e);
-        }
     }
 }

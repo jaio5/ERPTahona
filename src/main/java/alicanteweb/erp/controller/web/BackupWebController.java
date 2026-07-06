@@ -29,7 +29,7 @@ public class BackupWebController {
         m.addAttribute("moduloActivo", "backups");
         m.addAttribute("titulo", "Backups");
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Administración", "#"),
             BreadcrumbBuilder.active("Backups")));
         try {

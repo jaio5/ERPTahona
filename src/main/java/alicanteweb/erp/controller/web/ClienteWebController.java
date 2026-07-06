@@ -3,12 +3,10 @@ package alicanteweb.erp.controller.web;
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.service.*;
+import alicanteweb.erp.util.Csv;
+import alicanteweb.erp.util.Descargas;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.slf4j.Logger;
@@ -22,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -46,16 +43,15 @@ public class ClienteWebController extends BaseWebController {
                                 AlbaranVentaService albaranService,
                                 RgpdSolicitudService rgpdSolicitudService,
                                 AuditoriaService auditoriaService,
-                                UsuarioService usuarioService) {
+                                UsuarioService usuarioService,
+                                ObjectMapper objectMapper) {
         super(usuarioService);
         this.service = service;
         this.facturaService = facturaService;
         this.albaranService = albaranService;
         this.rgpdSolicitudService = rgpdSolicitudService;
         this.auditoriaService = auditoriaService;
-        this.objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.objectMapper = objectMapper;
     }
     @GetMapping
     public String lista(Model m,
@@ -74,7 +70,7 @@ public class ClienteWebController extends BaseWebController {
         m.addAttribute("sort", sort);
         m.addAttribute("dir", dir);
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.active("Clientes")));
         return WebController.layout(m, "clientes/lista");
     }
@@ -84,7 +80,7 @@ public class ClienteWebController extends BaseWebController {
         m.addAttribute("moduloActivo", "clientes");
         m.addAttribute("titulo", "Nuevo cliente");
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Clientes", "/web/clientes"),
             BreadcrumbBuilder.active("Nuevo cliente")));
         return WebController.layout(m, "clientes/formulario");
@@ -109,7 +105,7 @@ public class ClienteWebController extends BaseWebController {
             m.addAttribute("facturas", facturas);
             m.addAttribute("albaranes", albaranes);
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Clientes", "/web/clientes"),
                 BreadcrumbBuilder.active(c.getNombre())));
             return WebController.layout(m, "clientes/ver");
@@ -127,7 +123,7 @@ public class ClienteWebController extends BaseWebController {
             m.addAttribute("titulo", "Editar cliente");
             m.addAttribute("cliente", c);
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Clientes", "/web/clientes"),
                 BreadcrumbBuilder.active("Editar")));
             return WebController.layout(m, "clientes/formulario");
@@ -186,27 +182,26 @@ public class ClienteWebController extends BaseWebController {
                 : service.findAll();
 
         StringBuilder csv = new StringBuilder();
-        csv.append('\ufeff');
+        csv.append(Csv.BOM);
         csv.append("ID;Codigo;Nombre;CIF/NIF;Telefono;Email;Direccion;Poblacion;Codigo postal;Provincia;Activo\n");
         for (Cliente c : clientes) {
-            csv.append(csv(c.getId())).append(';')
-                .append(csv(c.getCodigo())).append(';')
-                .append(csv(c.getNombre())).append(';')
-                .append(csv(c.getCif())).append(';')
-                .append(csv(c.getTelefono())).append(';')
-                .append(csv(c.getEmail())).append(';')
-                .append(csv(c.getDireccion())).append(';')
-                .append(csv(c.getPoblacion())).append(';')
-                .append(csv(c.getCodigoPostal())).append(';')
-                .append(csv(c.getProvincia())).append(';')
-                .append(csv(Boolean.TRUE.equals(c.getActivo()) ? "SI" : "NO"))
+            csv.append(Csv.campo(c.getId())).append(';')
+                .append(Csv.campo(c.getCodigo())).append(';')
+                .append(Csv.campo(c.getNombre())).append(';')
+                .append(Csv.campo(c.getCif())).append(';')
+                .append(Csv.campo(c.getTelefono())).append(';')
+                .append(Csv.campo(c.getEmail())).append(';')
+                .append(Csv.campo(c.getDireccion())).append(';')
+                .append(Csv.campo(c.getPoblacion())).append(';')
+                .append(Csv.campo(c.getCodigoPostal())).append(';')
+                .append(Csv.campo(c.getProvincia())).append(';')
+                .append(Csv.campo(Boolean.TRUE.equals(c.getActivo()) ? "SI" : "NO"))
                 .append('\n');
         }
 
         auditoriaService.registrarExportacion(usuarioActual(s), "CLIENTES_CSV",
             "Exportacion de listado de clientes (" + clientes.size() + " registros)");
-        byte[] body = csv.toString().getBytes(StandardCharsets.UTF_8);
-        return descarga(body, "clientes_" + LocalDate.now() + ".csv", "text/csv; charset=UTF-8");
+        return Descargas.csv(csv.toString(), "clientes_" + LocalDate.now() + ".csv");
     }
 
     @GetMapping("/{id}/export.json")
@@ -217,26 +212,11 @@ public class ClienteWebController extends BaseWebController {
             auditoriaService.registrarExportacion(usuarioActual(s), "CLIENTE_RGPD_JSON",
                 "Exportacion RGPD/portabilidad del cliente " + id);
             byte[] body = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(datos);
-            return descarga(body, "cliente_" + id + "_rgpd_" + LocalDate.now() + ".json", MediaType.APPLICATION_JSON_VALUE);
+            return Descargas.adjunto(body, "cliente_" + id + "_rgpd_" + LocalDate.now() + ".json", MediaType.APPLICATION_JSON);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             log.error("Error al exportar datos RGPD del cliente {}: {}", id, e.getMessage(), e);
             throw new ErpException("Error al exportar datos RGPD: " + e.getMessage(), e);
         }
     }
 
-    private ResponseEntity<byte[]> descarga(byte[] body, String filename, String contentType) {
-        return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-                .filename(filename, StandardCharsets.UTF_8)
-                .build()
-                .toString())
-            .header(HttpHeaders.CACHE_CONTROL, "no-store")
-            .contentType(MediaType.parseMediaType(contentType))
-            .body(body);
-    }
-
-    private String csv(Object value) {
-        String text = value != null ? String.valueOf(value) : "";
-        return "\"" + text.replace("\"", "\"\"") + "\"";
-    }
 }

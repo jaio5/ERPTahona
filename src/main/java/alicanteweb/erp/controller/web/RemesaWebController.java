@@ -6,7 +6,7 @@ import alicanteweb.erp.service.UsuarioService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
+import alicanteweb.erp.util.Descargas;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,7 +44,7 @@ public class RemesaWebController extends BaseWebController {
         m.addAttribute("elegibles", sepaService.facturasElegibles());
         m.addAttribute("fechaCobroDefecto", LocalDate.now().plusDays(3));
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Finanzas", "#"),
                 BreadcrumbBuilder.active("Remesas SEPA")));
         return WebController.layout(m, "remesas/index");
@@ -72,11 +72,8 @@ public class RemesaWebController extends BaseWebController {
     public ResponseEntity<byte[]> descargarXml(@PathVariable Long id) {
         return sepaService.buscarPorId(id)
                 .filter(r -> r.getXml() != null)
-                .map(r -> ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION,
-                                "attachment; filename=\"remesa-sepa-" + r.getId() + ".xml\"")
-                        .contentType(MediaType.APPLICATION_XML)
-                        .body(r.getXml().getBytes(StandardCharsets.UTF_8)))
+                .map(r -> Descargas.adjunto(r.getXml().getBytes(StandardCharsets.UTF_8),
+                        "remesa-sepa-" + r.getId() + ".xml", MediaType.APPLICATION_XML))
                 .orElse(ResponseEntity.notFound().build());
     }
 

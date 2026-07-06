@@ -2,6 +2,7 @@ package alicanteweb.erp.controller.web;
 
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.service.*;
+import alicanteweb.erp.util.Descargas;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -74,7 +75,7 @@ public class AlbaranWebController extends BaseWebController {
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.active("Albaranes")));
         return WebController.layout(model, "albaranes/lista");
     }
@@ -98,7 +99,7 @@ public class AlbaranWebController extends BaseWebController {
         model.addAttribute("articulos", articuloService.findAll());
         model.addAttribute("lineasJson", "[]");
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Albaranes", "/web/albaranes"),
             BreadcrumbBuilder.active("Nuevo albarán")));
         return WebController.layout(model, "albaranes/formulario");
@@ -111,7 +112,7 @@ public class AlbaranWebController extends BaseWebController {
             model.addAttribute("titulo", "Albarán " + a.getNumero());
             model.addAttribute("albaran", a);
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Albaranes", "/web/albaranes"),
                 BreadcrumbBuilder.active(a.getNumero())));
             return WebController.layout(model, "albaranes/ver");
@@ -130,7 +131,7 @@ public class AlbaranWebController extends BaseWebController {
             model.addAttribute("articulos", articuloService.findAll());
             model.addAttribute("lineasJson", lineasToJson(a));
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Albaranes", "/web/albaranes"),
                 BreadcrumbBuilder.active("Editar " + a.getNumero())));
             return WebController.layout(model, "albaranes/formulario");
@@ -219,7 +220,7 @@ public class AlbaranWebController extends BaseWebController {
             File pdf = impresionService.generarAlbaranPdf(albaran);
             auditoriaService.registrarImpresion(usuarioActual(session), "ALBARAN", String.valueOf(id),
                 "PDF de albaran generado: " + albaran.getNumero());
-            return WebController.servirPdf(pdf);
+            return Descargas.pdf(pdf);
         } catch (RuntimeException e) {
             log.error("Error al generar PDF de albarán {}: {}", id, e.getMessage(), e);
             throw e;

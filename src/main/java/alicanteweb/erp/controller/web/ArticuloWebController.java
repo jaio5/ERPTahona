@@ -45,7 +45,7 @@ public class ArticuloWebController {
         m.addAttribute("sort", sort);
         m.addAttribute("dir", dir);
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.active("Artículos")));
         return WebController.layout(m, "articulos/lista");
     }
@@ -55,7 +55,7 @@ public class ArticuloWebController {
         m.addAttribute("moduloActivo", "articulos");
         m.addAttribute("titulo", "Nuevo artículo");
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Artículos", "/web/articulos"),
                 BreadcrumbBuilder.active("Nuevo artículo")));
         return WebController.layout(m, "articulos/formulario");
@@ -68,7 +68,7 @@ public class ArticuloWebController {
             m.addAttribute("titulo", a.getNombre());
             m.addAttribute("articulo", a);
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                    BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                    BreadcrumbBuilder.inicio(),
                     BreadcrumbBuilder.link("Artículos", "/web/articulos"),
                     BreadcrumbBuilder.active(a.getNombre())));
             return WebController.layout(m, "articulos/ver");
@@ -82,7 +82,7 @@ public class ArticuloWebController {
             m.addAttribute("titulo", "Editar artículo");
             m.addAttribute("articulo", a);
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                    BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                    BreadcrumbBuilder.inicio(),
                     BreadcrumbBuilder.link("Artículos", "/web/articulos"),
                     BreadcrumbBuilder.active("Editar")));
             return WebController.layout(m, "articulos/formulario");

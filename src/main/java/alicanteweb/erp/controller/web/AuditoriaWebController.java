@@ -23,7 +23,7 @@ public class AuditoriaWebController {
         m.addAttribute("titulo", "Auditoría");
         m.addAttribute("registros", s.obtenerRecientes());
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Administración", "#"),
             BreadcrumbBuilder.active("Auditoría")));
         return WebController.layout(m, "auditoria/lista");

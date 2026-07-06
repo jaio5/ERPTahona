@@ -62,7 +62,7 @@ public class VehiculoWebController {
             model.addAttribute("titulo", "Vehículo " + v.getMatricula());
             model.addAttribute("vehiculo", v);
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                    BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                    BreadcrumbBuilder.inicio(),
                     BreadcrumbBuilder.link("Vehículos", "/web/vehiculos"),
                     BreadcrumbBuilder.active(v.getMatricula())));
             return WebController.layout(model, "vehiculos/ver");

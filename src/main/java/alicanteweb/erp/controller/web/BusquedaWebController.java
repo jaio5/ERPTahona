@@ -39,7 +39,7 @@ public class BusquedaWebController {
             m.addAttribute("query", "");
             m.addAttribute("resultados", List.of());
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.active("Búsqueda global")));
             return WebController.layout(m, "buscar/resultados");
         }
@@ -66,7 +66,7 @@ public class BusquedaWebController {
         m.addAttribute("query", q);
         m.addAttribute("resultados", resultados);
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.active("Búsqueda global")));
         return WebController.layout(m, "buscar/resultados");
     }

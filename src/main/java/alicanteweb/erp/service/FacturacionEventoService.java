@@ -2,6 +2,7 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.FacturacionEvento;
 import alicanteweb.erp.repository.FacturacionEventoRepository;
+import alicanteweb.erp.util.Csv;
 import alicanteweb.erp.util.HashUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -96,15 +97,15 @@ public class FacturacionEventoService {
             for (FacturacionEvento evento : eventos) {
                 csv.append(valor(evento.getId())).append(';')
                     .append(valor(evento.getFecha())).append(';')
-                    .append(csv(evento.getAmbito())).append(';')
-                    .append(csv(evento.getTipoEvento())).append(';')
-                    .append(csv(evento.getReferencia())).append(';')
-                    .append(csv(evento.getHashAnterior())).append(';')
-                    .append(csv(evento.getHashActual())).append(';')
-                    .append(csv(evento.getPayloadHash())).append(';')
-                    .append(csv(evento.getVersionNormativa())).append(';')
-                    .append(csv(evento.getModalidadSif())).append(';')
-                    .append(csv(evento.getOrigenSistema())).append('\n');
+                    .append(Csv.campo(evento.getAmbito())).append(';')
+                    .append(Csv.campo(evento.getTipoEvento())).append(';')
+                    .append(Csv.campo(evento.getReferencia())).append(';')
+                    .append(Csv.campo(evento.getHashAnterior())).append(';')
+                    .append(Csv.campo(evento.getHashActual())).append(';')
+                    .append(Csv.campo(evento.getPayloadHash())).append(';')
+                    .append(Csv.campo(evento.getVersionNormativa())).append(';')
+                    .append(Csv.campo(evento.getModalidadSif())).append(';')
+                    .append(Csv.campo(evento.getOrigenSistema())).append('\n');
             }
             Files.writeString(archivo, csv.toString(), StandardCharsets.UTF_8);
             return archivo;
@@ -123,11 +124,6 @@ public class FacturacionEventoService {
 
     private String valor(Object value) {
         return value != null ? value.toString() : "";
-    }
-
-    private String csv(String value) {
-        String clean = valor(value).replace("\"", "\"\"");
-        return "\"" + clean + "\"";
     }
 
     private String valorMetadata(Map<String, Object> metadata, String key) {

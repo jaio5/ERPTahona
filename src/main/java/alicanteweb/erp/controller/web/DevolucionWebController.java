@@ -38,7 +38,7 @@ public class DevolucionWebController {
         model.addAttribute("devoluciones", devoluciones);
         model.addAttribute("q", q);
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.active("Devoluciones")));
         return WebController.layout(model, "devoluciones/lista");
     }
@@ -49,7 +49,7 @@ public class DevolucionWebController {
         model.addAttribute("titulo", "Nueva devolución");
         model.addAttribute("clientes", clienteService.findAll());
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Devoluciones", "/web/devoluciones"),
             BreadcrumbBuilder.active("Nueva devolución")));
         return WebController.layout(model, "devoluciones/formulario");

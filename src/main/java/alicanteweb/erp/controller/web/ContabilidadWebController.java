@@ -25,7 +25,7 @@ public class ContabilidadWebController {
         m.addAttribute("titulo", "Contabilidad");
         m.addAttribute("asientos", s.obtenerLibroDiario(LocalDate.now().withDayOfMonth(1), LocalDate.now()));
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Finanzas", "#"),
             BreadcrumbBuilder.active("Contabilidad")));
         return WebController.layout(m, "contabilidad/lista");
@@ -53,7 +53,7 @@ public class ContabilidadWebController {
         m.addAttribute("movimientos", cuenta != null && !cuenta.isBlank()
                 ? s.obtenerLibroMayor(cuenta, d, h) : java.util.List.of());
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Finanzas", "#"),
                 BreadcrumbBuilder.active("Libro mayor")));
         return WebController.layout(m, "contabilidad/mayor");
@@ -66,7 +66,7 @@ public class ContabilidadWebController {
         m.addAttribute("titulo", "Balance de situación y PyG");
         m.addAttribute("balance", s.obtenerBalancePgc(f));
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Finanzas", "#"),
                 BreadcrumbBuilder.active("Balance PGC")));
         return WebController.layout(m, "contabilidad/balance-pgc");

@@ -50,7 +50,7 @@ public class FacturaCompraWebController {
         model.addAttribute("q", q);
         model.addAttribute("estado", estado);
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Compras", "#"),
             BreadcrumbBuilder.active("Facturas de compra")));
         return WebController.layout(model, "facturas-compra/lista");

@@ -44,7 +44,7 @@ public class CarteraWebController extends BaseWebController {
         m.addAttribute("agingCobros", carteraService.aging(cobros));
         m.addAttribute("agingPagos", carteraService.aging(pagos));
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Finanzas", "#"),
                 BreadcrumbBuilder.active("Cartera")));
         return WebController.layout(m, "cartera/index");

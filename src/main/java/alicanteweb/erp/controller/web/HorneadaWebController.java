@@ -36,7 +36,7 @@ public class HorneadaWebController {
         model.addAttribute("horneadas", horneadas);
         model.addAttribute("q", q);
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Producción", "#"),
             BreadcrumbBuilder.active("Horneadas")));
         return WebController.layout(model, "horneadas/lista");

@@ -3,6 +3,7 @@ package alicanteweb.erp.controller.web;
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.service.*;
+import alicanteweb.erp.util.Descargas;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -109,7 +110,7 @@ public class FacturaWebController extends BaseWebController {
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.active("Facturas")));
         return WebController.layout(model, "facturas/lista");
     }
@@ -124,7 +125,7 @@ public class FacturaWebController extends BaseWebController {
         model.addAttribute("articulos", articuloService.findAll());
         model.addAttribute("lineasJson", "[]");
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Facturas", "/web/facturas"),
             BreadcrumbBuilder.active("Nueva factura")));
         return WebController.layout(model, "facturas/formulario");
@@ -137,7 +138,7 @@ public class FacturaWebController extends BaseWebController {
             model.addAttribute("moduloActivo", "facturas");
             model.addAttribute("titulo", "Editar factura " + f.getNumero());
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Facturas", "/web/facturas"),
                 BreadcrumbBuilder.active("Editar " + f.getNumero())));
             model.addAttribute("factura", f);
@@ -163,7 +164,7 @@ public class FacturaWebController extends BaseWebController {
             model.addAttribute("titulo", "Factura " + f.getNumero());
             model.addAttribute("factura", f);
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Facturas", "/web/facturas"),
                 BreadcrumbBuilder.active(f.getNumero())));
             return WebController.layout(model, "facturas/ver");
@@ -216,7 +217,7 @@ public class FacturaWebController extends BaseWebController {
             model.addAttribute("facturaOriginal", f);
             model.addAttribute("fechaHoy", LocalDate.now().toString());
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Facturas", "/web/facturas"),
                 BreadcrumbBuilder.link(f.getNumero(), "/web/facturas/" + f.getId()),
                 BreadcrumbBuilder.active("Rectificativa")));
@@ -290,7 +291,7 @@ public class FacturaWebController extends BaseWebController {
             File pdf = impresionService.generarFacturaPdf(factura);
             auditoriaService.registrarImpresion(usuarioActual(session), "FACTURA", String.valueOf(id),
                 "PDF de factura generado: " + factura.getNumero());
-            return WebController.servirPdf(pdf);
+            return Descargas.pdf(pdf);
         } catch (RuntimeException e) {
             log.error("Error al generar PDF de factura {}: {}", id, e.getMessage(), e);
             throw new ErpException("Error al generar PDF: " + e.getMessage(), e);

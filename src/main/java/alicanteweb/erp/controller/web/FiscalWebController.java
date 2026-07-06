@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
+import alicanteweb.erp.util.Descargas;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -55,7 +55,7 @@ public class FiscalWebController {
         model.addAttribute("errores", modelo347Service.validarModelo347(resultado));
         model.addAttribute("ejercicio", ejercicio);
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.active("Modelo 347")));
         return WebController.layout(model, "fiscal/modelo347");
     }
@@ -74,10 +74,7 @@ public class FiscalWebController {
                 empresa.getNombreEmpresa(), ejercicio);
         byte[] body = modelo347Service.generarFicheroBOE(resultado, declarante)
                 .getBytes(StandardCharsets.ISO_8859_1);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=modelo347-" + ejercicio + ".txt")
-                .contentType(MediaType.TEXT_PLAIN)
-                .body(body);
+        return Descargas.adjunto(body, "modelo347-" + ejercicio + ".txt", MediaType.TEXT_PLAIN);
     }
 
     @GetMapping("/web/verifactu")
@@ -96,7 +93,7 @@ public class FiscalWebController {
         model.addAttribute("pendientes", evidenceService.countByEstado("PENDIENTE"));
         model.addAttribute("erroresCount", evidenceService.countByEstado("ERROR"));
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.active("VERI*FACTU")));
         return WebController.layout(model, "fiscal/verifactu-lista");
     }
@@ -109,7 +106,7 @@ public class FiscalWebController {
             model.addAttribute("evidencia", e);
             model.addAttribute("cadenaValida", e.getSerie() != null && evidenceService.validarCadenaIntegridad(e.getSerie()));
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                    BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                    BreadcrumbBuilder.inicio(),
                     BreadcrumbBuilder.link("VERI*FACTU", "/web/verifactu"),
                     BreadcrumbBuilder.active("Evidencia #" + id)));
             return WebController.layout(model, "fiscal/verifactu-ver");
@@ -153,7 +150,7 @@ public class FiscalWebController {
         model.addAttribute("modalidades", SifModalidad.values());
         model.addAttribute("vigente", config != null && empresaConfigService.isFuncionamientoVerifactuVigente(config));
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.active("Cumplimiento fiscal")));
         return WebController.layout(model, "fiscal/cumplimiento");
     }
@@ -213,7 +210,7 @@ public class FiscalWebController {
         if (!pdf.exists()) {
             throw new IllegalStateException("El fichero de la declaración responsable no se encuentra en " + ruta);
         }
-        return WebController.servirPdf(pdf);
+        return Descargas.pdf(pdf);
     }
 
     @PostMapping("/web/fiscal/cumplimiento/iniciar")

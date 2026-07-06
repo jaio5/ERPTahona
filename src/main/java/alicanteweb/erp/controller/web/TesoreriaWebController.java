@@ -38,7 +38,7 @@ public class TesoreriaWebController {
         m.addAttribute("caja", cajaS.findAll());
         m.addAttribute("banco", bancoS.findAll());
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Finanzas", "#"),
             BreadcrumbBuilder.active("Tesorería")));
         return WebController.layout(m, "tesoreria/lista");

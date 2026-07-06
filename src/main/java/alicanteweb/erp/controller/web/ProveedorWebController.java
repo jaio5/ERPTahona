@@ -38,7 +38,7 @@ public class ProveedorWebController {
         m.addAttribute("page", pageResult);
         m.addAttribute("q", q);
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.active("Proveedores")));
         return WebController.layout(m, "proveedores/lista");
     }
@@ -48,7 +48,7 @@ public class ProveedorWebController {
         m.addAttribute("moduloActivo", "proveedores");
         m.addAttribute("titulo", "Nuevo proveedor");
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-            BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+            BreadcrumbBuilder.inicio(),
             BreadcrumbBuilder.link("Proveedores", "/web/proveedores"),
             BreadcrumbBuilder.active("Nuevo proveedor")));
         return WebController.layout(m, "proveedores/formulario");
@@ -61,7 +61,7 @@ public class ProveedorWebController {
             m.addAttribute("titulo", "Proveedor " + p.getNombre());
             m.addAttribute("proveedor", p);
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Proveedores", "/web/proveedores"),
                 BreadcrumbBuilder.active(p.getNombre())));
             return WebController.layout(m, "proveedores/ver");
@@ -75,7 +75,7 @@ public class ProveedorWebController {
             m.addAttribute("titulo", "Editar proveedor");
             m.addAttribute("proveedor", p);
             m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.link("Proveedores", "/web/proveedores"),
                 BreadcrumbBuilder.active("Editar")));
             return WebController.layout(m, "proveedores/formulario");

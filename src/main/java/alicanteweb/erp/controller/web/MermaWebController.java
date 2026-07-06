@@ -57,7 +57,7 @@ public class MermaWebController {
             model.addAttribute("titulo", "Detalle de merma");
             model.addAttribute("merma", merma);
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
-                    BreadcrumbBuilder.link("Inicio", "/web/dashboard"),
+                    BreadcrumbBuilder.inicio(),
                     BreadcrumbBuilder.link("Mermas", "/web/mermas"),
                     BreadcrumbBuilder.active("Merma #" + id)));
             return WebController.layout(model, "mermas/ver");

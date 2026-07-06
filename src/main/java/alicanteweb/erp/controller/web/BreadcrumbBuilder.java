@@ -17,6 +17,11 @@ public final class BreadcrumbBuilder {
         return new Crumb(label, url);
     }
 
+    /** Migaja raíz "Inicio" que apunta al panel; presente en casi todas las vistas. */
+    public static Crumb inicio() {
+        return link("Inicio", "/web/dashboard");
+    }
+
     public static Crumb active(String label) {
         return new Crumb(label, null);
     }
