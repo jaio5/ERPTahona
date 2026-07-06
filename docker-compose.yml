@@ -22,6 +22,10 @@ services:
       retries: 10
 
   app:
+    # Imagen nombrada: en desarrollo "docker compose build/--build" la reconstruye;
+    # en el escritorio del cliente se carga pre-construida (docker load) y "up" la usa
+    # sin necesidad de compilar (sin JDK/Maven ni internet).
+    image: erp-tahona:latest
     build: .
     container_name: erp-app
     restart: unless-stopped
