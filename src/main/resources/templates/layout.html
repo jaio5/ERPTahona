@@ -36,6 +36,14 @@
                         </li>
                     </ol>
                 </nav>
+                <!-- Breadcrumb por defecto: si la vista no fija uno, se deriva del título (Inicio / Título) -->
+                <nav aria-label="breadcrumb"
+                     th:if="${(breadcrumb == null or breadcrumb.isEmpty()) and titulo != null and !titulo.isEmpty()}">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a th:href="@{/web/dashboard}">Inicio</a></li>
+                        <li class="breadcrumb-item active" th:text="${titulo}"></li>
+                    </ol>
+                </nav>
                 <div class="ms-auto d-flex align-items-center gap-2">
                     <a th:href="@{/web/dashboard}" class="btn btn-ghost btn-sm" style="font-size:11px;">
                         <i class="bi bi-grid-1x2"></i>
