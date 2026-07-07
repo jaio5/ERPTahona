@@ -13,8 +13,11 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class FiscalComplianceService {
 
-    public static final LocalDate LIMITE_SOCIEDADES = LocalDate.of(2026, 1, 1);
-    public static final LocalDate LIMITE_RESTO_OBLIGADOS = LocalDate.of(2026, 7, 1);
+    // Plazos vigentes (RD 1007/2023, modificado por el RD-ley 15/2025, y Orden HAC/1177/2024):
+    // art. 3.1.a) (normalmente Impuesto sobre Sociedades) desde el 1 de enero de 2027;
+    // el resto de obligados del art. 3.1 desde el 1 de julio de 2027.
+    public static final LocalDate LIMITE_SOCIEDADES = LocalDate.of(2027, 1, 1);
+    public static final LocalDate LIMITE_RESTO_OBLIGADOS = LocalDate.of(2027, 7, 1);
 
     private final EmpresaConfigService empresaConfigService;
     private final VerifactuService verifactuService;

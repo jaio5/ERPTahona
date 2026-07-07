@@ -47,8 +47,18 @@ services:
       VERIFACTU_CERT_PATH: ${VERIFACTU_CERT_PATH:-}
       VERIFACTU_CERT_PASSWORD: ${VERIFACTU_CERT_PASSWORD:-}
       VERIFACTU_KEY_ALIAS: ${VERIFACTU_KEY_ALIAS:-mi_certificado}
+      VERIFACTU_KEY_PASSWORD: ${VERIFACTU_KEY_PASSWORD:-}
       VERIFACTU_AEAT_ENABLED: ${VERIFACTU_AEAT_ENABLED:-false}
-      VERIFACTU_AEAT_ENDPOINT: ${VERIFACTU_AEAT_ENDPOINT:-https://prewww2.aeat.es/wlpl/AVAC-FACT/ws/fe/SiiVerifactu}
+      # Endpoint oficial. Pruebas (homologación): prewww1; producción: www1
+      # (o www10 con certificado de sello). El guard de prod rechaza arrancar
+      # con remisión activa apuntando a un endpoint de pruebas (prewww).
+      VERIFACTU_AEAT_ENDPOINT: ${VERIFACTU_AEAT_ENDPOINT:-https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP}
+      # Identidad del productor del software (bloque SistemaInformatico del XML)
+      VERIFACTU_SISTEMA_NOMBRE_PRODUCTOR: ${VERIFACTU_SISTEMA_NOMBRE_PRODUCTOR:-}
+      VERIFACTU_SISTEMA_NIF_PRODUCTOR: ${VERIFACTU_SISTEMA_NIF_PRODUCTOR:-}
+      VERIFACTU_SISTEMA_ID: ${VERIFACTU_SISTEMA_ID:-01}
+      VERIFACTU_SISTEMA_NUMERO_INSTALACION: ${VERIFACTU_SISTEMA_NUMERO_INSTALACION:-1}
+      VERIFACTU_QR_BASE_URL: ${VERIFACTU_QR_BASE_URL:-https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR}
       ERP_LOG_FILE: logs/erp-tahona.log
       # ── TLS: el proxy Caddy sirve HTTPS, así que la cookie segura va activa.
       # Solo tendría sentido ponerla a false si se quitara el proxy (no recomendado).
