@@ -200,15 +200,21 @@ public class FiscalWebController {
 
     @GetMapping("/web/fiscal/cumplimiento/declaracion/descargar")
     @PreAuthorize("@permisos.puede('fiscal', 'exportar')")
-    public ResponseEntity<byte[]> descargarDeclaracionResponsable() {
-        EmpresaConfig config = empresaConfigService.getConfiguracionActivaOrThrow();
-        String ruta = config.getDeclaracionResponsableRuta();
+    public Object descargarDeclaracionResponsable(RedirectAttributes ra) {
+        // El enlace de descarga solo se muestra cuando la declaración está emitida;
+        // ante acceso directo o un enlace obsoleto respondemos con un aviso amable
+        // (redirección a la pantalla) en vez de un error 500.
+        EmpresaConfig config = empresaConfigService.getConfiguracionActiva().orElse(null);
+        String ruta = config != null ? config.getDeclaracionResponsableRuta() : null;
         if (ruta == null || ruta.isBlank()) {
-            throw new IllegalStateException("No hay declaración responsable emitida");
+            ra.addFlashAttribute("error", "Aún no se ha emitido la declaración responsable del sistema.");
+            return "redirect:/web/fiscal/cumplimiento";
         }
         java.io.File pdf = new java.io.File(ruta);
         if (!pdf.exists()) {
-            throw new IllegalStateException("El fichero de la declaración responsable no se encuentra en " + ruta);
+            ra.addFlashAttribute("error",
+                    "No se encuentra el fichero de la declaración responsable. Vuelve a emitirla.");
+            return "redirect:/web/fiscal/cumplimiento";
         }
         return Descargas.pdf(pdf);
     }
