@@ -47,7 +47,8 @@ services:
       VERIFACTU_CERT_PATH: ${VERIFACTU_CERT_PATH:-}
       VERIFACTU_CERT_PASSWORD: ${VERIFACTU_CERT_PASSWORD:-}
       VERIFACTU_KEY_ALIAS: ${VERIFACTU_KEY_ALIAS:-mi_certificado}
-      VERIFACTU_KEY_PASSWORD: ${VERIFACTU_KEY_PASSWORD:-}
+      # Si no se define aparte, la clave usa la contraseña del almacén (.p12).
+      VERIFACTU_KEY_PASSWORD: ${VERIFACTU_KEY_PASSWORD:-${VERIFACTU_CERT_PASSWORD:-}}
       VERIFACTU_AEAT_ENABLED: ${VERIFACTU_AEAT_ENABLED:-false}
       # Endpoint oficial. Pruebas (homologación): prewww1; producción: www1
       # (o www10 con certificado de sello). El guard de prod rechaza arrancar
