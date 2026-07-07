@@ -18,6 +18,11 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
     Optional<Lote> findByCodigo(String codigo);
     boolean existsByCodigo(String codigo);
 
+    // Carga articulo/almacen para poder mapear a DTO sin sesión abierta (open-in-view desactivado).
+    @Override
+    @EntityGraph(attributePaths = {"articulo", "almacen"})
+    List<Lote> findAll();
+
     @EntityGraph(attributePaths = {"articulo", "almacen"})
     List<Lote> findByArticuloId(Long articuloId);
 
@@ -27,6 +32,7 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
     @EntityGraph(attributePaths = {"articulo", "almacen"})
     List<Lote> findByFechaCaducidadBetween(LocalDate inicio, LocalDate fin);
     long countByFechaCaducidadBetween(LocalDate inicio, LocalDate fin);
+    @EntityGraph(attributePaths = {"articulo", "almacen"})
     List<Lote> findByFechaCaducidadBefore(LocalDate fecha);
     long countByFechaCaducidadBefore(LocalDate fecha);
     @EntityGraph(attributePaths = {"articulo", "almacen"})
