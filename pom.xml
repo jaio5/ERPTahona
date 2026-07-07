@@ -121,6 +121,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- Módulo Jackson para Hibernate: serializa proxies/colecciones LAZY no
+             inicializados como null en vez de lanzar LazyInitializationException
+             al serializar entidades JPA (open-in-view está desactivado). -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-hibernate6</artifactId>
+            <version>${jackson-bom.version}</version>
+        </dependency>
         <!-- Actuator: healthcheck real (app + BD) para docker compose y monitorización -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
