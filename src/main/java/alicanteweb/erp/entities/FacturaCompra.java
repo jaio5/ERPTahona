@@ -89,6 +89,11 @@ public class FacturaCompra {
     @Column(name = "fecha_pago")
     private LocalDate fechaPago;
 
+    /** Importe acumulado ya pagado (cartera de pagos, admite pagos parciales). */
+    @ColumnDefault("0.00")
+    @Column(name = "pagado", precision = 12, scale = 2)
+    private BigDecimal pagado;
+
     @Column(name = "fecha_vencimiento")
     private LocalDate fechaVencimiento;
 
@@ -181,6 +186,15 @@ public class FacturaCompra {
     }
 
     /**
+     * Importe pendiente de pago (total menos pagos acumulados).
+     */
+    public BigDecimal getPendiente() {
+        BigDecimal t = total != null ? total : BigDecimal.ZERO;
+        BigDecimal p = pagado != null ? pagado : BigDecimal.ZERO;
+        return t.subtract(p);
+    }
+
+    /**
      * Marca la factura como pagada
      */
     public void marcarComoPagada(LocalDate fechaPago) {
@@ -198,36 +212,6 @@ public class FacturaCompra {
         if ("PENDIENTE".equals(this.estado)) {
             this.estado = "CONTABILIZADA";
         }
-    }
-
-    // ===== MÉTODOS AUXILIARES PARA COMPATIBILIDAD =====
-
-    /**
-     * Obtiene el número de factura (alias para compatibilidad)
-     */
-    public String getNumeroFactura() {
-        return this.numero;
-    }
-
-    /**
-     * Obtiene la cuota de IVA (alias para compatibilidad)
-     */
-    public BigDecimal getCuotaIva() {
-        return this.importeIva;
-    }
-
-    /**
-     * Obtiene el total de la factura (alias para compatibilidad)
-     */
-    public BigDecimal getTotalFactura() {
-        return this.total;
-    }
-
-    /**
-     * Obtiene la fecha de la factura (alias para compatibilidad)
-     */
-    public LocalDate getFechaFactura() {
-        return this.fecha;
     }
 
     @Override

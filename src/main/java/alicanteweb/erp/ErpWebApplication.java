@@ -142,17 +142,26 @@ public class ErpWebApplication {
         if (!(applicationContext instanceof ServletWebServerApplicationContext webServerContext)) {
             return;
         }
+        // En un servidor/contenedor (headless) no hay navegador que abrir: el
+        // lanzador de escritorio (iniciar-erp.cmd) es quien abre el navegador.
+        if (java.awt.GraphicsEnvironment.isHeadless()) {
+            return;
+        }
         int port = webServerContext.getWebServer().getPort();
         String url = "http://localhost:" + port + "/web";
         try {
+            boolean esWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                 Desktop.getDesktop().browse(URI.create(url));
-            } else {
+            } else if (esWindows) {
                 new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", url).start();
+            } else {
+                log.info("Interfaz web disponible en {}", url);
+                return;
             }
             log.info("Interfaz web abierta en {}", url);
         } catch (Exception e) {
-            log.warn("No se pudo abrir el navegador automaticamente. Abre manualmente {}", url, e);
+            log.warn("No se pudo abrir el navegador automaticamente. Abre manualmente {}", url);
         }
     }
 }

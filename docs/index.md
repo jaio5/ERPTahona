@@ -1,57 +1,45 @@
-# Documentacion del proyecto ERP Tahona
+# Documentación del proyecto ERP Tahona
 
-ERP Tahona es una aplicacion de escritorio JavaFX con Spring Boot para gestion de una tahona/panaderia: ventas, compras, clientes, proveedores, articulos, almacen, caja, contabilidad operativa, auditoria, backups y preparacion VERI*FACTU.
+ERP Tahona es una aplicación web con Spring Boot y Thymeleaf para la gestión de una tahona/panadería: ventas, compras, clientes, proveedores, artículos, almacén, producción, reparto, tesorería, contabilidad, fiscalidad (VERI*FACTU, Modelo 347, libros de IVA), auditoría y backups.
 
-## Guias principales
+## Guías principales
 
-- [Despliegue de produccion](production-deployment.md): instalacion, variables, prechequeos y arranque.
-- [Checklist de produccion](production-checklist.md): lista de verificacion antes de usar datos reales.
-- [Operacion diaria](operations.md): uso operativo, backups, facturacion y mantenimiento.
-- [Configuracion](configuration.md): variables de entorno y secretos.
-- [Seguridad y autorizacion](security-and-authorization.md): usuarios, roles, permisos y contrasenas.
-- [VERI*FACTU](verifactu.md): configuracion, flujo legal de inicio y validaciones previas.
-- [Arquitectura](architecture.md): estructura tecnica del proyecto.
+- [Estado actual](estado-actual.md): build, capacidades y pendientes antes del lanzamiento.
+- [RUNBOOK de operación](RUNBOOK.md): despliegue con Docker + Caddy, backups, restore, actualización de versión. **Es la guía canónica de despliegue y operación.**
+- [Plan de lanzamiento](plan-lanzamiento.md): fases, checklist GO/NO-GO y decisión VeriFactu.
+- [Manual de la aplicación](manual-aplicacion.md): módulos, flujos operativos, rutas y TPV.
+- [Referencia de API REST](api-reference.md): endpoints REST con métodos, rutas y parámetros.
+- [Arquitectura](architecture.md): estructura técnica, capas, migraciones y frontend.
+- [Seguridad y autorización](security-and-authorization.md): usuarios, roles, permisos granulares y contraseñas.
 
-## Estado operativo
+## Fiscalidad
 
-El proyecto queda preparado tecnicamente para producir con:
+- [VERI*FACTU](verifactu.md): configuración, flujo legal de inicio y validaciones previas.
+- [Arquitectura VeriFactu](verifactu-arquitectura.md): registro de alta/anulación, hash encadenado, firma, QR y remisión AEAT.
+- [Cumplimiento fiscal SIF](fiscal-compliance.md): referencias normativas (RD 1007/2023, Orden HAC/1177/2024) y plazos.
+- [Revisión ERP España 2026-07-02](revision-erp-espana-2026-07-02.md): módulos implementados para operar en España y pendiente A1 (certificado + validación AEAT).
 
-- Perfil `prod` separado.
-- MySQL obligatorio en produccion.
-- Migraciones Flyway.
-- Validacion de entorno antes de arrancar.
-- Secretos fuera de Git mediante `.env.production.local`.
-- Roles y permisos por modulo.
-- Cambio obligatorio de contrasena inicial cuando corresponde.
-- Copias de seguridad con base de datos resuelta desde la URL JDBC.
-- Estado legal VERI*FACTU sin boton simple de activar/desactivar.
+## Despliegue resumido
+
+El despliegue soportado es **Docker Compose** (MySQL + aplicación + proxy Caddy con TLS). Ver [README_RUN.md](../README_RUN.md) para el arranque rápido y el [RUNBOOK](RUNBOOK.md) para la operación completa:
+
+```powershell
+Copy-Item .env.example .env    # rellenar secretos (openssl rand -base64 32)
+docker compose up -d --build
+```
 
 ## Lo que no debe guardarse en Git
 
-- `.env.production.local`
+- `.env` y cualquier fichero con secretos reales.
 - Certificados `.p12`, `.pfx`, claves privadas o passwords.
 - Backups reales.
 - Logs con datos personales o fiscales.
 - Exportaciones VERI*FACTU reales.
 
-## Comandos basicos
+## Comandos básicos
 
 ```powershell
-.\mvnw.cmd test
-.\scripts\build-production.ps1
-.\scripts\package-production.ps1
-.\scripts\check-production-env.ps1
-.\scripts\run-production.ps1
+.\mvnw.cmd verify        # tests + gate de cobertura JaCoCo
+docker compose up -d --build
+docker compose logs -f app
 ```
-
-## Primer despliegue resumido
-
-1. Instalar JDK 17, 21 o 23.
-2. Crear base MySQL 8 y usuario de aplicacion.
-3. Copiar `.env.production.example` a `.env.production.local`.
-4. Rellenar secretos, certificado y rutas reales.
-5. Ejecutar `.\scripts\check-production-env.ps1`.
-6. Ejecutar `.\mvnw.cmd test`.
-7. Ejecutar `.\scripts\build-production.ps1`.
-8. Arrancar con `.\scripts\run-production.ps1`.
-9. Configurar empresa, usuarios, roles, series, backups y VERI*FACTU.

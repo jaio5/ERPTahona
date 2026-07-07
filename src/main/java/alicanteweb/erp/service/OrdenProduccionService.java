@@ -1,10 +1,12 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.OrdenProduccion;
+import alicanteweb.erp.entities.OrdenProduccionSerieSequence;
 import alicanteweb.erp.entities.Pedido;
 import alicanteweb.erp.entities.PedidoLinea;
 import alicanteweb.erp.entities.Receta;
 import alicanteweb.erp.repository.OrdenProduccionRepository;
+import alicanteweb.erp.repository.OrdenProduccionSerieSequenceRepository;
 import alicanteweb.erp.repository.RecetaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,24 +17,34 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @Transactional(readOnly = true)
 public class OrdenProduccionService {
 
+    private static final String SERIE = "OP";
+
     private final OrdenProduccionRepository repository;
+    private final OrdenProduccionSerieSequenceRepository sequenceRepository;
     private final ArticuloService articuloService;
     private final AlmacenService almacenService;
     private final RecetaRepository recetaRepository;
+    private final StockService stockService;
 
     public OrdenProduccionService(OrdenProduccionRepository repository,
+                                   OrdenProduccionSerieSequenceRepository sequenceRepository,
                                    ArticuloService articuloService,
                                    AlmacenService almacenService,
-                                   RecetaRepository recetaRepository) {
+                                   RecetaRepository recetaRepository,
+                                   StockService stockService) {
         this.repository = repository;
+        this.sequenceRepository = sequenceRepository;
         this.articuloService = articuloService;
         this.almacenService = almacenService;
         this.recetaRepository = recetaRepository;
+        this.stockService = stockService;
     }
 
     public List<OrdenProduccion> findAll() {
@@ -43,12 +55,28 @@ public class OrdenProduccionService {
         return repository.findById(id);
     }
 
+    public Optional<OrdenProduccion> findDetailById(Long id) {
+        return repository.findDetailById(id);
+    }
+
+    public Page<OrdenProduccion> findPage(String estado, Long recetaId, Pageable pageable) {
+        return repository.findPage(normalize(estado), recetaId, pageable);
+    }
+
+    private String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     public Optional<OrdenProduccion> findByNumero(String numero) {
         return repository.findByNumero(numero);
     }
 
     public List<OrdenProduccion> findByEstado(String estado) {
         return repository.findByEstado(estado);
+    }
+
+    public long countByEstado(String estado) {
+        return repository.countByEstado(estado);
     }
 
     public List<OrdenProduccion> findByFechaBetween(LocalDate inicio, LocalDate fin) {
@@ -62,7 +90,7 @@ public class OrdenProduccionService {
     @Transactional
     public OrdenProduccion save(OrdenProduccion orden) {
         if (orden == null) throw new IllegalArgumentException("Orden de producción nula");
-        if (orden.getNumero() == null || orden.getNumero().trim().isEmpty()) {
+        if (orden.getNumero() == null || orden.getNumero().isBlank()) {
             orden.setNumero(generarNumero());
         }
         return repository.save(orden);
@@ -73,10 +101,35 @@ public class OrdenProduccionService {
         repository.deleteById(id);
     }
 
+    /**
+     * Numeración por secuencia con lock pesimista (mismo patrón que
+     * FacturaService/FacturaSerieSequenceRepository): correcta con varias
+     * instancias de la app, al contrario que el antiguo MAX(numero) bajo
+     * synchronized, que solo serializaba dentro de una JVM.
+     */
+    @Transactional
     public String generarNumero() {
-        String prefijo = "OP-" + LocalDate.now().getYear();
-        int maxSeq = repository.findMaxNumeroSecuencialBySerie(prefijo);
-        return prefijo + "-" + String.format("%04d", maxSeq + 1);
+        int ejercicio = LocalDate.now().getYear();
+        OrdenProduccionSerieSequence sequence = sequenceRepository
+            .findBySerieAndEjercicio(SERIE, ejercicio)
+            .orElseGet(() -> crearSecuencia(ejercicio));
+
+        long siguienteNumero = sequence.getUltimoNumero() + 1L;
+        sequence.setUltimoNumero(siguienteNumero);
+        sequenceRepository.saveAndFlush(sequence);
+
+        return String.format("%s-%d-%04d", SERIE, ejercicio, siguienteNumero);
+    }
+
+    private OrdenProduccionSerieSequence crearSecuencia(int ejercicio) {
+        // La migración V42 siembra los ejercicios con órdenes previas; este camino
+        // cubre el primer uso de un ejercicio nuevo. Se parte del máximo existente
+        // por si hubiera órdenes creadas fuera de la secuencia.
+        OrdenProduccionSerieSequence nueva = new OrdenProduccionSerieSequence();
+        nueva.setSerie(SERIE);
+        nueva.setEjercicio(ejercicio);
+        nueva.setUltimoNumero((long) repository.findMaxNumeroSecuencialBySerie(SERIE + "-" + ejercicio));
+        return nueva;
     }
 
     @Transactional
@@ -102,7 +155,30 @@ public class OrdenProduccionService {
         orden.setFechaFin(java.time.LocalDateTime.now());
         orden.setCantidadProducida(cantidadProducida);
         orden.setMerma(merma);
-        return repository.save(orden);
+        orden = repository.save(orden);
+
+        // Entrada de stock del artículo resultante
+        if (orden.getArticulo() != null && cantidadProducida != null && cantidadProducida.compareTo(BigDecimal.ZERO) > 0) {
+            Long almacenId = orden.getAlmacen() != null ? orden.getAlmacen().getId() : null;
+            stockService.registrarEntrada(orden.getArticulo().getId(), almacenId, cantidadProducida,
+                    "Produccion " + orden.getNumero(), "ORDEN_PRODUCCION", orden.getId());
+        }
+
+        // Salida de stock de ingredientes (si hay receta)
+        if (orden.getReceta() != null && orden.getReceta().getIngredientes() != null) {
+            BigDecimal rendimiento = orden.getReceta().getRendimientoCantidad();
+            if (rendimiento == null || rendimiento.compareTo(BigDecimal.ZERO) <= 0) rendimiento = BigDecimal.ONE;
+            BigDecimal factor = cantidadProducida.divide(rendimiento, 4, java.math.RoundingMode.HALF_UP);
+            Long almacenId = orden.getAlmacen() != null ? orden.getAlmacen().getId() : null;
+            for (var ing : orden.getReceta().getIngredientes()) {
+                if (ing.getArticulo() == null || ing.getCantidad() == null) continue;
+                BigDecimal cantidadInsumo = ing.getCantidad().multiply(factor);
+                stockService.registrarSalida(ing.getArticulo().getId(), almacenId, cantidadInsumo,
+                        "Consumo produccion " + orden.getNumero(), "ORDEN_PRODUCCION", orden.getId());
+            }
+        }
+
+        return orden;
     }
 
     @Transactional
@@ -130,12 +206,7 @@ public class OrdenProduccionService {
         for (PedidoLinea linea : pedido.getLineas()) {
             if (linea.getArticulo() == null) continue;
 
-            // Buscar recetas que produzcan este artículo
-            List<Receta> recetas = recetaRepository.findAll().stream()
-                    .filter(r -> r.getArticuloResultante() != null
-                            && r.getArticuloResultante().getId().equals(linea.getArticulo().getId())
-                            && Boolean.TRUE.equals(r.getActivo()))
-                    .toList();
+            List<Receta> recetas = recetaRepository.findByArticuloResultante_IdAndActivoTrue(linea.getArticulo().getId());
 
             if (!recetas.isEmpty()) {
                 Receta receta = recetas.get(0);

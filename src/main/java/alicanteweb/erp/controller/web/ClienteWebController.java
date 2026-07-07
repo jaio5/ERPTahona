@@ -1,135 +1,222 @@
 package alicanteweb.erp.controller.web;
 
 import alicanteweb.erp.entities.*;
+import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.service.*;
+import alicanteweb.erp.util.Csv;
+import alicanteweb.erp.util.Descargas;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import java.nio.charset.StandardCharsets;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 @Controller
+@PreAuthorize("@permisos.puede('clientes', 'ver')")
 @RequestMapping("/web/clientes")
-public class ClienteWebController {
+public class ClienteWebController extends BaseWebController {
+
+    private static final Logger log = LoggerFactory.getLogger(ClienteWebController.class);
+
     private final ClienteService service;
+    private final FacturaService facturaService;
+    private final AlbaranVentaService albaranService;
     private final RgpdSolicitudService rgpdSolicitudService;
     private final AuditoriaService auditoriaService;
-    private final UsuarioService usuarioService;
     private final ObjectMapper objectMapper;
 
     public ClienteWebController(ClienteService service,
+                                FacturaService facturaService,
+                                AlbaranVentaService albaranService,
                                 RgpdSolicitudService rgpdSolicitudService,
                                 AuditoriaService auditoriaService,
-                                UsuarioService usuarioService) {
+                                UsuarioService usuarioService,
+                                ObjectMapper objectMapper) {
+        super(usuarioService);
         this.service = service;
+        this.facturaService = facturaService;
+        this.albaranService = albaranService;
         this.rgpdSolicitudService = rgpdSolicitudService;
         this.auditoriaService = auditoriaService;
-        this.usuarioService = usuarioService;
-        this.objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.objectMapper = objectMapper;
     }
     @GetMapping
-    public String lista(HttpSession s, Model m, @RequestParam(required = false) String q) {
-        if(WebController.requireLogin(s))return"redirect:/web/login";
-        List<Cliente> items = service.findAll();
-        if(q!=null&&!q.isBlank()){String t=q.toLowerCase();items=items.stream().filter(c->(c.getNombre()!=null&&c.getNombre().toLowerCase().contains(t))||(c.getCodigo()!=null&&c.getCodigo().toLowerCase().contains(t))||(c.getCif()!=null&&c.getCif().toLowerCase().contains(t))).toList();}
-        m.addAttribute("moduloActivo","clientes");m.addAttribute("titulo","Clientes");m.addAttribute("clientes",items);m.addAttribute("q",q);
-        return WebController.layout(m,"clientes/lista");
+    public String lista(Model m,
+                        @RequestParam(required = false) String q,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "25") int size,
+                        @RequestParam(defaultValue = "nombre") String sort,
+                        @RequestParam(defaultValue = "asc") String dir) {
+        Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Page<Cliente> pageResult = service.buscarPaginado(q, PageRequest.of(page, size, Sort.by(direction, sort)));
+        m.addAttribute("moduloActivo", "clientes");
+        m.addAttribute("titulo", "Clientes");
+        m.addAttribute("clientes", pageResult.getContent());
+        m.addAttribute("page", pageResult);
+        m.addAttribute("q", q);
+        m.addAttribute("sort", sort);
+        m.addAttribute("dir", dir);
+        m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
+            BreadcrumbBuilder.inicio(),
+            BreadcrumbBuilder.active("Clientes")));
+        return WebController.layout(m, "clientes/lista");
     }
     @GetMapping("/nuevo")
-    public String nuevo(HttpSession s,Model m){if(WebController.requireLogin(s))return"redirect:/web/login";m.addAttribute("moduloActivo","clientes");m.addAttribute("titulo","Nuevo cliente");return WebController.layout(m,"clientes/formulario");}
+    @PreAuthorize("@permisos.puede('clientes', 'crear')")
+    public String nuevo(Model m) {
+        m.addAttribute("moduloActivo", "clientes");
+        m.addAttribute("titulo", "Nuevo cliente");
+        m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
+            BreadcrumbBuilder.inicio(),
+            BreadcrumbBuilder.link("Clientes", "/web/clientes"),
+            BreadcrumbBuilder.active("Nuevo cliente")));
+        return WebController.layout(m, "clientes/formulario");
+    }
+
     @GetMapping("/{id}")
-    public String ver(HttpSession s,@PathVariable Long id,Model m){if(WebController.requireLogin(s))return"redirect:/web/login";return service.findById(id).map(c->{m.addAttribute("moduloActivo","clientes");m.addAttribute("titulo",c.getNombre());m.addAttribute("cliente",c);return WebController.layout(m,"clientes/ver");}).orElse("redirect:/web/clientes");}
+    public String ver(@PathVariable Long id, Model m, RedirectAttributes ra) {
+        return service.findById(id).map(c -> {
+            m.addAttribute("moduloActivo", "clientes");
+            m.addAttribute("titulo", c.getNombre());
+            m.addAttribute("cliente", c);
+            var facturas = facturaService.findByClienteId(id).stream()
+                    .sorted(java.util.Comparator.comparing(
+                            alicanteweb.erp.entities.Factura::getFecha,
+                            java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())))
+                    .limit(10).toList();
+            var albaranes = albaranService.findByClienteId(id).stream()
+                    .sorted(java.util.Comparator.comparing(
+                            alicanteweb.erp.entities.AlbaranVenta::getFecha,
+                            java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())))
+                    .limit(10).toList();
+            m.addAttribute("facturas", facturas);
+            m.addAttribute("albaranes", albaranes);
+            m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
+                BreadcrumbBuilder.inicio(),
+                BreadcrumbBuilder.link("Clientes", "/web/clientes"),
+                BreadcrumbBuilder.active(c.getNombre())));
+            return WebController.layout(m, "clientes/ver");
+        }).orElseGet(() -> {
+            ra.addFlashAttribute("error", "Registro no encontrado");
+            return "redirect:/web/clientes";
+        });
+    }
+
+    @GetMapping("/{id}/editar")
+    @PreAuthorize("@permisos.puede('clientes', 'editar')")
+    public String editar(@PathVariable Long id, Model m, RedirectAttributes ra) {
+        return service.findById(id).map(c -> {
+            m.addAttribute("moduloActivo", "clientes");
+            m.addAttribute("titulo", "Editar cliente");
+            m.addAttribute("cliente", c);
+            m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
+                BreadcrumbBuilder.inicio(),
+                BreadcrumbBuilder.link("Clientes", "/web/clientes"),
+                BreadcrumbBuilder.active("Editar")));
+            return WebController.layout(m, "clientes/formulario");
+        }).orElseGet(() -> {
+            ra.addFlashAttribute("error", "Registro no encontrado");
+            return "redirect:/web/clientes";
+        });
+    }
+
     @PostMapping
-    public String guardar(HttpSession s,@RequestParam(required=false)Long id,@RequestParam String codigo,@RequestParam String nombre,@RequestParam(required=false)String cif,@RequestParam(required=false)String telefono,@RequestParam(required=false)String email,@RequestParam(required=false)String direccion,@RequestParam(required=false)String poblacion,@RequestParam(required=false)String codigoPostal,RedirectAttributes ra){if(WebController.requireLogin(s))return"redirect:/web/login";try{Cliente c=id!=null?service.findById(id).orElse(new Cliente()):new Cliente();c.setCodigo(codigo);c.setNombre(nombre);c.setCif(cif);c.setTelefono(telefono);c.setEmail(email);c.setDireccion(direccion);c.setPoblacion(poblacion);c.setCodigoPostal(codigoPostal);service.save(c);ra.addFlashAttribute("exito","Cliente guardado");}catch(Exception e){ra.addFlashAttribute("error",e.getMessage());}return"redirect:/web/clientes";}
+    @PreAuthorize("@permisos.puedeCrearOEditar('clientes')")
+    public String guardar(@RequestParam(required = false) Long id,
+                          @RequestParam String codigo,
+                          @RequestParam String nombre,
+                          @RequestParam(required = false) String cif,
+                          @RequestParam(required = false) String telefono,
+                          @RequestParam(required = false) String email,
+                          @RequestParam(required = false) String direccion,
+                          @RequestParam(required = false) String poblacion,
+                          @RequestParam(required = false) String codigoPostal,
+                          @RequestParam(required = false) String iban,
+                          @RequestParam(required = false) String mandatoSepaReferencia,
+                          @RequestParam(required = false) java.time.LocalDate mandatoSepaFecha,
+                          RedirectAttributes ra) {
+        try {
+            Cliente c = id != null
+                    ? service.findById(id).orElseThrow(() -> new IllegalArgumentException("ID de cliente no válido: " + id))
+                    : new Cliente();
+            c.setCodigo(codigo);
+            c.setNombre(nombre);
+            c.setCif(cif);
+            c.setTelefono(telefono);
+            c.setEmail(email);
+            c.setDireccion(direccion);
+            c.setPoblacion(poblacion);
+            c.setCodigoPostal(codigoPostal);
+            c.setIban(iban != null && !iban.isBlank() ? iban.replaceAll("\\s+", "").toUpperCase() : null);
+            c.setMandatoSepaReferencia(mandatoSepaReferencia != null && !mandatoSepaReferencia.isBlank() ? mandatoSepaReferencia.trim() : null);
+            c.setMandatoSepaFecha(mandatoSepaFecha);
+            service.save(c);
+            log.info("Cliente guardado correctamente [id={}, nombre={}]", c.getId(), c.getNombre());
+            ra.addFlashAttribute("exito", "Cliente guardado correctamente");
+        } catch (RuntimeException e) {
+            log.error("Error al guardar cliente [id={}]: {}", id, e.getMessage(), e);
+            ra.addFlashAttribute("error", e.getMessage());
+            if (id != null) return "redirect:/web/clientes/" + id + "/editar";
+        }
+        return "redirect:/web/clientes";
+    }
 
     @GetMapping("/export.csv")
+    @PreAuthorize("@permisos.puede('clientes', 'exportar')")
     public ResponseEntity<byte[]> exportarListadoCsv(HttpSession s, @RequestParam(required = false) String q) {
-        if (WebController.requireLogin(s)) {
-            return ResponseEntity.status(302).header(HttpHeaders.LOCATION, "/web/login").build();
-        }
-        List<Cliente> clientes = service.findAll();
-        if (q != null && !q.isBlank()) {
-            String t = q.toLowerCase();
-            clientes = clientes.stream()
-                .filter(c -> (c.getNombre() != null && c.getNombre().toLowerCase().contains(t))
-                    || (c.getCodigo() != null && c.getCodigo().toLowerCase().contains(t))
-                    || (c.getCif() != null && c.getCif().toLowerCase().contains(t)))
-                .toList();
-        }
+        List<Cliente> clientes = (q != null && !q.isBlank())
+                ? service.buscarPaginado(q, PageRequest.of(0, 10000)).getContent()
+                : service.findAll();
 
         StringBuilder csv = new StringBuilder();
-        csv.append('\ufeff');
+        csv.append(Csv.BOM);
         csv.append("ID;Codigo;Nombre;CIF/NIF;Telefono;Email;Direccion;Poblacion;Codigo postal;Provincia;Activo\n");
         for (Cliente c : clientes) {
-            csv.append(csv(c.getId())).append(';')
-                .append(csv(c.getCodigo())).append(';')
-                .append(csv(c.getNombre())).append(';')
-                .append(csv(c.getCif())).append(';')
-                .append(csv(c.getTelefono())).append(';')
-                .append(csv(c.getEmail())).append(';')
-                .append(csv(c.getDireccion())).append(';')
-                .append(csv(c.getPoblacion())).append(';')
-                .append(csv(c.getCodigoPostal())).append(';')
-                .append(csv(c.getProvincia())).append(';')
-                .append(csv(Boolean.TRUE.equals(c.getActivo()) ? "SI" : "NO"))
+            csv.append(Csv.campo(c.getId())).append(';')
+                .append(Csv.campo(c.getCodigo())).append(';')
+                .append(Csv.campo(c.getNombre())).append(';')
+                .append(Csv.campo(c.getCif())).append(';')
+                .append(Csv.campo(c.getTelefono())).append(';')
+                .append(Csv.campo(c.getEmail())).append(';')
+                .append(Csv.campo(c.getDireccion())).append(';')
+                .append(Csv.campo(c.getPoblacion())).append(';')
+                .append(Csv.campo(c.getCodigoPostal())).append(';')
+                .append(Csv.campo(c.getProvincia())).append(';')
+                .append(Csv.campo(Boolean.TRUE.equals(c.getActivo()) ? "SI" : "NO"))
                 .append('\n');
         }
 
         auditoriaService.registrarExportacion(usuarioActual(s), "CLIENTES_CSV",
             "Exportacion de listado de clientes (" + clientes.size() + " registros)");
-        byte[] body = csv.toString().getBytes(StandardCharsets.UTF_8);
-        return descarga(body, "clientes_" + LocalDate.now() + ".csv", "text/csv; charset=UTF-8");
+        return Descargas.csv(csv.toString(), "clientes_" + LocalDate.now() + ".csv");
     }
 
     @GetMapping("/{id}/export.json")
-    public ResponseEntity<byte[]> exportarDatosCliente(HttpSession s, @PathVariable Long id) throws Exception {
-        if (WebController.requireLogin(s)) {
-            return ResponseEntity.status(302).header(HttpHeaders.LOCATION, "/web/login").build();
+    @PreAuthorize("@permisos.puede('clientes', 'exportar')")
+    public ResponseEntity<byte[]> exportarDatosCliente(HttpSession s, @PathVariable Long id) {
+        try {
+            Map<String, Object> datos = rgpdSolicitudService.exportarDatosCliente(id);
+            auditoriaService.registrarExportacion(usuarioActual(s), "CLIENTE_RGPD_JSON",
+                "Exportacion RGPD/portabilidad del cliente " + id);
+            byte[] body = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(datos);
+            return Descargas.adjunto(body, "cliente_" + id + "_rgpd_" + LocalDate.now() + ".json", MediaType.APPLICATION_JSON);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            log.error("Error al exportar datos RGPD del cliente {}: {}", id, e.getMessage(), e);
+            throw new ErpException("Error al exportar datos RGPD: " + e.getMessage(), e);
         }
-        Map<String, Object> datos = rgpdSolicitudService.exportarDatosCliente(id);
-        auditoriaService.registrarExportacion(usuarioActual(s), "CLIENTE_RGPD_JSON",
-            "Exportacion RGPD/portabilidad del cliente " + id);
-        byte[] body = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(datos);
-        return descarga(body, "cliente_" + id + "_rgpd_" + LocalDate.now() + ".json", MediaType.APPLICATION_JSON_VALUE);
     }
 
-    private Usuario usuarioActual(HttpSession session) {
-        Object usuarioId = session != null ? session.getAttribute("usuarioId") : null;
-        if (usuarioId instanceof Long id) {
-            return usuarioService.buscarPorId(id).orElse(null);
-        }
-        if (usuarioId instanceof Number n) {
-            return usuarioService.buscarPorId(n.longValue()).orElse(null);
-        }
-        return null;
-    }
-
-    private ResponseEntity<byte[]> descarga(byte[] body, String filename, String contentType) {
-        return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-                .filename(filename, StandardCharsets.UTF_8)
-                .build()
-                .toString())
-            .header(HttpHeaders.CACHE_CONTROL, "no-store")
-            .contentType(MediaType.parseMediaType(contentType))
-            .body(body);
-    }
-
-    private String csv(Object value) {
-        String text = value != null ? String.valueOf(value) : "";
-        return "\"" + text.replace("\"", "\"\"") + "\"";
-    }
 }

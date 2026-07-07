@@ -1,23 +1,41 @@
 # ERP Tahona
 
-Aplicacion de escritorio JavaFX + Spring Boot para gestion ERP con soporte de facturacion, compras, ventas, clientes, proveedores, almacen, caja, auditoria, backups y preparacion VERI*FACTU.
+Aplicacion web Spring Boot + Thymeleaf para gestion ERP con soporte de facturacion, compras, ventas, clientes, proveedores, almacen, caja, auditoria, backups y preparacion VERI*FACTU.
 
 ## Requisitos
 
-- JDK 17 a JDK 23
-- Maven 3.9+
-- MySQL 8+ para uso normal
+- **Despliegue (recomendado):** solo Docker Desktop / Docker Engine con Compose.
+- **Desarrollo local:** JDK 17 a JDK 23, Maven Wrapper incluido (`mvnw`), MySQL 8+.
+
+## Despliegue con Docker (via soportada)
+
+El despliegue soportado es Docker Compose: MySQL 8 + aplicacion + proxy Caddy con TLS. La app no publica puertos; todo entra por HTTPS a traves de Caddy. Guia completa de operacion en el [RUNBOOK](docs/RUNBOOK.md).
+
+```powershell
+Copy-Item .env.example .env    # rellenar TODOS los secretos (openssl rand -base64 32)
+docker compose config -q       # valida el compose y que no falte ningun secreto
+docker compose up -d --build
+docker compose ps              # esperar a que db y app esten "healthy"
+```
+
+La aplicacion queda en `https://<ERP_DOMAIN>` (por defecto `https://localhost`).
 
 ## Documentacion
 
-- [Indice de documentacion](docs/index.md)
-- [Despliegue de produccion](docs/production-deployment.md)
-- [Checklist de produccion](docs/production-checklist.md)
-- [Operacion diaria](docs/operations.md)
-- [Configuracion](docs/configuration.md)
+- [Indice de documentacion](docs/index.md) — punto de entrada a toda la documentacion.
+- [Estado actual](docs/estado-actual.md) — build, capacidades y pendientes antes del lanzamiento.
+- [RUNBOOK de operacion](docs/RUNBOOK.md) — **guia canonica** de despliegue Docker + Caddy, backups, restore y actualizacion.
+- [Plan de lanzamiento](docs/plan-lanzamiento.md) — fases, checklist GO/NO-GO y decision VeriFactu.
 - [Seguridad y autorizacion](docs/security-and-authorization.md)
-- [VERI*FACTU](docs/verifactu.md)
+- [Manual de la aplicacion](docs/manual-aplicacion.md)
+- [Referencia de API REST](docs/api-reference.md)
 - [Arquitectura](docs/architecture.md)
+- [VERI*FACTU](docs/verifactu.md) · [Arquitectura VeriFactu](docs/verifactu-arquitectura.md) · [Cumplimiento fiscal](docs/fiscal-compliance.md)
+
+Estado técnico validado (auditoria GO/NO-GO 2026-07-04):
+
+- 267 pruebas, sin fallos (`.\mvnw.cmd verify`).
+- Gate JaCoCo cumplido (líneas y ramas).
 
 ## Arranque local
 
@@ -30,24 +48,24 @@ $env:SPRING_DATASOURCE_USERNAME="root"
 $env:SPRING_DATASOURCE_PASSWORD="<tu-password>"
 ```
 
-3. Ejecuta la aplicacion:
+3. Ejecuta la aplicacion web:
 
 ```powershell
-.\mvnw.cmd javafx:run
+.\mvnw.cmd spring-boot:run
 ```
 
 En desarrollo, si MySQL no esta disponible, la aplicacion puede reintentar con H2 en memoria para diagnostico local. Para forzarlo explicitamente:
 
 ```powershell
 $env:ERP_FALLBACK_H2_ENABLED="true"
-.\mvnw.cmd javafx:run
+.\mvnw.cmd spring-boot:run
 ```
 
 Para impedir ese fallback local:
 
 ```powershell
 $env:ERP_FALLBACK_H2_ENABLED="false"
-.\mvnw.cmd javafx:run
+.\mvnw.cmd spring-boot:run
 ```
 
 ## Produccion
@@ -67,7 +85,7 @@ $env:SPRING_DATASOURCE_USERNAME="erp_app"
 $env:SPRING_DATASOURCE_PASSWORD="<tu-password>"
 $env:CIFRADO_AES_KEY="<clave-base64-32-bytes>"
 $env:SECURITY_PBKDF2_SECRET="<secreto-pbkdf2>"
-.\mvnw.cmd javafx:run
+.\mvnw.cmd spring-boot:run
 ```
 
 ## Estado de cumplimiento legal
@@ -79,6 +97,8 @@ $env:SECURITY_PBKDF2_SECRET="<secreto-pbkdf2>"
   - Antes del 1 de julio de 2027 para el resto de obligados del articulo 3.1.
 - La Orden HAC/1177/2024 exige, entre otros puntos, integridad, inalterabilidad, trazabilidad, conservacion, legibilidad, exportacion de registros, registro de eventos, XML UTF-8, huella/hash y firma electronica de registros cuando corresponda.
 - Antes de considerar la aplicacion conforme de forma plena, hay que validar el XML, la firma, el QR y el envio contra las especificaciones oficiales y el entorno de pruebas de AEAT. La validacion XSD incluida es una ayuda interna, no una certificacion legal.
+
+La configuracion SIF y el diagnostico de preparacion fiscal estan documentados en `docs/fiscal-compliance.md`.
 
 ## Build
 

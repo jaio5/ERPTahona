@@ -1,12 +1,259 @@
-<section>
-    <div class="topbar"><h4 th:text="${titulo}">Nuevo presupuesto</h4><a th:href="@{/web/presupuestos}" class="btn btn-outline-secondary btn-sm">Volver</a></div>
-    <form th:action="@{/web/presupuestos}" method="post" class="card p-3">
-        <label class="form-label">Cliente</label>
-        <select name="clienteId" class="form-select" required>
-            <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre}"></option>
-        </select>
-        <label class="form-label mt-3">Observaciones</label>
-        <textarea name="observaciones" class="form-control"></textarea>
-        <div class="mt-4"><button class="btn btn-primary" type="submit">Guardar</button><a th:href="@{/web/presupuestos}" class="btn btn-outline-secondary ms-2">Cancelar</a></div>
-    </form>
-</section>
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Nuevo presupuesto</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/presupuestos}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card form-card-wide">
+        <form th:action="@{/web/presupuestos}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${presupuesto?.id}">
+
+            <div class="form-section-title">
+                <i class="bi bi-file-earmark-text"></i> Datos del presupuesto
+            </div>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label" for="fecha">Fecha *</label>
+                    <input type="date" id="fecha" name="fecha" class="form-control"
+                           th:value="${presupuesto?.fecha != null ? presupuesto.fecha : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                           required>
+                    <div class="invalid-feedback">La fecha es obligatoria.</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="fechaValidez">Válido hasta</label>
+                    <input type="date" id="fechaValidez" name="fechaValidez" class="form-control"
+                           th:value="${presupuesto?.fechaValidez != null ? presupuesto.fechaValidez : #temporals.format(#temporals.createNow().plusDays(15), 'yyyy-MM-dd')}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="clienteId">Cliente *</label>
+                    <select id="clienteId" name="clienteId" class="form-select" required data-searchable>
+                        <option value="">Seleccionar cliente...</option>
+                        <option th:each="c : ${clientes}" th:value="${c.id}"
+                                th:text="${c.nombre + (c.cif != null ? ' (' + c.cif + ')' : '')}"
+                                th:selected="${presupuesto?.cliente?.id == c.id}"></option>
+                    </select>
+                    <div class="invalid-feedback">Selecciona un cliente.</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="observaciones">Observaciones</label>
+                    <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
+                              th:text="${presupuesto?.observaciones}"></textarea>
+                </div>
+            </div>
+
+            <div class="form-section-divider">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="form-section-title mb-0">
+                        <i class="bi bi-list-ul"></i> Líneas del presupuesto
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm" id="addLineBtn">
+                        <i class="bi bi-plus me-1"></i>Añadir producto
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="lines-table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="col-qty">Cantidad</th>
+                                <th class="col-price">Precio unit.</th>
+                                <th class="col-iva">IVA %</th>
+                                <th class="col-dto">Dto %</th>
+                                <th class="col-sub text-end">Subtotal</th>
+                                <th class="col-del"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="presupuestoLineasBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="total-box mt-3">
+                    <span class="total-box-label">
+                        <i class="bi bi-calculator me-2"></i>Resumen
+                    </span>
+                    <div class="total-breakdown">
+                        <div class="total-breakdown-item">
+                            <span class="tbl">Base</span>
+                            <span class="tbv" id="baseDisplay">0,00 €</span>
+                        </div>
+                        <div class="total-breakdown-item">
+                            <span class="tbl">IVA</span>
+                            <span class="tbv" id="ivaDisplay">0,00 €</span>
+                        </div>
+                        <div class="total-breakdown-item highlight">
+                            <span class="tbl">Total</span>
+                            <span class="tbv" id="totalDisplay">0,00 €</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1"></i>Guardar presupuesto
+                </button>
+                <a th:href="@{/web/presupuestos}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <div id="presupuesto-form-data"
+         th:attr="data-lineas=${lineasJson}"
+         style="display:none">
+        <span th:each="a : ${articulos}"
+              th:attr="data-id=${a.id},data-texto=${(a.codigo ?: '') + ' — ' + (a.nombre ?: '')},data-pvp=${a.pvp != null ? a.pvp : 0},data-iva=${a.iva != null ? a.iva : 0}"
+              style="display:none"></span>
+    </div>
+    <script th:attr="nonce=${cspNonce}">
+        /* global TomSelect */
+        (function() {
+            const formData = document.getElementById('presupuesto-form-data');
+            const _lineasExistentes = [];
+            const _articulos = [];
+            const _articulosData = {};
+            try {
+                const l = JSON.parse(formData ? formData.getAttribute('data-lineas') : '[]');
+                if (Array.isArray(l)) _lineasExistentes.push(...l);
+            } catch(e) {}
+            document.querySelectorAll('#presupuesto-form-data span[data-id]').forEach(function(el) {
+                const id = el.getAttribute('data-id');
+                _articulos.push({id: id, texto: el.getAttribute('data-texto') || ''});
+                _articulosData[id] = {
+                    pvp: parseFloat(el.getAttribute('data-pvp') || '0'),
+                    iva: parseFloat(el.getAttribute('data-iva') || '0')
+                };
+            });
+
+            const tbody  = document.getElementById('presupuestoLineasBody');
+            const addBtn = document.getElementById('addLineBtn');
+            const baseEl = document.getElementById('baseDisplay');
+            const ivaEl  = document.getElementById('ivaDisplay');
+            const totalEl = document.getElementById('totalDisplay');
+            if (!tbody || !addBtn) return;
+            const fmt = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+
+            function parseNum(s) {
+                if (!s && s !== 0) return 0;
+                return parseFloat(String(s).replace(',', '.')) || 0;
+            }
+            function round2(n) { return Math.round(n * 100) / 100; }
+            function fmtDec(val) {
+                if (val === null || val === undefined || val === '') return '';
+                return String(val).replace('.', ',');
+            }
+
+            function recalcTotal() {
+                let base = 0, totalIva = 0;
+                tbody.querySelectorAll('tr').forEach(function(row) {
+                    const c  = parseNum(row.querySelector('.line-cantidad').value);
+                    const p  = parseNum(row.querySelector('.line-precio').value);
+                    const iv = parseNum(row.querySelector('.line-iva').value);
+                    const dt = parseNum(row.querySelector('.line-dto').value);
+                    const sub    = round2(c * p * (1 - dt / 100));
+                    const ivaAmt = round2(sub * iv / 100);
+                    row.querySelector('.line-subtotal').textContent = sub > 0 ? fmt.format(sub) : '—';
+                    base     = round2(base + sub);
+                    totalIva = round2(totalIva + ivaAmt);
+                });
+                if (baseEl)  baseEl.textContent  = fmt.format(base);
+                if (ivaEl)   ivaEl.textContent   = fmt.format(totalIva);
+                if (totalEl) totalEl.textContent = fmt.format(round2(base + totalIva));
+            }
+
+            function initTomSelect(sel) {
+                if (typeof TomSelect !== 'undefined' && !sel.tomselect) {
+                    try { new TomSelect(sel, { maxOptions: 500, searchField: ['text'],
+                        render: { no_results: function() { return '<div class="no-results">Sin resultados</div>'; } }
+                    }); } catch(e) {}
+                }
+            }
+
+            function buildSelect(selectedId) {
+                const sel = document.createElement('select');
+                sel.name = 'lineaArticuloId';
+                sel.className = 'form-select form-select-sm line-producto';
+                const empty = document.createElement('option');
+                empty.value = ''; empty.textContent = 'Seleccionar producto...';
+                sel.appendChild(empty);
+                _articulos.forEach(function(a) {
+                    const opt = document.createElement('option');
+                    opt.value = a.id; opt.textContent = a.texto;
+                    if (selectedId && String(a.id) === String(selectedId)) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+                return sel;
+            }
+
+            function makeInput(name, cssClass, placeholder, value) {
+                const inp = document.createElement('input');
+                inp.type = 'text'; inp.inputMode = 'decimal';
+                inp.name = name;
+                inp.className = 'form-control form-control-sm ' + cssClass + ' line-input';
+                inp.placeholder = placeholder;
+                if (value !== undefined && value !== null) inp.value = value;
+                return inp;
+            }
+
+            function addRow(data) {
+                const tr = document.createElement('tr');
+                const sel    = buildSelect(data && data.articuloId);
+                const cant   = makeInput('lineaCantidad',  'line-cantidad', '0',    data && fmtDec(data.cantidad));
+                const precio = makeInput('lineaPrecio',    'line-precio',   '0,00', data && fmtDec(data.precio));
+                const iva    = makeInput('lineaIva',       'line-iva',      '21',   data && fmtDec(data.iva));
+                const dto    = makeInput('lineaDescuento', 'line-dto',      '0',    data && fmtDec(data.descuento));
+
+                const tdSel    = document.createElement('td'); tdSel.appendChild(sel);
+                const tdCant   = document.createElement('td'); tdCant.appendChild(cant);
+                const tdPrecio = document.createElement('td'); tdPrecio.appendChild(precio);
+                const tdIva    = document.createElement('td'); tdIva.appendChild(iva);
+                const tdDto    = document.createElement('td'); tdDto.appendChild(dto);
+                const tdSub    = document.createElement('td');
+                tdSub.className = 'line-subtotal'; tdSub.textContent = '—';
+                const tdDel  = document.createElement('td');
+                const btnDel = document.createElement('button');
+                btnDel.type = 'button';
+                btnDel.className = 'btn btn-ghost btn-sm text-danger line-remove btn-remove-line p-1';
+                btnDel.title = 'Eliminar línea';
+                btnDel.innerHTML = '<i class="bi bi-trash3"></i>';
+                tdDel.appendChild(btnDel);
+
+                [tdSel, tdCant, tdPrecio, tdIva, tdDto, tdSub, tdDel].forEach(function(td) { tr.appendChild(td); });
+
+                sel.addEventListener('change', function() {
+                    const art = _articulosData[sel.value];
+                    if (art) {
+                        if (!precio.value) precio.value = (Number(art.pvp) || 0).toFixed(2).replace('.', ',');
+                        if (!iva.value)    iva.value    = String(art.iva != null ? art.iva : 0).replace('.', ',');
+                    }
+                    recalcTotal();
+                });
+                [cant, precio, iva, dto].forEach(function(inp) { inp.addEventListener('input', recalcTotal); });
+
+                tbody.appendChild(tr);
+                initTomSelect(sel);
+
+                btnDel.addEventListener('click', function() {
+                    tr.remove();
+                    if (!tbody.querySelectorAll('tr').length) addRow();
+                    recalcTotal();
+                });
+                recalcTotal();
+            }
+
+            addBtn.addEventListener('click', function() { addRow(); });
+
+            if (_lineasExistentes.length > 0) {
+                _lineasExistentes.forEach(function(l) { addRow(l); });
+            } else {
+                addRow();
+            }
+        })();
+    </script>
+</div>

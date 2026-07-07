@@ -1,0 +1,142 @@
+<div th:fragment="content" x-data="inventarioApp" x-cloak>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4>Reportes de inventario</h4>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-ghost btn-sm" @click="setTab('valoracion')" :class="tabClass('valoracion')">Valoración</button>
+            <button class="btn btn-ghost btn-sm" @click="setTab('movimientos')" :class="tabClass('movimientos')">Movimientos</button>
+            <button class="btn btn-ghost btn-sm" @click="setTab('ajustar')" :class="tabClass('ajustar')">Ajustar stock</button>
+        </div>
+    </div>
+
+    <!-- Valoración -->
+    <div x-show="isTab('valoracion')" class="stat-card">
+        <h6 class="mb-3">Valoración de inventario</h6>
+        <div class="mb-3">
+            <strong>Valor total: </strong><span x-text="money(totalValor)"></span>
+        </div>
+        <table class="table table-sm">
+            <thead><tr><th>Código</th><th>Artículo</th><th class="text-end">Stock</th><th class="text-end">Coste</th><th class="text-end">Valor</th></tr></thead>
+            <tbody>
+                <template x-for="i in items" :key="i.id">
+                    <tr>
+                        <td x-text="i.codigo"></td>
+                        <td x-text="i.nombre"></td>
+                        <td class="text-end" x-text="i.stock"></td>
+                        <td class="text-end" x-text="i.coste"></td>
+                        <td class="text-end" x-text="money(i.valor)"></td>
+                    </tr>
+                </template>
+                <tr x-show="items.length === 0">
+                    <td colspan="5" class="empty-state"><i class="bi bi-box-seam"></i><div>Sin datos de inventario</div></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Movimientos -->
+    <div x-show="isTab('movimientos')">
+        <div class="stat-card mb-3">
+            <div class="d-flex gap-2 align-items-center">
+                <label>Desde: <input type="date" x-model="desde" class="form-control form-control-sm d-inline" style="width:auto"></label>
+                <label>Hasta: <input type="date" x-model="hasta" class="form-control form-control-sm d-inline" style="width:auto"></label>
+                <button class="btn btn-sm btn-primary" @click="cargarMovimientos()">Filtrar</button>
+            </div>
+        </div>
+        <div class="stat-card">
+            <table class="table table-sm">
+                <thead><tr><th>Fecha</th><th>Tipo</th><th>Artículo</th><th class="text-end">Cantidad</th><th>Concepto</th></tr></thead>
+                <tbody>
+                    <template x-for="m in movimientos" :key="m.id">
+                        <tr>
+                            <td x-text="fechaCorta(m.fecha)"></td>
+                            <td><span class="badge" :class="badgeMovimiento(m.tipo)" x-text="m.tipo"></span></td>
+                            <td x-text="nombreArticulo(m)"></td>
+                            <td class="text-end" x-text="m.cantidad"></td>
+                            <td x-text="m.concepto"></td>
+                        </tr>
+                    </template>
+                    <tr x-show="movimientos.length === 0">
+                        <td colspan="5" class="empty-state"><i class="bi bi-arrow-left-right"></i><div>Sin movimientos en el período</div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Ajustar stock -->
+    <div x-show="isTab('ajustar')" class="stat-card" style="max-width:500px">
+        <h6 class="mb-3">Ajuste manual de stock</h6>
+        <div class="form-grid">
+            <div class="form-field">
+                <label>Artículo</label>
+                <select class="form-select" x-model="ajuste.articuloId">
+                    <option value="">Seleccionar...</option>
+                    <template x-for="a in lookups.articuloId" :key="a.id">
+                        <option :value="a.id" x-text="a.label"></option>
+                    </template>
+                </select>
+            </div>
+            <div class="form-field">
+                <label>Nueva cantidad</label>
+                <input type="number" class="form-control" x-model="ajuste.cantidadNueva">
+            </div>
+            <div class="form-field">
+                <label>Motivo</label>
+                <input type="text" class="form-control" x-model="ajuste.motivo">
+            </div>
+        </div>
+        <button class="btn btn-primary mt-3" @click="ajustarStock()">Aplicar ajuste</button>
+    </div>
+
+    <script th:attr="nonce=${cspNonce}">
+        document.addEventListener('alpine:init', function () {
+            Alpine.data('inventarioApp', function () {
+                return {
+                tab: 'valoracion',
+                items: [],
+                totalValor: 0,
+                movimientos: [],
+                desde: '',
+                hasta: '',
+                lookups: {articuloId:[]},
+                ajuste: {articuloId: '', cantidadNueva: '', motivo: ''},
+                init() {
+                    this.desde = new Date(Date.now() - 30*86400000).toISOString().split('T')[0];
+                    this.hasta = new Date().toISOString().split('T')[0];
+                    Promise.all([
+                        fetch('/api/web/reportes/inventario/valoracion').then(r=>r.json()),
+                        fetch('/api/web/articulos').then(r=>r.json()),
+                    ]).then(([val, arts]) => {
+                        this.items = val.items || [];
+                        this.totalValor = val.totalValor || 0;
+                        this.lookups.articuloId = (arts || []).map(a => ({id: a.id, label: a.nombre || a.label || a.codigo}));
+                    }).catch(err => console.error('Error cargando inventario', err));
+                    this.cargarMovimientos();
+                },
+                isTab(name) { return this.tab === name; },
+                setTab(name) { this.tab = name; },
+                tabClass(name) { return this.tab === name ? 'btn-primary' : ''; },
+                money(value) { return formatMoneyEs(value); },
+                fechaCorta(fecha) { return fecha ? String(fecha).substring(0, 10) : ''; },
+                badgeMovimiento(tipo) { return tipo === 'ENTRADA' ? 'bg-success' : 'bg-danger'; },
+                nombreArticulo(m) { return m.articulo ? m.articulo.nombre : String(m.articuloId || ''); },
+                cargarMovimientos() {
+                    fetch('/api/web/reportes/inventario/movimientos?desde=' + this.desde + '&hasta=' + this.hasta)
+                        .then(r=>r.json())
+                        .then(data => { this.movimientos = data || []; })
+                        .catch(err => console.error('Error cargando movimientos', err));
+                },
+                ajustarStock() {
+                    const {articuloId, cantidadNueva, motivo} = this.ajuste;
+                    if (!articuloId || !cantidadNueva) { alert('Selecciona artículo y cantidad'); return; }
+                    fetch('/api/web/reportes/inventario/ajustar?articuloId=' + articuloId + '&cantidadNueva=' + cantidadNueva + '&motivo=' + encodeURIComponent(motivo), {method:'POST'})
+                        .then(() => { alert('Ajuste aplicado'); this.ajuste = {articuloId:'', cantidadNueva:'', motivo:''}; })
+                        .catch(err => alert('Error al ajustar stock: ' + err.message));
+                }
+                };
+            });
+        });
+    </script>
+</div>

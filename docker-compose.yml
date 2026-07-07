@@ -1,0 +1,116 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: erp-mysql
+    restart: unless-stopped
+    environment:
+      # Sin valores por defecto: obliga a definir las contraseñas en .env (copia .env.example)
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD - copia .env.example a .env y rellena los secretos}"
+      MYSQL_DATABASE: tahona
+      MYSQL_USER: tahona
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:?Falta MYSQL_PASSWORD - copia .env.example a .env y rellena los secretos}"
+    ports:
+      # 3307 por defecto para no chocar con un MySQL local en 3306
+      - "${MYSQL_HOST_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      # MYSQL_PWD evita que la contraseña aparezca en la línea de comandos (visible con ps)
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h localhost -u root"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    # Imagen nombrada: en desarrollo "docker compose build/--build" la reconstruye;
+    # en el escritorio del cliente se carga pre-construida (docker load) y "up" la usa
+    # sin necesidad de compilar (sin JDK/Maven ni internet).
+    image: erp-tahona:latest
+    build: .
+    container_name: erp-app
+    restart: unless-stopped
+    # Sin "ports": la app solo es alcanzable desde la red interna del compose;
+    # todo el tráfico externo entra por el proxy TLS (servicio "proxy")
+    expose:
+      - "8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/tahona?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: tahona
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SERVER_PORT: 8080
+      # ── Secretos obligatorios: defínelos en .env (copia .env.example) ──
+      ADMIN_DEFAULT_PASSWORD: "${ADMIN_DEFAULT_PASSWORD:?Falta ADMIN_DEFAULT_PASSWORD - copia .env.example a .env y rellena los secretos}"
+      CIFRADO_AES_KEY: "${CIFRADO_AES_KEY:?Falta CIFRADO_AES_KEY - generala con openssl rand -base64 32}"
+      SECURITY_PBKDF2_SECRET: "${SECURITY_PBKDF2_SECRET:?Falta SECURITY_PBKDF2_SECRET - generalo con openssl rand -base64 32}"
+      # ── VeriFactu: vacío = firma/remisión deshabilitadas hasta tener certificado ──
+      VERIFACTU_CERT_PATH: ${VERIFACTU_CERT_PATH:-}
+      VERIFACTU_CERT_PASSWORD: ${VERIFACTU_CERT_PASSWORD:-}
+      VERIFACTU_KEY_ALIAS: ${VERIFACTU_KEY_ALIAS:-mi_certificado}
+      # Si no se define aparte, la clave usa la contraseña del almacén (.p12).
+      VERIFACTU_KEY_PASSWORD: ${VERIFACTU_KEY_PASSWORD:-${VERIFACTU_CERT_PASSWORD:-}}
+      VERIFACTU_AEAT_ENABLED: ${VERIFACTU_AEAT_ENABLED:-false}
+      # Endpoint oficial. Pruebas (homologación): prewww1; producción: www1
+      # (o www10 con certificado de sello). El guard de prod rechaza arrancar
+      # con remisión activa apuntando a un endpoint de pruebas (prewww).
+      VERIFACTU_AEAT_ENDPOINT: ${VERIFACTU_AEAT_ENDPOINT:-https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP}
+      # Identidad del productor del software (bloque SistemaInformatico del XML)
+      VERIFACTU_SISTEMA_NOMBRE_PRODUCTOR: ${VERIFACTU_SISTEMA_NOMBRE_PRODUCTOR:-}
+      VERIFACTU_SISTEMA_NIF_PRODUCTOR: ${VERIFACTU_SISTEMA_NIF_PRODUCTOR:-}
+      VERIFACTU_SISTEMA_ID: ${VERIFACTU_SISTEMA_ID:-01}
+      VERIFACTU_SISTEMA_NUMERO_INSTALACION: ${VERIFACTU_SISTEMA_NUMERO_INSTALACION:-1}
+      VERIFACTU_QR_BASE_URL: ${VERIFACTU_QR_BASE_URL:-https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR}
+      ERP_LOG_FILE: logs/erp-tahona.log
+      # ── TLS: el proxy Caddy sirve HTTPS, así que la cookie segura va activa.
+      # Solo tendría sentido ponerla a false si se quitara el proxy (no recomendado).
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
+      # ── Email (opcional): envío de facturas PDF a clientes ──
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    volumes:
+      # Conservación: backups, declaraciones responsables/PDFs y logs sobreviven al contenedor
+      - erp_backups:/app/backups
+      - erp_impresiones:/app/impresiones
+      - erp_logs:/app/logs
+      # Certificado VeriFactu (solo lectura); apunta VERIFACTU_CERT_PATH a certs/<fichero>.p12
+      - ./certs:/app/certs:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      # /actuator/health comprueba app + conexión a BD (no solo que Tomcat responda)
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  proxy:
+    image: caddy:2-alpine
+    container_name: erp-caddy
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      # Dominio del sitio y modo TLS: ver deploy/Caddyfile y .env.example
+      ERP_DOMAIN: ${ERP_DOMAIN:-localhost}
+      ERP_TLS_MODE: ${ERP_TLS_MODE:-internal}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # /data guarda certificados y la CA interna: debe sobrevivir al contenedor
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+  erp_backups:
+  erp_impresiones:
+  erp_logs:
+  caddy_data:
+  caddy_config:

@@ -3,8 +3,8 @@
 ## Principios
 
 - Produccion debe usar perfil `prod`.
-- Los secretos se cargan desde entorno o `.env.production.local`.
-- `.env.production.local` esta ignorado por Git.
+- Los secretos se cargan desde variables de entorno; con Docker Compose, desde el fichero `.env` (plantilla: `.env.example`).
+- `.env` esta ignorado por Git.
 - No se debe compartir el usuario `admin` para trabajo diario.
 - Cada usuario debe tener permisos minimos suficientes.
 
@@ -72,14 +72,24 @@ Acciones habituales:
 - `restaurar`
 - `enviar`
 
-## Protecciones aplicadas
+## Estado de aplicacion de permisos
 
-- El menu principal oculta modulos sin permiso `ver`.
-- Las acciones genericas de crear, editar y eliminar comprueban permisos.
-- Usuarios exige permisos del modulo `usuarios`.
-- Backups exige permisos `backup.crear`, `backup.restaurar` y `backup.eliminar`.
-- Auditoria exige `auditoria.exportar`.
-- VERI*FACTU exige permisos `verifactu.enviar` o `verifactu.exportar` segun la accion.
+La matriz JSON de permisos **se aplica en el servidor** (no solo en la UI) desde julio de 2026. Hay dos barreras complementarias:
+
+1. **Reglas por URL y rol Spring Security** (`SecurityConfig`):
+   - Usuarios, roles, empresa, backups y auditoria requieren `ADMIN` o `ADMINISTRADOR`.
+   - Fiscalidad, contabilidad, tesoreria y el ajuste de inventario requieren ademas `CONTABLE` o rol administrativo.
+   - Las eliminaciones mediante CRUD generico requieren rol administrativo.
+   - El resto de superficies web y API exige un usuario autenticado.
+   - CSRF permanece activo para formularios y APIs basadas en sesion.
+
+2. **Permisos granulares por modulo/accion** (`PermisoEvaluador`, bean `@permisos`):
+   - Los endpoints REST llevan `@PreAuthorize("@permisos.puede('<modulo>', '<accion>')")` metodo a metodo (GET→ver, POST→crear, PUT→editar, DELETE→eliminar).
+   - Las APIs genericas (`WebEntityController`, `WebChildEntityController`) resuelven el modulo de la entidad y deniegan por defecto si no hay mapeo.
+   - Los modulos `facturas` y `facturas-compra` son de solo lectura en la API generica (inalterabilidad RRSIF); las lineas de facturas emitidas o enviadas a VeriFactu rechazan cualquier escritura.
+   - Los ADMIN conservan acceso total.
+
+Las pruebas negativas por modulo/accion estan en `RestApiPermisosTest` (403 sin permiso, operacion correcta con el).
 
 ## Recomendacion de operacion
 

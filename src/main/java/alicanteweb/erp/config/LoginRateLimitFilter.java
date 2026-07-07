@@ -1,0 +1,95 @@
+package alicanteweb.erp.config;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Rate limiting para el endpoint de login.
+ * 10 intentos por minuto por IP.
+ * Superado ese límite, se bloquea la IP durante 1 minuto.
+ */
+public class LoginRateLimitFilter extends OncePerRequestFilter {
+
+    private static final int MAX_ATTEMPTS = 10;
+    private static final long WINDOW_MS = 60_000;   // 1 minuto
+    private static final long COOLDOWN_MS = 60_000;  // 1 minuto de bloqueo
+    // Umbral a partir del cual se purgan entradas inactivas (evita crecimiento sin límite del mapa)
+    private static final int CLEANUP_THRESHOLD = 10_000;
+
+    private final ConcurrentHashMap<String, AttemptWindow> attemptsByIp = new ConcurrentHashMap<>();
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        if (!"/web/login".equals(request.getServletPath()) || !"POST".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String ip = getClientIp(request);
+        long now = System.currentTimeMillis();
+        if (attemptsByIp.size() > CLEANUP_THRESHOLD) {
+            attemptsByIp.values().removeIf(w -> now - w.lastAttempt > WINDOW_MS + COOLDOWN_MS);
+        }
+        AttemptWindow window = attemptsByIp.computeIfAbsent(ip, k -> new AttemptWindow(now));
+
+        synchronized (window) {
+            if (window.blockedUntil > 0) {
+                if (now < window.blockedUntil) {
+                    response.setStatus(429);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"status\":429,\"error\":\"Too Many Requests\",\"message\":\"Demasiados intentos. Espera un minuto.\"}");
+                    return;
+                }
+                // Cooldown terminado: resetear
+                window.reset(now);
+            } else if (now - window.windowStart > WINDOW_MS) {
+                // Ventana caducada: resetear
+                window.reset(now);
+            }
+            window.count++;
+            window.lastAttempt = now;
+            if (window.count >= MAX_ATTEMPTS) {
+                window.blockedUntil = now + COOLDOWN_MS;
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        // No leer X-Forwarded-For directamente: cualquiera puede falsificarlo y saltarse
+        // el límite (o bloquear IPs ajenas). Detrás de un proxy, configura
+        // server.forward-headers-strategy (ya en application-prod.properties) para que
+        // el contenedor resuelva la IP real solo desde proxies de confianza.
+        return request.getRemoteAddr();
+    }
+
+    private static class AttemptWindow {
+        long windowStart;
+        int count;
+        long lastAttempt;
+        long blockedUntil;
+
+        AttemptWindow(long now) {
+            this.windowStart = now;
+            this.count = 0;
+            this.lastAttempt = now;
+            this.blockedUntil = 0;
+        }
+
+        void reset(long now) {
+            this.windowStart = now;
+            this.count = 0;
+            this.lastAttempt = now;
+            this.blockedUntil = 0;
+        }
+    }
+}

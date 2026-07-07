@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Service
@@ -13,15 +14,37 @@ public class ImportService {
 
     public record ImportResult(int total, int ok, int errores, List<String> mensajes) {}
 
+    private static String[] parseCsv(String line) {
+        List<String> cols = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    sb.append('"'); i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (c == ';' && !inQuotes) {
+                cols.add(sb.toString().trim()); sb.setLength(0);
+            } else {
+                sb.append(c);
+            }
+        }
+        cols.add(sb.toString().trim());
+        return cols.toArray(new String[0]);
+    }
+
     public ImportResult importarClientes(MultipartFile file, ClienteService service) {
         List<String> msgs = new ArrayList<>(); int total = 0, ok = 0;
-        try (BufferedReader r = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"))) {
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             String header = r.readLine(); total = -1;
             String line;
             while ((line = r.readLine()) != null) {
                 total++;
                 try {
-                    String[] cols = line.split(";");
+                    String[] cols = parseCsv(line);
                     if (cols.length < 2) continue;
                     Cliente c = new Cliente();
                     c.setCodigo(cols[0].trim());
@@ -40,13 +63,13 @@ public class ImportService {
 
     public ImportResult importarArticulos(MultipartFile file, ArticuloService service) {
         List<String> msgs = new ArrayList<>(); int total = 0, ok = 0;
-        try (BufferedReader r = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"))) {
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             r.readLine(); total = -1;
             String line;
             while ((line = r.readLine()) != null) {
                 total++;
                 try {
-                    String[] cols = line.split(";");
+                    String[] cols = parseCsv(line);
                     if (cols.length < 2) continue;
                     Articulo a = new Articulo();
                     a.setCodigo(cols[0].trim()); a.setNombre(cols[1].trim());

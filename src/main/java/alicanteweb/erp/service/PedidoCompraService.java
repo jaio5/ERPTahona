@@ -11,6 +11,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +58,14 @@ public class PedidoCompraService {
 
     public List<PedidoCompra> findByEstado(String estado) {
         return repository.findByEstado(estado);
+    }
+
+    public List<PedidoCompra> buscar(String q) {
+        return repository.buscar(q);
+    }
+
+    public Page<PedidoCompra> findPage(String q, String estado, Pageable pageable) {
+        return repository.findPage(q, estado, pageable);
     }
 
     @Transactional
@@ -121,5 +132,9 @@ public class PedidoCompraService {
                 .orElseThrow(() -> new IllegalArgumentException("Pedido de compra no encontrado: " + id));
         pedido.setEstado(nuevoEstado);
         return repository.save(pedido);
+    }
+
+    public long count() {
+        return repository.count();
     }
 }

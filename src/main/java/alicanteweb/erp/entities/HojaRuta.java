@@ -90,4 +90,13 @@ public class HojaRuta {
 
     @Override
     public String toString() { return "HojaRuta{id=" + id + ", fecha=" + fecha + "}"; }
+
+    public alicanteweb.erp.entities.enums.EstadoHojaRutaEnum getEstadoEnum() {
+        if (estado == null) return null;
+        try {
+            return alicanteweb.erp.entities.enums.EstadoHojaRutaEnum.valueOf(estado);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 }

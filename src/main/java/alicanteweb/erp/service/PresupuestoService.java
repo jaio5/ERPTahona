@@ -8,6 +8,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
+import alicanteweb.erp.util.FinancialMath;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -23,6 +30,9 @@ import java.util.Optional;
 public class PresupuestoService {
     private static final Logger log = LoggerFactory.getLogger(PresupuestoService.class);
 
+    private static final PageRequest LISTA_PAGEABLE =
+            PageRequest.of(0, 200, Sort.by(Sort.Direction.DESC, "fecha"));
+
     private final PresupuestoRepository presupuestoRepository;
     private final FacturaService facturaService;
 
@@ -37,6 +47,17 @@ public class PresupuestoService {
     public List<Presupuesto> obtenerTodos() {
         log.debug("Obteniendo todos los presupuestos");
         return presupuestoRepository.findAllOrdenados();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Presupuesto> obtenerTodos(Pageable pageable) {
+        log.debug("Obteniendo todos los presupuestos paginados");
+        return presupuestoRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Presupuesto> obtenerTodosLimitado() {
+        return presupuestoRepository.findAll(LISTA_PAGEABLE).getContent();
     }
 
     /**
@@ -75,6 +96,12 @@ public class PresupuestoService {
         return presupuestoRepository.findByEstado(estado);
     }
 
+    @Transactional(readOnly = true)
+    public Page<Presupuesto> buscarPorEstado(String estado, Pageable pageable) {
+        log.debug("Buscando presupuestos con estado: {} (paginado)", estado);
+        return presupuestoRepository.findByEstado(estado, pageable);
+    }
+
     /**
      * Busca presupuestos por texto
      */
@@ -82,6 +109,12 @@ public class PresupuestoService {
     public List<Presupuesto> buscar(String busqueda) {
         log.debug("Buscando presupuestos con: {}", busqueda);
         return presupuestoRepository.buscar(busqueda);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Presupuesto> buscar(String busqueda, Pageable pageable) {
+        log.debug("Buscando presupuestos con: {} (paginado)", busqueda);
+        return presupuestoRepository.buscar(busqueda, pageable);
     }
 
     /**
@@ -153,41 +186,6 @@ public class PresupuestoService {
             .orElseThrow(() -> new RuntimeException("Presupuesto no encontrado: " + id));
     }
 
-    // ============================================
-    // Métodos adicionales para compatibilidad con tests
-    // ============================================
-
-    /**
-     * Guarda un presupuesto (alias de guardar)
-     */
-    public Presupuesto save(Presupuesto presupuesto) {
-        return guardar(presupuesto);
-    }
-
-    /**
-     * Obtiene un presupuesto por ID (alias de obtenerPorId)
-     */
-    @Transactional(readOnly = true)
-    public Optional<Presupuesto> findById(Long id) {
-        return obtenerPorId(id);
-    }
-
-    /**
-     * Obtiene todos los presupuestos (alias de obtenerTodos)
-     */
-    @Transactional(readOnly = true)
-    public List<Presupuesto> findAll() {
-        return obtenerTodos();
-    }
-
-    /**
-     * Busca presupuestos por cliente (alias de buscarPorCliente)
-     */
-    @Transactional(readOnly = true)
-    public List<Presupuesto> findByCliente(Long clienteId) {
-        return buscarPorCliente(clienteId);
-    }
-
     /**
      * Acepta un presupuesto
      */
@@ -214,21 +212,6 @@ public class PresupuestoService {
         return presupuesto.getFechaValidez().isBefore(LocalDate.now());
     }
 
-    /**
-     * Obtiene los presupuestos pendientes
-     */
-    @Transactional(readOnly = true)
-    public List<Presupuesto> findPendientes() {
-        return buscarPorEstado("PENDIENTE");
-    }
-
-    /**
-     * Elimina un presupuesto (alias de eliminar)
-     */
-    public void deleteById(Long id) {
-        eliminar(id);
-    }
-
     // ==========================================
     // FLUJO COMPLETO - MÉTODOS AVANZADOS
     // ==========================================
@@ -237,7 +220,7 @@ public class PresupuestoService {
      * Convierte un presupuesto en factura
      */
     public Factura convertirAFactura(Long presupuestoId, Usuario usuario) {
-        log.info("🔄 Convirtiendo presupuesto {} a factura", presupuestoId);
+        log.info("[CONVERSION] Convirtiendo presupuesto {} a factura", presupuestoId);
 
         Presupuesto presupuesto = presupuestoRepository.findById(presupuestoId)
             .orElseThrow(() -> new IllegalArgumentException("Presupuesto no encontrado"));
@@ -273,20 +256,14 @@ public class PresupuestoService {
             lineaFactura.setIva(lineaPresupuesto.getTipoIva());
 
             // Calcular totales
-            BigDecimal subtotal = lineaPresupuesto.getCantidad().multiply(lineaPresupuesto.getPrecioUnitario());
-            if (lineaPresupuesto.getDescuento() != null && lineaPresupuesto.getDescuento().compareTo(BigDecimal.ZERO) > 0) {
-                BigDecimal descuentoImporte = subtotal.multiply(lineaPresupuesto.getDescuento())
-                    .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-                subtotal = subtotal.subtract(descuentoImporte);
-            }
+            BigDecimal subtotal = FinancialMath.subtotalConDescuento(
+                    lineaPresupuesto.getCantidad(), lineaPresupuesto.getPrecioUnitario(), lineaPresupuesto.getDescuento());
 
             lineaFactura.setTotal(subtotal);
             baseImponible = baseImponible.add(subtotal);
 
             if (lineaPresupuesto.getTipoIva() != null) {
-                BigDecimal ivaLinea = subtotal.multiply(lineaPresupuesto.getTipoIva())
-                    .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-                totalIva = totalIva.add(ivaLinea);
+                totalIva = totalIva.add(FinancialMath.porcentaje(subtotal, lineaPresupuesto.getTipoIva()));
             }
 
             factura.getFacturaLineas().add(lineaFactura);
@@ -303,7 +280,7 @@ public class PresupuestoService {
         presupuesto.setEstado("FACTURADO");
         presupuestoRepository.save(presupuesto);
 
-        log.info("✅ Presupuesto convertido a factura: {} -> {}", presupuesto.getNumero(), facturaGuardada.getNumero());
+        log.info("[OK] Presupuesto convertido a factura: {} -> {}", presupuesto.getNumero(), facturaGuardada.getNumero());
 
         return facturaGuardada;
     }
@@ -343,7 +320,7 @@ public class PresupuestoService {
         }
 
         Presupuesto guardado = presupuestoRepository.save(duplicado);
-        log.info("✅ Presupuesto duplicado: {}", guardado.getNumero());
+        log.info("[OK] Presupuesto duplicado: {}", guardado.getNumero());
 
         return guardado;
     }
@@ -367,7 +344,7 @@ public class PresupuestoService {
             }
         }
 
-        log.info("✅ {} presupuestos marcados como caducados", caducados);
+        log.info("[OK] {} presupuestos marcados como caducados", caducados);
         return caducados;
     }
 }

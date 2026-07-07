@@ -1,16 +1,83 @@
-<section>
-    <div class="topbar"><h4 th:text="${titulo}">Pedidos de compra</h4><a th:href="@{/web/pedidos-compra/nuevo}" class="btn btn-success btn-sm">+ Nuevo</a></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
-    <table class="table table-sm table-hover">
-        <thead><tr><th>Numero</th><th>Fecha</th><th>Proveedor</th><th>Estado</th></tr></thead>
-        <tbody>
-        <tr th:each="p : ${pedidos}">
-            <td th:text="${p.numero} ?: ${p.id}"></td>
-            <td th:text="${p.fecha}"></td>
-            <td th:text="${p.proveedor != null ? p.proveedor.nombre : ''}"></td>
-            <td th:text="${p.estado}"></td>
-        </tr>
-        </tbody>
-    </table>
-</section>
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Pedidos de compra</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/pedidos-compra/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo pedido
+            </a>
+        </div>
+    </div>
+
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/pedidos-compra}">
+        <div class="filter-bar-search">
+            <label for="pedidos-search" class="visually-hidden">Buscar pedidos</label>
+            <i class="bi bi-search"></i>
+            <input id="pedidos-search" type="search" name="q" class="form-control form-control-sm"
+                   placeholder="Número o proveedor..." th:value="${q}" autocomplete="off">
+        </div>
+        <div class="filter-bar-filters">
+            <select name="estado" class="form-select form-select-sm" style="width:150px;">
+                <option value="">Todos los estados</option>
+                <option value="BORRADOR"    th:selected="${estado == 'BORRADOR'}">Borrador</option>
+                <option value="PENDIENTE"   th:selected="${estado == 'PENDIENTE'}">Pendiente</option>
+                <option value="CONFIRMADO"  th:selected="${estado == 'CONFIRMADO'}">Confirmado</option>
+                <option value="RECIBIDO"    th:selected="${estado == 'RECIBIDO'}">Recibido</option>
+                <option value="CANCELADO"   th:selected="${estado == 'CANCELADO'}">Cancelado</option>
+            </select>
+        </div>
+        <div class="filter-bar-actions">
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-funnel me-1"></i>Filtrar
+            </button>
+            <a th:href="@{/web/pedidos-compra}" class="btn btn-ghost btn-sm">Limpiar</a>
+            <span class="text-muted small" th:if="${page != null}">
+                <span th:text="${page.totalElements}">0</span> pedidos
+            </span>
+        </div>
+    </form>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Fecha</th>
+                        <th>Proveedor</th>
+                        <th>Estado</th>
+                        <th style="width:80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(pedidos)}">
+                        <td colspan="5" class="empty-state">
+                            <i class="bi bi-bag-check"></i>
+                            <div>No hay pedidos de compra</div>
+                        </td>
+                    </tr>
+                    <tr th:each="p : ${pedidos}">
+                        <td><a th:href="@{/web/pedidos-compra/{id}(id=${p.id})}"
+                               class="fw-medium text-decoration-none" th:text="${p.numero ?: '—'}"></a></td>
+                        <td class="text-muted small"
+                            th:text="${p.fecha != null ? #temporals.format(p.fecha, 'dd/MM/yyyy') : '—'}"></td>
+                        <td th:text="${p.proveedor?.nombre ?: '—'}"></td>
+                        <td>
+                            <span class="badge-status" th:attr="data-status=${p.estado?.toLowerCase()}"
+                                  th:text="${p.estado ?: '—'}"></span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{/web/pedidos-compra/{id}(id=${p.id})}"
+                               class="btn btn-ghost btn-sm" title="Ver">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/pedidos-compra')}"></div>
+</div>

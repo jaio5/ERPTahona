@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/>
+<style>
+@page { size: A4; margin: 15mm 12mm; }
+* { box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #222; margin: 0; }
+.header { border-bottom: 3px solid #1a3a5c; padding-bottom: 8px; margin-bottom: 12px; }
+.doc-titulo { font-size: 20px; font-weight: bold; color: #1a3a5c; }
+.meta-table { width: 50%; border-collapse: collapse; font-size: 10px; margin-bottom: 14px; }
+.meta-table td { padding: 3px 8px 3px 0; }
+.meta-table td:first-child { color: #666; width: 100px; }
+table.paradas { width: 100%; border-collapse: collapse; font-size: 10px; }
+table.paradas thead tr { background-color: #1a3a5c; color: white; }
+table.paradas thead th { padding: 6px 8px; text-align: left; }
+table.paradas tbody tr:nth-child(even) { background-color: #f7f9fb; }
+table.paradas tbody td { padding: 5px 8px; border-bottom: 1px solid #eee; }
+.st-entregado { color: #2e7d32; font-weight: bold; }
+.st-pendiente { color: #e65100; }
+.st-incidencia { color: #c62828; font-weight: bold; }
+.incidencias-box { margin-top: 14px; padding: 8px; background-color: #fff3e0; border: 1px solid #ff9800; font-size: 10px; }
+.footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 8px; color: #999; text-align: center; }
+.firma-row td { padding-top: 40px; font-size: 9px; color: #666; border-top: 1px solid #999; text-align: center; width: 200px; }
+</style>
+</head>
+<body>
+
+<!-- Cabecera -->
+<div class="header">
+  <span class="doc-titulo">HOJA DE RUTA</span>
+  <span style="font-size:13px;color:#555;margin-left:16px;" th:text="${empresa.nombreEmpresa}"></span>
+</div>
+
+<!-- Meta info -->
+<table class="meta-table">
+  <tr>
+    <td>Fecha</td>
+    <td><strong th:text="${hojaRuta.fecha != null ? #temporals.format(hojaRuta.fecha, 'dd/MM/yyyy') : '-'}"></strong></td>
+  </tr>
+  <tr>
+    <td>Conductor</td>
+    <td th:text="${hojaRuta.conductor != null ? hojaRuta.conductor : 'Sin asignar'}">-</td>
+  </tr>
+  <tr>
+    <td>Vehículo</td>
+    <td th:text="${hojaRuta.vehiculo != null ? hojaRuta.vehiculo.matricula : 'Sin asignar'}">-</td>
+  </tr>
+  <tr>
+    <td>Estado</td>
+    <td th:text="${hojaRuta.estado}">PLANIFICADA</td>
+  </tr>
+  <tr th:if="${hojaRuta.horaSalida != null}">
+    <td>Salida</td>
+    <td th:text="${#temporals.format(hojaRuta.horaSalida, 'HH:mm')}">-</td>
+  </tr>
+  <tr th:if="${hojaRuta.horaLlegada != null}">
+    <td>Llegada</td>
+    <td th:text="${#temporals.format(hojaRuta.horaLlegada, 'HH:mm')}">-</td>
+  </tr>
+</table>
+
+<!-- Paradas / entregas -->
+<table class="paradas">
+  <thead>
+    <tr>
+      <th style="width:35px;">#</th>
+      <th>Cliente</th>
+      <th>Dirección</th>
+      <th style="width:90px;">Estado</th>
+      <th style="width:100px;">Recibido por</th>
+      <th>Incidencia</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr th:each="e : ${entregas}">
+      <td th:text="${e.orden != null ? e.orden : '-'}">1</td>
+      <td th:text="${e.cliente != null ? e.cliente.nombre : '-'}">-</td>
+      <td th:text="${e.cliente != null and e.cliente.direccion != null ? e.cliente.direccion : '-'}">-</td>
+      <td>
+        <span th:if="${e.incidencia != null and !e.incidencia.isEmpty()}" class="st-incidencia">INCIDENCIA</span>
+        <span th:if="${e.incidencia == null or e.incidencia.isEmpty()}"
+              th:classappend="${e.entregado != null and e.entregado ? 'st-entregado' : 'st-pendiente'}"
+              th:text="${e.entregado != null and e.entregado ? (e.estadoEntrega != null ? e.estadoEntrega : 'ENTREGADO') : 'PENDIENTE'}">-</span>
+      </td>
+      <td th:text="${e.personaRecepcion != null ? e.personaRecepcion : '-'}">-</td>
+      <td th:text="${e.incidencia != null ? e.incidencia : ''}"></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Incidencias generales -->
+<div class="incidencias-box" th:if="${hojaRuta.incidencias != null and !hojaRuta.incidencias.isEmpty()}">
+  <strong>Incidencias generales:</strong><br/>
+  <span th:text="${hojaRuta.incidencias}"></span>
+</div>
+
+<!-- Firmas -->
+<table style="margin-top:30px;width:100%;border-collapse:collapse;">
+  <tr class="firma-row">
+    <td>Conductor</td>
+    <td style="width:60%;"></td>
+    <td>Responsable ruta</td>
+  </tr>
+</table>
+
+<!-- Pie -->
+<div class="footer">
+  Hoja de ruta · Sistema ERP Tahona ·
+  <span th:text="${#temporals.format(now, 'dd/MM/yyyy HH:mm')}"></span>
+</div>
+
+</body>
+</html>

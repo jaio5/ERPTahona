@@ -73,6 +73,9 @@ public class Usuario {
     @Column(name = "fecha_bloqueo")
     private LocalDateTime fechaBloqueo;
 
+    @Column(name = "contador_bloqueos")
+    private Integer contadorBloqueos = 0;
+
     @Column(name = "ultimo_acceso")
     private LocalDateTime ultimoAcceso;
 
@@ -93,7 +96,6 @@ public class Usuario {
     @JoinColumn(name = "rol_id")
     private Rol rol;
 
-    // Para compatibilidad con código existente
     @Transient
     public Boolean getActivo() {
         return enabled;
@@ -160,8 +162,7 @@ public class Usuario {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Usuario)) return false;
-        Usuario that = (Usuario) o;
+        if (!(o instanceof Usuario that)) return false;
         return Objects.equals(id, that.id);
     }
 

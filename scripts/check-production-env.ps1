@@ -17,7 +17,7 @@ function Require-EnvValue {
     if ($value.Length -lt $MinLength) {
         throw "La variable $Name debe tener al menos $MinLength caracteres."
     }
-    if ($value -match "change-me|changeme|base64-32-byte-key|mysql-host|<|>") {
+    if ($value -match "change-me|changeme|cambia-esta|cambiaestaclave|base64-32-byte-key|mysql-host|<|>") {
         throw "La variable $Name contiene un placeholder, no un valor real."
     }
     return $value

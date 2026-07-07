@@ -5,8 +5,21 @@ import alicanteweb.erp.service.UsuarioService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Field;
@@ -16,10 +29,86 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/web/entities")
 public class WebEntityController {
+
+    private static final Logger log = LoggerFactory.getLogger(WebEntityController.class);
+
+    /**
+     * Módulos sin escritura genérica. Las facturas se gestionan exclusivamente por sus
+     * controladores/servicios propios: modificarlas o borrarlas por esta vía reflectiva
+     * saltaría el registro VeriFactu y rompería la inalterabilidad exigida por el RRSIF.
+     */
+    private static final Set<String> READ_ONLY_MODULES = Set.of(
+            "auditoria", "verifactu-evidencias", "modelo347", "facturas", "facturas-compra"
+    );
+
+    /** Módulos que requieren rol ADMIN o ADMINISTRADOR */
+    private static final Set<String> ADMIN_MODULES = Set.of(
+            "usuarios", "roles", "empresa", "auditoria", "verifactu-evidencias", "backups"
+    );
+
+    /** Módulos que requieren al menos rol CONTABLE */
+    private static final Set<String> FINANCE_MODULES = Set.of(
+            "asientos", "plan-contable", "plan-cuentas",
+            "movimientos-banco", "bancos",
+            "movimientos-caja", "cajas", "caja-movimientos",
+            "modelo347"
+    );
+
+    private static final Set<String> SENSITIVE_FIELDS = Set.of(
+            "password", "tokenRecuperacion", "fechaExpiracionToken"
+    );
+
+    private static final Set<String> ALWAYS_BLOCKED = Set.of("id", "version", "password", "rol", "role");
+
+    /**
+     * Módulo del modelo de permisos granulares (roles.permisos, ver RolService.tienePermiso)
+     * que gobierna cada módulo genérico. GET→ver, POST→crear, PUT→editar, DELETE→eliminar.
+     * Los ADMIN mantienen acceso total (PermisoEvaluador.puede devuelve true para ellos).
+     */
+    private static final Map<String, String> PERMISO_POR_MODULO = Map.ofEntries(
+            Map.entry("proveedores", "proveedores"),
+            Map.entry("pedidos-venta", "ventas"),
+            Map.entry("pedidos-compra", "compras"),
+            Map.entry("facturas", "ventas"),
+            Map.entry("facturas-compra", "compras"),
+            Map.entry("albaranes", "ventas"),
+            Map.entry("presupuestos", "ventas"),
+            Map.entry("almacenes", "almacen"),
+            Map.entry("usuarios", "usuarios"),
+            Map.entry("asientos", "contabilidad"),
+            Map.entry("plan-contable", "contabilidad"),
+            Map.entry("plan-cuentas", "contabilidad"),
+            Map.entry("movimientos-caja", "tesoreria"),
+            Map.entry("cajas", "tesoreria"),
+            Map.entry("caja-movimientos", "tesoreria"),
+            Map.entry("movimientos-banco", "tesoreria"),
+            Map.entry("bancos", "tesoreria"),
+            Map.entry("roles", "usuarios"),
+            Map.entry("direcciones-envio", "clientes"),
+            Map.entry("modelo347", "fiscal"),
+            Map.entry("auditoria", "auditoria"),
+            Map.entry("verifactu-evidencias", "verifactu"),
+            Map.entry("recetas", "produccion"),
+            Map.entry("ordenes-produccion", "produccion"),
+            Map.entry("horneadas", "produccion"),
+            Map.entry("lotes", "almacen"),
+            Map.entry("appcc", "produccion"),
+            Map.entry("vehiculos", "reparto"),
+            Map.entry("rutas-reparto", "reparto"),
+            Map.entry("hojas-ruta", "reparto"),
+            Map.entry("devoluciones", "ventas"),
+            Map.entry("empresa", "configuracion"),
+            Map.entry("tarifas-cliente", "clientes"),
+            Map.entry("mermas", "almacen"),
+            Map.entry("recepciones", "compras"),
+            Map.entry("recepcion-lineas", "compras"),
+            Map.entry("fianzas", "ventas")
+    );
 
     private static final Map<String, Class<?>> MODULES = Map.ofEntries(
             Map.entry("proveedores", Proveedor.class),
@@ -53,15 +142,25 @@ public class WebEntityController {
             Map.entry("rutas-reparto", RutaReparto.class),
             Map.entry("hojas-ruta", HojaRuta.class),
             Map.entry("devoluciones", Devolucion.class),
-            Map.entry("empresa", EmpresaConfig.class)
+            Map.entry("empresa", EmpresaConfig.class),
+            Map.entry("tarifas-cliente", TarifaCliente.class),
+            Map.entry("mermas", Merma.class),
+            Map.entry("recepciones", Recepcion.class),
+            Map.entry("recepcion-lineas", RecepcionLinea.class),
+            Map.entry("fianzas", Fianza.class)
     );
 
     private final EntityManager entityManager;
     private final UsuarioService usuarioService;
+    private final Validator validator;
+    private final alicanteweb.erp.config.PermisoEvaluador permisos;
 
-    public WebEntityController(EntityManager entityManager, UsuarioService usuarioService) {
+    public WebEntityController(EntityManager entityManager, UsuarioService usuarioService, Validator validator,
+                               alicanteweb.erp.config.PermisoEvaluador permisos) {
         this.entityManager = entityManager;
         this.usuarioService = usuarioService;
+        this.validator = validator;
+        this.permisos = permisos;
     }
 
     @GetMapping
@@ -72,23 +171,20 @@ public class WebEntityController {
     @GetMapping("/{module}")
     public ResponseEntity<List<Map<String, Object>>> list(@PathVariable String module,
                                                           @RequestParam(required = false) String q) {
+        requireAccess(module, "ver");
         Class<?> entityClass = entityClass(module);
         if (entityClass == null) {
             return ResponseEntity.notFound().build();
         }
-        String entityName = entityClass.getSimpleName();
-        List<?> rows = entityManager.createQuery("select e from " + entityName + " e", entityClass)
-                .setMaxResults(500)
-                .getResultList();
-        List<Map<String, Object>> dtoRows = rows.stream()
-                .map(this::toDto)
-                .filter(row -> matches(q, row))
-                .toList();
-        return ResponseEntity.ok(dtoRows);
+        List<?> rows = (q != null && !q.isBlank())
+                ? search(entityClass, q.trim(), 200)
+                : findAll(entityClass, 500);
+        return ResponseEntity.ok(rows.stream().map(this::toDto).toList());
     }
 
     @GetMapping("/{module}/{id}")
     public ResponseEntity<Map<String, Object>> get(@PathVariable String module, @PathVariable Long id) {
+        requireAccess(module, "ver");
         Class<?> entityClass = entityClass(module);
         if (entityClass == null) {
             return ResponseEntity.notFound().build();
@@ -101,13 +197,16 @@ public class WebEntityController {
     @Transactional
     public ResponseEntity<Map<String, Object>> create(@PathVariable String module,
                                                       @RequestBody Map<String, Object> data) {
+        requireAccess(module, "crear");
+        requireWritable(module);
         Class<?> entityClass = entityClass(module);
         if (entityClass == null) {
             return ResponseEntity.notFound().build();
         }
         try {
             Object entity = entityClass.getDeclaredConstructor().newInstance();
-            apply(entity, data);
+            apply(entity, data, module);
+            validate(entity);
             if (entity instanceof Usuario usuario) {
                 String password = String.valueOf(data.getOrDefault("passwordNuevo", ""));
                 if (password.isBlank()) {
@@ -128,6 +227,8 @@ public class WebEntityController {
     public ResponseEntity<Map<String, Object>> update(@PathVariable String module,
                                                       @PathVariable Long id,
                                                       @RequestBody Map<String, Object> data) {
+        requireAccess(module, "editar");
+        requireWritable(module);
         Class<?> entityClass = entityClass(module);
         if (entityClass == null) {
             return ResponseEntity.notFound().build();
@@ -136,8 +237,10 @@ public class WebEntityController {
         if (entity == null) {
             return ResponseEntity.notFound().build();
         }
-        apply(entity, data);
+        apply(entity, data, module);
+        validate(entity);
         if (entity instanceof Usuario usuario) {
+            entityManager.detach(usuario);
             Usuario updated = usuarioService.actualizarUsuario(usuario);
             Object password = data.get("passwordNuevo");
             if (password != null && !String.valueOf(password).isBlank()) {
@@ -153,18 +256,24 @@ public class WebEntityController {
     @PostMapping("/{module}/{id}/baja")
     @Transactional
     public ResponseEntity<Void> disable(@PathVariable String module, @PathVariable Long id) {
+        requireAccess(module, "editar");
+        requireWritable(module);
         return setActive(module, id, false);
     }
 
     @PostMapping("/{module}/{id}/activar")
     @Transactional
     public ResponseEntity<Void> enable(@PathVariable String module, @PathVariable Long id) {
+        requireAccess(module, "editar");
+        requireWritable(module);
         return setActive(module, id, true);
     }
 
     @DeleteMapping("/{module}/{id}")
     @Transactional
     public ResponseEntity<Void> delete(@PathVariable String module, @PathVariable Long id) {
+        requireAccess(module, "eliminar");
+        requireWritable(module);
         Class<?> entityClass = entityClass(module);
         if (entityClass == null) {
             return ResponseEntity.notFound().build();
@@ -197,6 +306,44 @@ public class WebEntityController {
         return MODULES.get(module);
     }
 
+    private <T> List<T> findAll(Class<T> entityClass, int limit) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<T> query = cb.createQuery(entityClass);
+        Root<T> root = query.from(entityClass);
+        query.select(root).orderBy(cb.asc(root.get("id")));
+        return entityManager.createQuery(query).setMaxResults(limit).getResultList();
+    }
+
+    private <T> List<T> search(Class<T> entityClass, String query, int limit) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<T> cq = cb.createQuery(entityClass);
+        Root<T> root = cq.from(entityClass);
+        String pattern = "%" + query.toLowerCase() + "%";
+        List<Predicate> predicates = fields(entityClass).stream()
+                .filter(f -> f.getType() == String.class
+                        && !isSensitive(f.getName())
+                        && !f.isAnnotationPresent(ManyToOne.class)
+                        && !f.isAnnotationPresent(Transient.class)
+                        && !java.lang.reflect.Modifier.isStatic(f.getModifiers()))
+                .map(f -> {
+                    try {
+                        return (Predicate) cb.like(cb.lower(root.<String>get(f.getName())), pattern);
+                    } catch (IllegalArgumentException e) {
+                        log.debug("Campo '{}' no accesible en Criteria API, se omite del filtro de búsqueda: {}", f.getName(), e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .toList();
+        if (predicates.isEmpty()) {
+            return List.of();
+        }
+        cq.select(root)
+          .where(cb.or(predicates.toArray(new Predicate[0])))
+          .orderBy(cb.asc(root.get("id")));
+        return entityManager.createQuery(cq).setMaxResults(limit).getResultList();
+    }
+
     private Map<String, Object> toDto(Object entity) {
         Map<String, Object> row = new LinkedHashMap<>();
         for (Field field : fields(entity.getClass())) {
@@ -219,12 +366,15 @@ public class WebEntityController {
         return row;
     }
 
-    private void apply(Object entity, Map<String, Object> data) {
+    private void apply(Object entity, Map<String, Object> data, String entityName) {
         Class<?> entityClass = entity.getClass();
         for (Field field : fields(entityClass)) {
+            if (isFieldBlocked(entityName, field.getName())) continue;
             boolean relationIdPresent = field.isAnnotationPresent(ManyToOne.class)
                     && data.containsKey(field.getName() + "Id");
-            if (field.isAnnotationPresent(Id.class) || (!data.containsKey(field.getName()) && !relationIdPresent)) {
+            if (field.isAnnotationPresent(Id.class)
+                    || field.isAnnotationPresent(Version.class)
+                    || (!data.containsKey(field.getName()) && !relationIdPresent)) {
                 continue;
             }
             if (isSensitive(field.getName())) {
@@ -247,26 +397,11 @@ public class WebEntityController {
     }
 
     private Object convert(Object value, Class<?> type) {
-        if (value == null || String.valueOf(value).isBlank()) {
-            return type.isPrimitive() ? primitiveDefault(type) : null;
-        }
-        if (type == String.class) return String.valueOf(value);
-        if (type == Long.class || type == long.class) return Long.valueOf(String.valueOf(value));
-        if (type == Integer.class || type == int.class) return Integer.valueOf(String.valueOf(value));
-        if (type == Boolean.class || type == boolean.class) return Boolean.valueOf(String.valueOf(value));
-        if (type == BigDecimal.class) return new BigDecimal(String.valueOf(value));
-        if (type == Instant.class) return Instant.parse(String.valueOf(value));
-        if (type == LocalDate.class) return LocalDate.parse(String.valueOf(value));
-        if (type == LocalTime.class) return LocalTime.parse(String.valueOf(value));
-        if (type == LocalDateTime.class) return LocalDateTime.parse(String.valueOf(value));
-        return value;
+        return EntityFieldConverter.convert(value, type);
     }
 
     private Object primitiveDefault(Class<?> type) {
-        if (type == boolean.class) return false;
-        if (type == int.class) return 0;
-        if (type == long.class) return 0L;
-        return null;
+        return EntityFieldConverter.primitiveDefault(type);
     }
 
     private boolean isSimple(Class<?> type) {
@@ -283,7 +418,23 @@ public class WebEntityController {
     }
 
     private boolean isSensitive(String fieldName) {
-        return Set.of("password", "tokenRecuperacion", "fechaExpiracionToken").contains(fieldName);
+        return SENSITIVE_FIELDS.contains(fieldName);
+    }
+
+    private boolean isFieldBlocked(String module, String fieldName) {
+        if (ALWAYS_BLOCKED.contains(fieldName)) return true;
+        if ("usuarios".equals(module) && Set.of("bloqueado", "enabled", "intentosFallidos").contains(fieldName)) return true;
+        return false;
+    }
+
+    private void validate(Object entity) {
+        Set<ConstraintViolation<Object>> violations = validator.validate(entity);
+        if (!violations.isEmpty()) {
+            String msg = violations.stream()
+                    .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                    .collect(Collectors.joining("; "));
+            throw new IllegalArgumentException(msg);
+        }
     }
 
     private List<Field> fields(Class<?> type) {
@@ -356,15 +507,36 @@ public class WebEntityController {
         }
     }
 
-    private boolean matches(String query, Map<String, Object> row) {
-        if (query == null || query.isBlank()) {
-            return true;
+    private void requireWritable(String module) {
+        if (READ_ONLY_MODULES.contains(module)) {
+            throw new IllegalStateException("El módulo " + module + " es de solo lectura");
         }
-        String normalized = query.trim().toLowerCase();
-        return row.values().stream()
-                .filter(Objects::nonNull)
-                .map(String::valueOf)
-                .map(String::toLowerCase)
-                .anyMatch(value -> value.contains(normalized));
+    }
+
+    private void requireAccess(String module, String accion) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new AccessDeniedException("No autenticado");
+        }
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+        boolean isContable = isAdmin || auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_CONTABLE"));
+
+        if (ADMIN_MODULES.contains(module) && !isAdmin) {
+            throw new AccessDeniedException("Acceso denegado al módulo " + module);
+        }
+        if (FINANCE_MODULES.contains(module) && !isContable) {
+            throw new AccessDeniedException("Acceso denegado al módulo " + module);
+        }
+        if (isAdmin) {
+            return; // comportamiento actual: los admin conservan acceso total
+        }
+        // Permisos granulares del rol: los grupos de arriba son la primera barrera,
+        // el modelo por módulo/acción decide el resto
+        String permisoModulo = PERMISO_POR_MODULO.get(module);
+        if (permisoModulo == null || !permisos.puede(permisoModulo, accion)) {
+            throw new AccessDeniedException("Acceso denegado al módulo " + module);
+        }
     }
 }

@@ -18,13 +18,16 @@ public class HojaRutaService {
     private final HojaRutaRepository hojaRutaRepository;
     private final HojaRutaEntregaRepository entregaRepository;
     private final RutaRepartoService rutaRepartoService;
+    private final AlbaranService albaranService;
 
     public HojaRutaService(HojaRutaRepository hojaRutaRepository,
-                            HojaRutaEntregaRepository entregaRepository,
-                            RutaRepartoService rutaRepartoService) {
+                             HojaRutaEntregaRepository entregaRepository,
+                             RutaRepartoService rutaRepartoService,
+                             AlbaranService albaranService) {
         this.hojaRutaRepository = hojaRutaRepository;
         this.entregaRepository = entregaRepository;
         this.rutaRepartoService = rutaRepartoService;
+        this.albaranService = albaranService;
     }
 
     public List<HojaRuta> findAll() {
@@ -39,6 +42,26 @@ public class HojaRutaService {
         return hojaRutaRepository.findByFecha(fecha);
     }
 
+    public Optional<HojaRuta> findRutaDelUsuario(LocalDate fecha, Long usuarioId,
+                                                  String username, String displayName) {
+        if (usuarioId != null) {
+            Optional<HojaRuta> asignada = hojaRutaRepository.findFirstByFechaAndUsuarioId(fecha, usuarioId);
+            if (asignada.isPresent()) return asignada;
+        }
+        Optional<HojaRuta> legacy = findRutaLegacy(fecha, username);
+        return legacy.isPresent() ? legacy : findRutaLegacy(fecha, displayName);
+    }
+
+    public boolean puedeGestionarHoja(Long hojaId, Long usuarioId, String username, String displayName) {
+        if (usuarioId != null && hojaRutaRepository.existsByIdAndUsuarioId(hojaId, usuarioId)) return true;
+        return existeHojaLegacy(hojaId, username) || existeHojaLegacy(hojaId, displayName);
+    }
+
+    public boolean puedeGestionarEntrega(Long entregaId, Long usuarioId, String username, String displayName) {
+        if (usuarioId != null && entregaRepository.existsByIdAndHojaRutaUsuarioId(entregaId, usuarioId)) return true;
+        return existeEntregaLegacy(entregaId, username) || existeEntregaLegacy(entregaId, displayName);
+    }
+
     public List<HojaRuta> findByFechaBetween(LocalDate inicio, LocalDate fin) {
         return hojaRutaRepository.findByFechaBetween(inicio, fin);
     }
@@ -49,6 +72,10 @@ public class HojaRutaService {
 
     public List<HojaRuta> findByEstado(String estado) {
         return hojaRutaRepository.findByEstado(estado);
+    }
+
+    public long countByEstado(String estado) {
+        return hojaRutaRepository.countByEstado(estado);
     }
 
     @Transactional
@@ -94,6 +121,34 @@ public class HojaRutaService {
 
     public List<HojaRutaEntrega> getEntregas(Long hojaRutaId) {
         return entregaRepository.findByHojaRutaIdOrderByOrden(hojaRutaId);
+    }
+
+    public Optional<HojaRuta> findDetailById(Long id) {
+        return hojaRutaRepository.findDetailById(id);
+    }
+
+    public List<HojaRutaEntrega> getEntregasDetalle(Long hojaRutaId) {
+        return entregaRepository.findDetailByHojaRutaId(hojaRutaId);
+    }
+
+    private Optional<HojaRuta> findRutaLegacy(LocalDate fecha, String conductor) {
+        if (conductor == null || conductor.isBlank()) return Optional.empty();
+        return hojaRutaRepository.findFirstByFechaAndUsuarioIsNullAndConductorIgnoreCase(fecha, conductor);
+    }
+
+    private boolean existeHojaLegacy(Long hojaId, String conductor) {
+        return conductor != null && !conductor.isBlank()
+                && hojaRutaRepository.existsByIdAndUsuarioIsNullAndConductorIgnoreCase(hojaId, conductor);
+    }
+
+    private boolean existeEntregaLegacy(Long entregaId, String conductor) {
+        return conductor != null && !conductor.isBlank()
+                && entregaRepository.existsByIdAndHojaRutaUsuarioIsNullAndHojaRutaConductorIgnoreCase(
+                        entregaId, conductor);
+    }
+
+    public List<Long> getAlbaranIdsAsignados() {
+        return entregaRepository.findAllAlbaranIdsAsignados();
     }
 
     @Transactional
@@ -145,5 +200,24 @@ public class HojaRutaService {
         hoja.setKmFin(kmFin);
         hoja.setIncidencias(incidencias);
         return hojaRutaRepository.save(hoja);
+    }
+
+    @Transactional
+    public void vincularAlbaranes(Long hojaRutaId, List<Long> albaranIds) {
+        HojaRuta hoja = hojaRutaRepository.findById(hojaRutaId)
+                .orElseThrow(() -> new IllegalArgumentException("Hoja de ruta no encontrada: " + hojaRutaId));
+        int ordenBase = (int) entregaRepository.countByHojaRutaId(hojaRutaId);
+        for (Long albaranId : albaranIds) {
+            AlbaranVenta albaran = albaranService.obtenerPorId(albaranId)
+                    .orElseThrow(() -> new IllegalArgumentException("Albarán no encontrado: " + albaranId));
+            HojaRutaEntrega entrega = new HojaRutaEntrega();
+            entrega.setHojaRuta(hoja);
+            entrega.setAlbaran(albaran);
+            entrega.setCliente(albaran.getCliente());
+            entrega.setOrden(++ordenBase);
+            entrega.setEntregado(false);
+            entrega.setEstadoEntrega("PENDIENTE");
+            entregaRepository.save(entrega);
+        }
     }
 }

@@ -64,6 +64,20 @@ public class Cliente {
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
 
+    // ── Domiciliación SEPA ──
+    @Size(max = 34)
+    @Column(name = "iban", length = 34)
+    private String iban;
+
+    /** Referencia única del mandato SEPA (AT-01). */
+    @Size(max = 35)
+    @Column(name = "mandato_sepa_referencia", length = 35)
+    private String mandatoSepaReferencia;
+
+    /** Fecha de firma del mandato SEPA (AT-25). */
+    @Column(name = "mandato_sepa_fecha")
+    private java.time.LocalDate mandatoSepaFecha;
+
     /**
      * PrePersist para asegurar valores por defecto
      */

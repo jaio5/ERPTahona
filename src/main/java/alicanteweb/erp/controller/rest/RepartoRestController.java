@@ -7,9 +7,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/reparto")
+@PreAuthorize("@permisos.puede('reparto', 'ver')")
 public class RepartoRestController {
 
     private final VehiculoService vehiculoService;
@@ -37,6 +39,7 @@ public class RepartoRestController {
     }
 
     @PostMapping("/vehiculos")
+    @PreAuthorize("@permisos.puede('reparto', 'crear')")
     public Vehiculo createVehiculo(@RequestBody Vehiculo vehiculo) {
         return vehiculoService.save(vehiculo);
     }
@@ -59,6 +62,7 @@ public class RepartoRestController {
     }
 
     @PostMapping("/rutas")
+    @PreAuthorize("@permisos.puede('reparto', 'crear')")
     public RutaReparto createRuta(@RequestBody RutaReparto ruta) {
         return rutaService.save(ruta);
     }
@@ -87,17 +91,20 @@ public class RepartoRestController {
     }
 
     @PostMapping("/hojas/generar")
+    @PreAuthorize("@permisos.puede('reparto', 'crear')")
     public ResponseEntity<HojaRuta> generarHoja(@RequestParam Long rutaId,
                                                  @RequestParam String fecha) {
         return ResponseEntity.ok(hojaRutaService.generarDesdeRuta(rutaId, java.time.LocalDate.parse(fecha)));
     }
 
     @PostMapping("/hojas/{id}/iniciar")
+    @PreAuthorize("@permisos.puede('reparto', 'editar')")
     public ResponseEntity<HojaRuta> iniciarRuta(@PathVariable Long id) {
         return ResponseEntity.ok(hojaRutaService.iniciarRuta(id));
     }
 
     @PostMapping("/hojas/{id}/finalizar")
+    @PreAuthorize("@permisos.puede('reparto', 'editar')")
     public ResponseEntity<HojaRuta> finalizarRuta(@PathVariable Long id,
                                                     @RequestParam BigDecimal kmFin,
                                                     @RequestParam(required = false) String incidencias) {
@@ -105,6 +112,7 @@ public class RepartoRestController {
     }
 
     @PostMapping("/entregas/{id}/confirmar")
+    @PreAuthorize("@permisos.puede('reparto', 'editar')")
     public ResponseEntity<HojaRutaEntrega> confirmarEntrega(@PathVariable Long id,
                                                              @RequestParam(required = false) String persona,
                                                              @RequestParam(required = false) String incidencia,
@@ -114,6 +122,7 @@ public class RepartoRestController {
     }
 
     @PostMapping("/entregas/{id}/incidencia")
+    @PreAuthorize("@permisos.puede('reparto', 'editar')")
     public ResponseEntity<HojaRutaEntrega> marcarIncidencia(@PathVariable Long id,
                                                              @RequestParam String incidencia) {
         return ResponseEntity.ok(hojaRutaService.marcarIncidencia(id, incidencia));

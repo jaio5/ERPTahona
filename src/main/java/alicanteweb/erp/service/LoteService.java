@@ -4,6 +4,8 @@ import alicanteweb.erp.entities.Lote;
 import alicanteweb.erp.entities.LoteInsumo;
 import alicanteweb.erp.repository.LoteInsumoRepository;
 import alicanteweb.erp.repository.LoteRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +29,16 @@ public class LoteService {
         return loteRepository.findAll();
     }
 
+    public Page<Lote> findPage(String q, String estado, Pageable pageable) {
+        return loteRepository.findPage(q, estado, pageable);
+    }
+
     public Optional<Lote> findById(Long id) {
         return loteRepository.findById(id);
+    }
+
+    public Optional<Lote> findDetailById(Long id) {
+        return loteRepository.findDetailById(id);
     }
 
     public Optional<Lote> findByCodigo(String codigo) {
@@ -47,8 +57,25 @@ public class LoteService {
         return loteRepository.findByFechaCaducidadBefore(fecha);
     }
 
+    public long countByFechaCaducidadBefore(LocalDate fecha) {
+        return loteRepository.countByFechaCaducidadBefore(fecha);
+    }
+
     public List<Lote> findByFechaCaducidadBetween(LocalDate inicio, LocalDate fin) {
         return loteRepository.findByFechaCaducidadBetween(inicio, fin);
+    }
+
+    public long countByFechaCaducidadBetween(LocalDate inicio, LocalDate fin) {
+        return loteRepository.countByFechaCaducidadBetween(inicio, fin);
+    }
+
+    public long count() {
+        return loteRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Lote> searchByCodigo(String q) {
+        return loteRepository.findByCodigoContainingIgnoreCase(q);
     }
 
     public List<Lote> findByAlmacenId(Long almacenId) {
@@ -58,7 +85,7 @@ public class LoteService {
     @Transactional
     public Lote save(Lote lote) {
         if (lote == null) throw new IllegalArgumentException("Lote nulo");
-        if (lote.getCodigo() == null || lote.getCodigo().trim().isEmpty()) {
+        if (lote.getCodigo() == null || lote.getCodigo().isBlank()) {
             throw new IllegalArgumentException("El código del lote es obligatorio");
         }
         var opt = loteRepository.findByCodigo(lote.getCodigo().trim());
@@ -96,6 +123,14 @@ public class LoteService {
      */
     public List<LoteInsumo> findInsumosDeProducto(Long loteProductoId) {
         return loteInsumoRepository.findByLoteProductoId(loteProductoId);
+    }
+
+    public List<LoteInsumo> findProductosQueUsaronInsumoDetail(Long loteInsumoId) {
+        return loteInsumoRepository.findDetailByLoteInsumoId(loteInsumoId);
+    }
+
+    public List<LoteInsumo> findInsumosDeProductoDetail(Long loteProductoId) {
+        return loteInsumoRepository.findDetailByLoteProductoId(loteProductoId);
     }
 
     @Transactional

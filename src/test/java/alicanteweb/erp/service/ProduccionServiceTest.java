@@ -27,6 +27,7 @@ class ProduccionServiceTest {
     @Mock private RecetaRepository recetaRepository;
     @Mock private RecetaIngredienteRepository ingredienteRepository;
     @Mock private OrdenProduccionRepository ordenProduccionRepository;
+    @Mock private alicanteweb.erp.repository.OrdenProduccionSerieSequenceRepository ordenSerieSequenceRepository;
     @Mock private HorneadaRepository horneadaRepository;
     @Mock private ArticuloService articuloService;
     @Mock private AlmacenService almacenService;
@@ -83,6 +84,9 @@ class ProduccionServiceTest {
     @DisplayName("Generar número de orden secuencial")
     void generarNumeroOrden() {
         orden.setNumero(null); // Forzar generación de número
+        // Ejercicio sin secuencia todavía: se crea partiendo del máximo existente (5)
+        when(ordenSerieSequenceRepository.findBySerieAndEjercicio(eq("OP"), anyInt()))
+                .thenReturn(Optional.empty());
         when(ordenProduccionRepository.findMaxNumeroSecuencialBySerie(anyString())).thenReturn(5);
         when(ordenProduccionRepository.save(any())).thenReturn(orden);
 
@@ -90,6 +94,7 @@ class ProduccionServiceTest {
         assertNotNull(saved);
         assertNotNull(saved.getNumero());
         assertTrue(saved.getNumero().startsWith("OP-"));
+        assertTrue(saved.getNumero().endsWith("0006"), "debe continuar tras el máximo existente");
     }
 
     @Test

@@ -28,6 +28,10 @@ public class AlbaranVenta {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     @Size(max = 50)
     @NotNull
     @Column(name = "numero", nullable = false, length = 50)
@@ -35,6 +39,11 @@ public class AlbaranVenta {
 
     @Column(name = "fecha")
     private LocalDate fecha;
+
+    @Size(max = 20)
+    @ColumnDefault("'PENDIENTE'")
+    @Column(name = "estado", length = 20)
+    private String estado;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id")
@@ -55,17 +64,17 @@ public class AlbaranVenta {
     @OneToMany(mappedBy = "albaran", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AlbaranVentaLinea> albaranVentaLineas = new LinkedHashSet<>();
 
-    /** @deprecated Usar {@link #getAlbaranVentaLineas()} directamente. */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public Set<AlbaranVentaLinea> getLineas() {
-        return this.albaranVentaLineas;
+    @PrePersist
+    protected void onCreate() {
+        if (estado == null || estado.isBlank()) {
+            estado = "PENDIENTE";
+        }
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AlbaranVenta)) return false;
-        AlbaranVenta that = (AlbaranVenta) o;
+        if (!(o instanceof AlbaranVenta that)) return false;
         return Objects.equals(id, that.id);
     }
 
@@ -74,4 +83,13 @@ public class AlbaranVenta {
 
     @Override
     public String toString() { return "AlbaranVenta{id=" + id + ", numero='" + numero + "'}"; }
+
+    public alicanteweb.erp.entities.enums.EstadoAlbaranEnum getEstadoEnum() {
+        if (estado == null) return null;
+        try {
+            return alicanteweb.erp.entities.enums.EstadoAlbaranEnum.valueOf(estado);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 }

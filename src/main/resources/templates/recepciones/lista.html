@@ -1,0 +1,69 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Recepciones</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/recepciones/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nueva recepción
+            </a>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <form method="get" class="d-flex gap-2 flex-wrap align-items-center">
+            <select name="estado" class="form-select form-select-sm" style="width:auto;" data-autosubmit aria-label="Filtrar por estado">
+                <option value="" th:selected="${estado == null or estado == ''}">Todos los estados</option>
+                <option value="PENDIENTE" th:selected="${estado == 'PENDIENTE'}">Pendiente</option>
+                <option value="CONFIRMADA" th:selected="${estado == 'CONFIRMADA'}">Confirmada</option>
+            </select>
+            <button th:if="${estado != null and estado != ''}" type="button"
+                    class="btn btn-ghost btn-sm" data-navigate="/web/recepciones">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </form>
+    </div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Fecha</th>
+                        <th>Proveedor</th>
+                        <th>Almacén</th>
+                        <th>Estado</th>
+                        <th style="width:80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(recepciones)}">
+                        <td colspan="6" class="empty-state">
+                            <i class="bi bi-box-arrow-in-down"></i>
+                            <div>No hay recepciones registradas</div>
+                            <a th:href="@{/web/recepciones/nuevo}" class="btn btn-primary btn-sm mt-2">Nueva recepción</a>
+                        </td>
+                    </tr>
+                    <tr th:each="r : ${recepciones}">
+                        <td class="fw-medium" th:text="${r.numero ?: '#' + r.id}"></td>
+                        <td th:text="${r.fecha != null ? #temporals.format(r.fecha,'dd/MM/yyyy') : '—'}"></td>
+                        <td th:text="${r.proveedor?.nombre ?: '—'}"></td>
+                        <td class="text-muted" th:text="${r.almacen?.nombre ?: '—'}"></td>
+                        <td>
+                            <span th:if="${r.estado == 'CONFIRMADA'}" class="badge-status" data-status="activo">Confirmada</span>
+                            <span th:if="${r.estado != 'CONFIRMADA'}" class="badge-status" data-status="pendiente">Pendiente</span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{/web/recepciones/{id}(id=${r.id})}" class="btn btn-ghost btn-sm" title="Ver">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/recepciones')}"></div>
+</div>

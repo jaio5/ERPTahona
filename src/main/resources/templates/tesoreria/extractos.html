@@ -1,0 +1,180 @@
+<div th:fragment="content" x-data="extractosApp" x-cloak>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4>Extractos bancarios</h4>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-ghost btn-sm" @click="setTab('lista')" :class="tabClass('lista')">Movimientos</button>
+            <button class="btn btn-ghost btn-sm" @click="setTab('importar')" :class="tabClass('importar')">Importar CSV</button>
+            <button class="btn btn-ghost btn-sm" @click="setTab('conciliar')" :class="tabClass('conciliar')">Conciliar</button>
+        </div>
+    </div>
+
+    <!-- Lista movimientos -->
+    <div x-show="isTab('lista')">
+        <div class="stat-card mb-3">
+            <div class="d-flex gap-2 align-items-center">
+                <label>Desde: <input type="date" x-model="desde" class="form-control form-control-sm d-inline" style="width:auto"></label>
+                <label>Hasta: <input type="date" x-model="hasta" class="form-control form-control-sm d-inline" style="width:auto"></label>
+                <button class="btn btn-sm btn-primary" @click="cargarMovimientos()">Filtrar</button>
+            </div>
+        </div>
+        <div class="stat-card">
+            <table class="table table-sm">
+                <thead><tr><th>Fecha</th><th>Concepto</th><th class="text-end">Importe</th><th>Tipo</th><th>Conciliado</th></tr></thead>
+                <tbody>
+                    <template x-for="m in movimientos" :key="m.id">
+                        <tr :class="rowClass(m.tipo)">
+                            <td x-text="m.fecha"></td>
+                            <td x-text="m.concepto"></td>
+                            <td class="text-end" x-text="money(m.importe)"></td>
+                            <td><span class="badge" :class="badgeTipo(m.tipo)" x-text="m.tipo"></span></td>
+                            <td><span class="badge" :class="badgeConciliado(m.conciliado)" x-text="labelConciliado(m.conciliado)"></span></td>
+                        </tr>
+                    </template>
+                    <tr x-show="movimientos.length === 0">
+                        <td colspan="5" class="empty-state"><i class="bi bi-bank"></i><div>Sin movimientos en el período</div></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Importar CSV -->
+    <div x-show="isTab('importar')" class="stat-card" style="max-width:600px">
+        <h6 class="mb-3">Importar extracto CSV</h6>
+        <p class="text-muted small">Formato esperado: fecha;concepto;importe (dd/MM/yyyy;texto;12.34). Primera línea = cabecera.</p>
+        <div class="form-grid">
+            <div class="form-field">
+                <label>Banco</label>
+                <select class="form-select" x-model="bancoId">
+                    <template x-for="b in bancos" :key="b.id">
+                        <option :value="b.id" x-text="b.nombre"></option>
+                    </template>
+                </select>
+            </div>
+            <div class="form-field">
+                <label>Archivo CSV</label>
+                <input type="file" class="form-control" id="csvFile" accept=".csv">
+            </div>
+        </div>
+        <button class="btn btn-primary mt-3" @click="importarCSV()">Importar</button>
+        <hr>
+        <h6 class="mb-2">Importar extracto Norma 43 (AEB)</h6>
+        <p class="text-muted small">Fichero estándar del cuaderno 43 que exporta cualquier banco español.</p>
+        <div class="form-field">
+            <label>Archivo N43</label>
+            <input type="file" class="form-control" id="n43File" accept=".n43,.txt,.aeb,.043,.q43">
+        </div>
+        <button class="btn btn-primary mt-3" @click="importarN43()">Importar Norma 43</button>
+        <div x-show="importResult" class="mt-3">
+            <p><strong>Importados:</strong> <span x-text="importados()"></span></p>
+            <p x-show="hasImportErrors()"><strong>Errores:</strong></p>
+            <ul>
+                <template x-for="e in importErrors()" :key="e">
+                    <li class="text-danger small" x-text="e"></li>
+                </template>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Conciliar -->
+    <div x-show="isTab('conciliar')" class="stat-card">
+        <h6 class="mb-3">Movimientos no conciliados</h6>
+        <table class="table table-sm">
+            <thead><tr><th>Fecha</th><th>Concepto</th><th class="text-end">Importe</th><th>Acción</th></tr></thead>
+            <tbody>
+                <template x-for="m in noConciliados" :key="m.id">
+                    <tr>
+                        <td x-text="m.fecha"></td>
+                        <td x-text="m.concepto"></td>
+                        <td class="text-end" x-text="money(m.importe)"></td>
+                        <td><button class="btn btn-success btn-sm" @click="conciliar(m.id)">Conciliar</button></td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+        <div x-show="noConciliados.length === 0" class="text-muted">Todos los movimientos están conciliados</div>
+    </div>
+
+    <script th:attr="nonce=${cspNonce}">
+        document.addEventListener('alpine:init', function () {
+            Alpine.data('extractosApp', function () {
+                return {
+                tab: 'lista',
+                movimientos: [],
+                noConciliados: [],
+                bancos: [],
+                bancoId: null,
+                desde: '',
+                hasta: '',
+                importResult: null,
+                init() {
+                    this.desde = new Date(Date.now() - 30*86400000).toISOString().split('T')[0];
+                    this.hasta = new Date().toISOString().split('T')[0];
+                    Promise.all([
+                        fetch('/api/web/entities/bancos').then(r=>r.json()),
+                        fetch('/api/web/extractos/no-conciliados').then(r=>r.json())
+                    ]).then(([b, nc]) => {
+                        this.bancos = b || [];
+                        if (this.bancos.length) this.bancoId = this.bancos[0].id;
+                        this.noConciliados = nc || [];
+                    }).catch(err => console.error('Error cargando datos bancarios', err));
+                    this.cargarMovimientos();
+                },
+                isTab(name) { return this.tab === name; },
+                setTab(name) { this.tab = name; },
+                tabClass(name) { return this.tab === name ? 'btn-primary' : ''; },
+                money(value) { return formatMoneyEs(value); },
+                rowClass(tipo) { return tipo === 'INGRESO' ? 'text-success' : 'text-danger'; },
+                badgeTipo(tipo) { return tipo === 'INGRESO' ? 'bg-success' : 'bg-danger'; },
+                badgeConciliado(conciliado) { return conciliado ? 'bg-success' : 'bg-warning'; },
+                labelConciliado(conciliado) { return conciliado ? 'Sí' : 'No'; },
+                importados() { return this.importResult ? this.importResult.importados : 0; },
+                hasImportErrors() { return this.importErrors().length > 0; },
+                importErrors() { return this.importResult && this.importResult.errores ? this.importResult.errores : []; },
+                cargarMovimientos() {
+                    fetch('/api/web/extractos?desde=' + this.desde + '&hasta=' + this.hasta)
+                        .then(r=>r.json())
+                        .then(data => { this.movimientos = data || []; })
+                        .catch(err => console.error('Error cargando movimientos', err));
+                },
+                async importarCSV() {
+                    const file = document.getElementById('csvFile').files[0];
+                    if (!file) { alert('Selecciona un archivo'); return; }
+                    const form = new FormData();
+                    form.append('archivo', file);
+                    form.append('bancoId', this.bancoId);
+                    try {
+                        const resp = await fetch('/api/web/extractos/importar', {method:'POST', body:form});
+                        this.importResult = await resp.json();
+                    } catch (err) {
+                        console.error('Error importando CSV', err);
+                    }
+                },
+                async importarN43() {
+                    const file = document.getElementById('n43File').files[0];
+                    if (!file) { alert('Selecciona un archivo'); return; }
+                    const form = new FormData();
+                    form.append('archivo', file);
+                    form.append('bancoId', this.bancoId);
+                    try {
+                        const resp = await fetch('/api/web/extractos/importar-n43', {method:'POST', body:form});
+                        this.importResult = await resp.json();
+                    } catch (err) {
+                        console.error('Error importando Norma 43', err);
+                    }
+                },
+                async conciliar(id) {
+                    try {
+                        await fetch('/api/web/extractos/' + id + '/conciliar', {method:'POST'});
+                        this.noConciliados = this.noConciliados.filter(m => m.id !== id);
+                    } catch (err) {
+                        console.error('Error conciliando movimiento', err);
+                    }
+                }
+                };
+            });
+        });
+    </script>
+</div>

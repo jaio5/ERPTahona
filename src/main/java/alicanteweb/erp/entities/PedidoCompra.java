@@ -45,7 +45,7 @@ public class PedidoCompra {
 
     @NotNull
     @Column(name = "total", nullable = false, precision = 12, scale = 2)
-    private BigDecimal total;
+    private BigDecimal total = BigDecimal.ZERO;
 
     @Size(max = 20)
     @ColumnDefault("'BORRADOR'")
@@ -71,6 +71,9 @@ public class PedidoCompra {
         fechaModificacion = LocalDateTime.now();
         if (estado == null) {
             estado = "BORRADOR";
+        }
+        if (total == null) {
+            total = BigDecimal.ZERO;
         }
     }
 

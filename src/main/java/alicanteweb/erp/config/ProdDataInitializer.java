@@ -21,6 +21,10 @@ public class ProdDataInitializer {
 
     private static final Logger log = LoggerFactory.getLogger(ProdDataInitializer.class);
 
+    /** Hash placeholder que V9__disable_insecure_bootstrap_admin.sql asigna al admin de bootstrap. */
+    private static final String PLACEHOLDER_BOOTSTRAP_HASH =
+            "{bcrypt}$2a$10$7EqJtq98hPqEX7fNZaFWoOhiYr0YHG6MlCezr2XbZYi1s4r8Wz.VS";
+
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
@@ -73,6 +77,9 @@ public class ProdDataInitializer {
             return true;
         }
         if ("admin".equals(password)) {
+            return true;
+        }
+        if (PLACEHOLDER_BOOTSTRAP_HASH.equals(password)) {
             return true;
         }
         return !password.startsWith("{") && !password.startsWith("$2");

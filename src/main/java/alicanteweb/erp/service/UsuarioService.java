@@ -5,6 +5,9 @@ import alicanteweb.erp.repository.RolRepository;
 import alicanteweb.erp.repository.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,9 +42,12 @@ public class UsuarioService {
     /**
      * Crear un nuevo usuario
      */
+    @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR')")
     @Transactional
     public Usuario crearUsuario(Usuario usuario, String passwordPlain) {
         log.info("Creando usuario: {}", usuario.getUsername());
+
+        validarPassword(passwordPlain);
 
         // Validar que no exista el username
         if (usuarioRepository.existsByUsername(usuario.getUsername())) {
@@ -76,6 +82,7 @@ public class UsuarioService {
     /**
      * Actualizar un usuario existente
      */
+    @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR')")
     @Transactional
     public Usuario actualizarUsuario(Usuario usuario) {
         log.info("Actualizando usuario: {}", usuario.getUsername());
@@ -120,6 +127,8 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
+        validarPassword(newPassword);
+
         // Verificar contraseña anterior
         if (!cifradoService.verificarPassword(oldPassword, usuario.getPassword())) {
             auditoriaService.registrarError(usuario, "Usuario", usuarioId.toString(),
@@ -141,8 +150,8 @@ public class UsuarioService {
 
     /**
      * Cambiar la contraseña de un usuario por un administrador sin necesidad de la contraseña anterior.
-     * Usar sólo desde interfaces administrativas y con autorización adecuada.
      */
+    @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR')")
     @Transactional
     public void cambiarPasswordAdmin(Long usuarioId, String newPassword) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -198,6 +207,8 @@ public class UsuarioService {
             // Bloquear si supera el máximo
             if (intentos >= MAX_INTENTOS_FALLIDOS) {
                 usuario.setBloqueado(true);
+                usuario.setFechaBloqueo(LocalDateTime.now());
+                usuario.setContadorBloqueos(usuario.getContadorBloqueos() != null ? usuario.getContadorBloqueos() + 1 : 1);
                 log.warn("Usuario bloqueado por {} intentos fallidos: {}", intentos, usuario.getUsername());
                 auditoriaService.registrarAccion(usuario, "BLOQUEO_AUTOMATICO", "Usuario", usuario.getId().toString(),
                         "Usuario bloqueado automáticamente por " + intentos + " intentos fallidos");
@@ -244,9 +255,6 @@ public class UsuarioService {
         return usuarioRepository.findByEnabledTrue();
     }
 
-    /**
-     * Contar usuarios activos (método de compatibilidad para tests)
-     */
     public long contarActivos() {
         return usuarioRepository.countByEnabledTrue();
     }
@@ -255,10 +263,14 @@ public class UsuarioService {
      * Buscar usuarios por texto (nombre, username, email)
      */
     public List<Usuario> buscar(String texto) {
-        if (texto == null || texto.trim().isEmpty()) {
+        if (texto == null || texto.isBlank()) {
             return listarTodos();
         }
         return usuarioRepository.buscar(texto.trim());
+    }
+
+    public Page<Usuario> listarPaginado(String q, Pageable pageable) {
+        return usuarioRepository.findPage(q, pageable);
     }
 
     /**
@@ -270,6 +282,8 @@ public class UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
         usuario.setBloqueado(true);
+        usuario.setFechaBloqueo(LocalDateTime.now());
+        usuario.setContadorBloqueos(usuario.getContadorBloqueos() != null ? usuario.getContadorBloqueos() + 1 : 1);
         usuarioRepository.save(usuario);
 
         auditoriaService.registrarAccion(null, "BLOQUEO_USUARIO", "Usuario", usuarioId.toString(),
@@ -310,6 +324,8 @@ public class UsuarioService {
         // Bloquear si supera el máximo
         if (intentos >= MAX_INTENTOS_FALLIDOS) {
             usuario.setBloqueado(true);
+            usuario.setFechaBloqueo(LocalDateTime.now());
+            usuario.setContadorBloqueos(usuario.getContadorBloqueos() != null ? usuario.getContadorBloqueos() + 1 : 1);
             log.warn("Usuario bloqueado por {} intentos fallidos: {}", intentos, usuario.getUsername());
             auditoriaService.registrarAccion(usuario, "BLOQUEO_AUTOMATICO", "Usuario", usuarioId.toString(),
                     "Usuario bloqueado automáticamente por " + intentos + " intentos fallidos");
@@ -333,6 +349,7 @@ public class UsuarioService {
     /**
      * Eliminar usuario (desactivar)
      */
+    @PreAuthorize("hasAnyRole('ADMIN','ADMINISTRADOR')")
     @Transactional
     public void eliminarUsuario(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -345,6 +362,20 @@ public class UsuarioService {
                 "Usuario desactivado: " + usuario.getUsername());
 
         log.info("Usuario desactivado: {}", usuario.getUsername());
+    }
+
+    @Transactional
+    public void activarUsuario(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        usuario.setEnabled(true);
+        usuarioRepository.save(usuario);
+
+        auditoriaService.registrarActualizacion(null, "Usuario", usuarioId.toString(),
+                "Usuario activado: " + usuario.getUsername());
+
+        log.info("Usuario activado: {}", usuario.getUsername());
     }
 
     /**
@@ -375,11 +406,20 @@ public class UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
         usuario.setUltimoLogin(LocalDateTime.now());
         usuarioRepository.save(usuario);
-
-        auditoriaService.registrarAccion(usuario, "LOGIN", "Usuario", usuarioId.toString(),
-                "Usuario inició sesión");
         log.info("Último acceso actualizado para usuario: {}", usuario.getUsername());
     }
+    private void validarPassword(String password) {
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("La contraseña debe tener al menos 8 caracteres");
+        }
+        if (!password.matches(".*[A-Z].*")) {
+            throw new IllegalArgumentException("La contraseña debe contener al menos una mayúscula");
+        }
+        if (!password.matches(".*[0-9].*")) {
+            throw new IllegalArgumentException("La contraseña debe contener al menos un dígito");
+        }
+    }
+
     private void sincronizarRol(Usuario usuario) {
         if (usuario.getRole() == null && usuario.getRol() != null) {
             usuario.setRole(usuario.getRol().getNombre());

@@ -90,4 +90,13 @@ public class Lote {
 
     @Override
     public String toString() { return "Lote{id=" + id + ", codigo='" + codigo + "'}"; }
+
+    public alicanteweb.erp.entities.enums.EstadoLoteEnum getEstadoEnum() {
+        if (estado == null) return null;
+        try {
+            return alicanteweb.erp.entities.enums.EstadoLoteEnum.valueOf(estado);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 }

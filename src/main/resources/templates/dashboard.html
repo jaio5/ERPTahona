@@ -1,89 +1,344 @@
-<div th:fragment="content">
-    <div class="topbar">
-        <h4>Panel de trabajo</h4>
-        <small class="text-muted" th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy')}">01/01/2026</small>
+<div th:fragment="content" x-data="dashboardApp" x-cloak>
+    <div class="topbar d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-0">Panel de trabajo</h4>
+            <small class="text-muted" th:text="'Hoy, ' + ${#temporals.format(#temporals.createNow(), 'EEEE d MMMM yyyy')}"></small>
+        </div>
+        <a th:href="@{/web/reportes}" class="btn btn-ghost btn-sm">
+            <i class="bi bi-bar-chart-line me-1"></i>Informes
+        </a>
     </div>
 
+    <!-- Alertas dinámicas (Alpine.js) -->
+    <div x-show="hasAlertas()" class="mb-4">
+        <template x-for="a in alertas" :key="a.id">
+            <div class="alert alert-dismissible fade show py-2 mb-1 d-flex align-items-center gap-2"
+                 :class="alertClass(a)">
+                <i class="bi" :class="alertIcon(a)"></i>
+                <div>
+                    <strong x-text="a.titulo"></strong>
+                    <small class="d-block text-muted" x-text="a.descripcion"></small>
+                </div>
+                <button type="button" class="btn-close ms-auto" @click="cerrarAlerta(a)"></button>
+            </div>
+        </template>
+    </div>
+
+    <!-- KPIs principales -->
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-label">Facturas</div>
-                <div class="stat-value" th:text="${totalFacturas}">0</div>
-                <div class="stat-sub">Totales en el sistema</div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-primary-light"><i class="bi bi-receipt-cutoff"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-value" th:text="${totalFacturas}">0</div>
+                    <div class="kpi-label">Facturas totales</div>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-label">Clientes</div>
-                <div class="stat-value" th:text="${totalClientes}">0</div>
-                <div class="stat-sub">Activos en la base</div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-success-light"><i class="bi bi-people"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-value" th:text="${totalClientes}">0</div>
+                    <div class="kpi-label">Clientes activos</div>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-label">Artículos</div>
-                <div class="stat-value" th:text="${totalArticulos}">0</div>
-                <div class="stat-sub">Catálogo operativo</div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-warning-light"><i class="bi bi-box"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-value" th:text="${totalArticulos}">0</div>
+                    <div class="kpi-label">Artículos catálogo</div>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card">
-                <div class="stat-label">Recetas</div>
-                <div class="stat-value" th:text="${totalRecetas}">0</div>
-                <div class="stat-sub">Fórmulas activas</div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-primary-light" style="background: #fce7f3; color: #be185d;">
+                    <i class="bi bi-journal-code"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-value" th:text="${totalRecetas}">0</div>
+                    <div class="kpi-label">Recetas activas</div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- KPIs operacionales -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-label">Órdenes activas</div>
-                <div class="stat-value" th:text="${ordenesActivas}" style="color: #2563eb;">0</div>
-                <div class="stat-sub">Producción en curso</div>
+        <div class="col-sm-4">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-primary-light"><i class="bi bi-gear-fill"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-value" th:text="${ordenesActivas}">0</div>
+                    <div class="kpi-label">Órdenes en producción</div>
+                    <div class="kpi-trend up" th:if="${ordenesActivas > 0}">
+                        <i class="bi bi-check-circle-fill"></i> En curso
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-label">Lotes por caducar</div>
-                <div class="stat-value" th:text="${lotesCaducar}" style="color: #d97706;">0</div>
-                <div class="stat-sub">Próximos 7 días</div>
+        <div class="col-sm-4">
+            <div class="kpi-card">
+                <div class="kpi-icon" th:classappend="${lotesCaducar > 0 ? 'bg-danger-light' : 'bg-success-light'}">
+                    <i class="bi bi-exclamation-triangle" th:if="${lotesCaducar > 0}"></i>
+                    <i class="bi bi-check-circle" th:if="${lotesCaducar == 0}"></i>
+                </div>
+                <div class="kpi-body">
+                    <div class="kpi-value" th:text="${lotesCaducar}">0</div>
+                    <div class="kpi-label">Lotes por caducar</div>
+                    <div class="kpi-trend" th:classappend="${lotesCaducar > 0 ? 'down' : 'up'}">
+                        <span th:text="${lotesCaducar > 0 ? 'Próximos 7 días' : 'Todo en orden'}"></span>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stat-card">
-                <div class="stat-label">Rutas activas</div>
-                <div class="stat-value" th:text="${rutasActivas}" style="color: #059669;">0</div>
-                <div class="stat-sub">Hojas en curso</div>
+        <div class="col-sm-4">
+            <div class="kpi-card">
+                <div class="kpi-icon bg-success-light"><i class="bi bi-truck"></i></div>
+                <div class="kpi-body">
+                    <div class="kpi-value" th:text="${rutasActivas}">0</div>
+                    <div class="kpi-label">Rutas activas hoy</div>
+                    <div class="kpi-trend up" th:if="${rutasActivas > 0}">
+                        <i class="bi bi-arrow-right"></i> En distribución
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Acciones rápidas + accesos directos -->
     <div class="row g-3">
         <div class="col-md-4">
-            <div class="stat-card">
-                <h6 class="mb-3">Acciones rápidas</h6>
-                <a th:href="@{/web/facturas/nueva}" class="btn btn-outline-primary btn-sm w-100 mb-2">+ Nueva factura</a>
-                <a th:href="@{/web/albaranes/nuevo}" class="btn btn-outline-primary btn-sm w-100 mb-2">+ Nuevo albarán</a>
-                <a th:href="@{/web/clientes/nuevo}" class="btn btn-outline-primary btn-sm w-100 mb-2">+ Nuevo cliente</a>
-                <a th:href="@{/web/articulos/nuevo}" class="btn btn-outline-primary btn-sm w-100">+ Nuevo artículo</a>
+            <div class="form-card">
+                <h6 class="mb-3 fw-600">
+                    <i class="bi bi-lightning-charge text-warning me-2"></i>Acciones rápidas
+                </h6>
+                <div class="quick-actions-grid">
+                    <a th:href="@{/web/facturas/nueva}" class="action-tile">
+                        <i class="bi bi-receipt-cutoff"></i>
+                        <span>Nueva factura</span>
+                    </a>
+                    <a th:href="@{/web/albaranes/nuevo}" class="action-tile">
+                        <i class="bi bi-truck"></i>
+                        <span>Albarán</span>
+                    </a>
+                    <a th:href="@{/web/clientes/nuevo}" class="action-tile">
+                        <i class="bi bi-person-plus"></i>
+                        <span>Cliente</span>
+                    </a>
+                    <a th:href="@{/web/articulos/nuevo}" class="action-tile">
+                        <i class="bi bi-box"></i>
+                        <span>Artículo</span>
+                    </a>
+                    <a th:href="@{/web/ordenes-produccion/nuevo}" class="action-tile">
+                        <i class="bi bi-gear"></i>
+                        <span>Orden prod.</span>
+                    </a>
+                    <a th:href="@{/web/hojas-ruta/nuevo}" class="action-tile">
+                        <i class="bi bi-map"></i>
+                        <span>Hoja ruta</span>
+                    </a>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card">
-                <h6 class="mb-3">Producción</h6>
-                <a th:href="@{/web/ordenes-produccion}" class="btn btn-outline-primary btn-sm w-100 mb-2">Órdenes de producción</a>
-                <a th:href="@{/web/horneadas}" class="btn btn-outline-primary btn-sm w-100 mb-2">Registro de horneadas</a>
-                <a th:href="@{/web/recetas}" class="btn btn-outline-primary btn-sm w-100">Gestión de recetas</a>
+            <div class="form-card">
+                <h6 class="mb-3">
+                    <i class="bi bi-fire text-danger me-2"></i>Producción
+                </h6>
+                <div class="list-group list-group-flush">
+                    <a th:href="@{/web/ordenes-produccion}" class="list-group-item list-group-item-action py-2 px-0 border-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-gear text-muted"></i>Órdenes de producción
+                    </a>
+                    <a th:href="@{/web/horneadas}" class="list-group-item list-group-item-action py-2 px-0 border-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-thermometer-half text-muted"></i>Registro de horneadas
+                    </a>
+                    <a th:href="@{/web/recetas}" class="list-group-item list-group-item-action py-2 px-0 border-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-journal-code text-muted"></i>Gestión de recetas
+                    </a>
+                    <a th:href="@{/web/lotes}" class="list-group-item list-group-item-action py-2 px-0 border-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-arrow-left-right text-muted"></i>Trazabilidad de lotes
+                    </a>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card">
-                <h6 class="mb-3">Reparto</h6>
-                <a th:href="@{/web/hojas-ruta}" class="btn btn-outline-primary btn-sm w-100 mb-2">Hojas de ruta del día</a>
-                <a th:href="@{/web/rutas}" class="btn btn-outline-primary btn-sm w-100 mb-2">Rutas maestras</a>
-                <a th:href="@{/web/vehiculos}" class="btn btn-outline-primary btn-sm w-100">Vehículos</a>
+            <div class="form-card">
+                <h6 class="mb-3">
+                    <i class="bi bi-truck-front text-primary me-2"></i>Reparto
+                </h6>
+                <div class="list-group list-group-flush">
+                    <a th:href="@{/web/hojas-ruta}" class="list-group-item list-group-item-action py-2 px-0 border-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-map text-muted"></i>Hojas de ruta del día
+                    </a>
+                    <a th:href="@{/web/albaranes}" class="list-group-item list-group-item-action py-2 px-0 border-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-truck text-muted"></i>Albaranes pendientes
+                    </a>
+                    <a th:href="@{/web/rutas}" class="list-group-item list-group-item-action py-2 px-0 border-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-signpost-2 text-muted"></i>Rutas maestras
+                    </a>
+                    <a th:href="@{/web/devoluciones}" class="list-group-item list-group-item-action py-2 px-0 border-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-arrow-return-left text-muted"></i>Devoluciones
+                    </a>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Gráficos -->
+    <div class="row g-3 mt-3">
+        <div class="col-md-8">
+            <div class="form-card">
+                <h6 class="mb-3"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Ventas últimos 6 meses</h6>
+                <canvas id="chartVentas" style="max-height:210px;"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-card">
+                <h6 class="mb-3"><i class="bi bi-pie-chart me-2 text-warning"></i>Estado producción</h6>
+                <canvas id="chartProduccion" style="max-height:210px;display:none;"></canvas>
+                <div id="produccionVacio" class="empty-state" style="padding:2rem 0;">
+                    <i class="bi bi-gear"></i>
+                    <div>Sin órdenes activas</div>
+                    <a th:href="@{/web/ordenes-produccion/nuevo}" class="btn btn-sm btn-primary mt-2">+ Nueva orden</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:attr="nonce=${cspNonce}">
+        document.addEventListener('alpine:init', function () {
+            Alpine.data('dashboardApp', function () {
+                const STORAGE_KEY = 'erp_alertas_descartadas';
+                function getDescartadas() {
+                    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) { return []; }
+                }
+                function saveDescartada(id) {
+                    try {
+                        const ids = getDescartadas();
+                        if (!ids.includes(id)) { ids.push(id); localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); }
+                    } catch(e) {}
+                }
+                return {
+                alertas: [],
+                init() {
+                    const descartadas = getDescartadas();
+                    fetch('/api/web/alertas')
+                        .then(r => { if (r.ok) return r.json(); return []; })
+                        .then(data => {
+                            this.alertas = (Array.isArray(data) ? data : [])
+                                .filter(a => !descartadas.includes(a.id));
+                        })
+                        .catch(() => { this.alertas = []; });
+                },
+                hasAlertas() { return this.alertas.length > 0; },
+                alertClass(a) {
+                    const sev = a.severidad;
+                    if (sev === 'danger') return 'alert-danger';
+                    if (sev === 'warning') return 'alert-warning';
+                    return 'alert-info';
+                },
+                alertIcon(a) {
+                    const sev = a.severidad;
+                    if (sev === 'danger') return 'bi-exclamation-triangle-fill';
+                    if (sev === 'warning') return 'bi-exclamation-circle-fill';
+                    return 'bi-info-circle-fill';
+                },
+                cerrarAlerta(a) {
+                    saveDescartada(a.id);
+                    this.alertas = this.alertas.filter(x => x.id !== a.id);
+                }
+                };
+            });
+        });
+    </script>
+
+    <script th:attr="nonce=${cspNonce}" th:src="@{/webjars/chart.js/4.4.0/dist/chart.umd.js}"></script>
+    <script th:attr="nonce=${cspNonce}">
+    /* global Chart */
+    (function () {
+        const COLORES = ['#1e40af','#059669','#d97706','#dc2626','#7c3aed','#0891b2','#be185d','#047857'];
+
+        function renderVentas(data) {
+            const ctx = document.getElementById('chartVentas');
+            if (!ctx || !data.length) return;
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(function(d){return d.mes;}),
+                    datasets: [{
+                        label: 'Total €',
+                        data: data.map(function(d){return d.total;}),
+                        backgroundColor: 'rgba(30,64,175,0.72)',
+                        borderColor: '#1e40af',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function renderProduccion(data) {
+            const ctx = document.getElementById('chartProduccion');
+            const vacio = document.getElementById('produccionVacio');
+            if (!ctx) return;
+            if (!data || !data.length) {
+                ctx.style.display = 'none';
+                if (vacio) vacio.style.display = '';
+                return;
+            }
+            ctx.style.display = '';
+            if (vacio) vacio.style.display = 'none';
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(function(d){return d.estado;}),
+                    datasets: [{
+                        data: data.map(function(d){return d.cantidad;}),
+                        backgroundColor: COLORES.slice(0, data.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 10, font: { size: 10 }, padding: 8 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initCharts() {
+            fetch('/api/dashboard/ventas-mensuales')
+                .then(function(r){ return r.ok ? r.json() : []; })
+                .then(renderVentas)
+                .catch(function(e){ console.warn('[ERP] Error cargando gráfico de ventas', e); });
+
+            fetch('/api/dashboard/produccion-estado')
+                .then(function(r){ return r.ok ? r.json() : []; })
+                .then(renderProduccion)
+                .catch(function(e){ console.warn('[ERP] Error cargando gráfico de producción', e); });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCharts);
+        } else {
+            initCharts();
+        }
+    })();
+    </script>
 </div>

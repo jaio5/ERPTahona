@@ -1,35 +1,88 @@
 <div th:fragment="content">
-    <div class="topbar">
-        <h4 th:text="${titulo}">Clientes</h4>
-        <div class="d-flex gap-2">
-            <a th:href="@{/web/clientes/export.csv(q=${q})}" class="btn btn-outline-secondary btn-sm">Exportar CSV</a>
-            <a th:href="@{/web/clientes/nuevo}" class="btn btn-success btn-sm">+ Nuevo</a>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Clientes</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/clientes/export.csv(q=${q})}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-download me-1"></i>CSV
+            </a>
+            <a th:href="@{/web/clientes/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo cliente
+            </a>
         </div>
     </div>
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
-    <div class="row g-2 mb-3">
-        <div class="col-md-5">
-            <form class="d-flex gap-2">
-                <input type="search" name="q" class="form-control form-control-sm" placeholder="Buscar..." th:value="${q}">
-                <button class="btn btn-outline-primary btn-sm">Filtrar</button>
-            </form>
+
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/clientes}">
+        <input type="hidden" name="sort" th:value="${sort}">
+        <input type="hidden" name="dir"  th:value="${dir}">
+        <div class="filter-bar-search">
+            <label for="clientes-search" class="visually-hidden">Buscar clientes</label>
+            <i class="bi bi-search"></i>
+            <input id="clientes-search" type="search" name="q" class="form-control form-control-sm"
+                   placeholder="Nombre, CIF o email..." th:value="${q}" autocomplete="off">
         </div>
-    </div>
+        <div class="filter-bar-actions">
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-funnel me-1"></i>Filtrar
+            </button>
+            <a th:href="@{/web/clientes}" class="btn btn-ghost btn-sm">Limpiar</a>
+            <span class="text-muted small" th:if="${page != null}">
+                <span th:text="${page.totalElements}">0</span> clientes
+            </span>
+        </div>
+    </form>
+
     <div class="table-card">
-        <table class="table table-hover">
-            <thead><tr><th>Codigo</th><th>Nombre</th><th>CIF/NIF</th><th>Telefono</th><th>Email</th><th style="width:190px;"></th></tr></thead>
+        <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>
+                        <a th:href="@{/web/clientes(q=${q},sort='nombre',dir=${sort == 'nombre' and dir == 'asc' ? 'desc' : 'asc'})}"
+                           class="text-decoration-none text-body d-flex align-items-center gap-1">
+                            Nombre
+                            <i class="bi" th:classappend="${sort == 'nombre'} ? (${dir == 'asc'} ? 'bi-sort-up' : 'bi-sort-down') : 'bi-arrow-down-up opacity-25'"></i>
+                        </a>
+                    </th>
+                    <th>CIF/NIF</th>
+                    <th>Teléfono</th>
+                    <th class="d-none d-md-table-cell">Ciudad</th>
+                    <th>Email</th>
+                    <th style="width:100px;"></th>
+                </tr>
+            </thead>
             <tbody>
+                <tr th:if="${#lists.isEmpty(clientes)}">
+                    <td colspan="6" class="empty-state">
+                        <i class="bi bi-people"></i>
+                        <div>No hay clientes</div>
+                        <small th:if="${q != null and !q.isEmpty()}">Prueba con otros términos de búsqueda</small>
+                    </td>
+                </tr>
                 <tr th:each="c : ${clientes}">
-                    <td th:text="${c.codigo}"></td><td th:text="${c.nombre}"></td>
-                    <td th:text="${c.cif}"></td><td th:text="${c.telefono}"></td>
-                    <td th:text="${c.email}"></td>
+                    <td class="text-muted small" th:text="${c.codigo}"></td>
+                    <td><a th:href="@{/web/clientes/{id}(id=${c.id})}" class="fw-medium text-decoration-none" th:text="${c.nombre}"></a></td>
+                    <td class="text-muted small" th:text="${c.cif}"></td>
+                    <td class="text-muted small" th:text="${c.telefono}"></td>
+                    <td class="text-muted small d-none d-md-table-cell" th:text="${c.poblacion}"></td>
+                    <td class="text-muted small" th:text="${c.email}"></td>
                     <td class="text-end">
-                        <a th:href="@{/web/clientes/{id}/export.json(id=${c.id})}" class="btn btn-outline-primary btn-sm">RGPD</a>
-                        <a th:href="@{/web/clientes/{id}(id=${c.id})}" class="btn btn-outline-secondary btn-sm">Ver</a>
+                        <a th:href="@{/web/clientes/{id}/export.json(id=${c.id})}" class="btn btn-ghost btn-sm"
+                           th:attr="aria-label='Exportar RGPD de ' + ${c.nombre}" title="Exportar RGPD">
+                            <i class="bi bi-shield-check"></i>
+                        </a>
+                        <a th:href="@{/web/clientes/{id}(id=${c.id})}" class="btn btn-ghost btn-sm"
+                           th:attr="aria-label='Ver cliente ' + ${c.nombre}" title="Ver">
+                            <i class="bi bi-eye"></i>
+                        </a>
                     </td>
                 </tr>
             </tbody>
         </table>
+        </div>
     </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/clientes')}"></div>
 </div>

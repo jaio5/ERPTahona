@@ -76,14 +76,30 @@ La aplicacion mantiene registros de:
 - Firma si hay certificado.
 - Eventos de facturacion.
 
+## Conformidad con las especificaciones oficiales (julio 2026)
+
+Los registros de facturacion se generan con el formato oficial de AEAT:
+
+- **XML**: envoltorio `RegFactuSistemaFacturacion` con los esquemas `SuministroLR.xsd` /
+  `SuministroInformacion.xsd` (tikeV1.0): `RegistroAlta` y `RegistroAnulacion` con `IDVersion`,
+  `IDFactura`, `TipoFactura` (codigos F1/F2/R4/R5), `Desglose` por tipo impositivo,
+  `Encadenamiento` (PrimerRegistro/RegistroAnterior), bloque `SistemaInformatico` completo,
+  `FechaHoraHusoGenRegistro`, `TipoHuella` 01 y `Huella`.
+- **Huella**: formula oficial de la Orden HAC/1177/2024 (concatenacion `campo=valor` con `&`,
+  SHA-256 hexadecimal en mayusculas, huella anterior encadenada).
+- **QR tributario**: URL oficial de cotejo `.../wlpl/TIKE-CONT/ValidarQR?nif=&numserie=&fecha=&importe=`
+  (configurable con `verifactu.qr.base-url`; en dev apunta al entorno de pruebas `prewww2.aeat.es`).
+- **SistemaInformatico**: configurable con `verifactu.sistema.*` (productor, id de sistema,
+  numero de instalacion); si el productor es la propia empresa se usan sus datos fiscales.
+- Los XSD internos (`xsd/verifactu-suministro-*.xsd`) son una transcripcion del esquema oficial
+  para validacion estructural local: ante divergencias prevalece el XSD publicado por AEAT.
+
 ## Riesgo pendiente
 
-La preparacion tecnica no sustituye la validacion formal con AEAT. Antes de operar con remision real hay que validar contra el entorno y especificaciones oficiales vigentes:
+La preparacion tecnica no sustituye la validacion formal con AEAT. Antes de operar con remision
+real hay que validar contra el entorno de pruebas oficial con certificado:
 
-- XML.
-- Esquemas XSD.
-- Firma.
-- QR/frase de factura.
-- Endpoint.
-- Respuestas de AEAT.
+- Aceptacion del XML por el servicio SOAP real (WSDL y cabeceras WS-Security).
+- Respuestas y codigos de error de AEAT.
+- Declaracion responsable del productor del software (art. 13 RRSIF), que es un tramite documental.
 - Exportacion y conservacion de registros.

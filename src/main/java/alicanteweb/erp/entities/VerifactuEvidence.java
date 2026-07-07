@@ -57,7 +57,8 @@ public class VerifactuEvidence {
     @Column(name = "serie")
     private String serie;
 
-    @Column(name = "signature")
+    // BLOB: una firma RSA-2048 ocupa 256 bytes y no cabe en el varbinary(255) por defecto
+    @Column(name = "signature", columnDefinition = "BLOB")
     private byte[] signature;
 
     @Size(max = 50)
@@ -79,7 +80,7 @@ public class VerifactuEvidence {
     private String tipoRegistro;
 
     @Lob
-    @Column(name = "xml_generado")
+    @Column(name = "xml_generado", columnDefinition = "LONGTEXT")
     private String xmlGenerado;
 
     @Column(name = "fecha_generacion_registro")

@@ -1,0 +1,226 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">TPV</h4>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Parrilla de artículos -->
+        <div class="col-lg-8">
+            <input type="search" id="tpvBuscar" class="form-control mb-2" placeholder="Buscar artículo...">
+            <div class="row g-2" id="tpvParrilla">
+                <div th:if="${#lists.isEmpty(articulos)}" class="col-12">
+                    <div class="empty-state p-4"><i class="bi bi-box"></i>
+                        <div>No hay artículos activos con PVP. Configura precios de venta en el catálogo.</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-xl-3 tpv-item" th:each="a : ${articulos}"
+                     th:attr="data-nombre=${#strings.toLowerCase(a.nombre)}">
+                    <button type="button" class="btn btn-outline-primary w-100 h-100 p-2 text-start tpv-articulo"
+                            th:attr="data-id=${a.id},data-nombre=${a.nombre},data-pvp=${a.pvp},data-iva=${a.iva}">
+                        <div class="fw-medium text-truncate" th:text="${a.nombre}"></div>
+                        <div class="small text-muted" th:text="${a.categoria ?: ''}"></div>
+                        <div class="fw-bold" th:text="${#numbers.formatCurrency(a.pvpConIva)}"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carrito -->
+        <div class="col-lg-4">
+            <div class="table-card p-3 position-sticky" style="top: 1rem">
+                <h6 class="fw-bold"><i class="bi bi-basket me-1"></i>Ticket actual</h6>
+                <div id="tpvCarrito" class="mb-2" style="max-height: 45vh; overflow-y: auto">
+                    <div class="text-muted small" id="tpvVacio">Pulsa artículos para añadirlos</div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fs-4 fw-bold">
+                    <span>Total</span><span id="tpvTotal">0,00 €</span>
+                </div>
+                <div class="text-muted small text-end">IVA incluido</div>
+                <div class="d-grid gap-2 mt-3">
+                    <button type="button" class="btn btn-success btn-lg" id="tpvCobrarEfectivo" disabled>
+                        <i class="bi bi-cash-coin me-1"></i>Cobrar en efectivo
+                    </button>
+                    <button type="button" class="btn btn-primary" id="tpvCobrarTarjeta" disabled>
+                        <i class="bi bi-credit-card me-1"></i>Cobrar con tarjeta
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="tpvCobrarBizum" disabled>Bizum</button>
+                    <button type="button" class="btn btn-ghost text-danger" id="tpvVaciar">Vaciar ticket</button>
+                </div>
+                <div id="tpvResultado" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script th:attr="nonce=${cspNonce}">
+        (function() {
+            var carrito = new Map(); // id -> {nombre, pvp, iva, cantidad}
+
+            function fmt(n) {
+                return n.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+            }
+
+            // Importe de la línea IVA incluido, en céntimos, con el mismo redondeo
+            // que el servidor (base a 2 decimales + cuota a 2 decimales, HALF_UP):
+            // así el total mostrado coincide siempre con el de la factura emitida.
+            function lineaCents(item) {
+                var baseCents = Math.round(item.pvp * 100) * item.cantidad;
+                return baseCents + Math.round(baseCents * item.iva / 100);
+            }
+
+            function render() {
+                var cont = document.getElementById('tpvCarrito');
+                cont.innerHTML = '';
+                var totalCents = 0;
+                if (carrito.size === 0) {
+                    cont.innerHTML = '<div class="text-muted small">Pulsa artículos para añadirlos</div>';
+                }
+                carrito.forEach(function(item, id) {
+                    var cents = lineaCents(item);
+                    totalCents += cents;
+                    var row = document.createElement('div');
+                    row.className = 'd-flex align-items-center gap-2 py-1 border-bottom';
+
+                    // Nodos construidos con textContent (nunca innerHTML): el nombre del
+                    // artículo lo escriben usuarios del ERP y no debe interpretarse como HTML.
+                    var nombre = document.createElement('div');
+                    nombre.className = 'flex-grow-1 text-truncate';
+                    nombre.textContent = item.nombre;
+
+                    var grupo = document.createElement('div');
+                    grupo.className = 'btn-group btn-group-sm';
+                    var menos = document.createElement('button');
+                    menos.className = 'btn btn-outline-secondary tpv-menos';
+                    menos.setAttribute('data-id', id);
+                    menos.textContent = '−';
+                    var cantidad = document.createElement('span');
+                    cantidad.className = 'btn btn-outline-secondary disabled';
+                    cantidad.textContent = item.cantidad;
+                    var mas = document.createElement('button');
+                    mas.className = 'btn btn-outline-secondary tpv-mas';
+                    mas.setAttribute('data-id', id);
+                    mas.textContent = '+';
+                    grupo.appendChild(menos);
+                    grupo.appendChild(cantidad);
+                    grupo.appendChild(mas);
+
+                    var importe = document.createElement('div');
+                    importe.className = 'text-end';
+                    importe.style.minWidth = '4.5rem';
+                    importe.textContent = fmt(cents / 100);
+
+                    row.appendChild(nombre);
+                    row.appendChild(grupo);
+                    row.appendChild(importe);
+                    cont.appendChild(row);
+                });
+                document.getElementById('tpvTotal').textContent = fmt(totalCents / 100);
+                var hayLineas = carrito.size > 0;
+                ['tpvCobrarEfectivo', 'tpvCobrarTarjeta', 'tpvCobrarBizum'].forEach(function(id) {
+                    document.getElementById(id).disabled = !hayLineas;
+                });
+            }
+
+            document.getElementById('tpvParrilla').addEventListener('click', function(e) {
+                var btn = e.target.closest('.tpv-articulo');
+                if (!btn) return;
+                var id = btn.getAttribute('data-id');
+                var item = carrito.get(id) || {
+                    nombre: btn.getAttribute('data-nombre'),
+                    pvp: parseFloat(btn.getAttribute('data-pvp')),
+                    iva: parseFloat(btn.getAttribute('data-iva')) || 0,
+                    cantidad: 0
+                };
+                item.cantidad += 1;
+                carrito.set(id, item);
+                render();
+            });
+
+            document.getElementById('tpvCarrito').addEventListener('click', function(e) {
+                var mas = e.target.closest('.tpv-mas');
+                var menos = e.target.closest('.tpv-menos');
+                var id = (mas || menos) && (mas || menos).getAttribute('data-id');
+                if (!id) return;
+                var item = carrito.get(id);
+                if (!item) return;
+                item.cantidad += mas ? 1 : -1;
+                if (item.cantidad <= 0) carrito.delete(id); else carrito.set(id, item);
+                render();
+            });
+
+            document.getElementById('tpvVaciar').addEventListener('click', function() {
+                carrito.clear();
+                document.getElementById('tpvResultado').innerHTML = '';
+                render();
+            });
+
+            document.getElementById('tpvBuscar').addEventListener('input', function() {
+                var q = this.value.toLowerCase();
+                document.querySelectorAll('#tpvParrilla .tpv-item').forEach(function(el) {
+                    el.style.display = el.getAttribute('data-nombre').indexOf(q) >= 0 ? '' : 'none';
+                });
+            });
+
+            function cobrar(formaPago) {
+                var lineas = [];
+                carrito.forEach(function(item, id) {
+                    lineas.push({articuloId: parseInt(id, 10), cantidad: item.cantidad});
+                });
+                var resultado = document.getElementById('tpvResultado');
+                resultado.innerHTML = '<div class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Emitiendo ticket...</div>';
+                fetch('/web/tpv/vender', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({lineas: lineas, formaPago: formaPago})
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.ok) {
+                        carrito.clear();
+                        render();
+                        var alerta = document.createElement('div');
+                        alerta.className = 'alert alert-success mb-0';
+                        var titulo = document.createElement('div');
+                        titulo.className = 'fw-bold';
+                        titulo.appendChild(icono('bi bi-check-circle me-1'));
+                        titulo.appendChild(document.createTextNode('Ticket ' + data.numero));
+                        var enlace = document.createElement('a');
+                        enlace.className = 'btn btn-sm btn-outline-secondary mt-2';
+                        enlace.target = '_blank';
+                        enlace.href = data.pdfUrl;
+                        enlace.appendChild(icono('bi bi-printer me-1'));
+                        enlace.appendChild(document.createTextNode('Imprimir ticket'));
+                        alerta.appendChild(titulo);
+                        alerta.appendChild(enlace);
+                        resultado.replaceChildren(alerta);
+                    } else {
+                        // El mensaje de error del servidor puede incluir texto introducido por
+                        // usuarios (p.ej. nombres de artículo): nunca interpretarlo como HTML.
+                        resultado.replaceChildren(alertaError(data.error || 'Error al emitir'));
+                    }
+                }).catch(function(err) {
+                    resultado.replaceChildren(alertaError('Error de red: ' + err));
+                });
+            }
+
+            function icono(clases) {
+                var i = document.createElement('i');
+                i.className = clases;
+                return i;
+            }
+
+            function alertaError(mensaje) {
+                var div = document.createElement('div');
+                div.className = 'alert alert-danger mb-0';
+                div.textContent = mensaje;
+                return div;
+            }
+
+            document.getElementById('tpvCobrarEfectivo').addEventListener('click', function() { cobrar('EFECTIVO'); });
+            document.getElementById('tpvCobrarTarjeta').addEventListener('click', function() { cobrar('TARJETA'); });
+            document.getElementById('tpvCobrarBizum').addEventListener('click', function() { cobrar('BIZUM'); });
+
+            render();
+        })();
+    </script>
+</div>

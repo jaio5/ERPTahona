@@ -89,4 +89,13 @@ public class OrdenProduccion {
 
     @Override
     public String toString() { return "OrdenProduccion{id=" + id + ", numero='" + numero + "'}"; }
+
+    public alicanteweb.erp.entities.enums.EstadoOrdenProduccionEnum getEstadoEnum() {
+        if (estado == null) return null;
+        try {
+            return alicanteweb.erp.entities.enums.EstadoOrdenProduccionEnum.valueOf(estado);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 }

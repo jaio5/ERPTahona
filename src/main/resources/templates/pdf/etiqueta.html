@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/>
+<style>
+@page { size: 105mm 148mm; margin: 8mm; }
+* { box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #222; margin: 0; }
+h2 { font-size: 15px; font-weight: bold; margin: 0 0 4px 0; color: #1a3a5c; }
+.section { margin-bottom: 7px; padding-bottom: 5px; border-bottom: 1px dashed #ccc; }
+.label { color: #888; font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.value { font-size: 11px; font-weight: bold; }
+.alergeno { color: #cc0000; font-weight: bold; font-size: 10px; }
+.empresa-pie { margin-top: 6px; font-size: 8px; color: #555; border-top: 1px solid #ddd; padding-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- Nombre del producto -->
+<div class="section">
+  <h2 th:text="${articulo.nombre != null ? articulo.nombre : articulo.codigo}">Producto</h2>
+  <span class="label">Código: </span><span class="value" th:text="${articulo.codigo}"></span>
+  <span th:if="${articulo.unidad != null}">
+    &nbsp;·&nbsp;<span class="label">Peso neto: </span><span class="value" th:text="${articulo.unidad}"></span>
+  </span>
+</div>
+
+<!-- Lote y caducidad -->
+<div class="section" th:if="${lote != null}">
+  <span class="label">Lote: </span><span class="value" th:text="${lote.codigo}"></span>
+  <br th:if="${lote.fechaCaducidad != null}"/>
+  <span th:if="${lote.fechaCaducidad != null}">
+    <span class="label">Consumir preferentemente antes del: </span>
+    <span class="value" th:text="${#temporals.format(lote.fechaCaducidad, 'dd/MM/yyyy')}"></span>
+  </span>
+  <br th:if="${lote.fechaProduccion != null}"/>
+  <span th:if="${lote.fechaProduccion != null}">
+    <span class="label">Fecha producción: </span>
+    <span th:text="${#temporals.format(lote.fechaProduccion, 'dd/MM/yyyy')}"></span>
+  </span>
+  <br th:if="${lote.numeroRegistroSanitario != null}"/>
+  <span th:if="${lote.numeroRegistroSanitario != null}">
+    <span class="label">Reg. Sanitario: </span><span th:text="${lote.numeroRegistroSanitario}"></span>
+  </span>
+</div>
+
+<!-- Alérgenos (obligatorio UE 1169/2011) -->
+<div class="section">
+  <span class="label">Alérgenos: </span>
+  <span class="alergeno"
+        th:if="${articulo.alergenos != null and !articulo.alergenos.isEmpty()}"
+        th:text="${articulo.alergenos}"></span>
+  <span th:if="${articulo.alergenos == null or articulo.alergenos.isEmpty()}">Ninguno declarado</span>
+</div>
+
+<!-- Ingredientes (de receta) -->
+<div class="section"
+     th:if="${receta != null and receta.ingredientes != null and !receta.ingredientes.isEmpty()}">
+  <span class="label">Ingredientes: </span>
+  <span th:each="ing, stat : ${receta.ingredientes}">
+    <span th:if="${ing.articulo != null}" th:text="${ing.articulo.nombre}"></span><span th:if="${!stat.last}">, </span>
+  </span>
+</div>
+
+<!-- Conservación -->
+<div class="section">
+  <span class="label">Conservar en lugar fresco y seco. Proteger de la luz solar.</span>
+</div>
+
+<!-- Datos empresa -->
+<div class="empresa-pie" th:if="${empresa != null}">
+  <strong th:text="${empresa.nombreEmpresa}"></strong><br/>
+  <span th:text="${empresa.direccion}"></span>&nbsp;
+  <span th:text="${empresa.codigoPostal}"></span>&nbsp;
+  <span th:text="${empresa.ciudad}"></span><br/>
+  <span>CIF: <span th:text="${empresa.cif}"></span></span>
+  <span th:if="${empresa.registroSanitario != null}">
+    &nbsp;·&nbsp;RGSEAA: <span th:text="${empresa.registroSanitario}"></span>
+  </span>
+</div>
+
+</body>
+</html>

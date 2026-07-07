@@ -1,12 +1,19 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.*;
+import alicanteweb.erp.repository.AlbaranVentaFacturaRepository;
 import alicanteweb.erp.repository.AlbaranVentaRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import alicanteweb.erp.util.FinancialMath;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,8 +31,11 @@ public class AlbaranService {
     private static final Logger log = LoggerFactory.getLogger(AlbaranService.class);
 
     private final AlbaranVentaRepository albaranRepository;
+    private final AlbaranVentaFacturaRepository albaranFacturaRepository;
     private final FacturaService facturaService;
     private final AuditoriaService auditoriaService;
+    private final StockService stockService;
+    private final AlbaranNumeroService albaranNumeroService;
 
     // ==========================================
     // OPERACIONES CRUD BÁSICAS
@@ -47,6 +57,11 @@ public class AlbaranService {
     public Optional<AlbaranVenta> obtenerPorId(Long id) {
         log.debug("Obteniendo albarán con ID: {}", id);
         return albaranRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AlbaranVenta> obtenerRecientesPorCliente(Long clienteId) {
+        return albaranRepository.findTop10ByClienteIdWithLineas(clienteId, PageRequest.of(0, 10));
     }
 
     @Transactional(readOnly = true)
@@ -73,6 +88,29 @@ public class AlbaranService {
         return albaranRepository.findByClienteId(clienteId);
     }
 
+    @Transactional(readOnly = true)
+    public List<AlbaranVenta> buscarPendientesFacturar() {
+        return albaranRepository.findPendientesFacturar();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AlbaranVenta> buscarPendientesFacturarPorCliente(Long clienteId) {
+        return albaranRepository.findPendientesFacturarByClienteId(clienteId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AlbaranVenta> findByFecha(LocalDate fecha) {
+        return albaranRepository.findByFecha(fecha);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AlbaranVenta> buscarPaginado(String q, String estado, Pageable pageable) {
+        return albaranRepository.buscarPaginado(
+            (q != null && !q.isBlank()) ? q : null,
+            (estado != null && !estado.isBlank()) ? estado : null,
+            pageable);
+    }
+
     /**
      * Guarda un albarán
      */
@@ -96,7 +134,7 @@ public class AlbaranService {
         }
 
         // Calcular total si tiene líneas
-        if (albaran.getLineas() != null && !albaran.getLineas().isEmpty()) {
+        if (albaran.getAlbaranVentaLineas() != null && !albaran.getAlbaranVentaLineas().isEmpty()) {
             calcularTotal(albaran);
         }
 
@@ -111,57 +149,95 @@ public class AlbaranService {
         albaranRepository.deleteById(id);
     }
 
+    /**
+     * Marca el albarán como ENTREGADO y deduce stock por cada línea.
+     */
+    @Transactional
+    public AlbaranVenta marcarEntregado(Long id) {
+        AlbaranVenta albaran = albaranRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Albarán no encontrado: " + id));
+        if ("ENTREGADO".equals(albaran.getEstado())) {
+            return albaran;
+        }
+        for (AlbaranVentaLinea linea : albaran.getAlbaranVentaLineas()) {
+            if (linea.getArticulo() == null || linea.getCantidad() == null
+                    || linea.getCantidad().compareTo(BigDecimal.ZERO) <= 0) continue;
+            Long almacenId = albaran.getAlmacen() != null ? albaran.getAlmacen().getId() : null;
+            stockService.registrarSalida(linea.getArticulo().getId(), almacenId, linea.getCantidad(),
+                    "Entrega albaran " + albaran.getNumero(), "ALBARAN", albaran.getId());
+        }
+        albaran.setEstado("ENTREGADO");
+        albaran = albaranRepository.save(albaran);
+        log.info("Albarán {} marcado como ENTREGADO", albaran.getNumero());
+        return albaran;
+    }
+
     // ==========================================
     // FLUJO COMPLETO - CONVERSIÓN A FACTURA
     // ==========================================
 
     /**
-     * Convierte un albarán en factura
+     * Convierte un albarán en factura (versión básica, para compatibilidad REST)
      */
     public Factura convertirAFactura(Long albaranId, Usuario usuario) {
-        log.info("🔄 Convirtiendo albarán {} a factura", albaranId);
+        return convertirAFactura(albaranId, usuario, null, null, null, null);
+    }
+
+    /**
+     * Convierte un albarán en factura con datos de facturación opcionales
+     */
+    @Transactional
+    public Factura convertirAFactura(Long albaranId, Usuario usuario,
+                                     String fechaStr, String medioCobro,
+                                     String fechaVencimientoStr, String observacionesExtra) {
+        log.info("[CONVERSION] Convirtiendo albarán {} a factura", albaranId);
 
         AlbaranVenta albaran = albaranRepository.findById(albaranId)
             .orElseThrow(() -> new IllegalArgumentException("Albarán no encontrado"));
+        if (albaranFacturaRepository.existsByAlbaran_Id(albaran.getId())) {
+            throw new IllegalStateException("El albarán " + albaran.getNumero() + " ya está facturado");
+        }
 
         // Crear factura
         Factura factura = new Factura();
         factura.setCliente(albaran.getCliente());
-        factura.setFecha(LocalDate.now());
+        factura.setFecha(fechaStr != null && !fechaStr.isBlank() ? LocalDate.parse(fechaStr) : LocalDate.now());
         factura.setEstado("BORRADOR");
-        factura.setObservaciones("Generada desde albarán " + albaran.getNumero());
+        if (medioCobro != null && !medioCobro.isBlank()) factura.setMedioCobro(medioCobro);
+        if (fechaVencimientoStr != null && !fechaVencimientoStr.isBlank()) {
+            factura.setFechaVencimiento(LocalDate.parse(fechaVencimientoStr));
+        }
+        String obs = "Generada desde albarán " + albaran.getNumero();
+        if (observacionesExtra != null && !observacionesExtra.isBlank()) obs += ". " + observacionesExtra;
+        factura.setObservaciones(obs);
+        factura.setNumeroAlbaran(albaran.getNumero());
 
         // Copiar líneas del albarán
         BigDecimal baseImponible = BigDecimal.ZERO;
         BigDecimal totalIva = BigDecimal.ZERO;
 
-        for (AlbaranVentaLinea lineaAlbaran : albaran.getLineas()) {
+        for (AlbaranVentaLinea lineaAlbaran : albaran.getAlbaranVentaLineas()) {
+            BigDecimal cantidad = lineaAlbaran.getCantidad();
+            BigDecimal precio = lineaAlbaran.getPrecio();
+            if (cantidad == null || precio == null) continue;
+
             FacturaLinea lineaFactura = new FacturaLinea();
             lineaFactura.setFactura(factura);
             lineaFactura.setArticulo(lineaAlbaran.getArticulo());
             lineaFactura.setDescripcion(lineaAlbaran.getDescripcion() != null ?
                 lineaAlbaran.getDescripcion() :
                 (lineaAlbaran.getArticulo() != null ? lineaAlbaran.getArticulo().getNombre() : ""));
-            lineaFactura.setCantidad(lineaAlbaran.getCantidad());
-            lineaFactura.setPrecioUnitario(lineaAlbaran.getPrecio());
+            lineaFactura.setCantidad(cantidad);
+            lineaFactura.setPrecioUnitario(precio);
             lineaFactura.setDescuento(lineaAlbaran.getDescuento());
             lineaFactura.setIva(lineaAlbaran.getIva());
 
-            // Calcular totales
-            BigDecimal subtotal = lineaAlbaran.getCantidad().multiply(lineaAlbaran.getPrecio());
-            if (lineaAlbaran.getDescuento() != null && lineaAlbaran.getDescuento().compareTo(BigDecimal.ZERO) > 0) {
-                BigDecimal descuentoImporte = subtotal.multiply(lineaAlbaran.getDescuento())
-                    .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-                subtotal = subtotal.subtract(descuentoImporte);
-            }
-
+            BigDecimal subtotal = calcularSubtotalLinea(cantidad, precio, lineaAlbaran.getDescuento());
             lineaFactura.setTotal(subtotal);
             baseImponible = baseImponible.add(subtotal);
 
             if (lineaAlbaran.getIva() != null) {
-                BigDecimal ivaLinea = subtotal.multiply(lineaAlbaran.getIva())
-                    .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-                totalIva = totalIva.add(ivaLinea);
+                totalIva = totalIva.add(FinancialMath.porcentaje(subtotal, lineaAlbaran.getIva()));
             }
 
             factura.getFacturaLineas().add(lineaFactura);
@@ -173,14 +249,18 @@ public class AlbaranService {
 
         // Guardar factura
         Factura facturaGuardada = facturaService.save(factura);
+        vincularAlbaranFactura(albaran, facturaGuardada);
 
-        log.info("✅ Albarán convertido a factura: {} -> {}", albaran.getNumero(), facturaGuardada.getNumero());
+        albaran.setEstado("FACTURADO");
+        albaranRepository.save(albaran);
+
+        log.info("[OK] Albarán convertido a factura: {} -> {}", albaran.getNumero(), facturaGuardada.getNumero());
 
         // Auditar
         if (auditoriaService != null) {
-            auditoriaService.registrarAccion(usuario, "ALBARAN", "CONVERTIR_FACTURA",
-                "Albarán " + albaran.getNumero() + " convertido a factura " + facturaGuardada.getNumero(),
-                "EXITOSO");
+            auditoriaService.registrarAccion(usuario, "CONVERTIR_FACTURA", "AlbaranVenta",
+                albaran.getId().toString(),
+                "Albarán " + albaran.getNumero() + " convertido a factura " + facturaGuardada.getNumero());
         }
 
         return facturaGuardada;
@@ -189,8 +269,9 @@ public class AlbaranService {
     /**
      * Convierte múltiples albaranes en una sola factura
      */
+    @Transactional
     public Factura convertirVariosAFactura(List<Long> albaranIds, Usuario usuario) {
-        log.info("🔄 Convirtiendo {} albaranes a una factura", albaranIds.size());
+        log.info("[CONVERSION] Convirtiendo {} albaranes a una factura", albaranIds.size());
 
         if (albaranIds.isEmpty()) {
             throw new IllegalArgumentException("Debe seleccionar al menos un albarán");
@@ -202,12 +283,26 @@ public class AlbaranService {
         if (albaranes.isEmpty()) {
             throw new IllegalArgumentException("No se encontraron los albaranes especificados");
         }
+        if (albaranes.size() != albaranIds.size()) {
+            List<Long> encontrados = albaranes.stream().map(AlbaranVenta::getId).toList();
+            List<Long> noEncontrados = albaranIds.stream().filter(i -> !encontrados.contains(i)).toList();
+            throw new IllegalArgumentException("Albaranes no encontrados: " + noEncontrados);
+        }
 
-        // Verificar que todos sean del mismo cliente
+        // Verificar que todos tengan cliente y sean del mismo
         Cliente cliente = albaranes.get(0).getCliente();
+        if (cliente == null) {
+            throw new IllegalArgumentException("El albarán " + albaranes.get(0).getNumero() + " no tiene cliente asignado");
+        }
         for (AlbaranVenta albaran : albaranes) {
+            if (albaran.getCliente() == null) {
+                throw new IllegalArgumentException("El albarán " + albaran.getNumero() + " no tiene cliente asignado");
+            }
             if (!albaran.getCliente().getId().equals(cliente.getId())) {
                 throw new IllegalStateException("Todos los albaranes deben ser del mismo cliente");
+            }
+            if (albaranFacturaRepository.existsByAlbaran_Id(albaran.getId())) {
+                throw new IllegalStateException("El albarán " + albaran.getNumero() + " ya está facturado");
             }
         }
 
@@ -223,39 +318,35 @@ public class AlbaranService {
             if (i < albaranes.size() - 1) observaciones.append(", ");
         }
         factura.setObservaciones(observaciones.toString());
+        factura.setNumeroAlbaran(albaranes.stream().map(AlbaranVenta::getNumero).reduce((a, b) -> a + ", " + b).orElse(null));
 
         BigDecimal baseImponible = BigDecimal.ZERO;
         BigDecimal totalIva = BigDecimal.ZERO;
 
         // Copiar líneas de todos los albaranes
         for (AlbaranVenta albaran : albaranes) {
-            for (AlbaranVentaLinea lineaAlbaran : albaran.getLineas()) {
+            for (AlbaranVentaLinea lineaAlbaran : albaran.getAlbaranVentaLineas()) {
+                BigDecimal cantidad = lineaAlbaran.getCantidad();
+                BigDecimal precio = lineaAlbaran.getPrecio();
+                if (cantidad == null || precio == null) continue;
+
                 FacturaLinea lineaFactura = new FacturaLinea();
                 lineaFactura.setFactura(factura);
                 lineaFactura.setArticulo(lineaAlbaran.getArticulo());
                 lineaFactura.setDescripcion(lineaAlbaran.getDescripcion() != null ?
                     lineaAlbaran.getDescripcion() :
                     (lineaAlbaran.getArticulo() != null ? lineaAlbaran.getArticulo().getNombre() : ""));
-                lineaFactura.setCantidad(lineaAlbaran.getCantidad());
-                lineaFactura.setPrecioUnitario(lineaAlbaran.getPrecio());
+                lineaFactura.setCantidad(cantidad);
+                lineaFactura.setPrecioUnitario(precio);
                 lineaFactura.setDescuento(lineaAlbaran.getDescuento());
                 lineaFactura.setIva(lineaAlbaran.getIva());
 
-                // Calcular totales
-                BigDecimal subtotal = lineaAlbaran.getCantidad().multiply(lineaAlbaran.getPrecio());
-                if (lineaAlbaran.getDescuento() != null && lineaAlbaran.getDescuento().compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal descuentoImporte = subtotal.multiply(lineaAlbaran.getDescuento())
-                        .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-                    subtotal = subtotal.subtract(descuentoImporte);
-                }
-
+                BigDecimal subtotal = calcularSubtotalLinea(cantidad, precio, lineaAlbaran.getDescuento());
                 lineaFactura.setTotal(subtotal);
                 baseImponible = baseImponible.add(subtotal);
 
                 if (lineaAlbaran.getIva() != null) {
-                    BigDecimal ivaLinea = subtotal.multiply(lineaAlbaran.getIva())
-                        .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-                    totalIva = totalIva.add(ivaLinea);
+                    totalIva = totalIva.add(FinancialMath.porcentaje(subtotal, lineaAlbaran.getIva()));
                 }
 
                 factura.getFacturaLineas().add(lineaFactura);
@@ -266,16 +357,21 @@ public class AlbaranService {
         factura.setTotalIva(totalIva);
         factura.setTotal(baseImponible.add(totalIva));
 
-        // Guardar factura
+        // Guardar factura y marcar albaranes como FACTURADO
         Factura facturaGuardada = facturaService.save(factura);
+        for (AlbaranVenta albaran : albaranes) {
+            vincularAlbaranFactura(albaran, facturaGuardada);
+            albaran.setEstado("FACTURADO");
+            albaranRepository.save(albaran);
+        }
 
-        log.info("✅ {} albaranes convertidos a factura: {}", albaranes.size(), facturaGuardada.getNumero());
+        log.info("[OK] {} albaranes convertidos a factura: {}", albaranes.size(), facturaGuardada.getNumero());
 
         // Registrar auditoría usando el usuario proporcionado (si existe)
         if (auditoriaService != null && usuario != null) {
-            auditoriaService.registrarAccion(usuario, "ALBARAN", "CONVERTIR_FACTURA_MASIVO",
-                "Albaranes " + observaciones + " convertidos a factura " + facturaGuardada.getNumero(),
-                "EXITOSO");
+            auditoriaService.registrarAccion(usuario, "CONVERTIR_FACTURA_MASIVO", "AlbaranVenta",
+                facturaGuardada.getId().toString(),
+                "Albaranes " + observaciones + " convertidos a factura " + facturaGuardada.getNumero());
         }
 
         return facturaGuardada;
@@ -298,7 +394,7 @@ public class AlbaranService {
         duplicado.setObservaciones(original.getObservaciones());
 
         // Copiar líneas
-        for (AlbaranVentaLinea lineaOriginal : original.getLineas()) {
+        for (AlbaranVentaLinea lineaOriginal : original.getAlbaranVentaLineas()) {
             AlbaranVentaLinea lineaDuplicada = new AlbaranVentaLinea();
             lineaDuplicada.setAlbaran(duplicado);
             lineaDuplicada.setArticulo(lineaOriginal.getArticulo());
@@ -308,13 +404,13 @@ public class AlbaranService {
             lineaDuplicada.setDescuento(lineaOriginal.getDescuento());
             lineaDuplicada.setIva(lineaOriginal.getIva());
 
-            duplicado.getLineas().add(lineaDuplicada);
+            duplicado.getAlbaranVentaLineas().add(lineaDuplicada);
         }
 
         calcularTotal(duplicado);
 
         AlbaranVenta guardado = albaranRepository.save(duplicado);
-        log.info("✅ Albarán duplicado: {}", guardado.getNumero());
+        log.info("[OK] Albarán duplicado: {}", guardado.getNumero());
 
         return guardado;
     }
@@ -326,72 +422,40 @@ public class AlbaranService {
     /**
      * Genera un número de albarán automático
      */
-    private String generarNumeroAlbaran() {
-        int year = LocalDate.now().getYear();
-        String patron = "ALB-" + year + "-%";
-        Integer maxSecuencia = albaranRepository.findMaxSecuenciaByYear(patron);
-        int siguiente = (maxSecuencia != null ? maxSecuencia : 0) + 1;
-        return "ALB-" + year + "-" + String.format("%06d", siguiente);
+    public String generarNumeroAlbaran() {
+        return albaranNumeroService.generarNumero();
+    }
+
+    private void vincularAlbaranFactura(AlbaranVenta albaran, Factura factura) {
+        if (albaran == null || albaran.getId() == null || factura == null || factura.getId() == null) {
+            return;
+        }
+        if (albaranFacturaRepository.existsByAlbaran_Id(albaran.getId())) {
+            return;
+        }
+        albaranFacturaRepository.vincular(albaran.getId(), factura.getId());
     }
 
     /**
-     * Calcula el total del albarán
+     * Calcula el total del albarán (base + IVA incluido).
      */
     private void calcularTotal(AlbaranVenta albaran) {
         BigDecimal total = BigDecimal.ZERO;
-
-        if (albaran.getLineas() != null) {
-            for (AlbaranVentaLinea linea : albaran.getLineas()) {
-                if (linea.getCantidad() != null && linea.getPrecio() != null) {
-                    BigDecimal subtotal = linea.getCantidad().multiply(linea.getPrecio());
-
-                    // Aplicar descuento si existe
-                    if (linea.getDescuento() != null && linea.getDescuento().compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal descuentoImporte = subtotal.multiply(linea.getDescuento())
-                            .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-                        subtotal = subtotal.subtract(descuentoImporte);
-                    }
-
-                    // Aplicar IVA si existe
-                    if (linea.getIva() != null && linea.getIva().compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal ivaImporte = subtotal.multiply(linea.getIva())
-                            .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-                        subtotal = subtotal.add(ivaImporte);
-                    }
-
-                    total = total.add(subtotal);
+        if (albaran.getAlbaranVentaLineas() != null) {
+            for (AlbaranVentaLinea linea : albaran.getAlbaranVentaLineas()) {
+                if (linea.getCantidad() == null || linea.getPrecio() == null) continue;
+                BigDecimal subtotal = calcularSubtotalLinea(linea.getCantidad(), linea.getPrecio(), linea.getDescuento());
+                if (linea.getIva() != null && linea.getIva().compareTo(BigDecimal.ZERO) > 0) {
+                    subtotal = subtotal.add(FinancialMath.porcentaje(subtotal, linea.getIva()));
                 }
+                total = total.add(subtotal);
             }
         }
-
         albaran.setTotal(total);
     }
 
-    // ==========================================
-    // MÉTODOS ALIAS — @deprecated, usar métodos primarios
-    // ==========================================
-
-    /** @deprecated Usar {@link #obtenerTodos()} */
-    @Deprecated(since = "1.0", forRemoval = true)
-    @Transactional(readOnly = true)
-    public List<AlbaranVenta> findAll() { return obtenerTodos(); }
-
-    /** @deprecated Usar {@link #obtenerPorId(Long)} */
-    @Deprecated(since = "1.0", forRemoval = true)
-    @Transactional(readOnly = true)
-    public Optional<AlbaranVenta> findById(Long id) { return obtenerPorId(id); }
-
-    /** @deprecated Usar {@link #guardar(AlbaranVenta)} */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public AlbaranVenta save(AlbaranVenta albaran) { return guardar(albaran); }
-
-    /** @deprecated Usar {@link #eliminar(Long)} */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public void deleteById(Long id) { eliminar(id); }
-
-    /** @deprecated Usar {@link #buscarPorCliente(Long)} */
-    @Deprecated(since = "1.0", forRemoval = true)
-    @Transactional(readOnly = true)
-    public List<AlbaranVenta> findByCliente(Long clienteId) { return buscarPorCliente(clienteId); }
+    private BigDecimal calcularSubtotalLinea(BigDecimal cantidad, BigDecimal precio, BigDecimal descuento) {
+        return FinancialMath.subtotalConDescuento(cantidad, precio, descuento);
+    }
 }
 

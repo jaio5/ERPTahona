@@ -1,0 +1,45 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title"><h4 th:text="${titulo}">Vehículo</h4></div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/vehiculos/{id}/editar(id=${vehiculo.id})}" class="btn btn-outline-primary btn-sm">Editar</a>
+            <a th:href="@{/web/vehiculos}" class="btn btn-ghost btn-sm">Volver</a>
+        </div>
+    </div>
+    <div class="form-card">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <span class="doc-field-label">Matrícula</span>
+                <div class="doc-field-value" th:text="${vehiculo.matricula}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Marca</span>
+                <div class="doc-field-value" th:text="${vehiculo.marca ?: '—'}">—</div>
+            </div>
+            <div class="col-md-4">
+                <span class="doc-field-label">Modelo</span>
+                <div class="doc-field-value" th:text="${vehiculo.modelo ?: '—'}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Tipo</span>
+                <div class="doc-field-value" th:text="${vehiculo.tipo ?: '—'}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Capacidad kg</span>
+                <div class="doc-field-value" th:text="${vehiculo.capacidadKg ?: '—'}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Volumen</span>
+                <div class="doc-field-value" th:text="${vehiculo.capacidadVolumen ?: '—'}">—</div>
+            </div>
+            <div class="col-md-3">
+                <span class="doc-field-label">Consumo medio</span>
+                <div class="doc-field-value" th:text="${vehiculo.consumoMedio ?: '—'}">—</div>
+            </div>
+            <div class="col-12" th:if="${vehiculo.observaciones}">
+                <span class="doc-field-label">Observaciones</span>
+                <div class="doc-field-value text-muted" th:text="${vehiculo.observaciones}">—</div>
+            </div>
+        </div>
+    </div>
+</div>

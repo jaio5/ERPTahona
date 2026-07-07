@@ -1,8 +1,77 @@
-﻿<div th:fragment="content">
-    <div class="topbar"><h4 th:text="${titulo}"></h4><a th:href="@{/web/recetas/nuevo}" class="btn btn-success btn-sm">+ Nueva</a></div>
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div class="table-card"><table class="table table-hover">
-        <thead><tr><th>Código</th><th>Nombre</th><th>Prep (min)</th><th>Temp (°C)</th><th>Alérgenos</th></tr></thead>
-        <tbody><tr th:each="r : ${recetas}"><td th:text="${r.codigo}"></td><td th:text="${r.nombre}"></td><td th:text="${r.tiempoPreparacion}"></td><td th:text="${r.temperaturaHorneado}"></td><td th:text="${r.alergenos}"></td></tr></tbody>
-    </table></div>
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Recetas</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/recetas/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nueva receta
+            </a>
+        </div>
+    </div>
+
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/recetas}">
+        <div class="filter-bar-search">
+            <label for="recetas-search" class="visually-hidden">Buscar recetas</label>
+            <i class="bi bi-search"></i>
+            <input id="recetas-search" type="search" name="q" class="form-control form-control-sm"
+                   placeholder="Nombre o código..." th:value="${q}" autocomplete="off">
+        </div>
+        <div class="filter-bar-actions">
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-funnel me-1"></i>Filtrar
+            </button>
+            <a th:href="@{/web/recetas}" class="btn btn-ghost btn-sm">Limpiar</a>
+        </div>
+    </form>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Prep (min)</th>
+                        <th>Horneado (min)</th>
+                        <th>Temp (°C)</th>
+                        <th>Alérgenos</th>
+                        <th style="width:80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(recetas)}">
+                        <td colspan="7" class="empty-state">
+                            <i class="bi bi-journal-code"></i>
+                            <div>No hay recetas</div>
+                            <small th:if="${q != null and !q.isEmpty()}">Prueba con otros términos de búsqueda</small>
+                            <small th:unless="${q != null and !q.isEmpty()}">
+                                <a th:href="@{/web/recetas/nuevo}">Crear la primera receta</a>
+                            </small>
+                        </td>
+                    </tr>
+                    <tr th:each="r : ${recetas}">
+                        <td class="fw-medium" th:text="${r.codigo}"></td>
+                        <td th:text="${r.nombre}"></td>
+                        <td class="text-muted" th:text="${r.tiempoPreparacion != null ? r.tiempoPreparacion : '—'}"></td>
+                        <td class="text-muted" th:text="${r.tiempoHorneado != null ? r.tiempoHorneado : '—'}"></td>
+                        <td class="text-muted" th:text="${r.temperaturaHorneado != null ? r.temperaturaHorneado + ' °C' : '—'}"></td>
+                        <td class="text-muted small" th:text="${r.alergenos ?: '—'}"></td>
+                        <td class="text-end">
+                            <a th:href="@{/web/recetas/{id}(id=${r.id})}"
+                               class="btn btn-ghost btn-sm" title="Ver detalle">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a th:href="@{/web/recetas/{id}/editar(id=${r.id})}"
+                               class="btn btn-ghost btn-sm" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/recetas')}"></div>
 </div>

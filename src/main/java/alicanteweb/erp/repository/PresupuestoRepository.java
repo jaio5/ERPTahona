@@ -1,6 +1,9 @@
 package alicanteweb.erp.repository;
 
 import alicanteweb.erp.entities.Presupuesto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,7 +33,11 @@ public interface PresupuestoRepository extends JpaRepository<Presupuesto, Long> 
     /**
      * Busca presupuestos por estado
      */
+    @EntityGraph(attributePaths = {"cliente"})
     List<Presupuesto> findByEstado(String estado);
+
+    @EntityGraph(attributePaths = {"cliente"})
+    Page<Presupuesto> findByEstado(String estado, Pageable pageable);
 
     /**
      * Busca presupuestos por rango de fechas
@@ -47,16 +54,33 @@ public interface PresupuestoRepository extends JpaRepository<Presupuesto, Long> 
     /**
      * Busca presupuestos por número o nombre de cliente
      */
-    @Query("SELECT p FROM Presupuesto p WHERE " +
+    @Query("SELECT p FROM Presupuesto p LEFT JOIN FETCH p.cliente WHERE " +
            "LOWER(p.numero) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR " +
            "LOWER(p.cliente.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%')) " +
            "ORDER BY p.fecha DESC")
     List<Presupuesto> buscar(@Param("busqueda") String busqueda);
 
+    @Query(value = "SELECT p FROM Presupuesto p LEFT JOIN FETCH p.cliente WHERE " +
+           "LOWER(p.numero) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR " +
+           "LOWER(p.cliente.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%')) " +
+           "ORDER BY p.fecha DESC",
+           countQuery = "SELECT COUNT(p) FROM Presupuesto p LEFT JOIN p.cliente WHERE " +
+           "LOWER(p.numero) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR " +
+           "LOWER(p.cliente.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%'))")
+    Page<Presupuesto> buscar(@Param("busqueda") String busqueda, Pageable pageable);
+
     /**
      * Obtiene todos los presupuestos ordenados por fecha descendente
      */
-    @Query("SELECT p FROM Presupuesto p ORDER BY p.fecha DESC")
+    @Query("SELECT p FROM Presupuesto p LEFT JOIN FETCH p.cliente ORDER BY p.fecha DESC")
     List<Presupuesto> findAllOrdenados();
+
+    @Override
+    @EntityGraph(attributePaths = {"cliente"})
+    Page<Presupuesto> findAll(Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"cliente", "lineas", "lineas.articulo"})
+    Optional<Presupuesto> findById(Long id);
 }
 

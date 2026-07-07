@@ -1,8 +1,7 @@
 package alicanteweb.erp.controller.web;
 
-import alicanteweb.erp.entities.Usuario;
 import alicanteweb.erp.service.*;
-import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +13,6 @@ import java.time.LocalDate;
 @RequestMapping("/web")
 public class WebController {
 
-    private final AutenticacionService autenticacionService;
     private final FacturaService facturaService;
     private final ClienteService clienteService;
     private final ArticuloService articuloService;
@@ -23,15 +21,13 @@ public class WebController {
     private final HojaRutaService hojaRutaService;
     private final RecetaService recetaService;
 
-    public WebController(AutenticacionService autenticacionService,
-                         FacturaService facturaService,
+    public WebController(FacturaService facturaService,
                          ClienteService clienteService,
                          ArticuloService articuloService,
                          OrdenProduccionService ordenProduccionService,
                          LoteService loteService,
                          HojaRutaService hojaRutaService,
                          RecetaService recetaService) {
-        this.autenticacionService = autenticacionService;
         this.facturaService = facturaService;
         this.clienteService = clienteService;
         this.articuloService = articuloService;
@@ -42,63 +38,68 @@ public class WebController {
     }
 
     @GetMapping
-    public String index(HttpSession session) {
-        return requireLogin(session) ? "redirect:/web/dashboard" : "redirect:/web/login";
-    }
-
-    @GetMapping("/login")
-    public String loginPage(HttpSession session) {
-        if (session.getAttribute("usuarioId") != null) return "redirect:/web/dashboard";
-        return "login";
-    }
-
-    @PostMapping("/login")
-    public String login(@RequestParam String username, @RequestParam String password,
-                         HttpSession session, Model model) {
-        Usuario usuario = autenticacionService.login(username, password);
-        if (usuario == null) {
-            model.addAttribute("error", "Usuario o contraseña incorrectos");
-            return "login";
-        }
-        session.setAttribute("usuarioId", usuario.getId());
-        session.setAttribute("usuarioNombre", usuario.getNombre() != null ? usuario.getNombre() : usuario.getUsername());
+    public String index() {
         return "redirect:/web/dashboard";
     }
 
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        autenticacionService.logout();
-        session.invalidate();
-        return "redirect:/web/login";
+    @GetMapping("/login")
+    public String loginPage(Authentication authentication,
+                            @RequestParam(required = false) String error,
+                            @RequestParam(required = false) String logout,
+                            Model model) {
+        if (authentication != null && authentication.isAuthenticated()) return "redirect:/web/dashboard";
+        if (error != null) {
+            model.addAttribute("error", "Usuario o contraseña incorrectos");
+        }
+        if (logout != null) {
+            model.addAttribute("mensaje", "Sesión cerrada correctamente");
+        }
+        return "login";
     }
 
     @GetMapping("/dashboard")
-    public String dashboard(HttpSession session, Model model) {
-        if (requireLogin(session)) return "redirect:/web/login";
+    public String dashboard(Model model) {
         model.addAttribute("moduloActivo", "dashboard");
         model.addAttribute("titulo", "Panel");
+        model.addAttribute("breadcrumb", BreadcrumbBuilder.of(BreadcrumbBuilder.active("Inicio")));
 
-        model.addAttribute("totalClientes", clienteService.findAll().size());
-        model.addAttribute("totalArticulos", articuloService.findAll().size());
-        model.addAttribute("totalFacturas", facturaService.findAll().size());
-        model.addAttribute("totalRecetas", recetaService.findAll().size());
+        model.addAttribute("totalClientes", clienteService.count());
+        model.addAttribute("totalArticulos", articuloService.count());
+        model.addAttribute("totalFacturas", facturaService.count());
+        model.addAttribute("totalRecetas", recetaService.count());
 
-        long ordenesActivas = ordenProduccionService.findByEstado("EN_CURSO").size()
-                + ordenProduccionService.findByEstado("PLANIFICADA").size();
+        long ordenesActivas = ordenProduccionService.countByEstado("EN_CURSO")
+                + ordenProduccionService.countByEstado("PLANIFICADA");
         model.addAttribute("ordenesActivas", ordenesActivas);
 
-        long lotesCaducar = loteService.findByFechaCaducidadBetween(
-                LocalDate.now(), LocalDate.now().plusDays(7)).size();
+        long lotesCaducar = loteService.countByFechaCaducidadBetween(
+                LocalDate.now(), LocalDate.now().plusDays(7));
         model.addAttribute("lotesCaducar", lotesCaducar);
 
-        long rutasActivas = hojaRutaService.findByEstado("EN_CURSO").size();
+        long rutasActivas = hojaRutaService.countByEstado("EN_CURSO");
         model.addAttribute("rutasActivas", rutasActivas);
 
         return layout(model, "dashboard");
     }
 
-    public static boolean requireLogin(HttpSession session) {
-        return session == null || session.getAttribute("usuarioId") == null;
+    @GetMapping("/calendario")
+    public String calendario(Model model) {
+        model.addAttribute("moduloActivo", "calendario");
+        model.addAttribute("titulo", "Calendario");
+        return layout(model, "calendario");
+    }
+
+    @GetMapping("/planificador")
+    public String planificador(Model model) {
+        model.addAttribute("moduloActivo", "planificador");
+        model.addAttribute("titulo", "Planificador");
+        return layout(model, "planificador");
+    }
+
+    @GetMapping("/acceso-denegado")
+    public String accesoDenegado(Model model) {
+        model.addAttribute("titulo", "Acceso denegado");
+        return layout(model, "acceso-denegado");
     }
 
     public static String layout(Model model, String view) {

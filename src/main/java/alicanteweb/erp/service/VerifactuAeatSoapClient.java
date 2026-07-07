@@ -18,6 +18,7 @@ import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
 import javax.xml.crypto.dsig.spec.TransformParameterSpec;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -34,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.time.Instant;
 
 /**
@@ -45,6 +47,9 @@ import java.time.Instant;
 @ConditionalOnProperty(prefix = "verifactu.aeat", name = "enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class VerifactuAeatSoapClient {
+
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
 
     @Value("${verifactu.aeat.endpoint:}")
     private String aeatEndpoint;
@@ -93,12 +98,12 @@ public class VerifactuAeatSoapClient {
             // 4. Procesar respuesta
             String resultado = procesarRespuesta(respuesta);
 
-            log.info("✅ Respuesta AEAT recibida: {}", resultado.substring(0, Math.min(100, resultado.length())));
+            log.info("[OK] Respuesta AEAT recibida: {}", resultado.substring(0, Math.min(100, resultado.length())));
 
             return resultado;
 
         } catch (Exception e) {
-            log.error("❌ Error enviando a AEAT: {}", e.getMessage(), e);
+            log.error("[ERROR] Error enviando a AEAT: {}", e.getMessage(), e);
             throw new Exception("Error en comunicación con AEAT: " + e.getMessage(), e);
         }
     }
@@ -116,9 +121,9 @@ public class VerifactuAeatSoapClient {
         SOAPPart soapPart = soapMessage.getSOAPPart();
         SOAPEnvelope envelope = soapPart.getEnvelope();
 
-        // Namespace obligatorio de AEAT
-        envelope.addNamespaceDeclaration("siiLR",
-            "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/ssii/fact/ws/SuministroLR.xsd");
+        // Namespace del servicio VeriFactu de AEAT (tikeV1.0)
+        envelope.addNamespaceDeclaration("sum",
+            "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroLR.xsd");
 
         // Crear cuerpo del mensaje
         SOAPBody soapBody = envelope.getBody();
@@ -129,7 +134,8 @@ public class VerifactuAeatSoapClient {
         // Mitigar XXE
         try {
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        } catch (Exception ignored) {
+        } catch (ParserConfigurationException e) {
+            log.warn("No se pudo habilitar la protección XXE en DocumentBuilderFactory; el parser puede ser vulnerable a ataques XXE", e);
         }
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document facturaDoc = builder.parse(new ByteArrayInputStream(xmlFactura.getBytes(StandardCharsets.UTF_8)));
@@ -194,7 +200,9 @@ public class VerifactuAeatSoapClient {
             dbf.setNamespaceAware(true);
             try {
                 dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            } catch (Exception ignored) {}
+            } catch (ParserConfigurationException e) {
+                log.warn("No se pudo habilitar la protección XXE en DocumentBuilderFactory (firma WS-Security); el parser puede ser vulnerable a ataques XXE", e);
+            }
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc;
             try (InputStream is = new ByteArrayInputStream(soapBytes)) {
@@ -256,7 +264,7 @@ public class VerifactuAeatSoapClient {
             securityElem.setAttributeNS(SOAP_ENV_NS, "soapenv:mustUnderstand", "1");
             headerElem.appendChild(securityElem);
 
-            // Añadir Timestamp (wsu:Timestamp) para compatibilidad WS-Security
+            // Añadir Timestamp (wsu:Timestamp) exigido por WS-Security
             try {
                 String created = Instant.now().toString();
                 String expires = Instant.now().plusSeconds(300).toString();
@@ -356,9 +364,14 @@ public class VerifactuAeatSoapClient {
         byte[] requestBytes = baos.toByteArray();
 
         // Enviar usando java.net.http.HttpClient en lugar de SOAPConnection (evita APIs deprecated)
-        HttpClient client = HttpClient.newBuilder().build();
+        // Timeouts obligatorios: sin ellos, un endpoint AEAT colgado bloquearía el hilo
+        // (y con él la emisión de facturas) indefinidamente.
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(CONNECT_TIMEOUT)
+                .build();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(aeatEndpoint))
+                .timeout(REQUEST_TIMEOUT)
                 .header("Content-Type", "text/xml; charset=utf-8")
                 .POST(HttpRequest.BodyPublishers.ofByteArray(requestBytes))
                 .build();
@@ -397,7 +410,7 @@ public class VerifactuAeatSoapClient {
             String faultCode = fault.getFaultCode();
             String faultString = fault.getFaultString();
 
-            log.error("❌ SOAP Fault recibido: {} - {}", faultCode, faultString);
+            log.error("[ERROR] SOAP Fault recibido: {} - {}", faultCode, faultString);
             throw new Exception("Error SOAP de AEAT: " + faultString);
         }
 
@@ -405,24 +418,24 @@ public class VerifactuAeatSoapClient {
         if (xmlRespuesta.contains("<EstadoRegistro>Correcto</EstadoRegistro>") ||
             xmlRespuesta.contains("<EstadoEnvio>Correcto</EstadoEnvio>")) {
 
-            log.info("✅ Factura ACEPTADA por AEAT");
+            log.info("[OK] Factura ACEPTADA por AEAT");
             return "ACEPTADA";
 
         } else if (xmlRespuesta.contains("<EstadoRegistro>AceptadoConErrores</EstadoRegistro>")) {
 
             String errores = extraerErrores(xmlRespuesta);
-            log.warn("⚠️ Factura ACEPTADA CON ERRORES: {}", errores);
+            log.warn("[AVISO] Factura ACEPTADA CON ERRORES: {}", errores);
             return "ACEPTADA_CON_ERRORES: " + errores;
 
         } else if (xmlRespuesta.contains("<EstadoRegistro>Rechazado</EstadoRegistro>")) {
 
             String errores = extraerErrores(xmlRespuesta);
-            log.error("❌ Factura RECHAZADA por AEAT: {}", errores);
+            log.error("[ERROR] Factura RECHAZADA por AEAT: {}", errores);
             throw new Exception("Factura rechazada por AEAT: " + errores);
 
         } else {
             // Respuesta inesperada
-            log.warn("⚠️ Respuesta inesperada de AEAT (primeros 500 caracteres):\n{}",
+            log.warn("[AVISO] Respuesta inesperada de AEAT (primeros 500 caracteres):\n{}",
                     xmlRespuesta.substring(0, Math.min(500, xmlRespuesta.length())));
             return "RESPUESTA_INESPERADA";
         }
@@ -529,24 +542,27 @@ public class VerifactuAeatSoapClient {
             log.info("Verificando conexión con AEAT...");
 
             // Intentar crear una conexión simple
-            HttpClient client = HttpClient.newBuilder().build();
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(CONNECT_TIMEOUT)
+                    .build();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(aeatEndpoint))
+                    .timeout(REQUEST_TIMEOUT)
                     .method("HEAD", HttpRequest.BodyPublishers.noBody())
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             int status = response.statusCode();
             if (status < 200 || status >= 300) {
-                log.error("❌ Respuesta inesperada de AEAT (HEAD request): {}", status);
+                log.error("[ERROR] Respuesta inesperada de AEAT (HEAD request): {}", status);
                 return false;
             }
 
-            log.info("✅ Conexión con AEAT verificada correctamente");
+            log.info("[OK] Conexión con AEAT verificada correctamente");
             return true;
 
         } catch (Exception e) {
-            log.error("❌ No se pudo conectar con AEAT: {}", e.getMessage());
+            log.error("[ERROR] No se pudo conectar con AEAT: {}", e.getMessage());
             return false;
         }
     }

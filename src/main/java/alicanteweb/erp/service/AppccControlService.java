@@ -34,6 +34,10 @@ public class AppccControlService {
         return repository.findByLoteId(loteId);
     }
 
+    public List<AppccControl> buscar(String q) {
+        return repository.buscar(q);
+    }
+
     @Transactional
     public AppccControl save(AppccControl control) {
         if (control == null) throw new IllegalArgumentException("Control APPCC nulo");

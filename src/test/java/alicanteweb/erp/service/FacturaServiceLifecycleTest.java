@@ -38,6 +38,12 @@ class FacturaServiceLifecycleTest {
     FacturacionEventoService facturacionEventoService;
 
     @Mock
+    FiscalComplianceService fiscalComplianceService;
+
+    @Mock
+    ContabilidadService contabilidadService;
+
+    @Mock
     EntityManager entityManager;
 
     @InjectMocks
@@ -87,13 +93,44 @@ class FacturaServiceLifecycleTest {
         factura.setFechaEmisionVerifactu(LocalDateTime.now());
 
         when(repository.findById(3L)).thenReturn(Optional.of(factura));
-        when(verifactuService.isAeatAvailable()).thenReturn(true);
         when(repository.save(any(Factura.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Factura emitida = service.aprobarYEmitir(3L);
 
         assertEquals(factura, emitida);
+        verify(fiscalComplianceService).exigirListoParaEmision();
         verify(verifactuService).enviarFacturaVerifactu(factura);
         verify(facturacionEventoService).registrarEvento(eq(FacturacionEventoService.AMBITO_FACTURAS), eq("EMISION_FACTURA"), eq("F-GEN-2026-0003"), any());
+    }
+
+    @Test
+    void save_rechazaModificarFacturaEmitida() {
+        Factura existente = new Factura();
+        existente.setId(4L);
+        existente.setEstado("EMITIDA");
+
+        Factura cambios = new Factura();
+        cambios.setId(4L);
+        cambios.setEstado("BORRADOR");
+
+        when(repository.findById(4L)).thenReturn(Optional.of(existente));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> service.save(cambios));
+
+        assertTrue(ex.getMessage().contains("rectificativa"));
+        verify(repository, never()).save(cambios);
+    }
+
+    @Test
+    void deleteById_rechazaEliminarFacturaEnviada() {
+        Factura existente = new Factura();
+        existente.setId(5L);
+        existente.setEstado("REVISION");
+        existente.setVerifactuEnviada(true);
+
+        when(repository.findById(5L)).thenReturn(Optional.of(existente));
+
+        assertThrows(IllegalStateException.class, () -> service.deleteById(5L));
+        verify(repository, never()).deleteById(5L);
     }
 }

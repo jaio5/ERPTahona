@@ -1,0 +1,110 @@
+<div th:fragment="content" x-data="balanceApp" x-cloak>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4>Balance y cierre contable</h4>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-ghost btn-sm" @click="setTab('balance')" :class="tabClass('balance')">Balance</button>
+            <button class="btn btn-ghost btn-sm" @click="setTab('cierre')" :class="tabClass('cierre')">Cierre ejercicio</button>
+        </div>
+    </div>
+
+    <!-- Balance -->
+    <div x-show="isTab('balance')">
+        <div class="stat-card mb-3">
+            <div class="d-flex gap-2 align-items-center">
+                <label>Mes: <input type="month" x-model="mes" class="form-control form-control-sm d-inline" style="width:auto"></label>
+                <button class="btn btn-sm btn-primary" @click="cargarBalance()">Ver balance</button>
+            </div>
+        </div>
+        <div x-show="balance">
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Debe</div>
+                        <div class="stat-value" x-text="money(balanceValue('totalDebe'))"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Haber</div>
+                        <div class="stat-value" x-text="money(balanceValue('totalHaber'))"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-label">Diferencia</div>
+                        <div class="stat-value" :class="isBalanced() ? 'text-success' : 'text-danger'" x-text="money(balanceValue('diferencia'))"></div>
+                        <div class="stat-sub" x-text="balanceCountText()"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cierre ejercicio -->
+    <div x-show="isTab('cierre')" class="stat-card" style="max-width:500px">
+        <h6 class="mb-3">Cierre de ejercicio anual</h6>
+        <div class="form-field">
+            <label>Año a cerrar</label>
+            <input type="number" class="form-control" x-model="anioCierre" min="2020" :max="maxAnio">
+        </div>
+        <button class="btn btn-warning mt-3" @click="ejecutarCierre()">Ejecutar cierre</button>
+        <div x-show="cierreResult" class="mt-3 alert alert-info">
+            <p x-text="resultValue('mensaje')"></p>
+            <p><strong>Debe:</strong> <span x-text="money(resultValue('totalDebe'))"></span></p>
+            <p><strong>Haber:</strong> <span x-text="money(resultValue('totalHaber'))"></span></p>
+            <p><strong>Asiento cierre ID:</strong> <span x-text="resultValue('asientoCierreId')"></span></p>
+        </div>
+    </div>
+
+    <script th:attr="nonce=${cspNonce}">
+        document.addEventListener('alpine:init', function () {
+            Alpine.data('balanceApp', function () {
+                return {
+                tab: 'balance',
+                mes: '',
+                balance: null,
+                anioCierre: new Date().getFullYear(),
+                maxAnio: new Date().getFullYear(),
+                cierreResult: null,
+                money(value) {
+                    return formatMoneyEs(value);
+                },
+                balanceValue(field) {
+                    return this.balance ? this.balance[field] : null;
+                },
+                isBalanced() {
+                    return this.balance != null && this.balance.diferencia === 0;
+                },
+                balanceCountText() {
+                    return (this.balance ? this.balance.asientos : 0) + ' asientos contables';
+                },
+                resultValue(field) {
+                    return this.cierreResult ? this.cierreResult[field] : '';
+                },
+                isTab(name) { return this.tab === name; },
+                setTab(name) { this.tab = name; },
+                tabClass(name) { return this.tab === name ? 'btn-primary' : ''; },
+                init() {
+                    const now = new Date();
+                    this.mes = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2, '0');
+                    this.cargarBalance();
+                },
+                cargarBalance() {
+                    const [year, month] = this.mes.split('-');
+                    const fecha = `${year}-${month}-28`;
+                    fetch(`/api/web/contabilidad/balance?fecha=${fecha}`)
+                        .then(r => r.json())
+                        .then(data => this.balance = data);
+                },
+                async ejecutarCierre() {
+                    if (!confirm(`¿Cerrar el ejercicio ${this.anioCierre}?`)) return;
+                    const resp = await fetch(`/api/web/contabilidad/cierre?anio=${this.anioCierre}`, {method:'POST'});
+                    this.cierreResult = await resp.json();
+                }
+                };
+            });
+        });
+    </script>
+</div>

@@ -1,6 +1,7 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.FacturaSerieSequence;
+import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.repository.FacturaRepository;
 import alicanteweb.erp.repository.FacturaSerieSequenceRepository;
 import jakarta.persistence.EntityManager;
@@ -15,11 +16,12 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,31 +40,27 @@ class FacturaServiceTest {
     FacturacionEventoService facturacionEventoService;
 
     @Mock
+    FiscalComplianceService fiscalComplianceService;
+
+    @Mock
     EntityManager entityManager;
 
     @InjectMocks
     FacturaService service;
 
     @Test
-    void generarSiguienteNumero_reintentaCuandoLaPrimeraInsercionDeSecuenciaColisiona() {
-        FacturaSerieSequence sequence = new FacturaSerieSequence();
-        sequence.setSerie("GEN");
-        sequence.setEjercicio(2026);
-        sequence.setUltimoNumero(7L);
-
+    void generarSiguienteNumero_propagaColisionSinReusarLaTransaccion() {
         when(sequenceRepository.findBySerieAndEjercicio("GEN", 2026))
-            .thenReturn(Optional.empty(), Optional.of(sequence));
+            .thenReturn(Optional.empty());
         when(repository.findMaxNumeroSecuencialBySerieAndPrefijo("GEN", "F-GEN-2026-%", 11))
             .thenReturn(7L);
         when(sequenceRepository.saveAndFlush(any(FacturaSerieSequence.class)))
-            .thenThrow(new DataIntegrityViolationException("duplicate"))
-            .thenAnswer(invocation -> invocation.getArgument(0));
+            .thenThrow(new DataIntegrityViolationException("duplicate"));
 
-        String numero = service.generarSiguienteNumero("gen", LocalDate.of(2026, 4, 24), false);
-
-        assertEquals("F-GEN-2026-0008", numero);
-        verify(entityManager).clear();
-        verify(sequenceRepository, times(2)).saveAndFlush(any(FacturaSerieSequence.class));
+        assertThrows(DataIntegrityViolationException.class,
+                () -> service.generarSiguienteNumero("gen", LocalDate.of(2026, 4, 24), false));
+        verify(entityManager, never()).clear();
+        verify(sequenceRepository).saveAndFlush(any(FacturaSerieSequence.class));
     }
 
     @Test
@@ -78,5 +76,29 @@ class FacturaServiceTest {
 
         assertEquals("R-CLI01-2026-0013", numero);
         verify(repository).findMaxNumeroSecuencialBySerieAndPrefijo("CLI01", "R-CLI01-2026-%", 13);
+    }
+
+    @Test
+    void save_generaNumeroYSerieCuandoLaFacturaNuevaNoLosTrae() {
+        FacturaSerieSequence sequence = new FacturaSerieSequence();
+        sequence.setSerie("GEN");
+        sequence.setEjercicio(2026);
+        sequence.setUltimoNumero(3L);
+
+        Factura factura = new Factura();
+        factura.setFecha(LocalDate.of(2026, 6, 16));
+
+        when(sequenceRepository.findBySerieAndEjercicio("GEN", 2026))
+            .thenReturn(Optional.of(sequence));
+        when(sequenceRepository.saveAndFlush(any(FacturaSerieSequence.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.save(any(Factura.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Factura guardada = service.save(factura);
+
+        assertEquals("GEN", guardada.getSerie());
+        assertEquals("F-GEN-2026-0004", guardada.getNumero());
+        verify(repository).save(factura);
     }
 }

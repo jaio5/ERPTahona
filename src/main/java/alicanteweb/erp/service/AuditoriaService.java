@@ -29,16 +29,18 @@ public class AuditoriaService {
     /**
      * Registra una acción genérica en el sistema
      */
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarAccion(Usuario usuario, String tipoAccion, String entidadTipo,
                                 String entidadId, String descripcion) {
-        registrarAccion(usuario, tipoAccion, entidadTipo, entidadId, descripcion, null, null, null);
+        registrarAccion(usuario, tipoAccion, entidadTipo, entidadId, descripcion, moduloDeEntidad(entidadTipo), null, null);
     }
 
     /**
-     * Registra una acción completa con todos los detalles
+     * Registra una acción completa con todos los detalles.
+     * Usa NOT_SUPPORTED para ejecutar sin transacción activa: si el save falla,
+     * la excepción se captura y se loguea sin contaminar ninguna transacción padre.
      */
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarAccion(Usuario usuario, String tipoAccion, String entidadTipo,
                                 String entidadId, String descripcion, String modulo,
                                 Map<String, Object> valoresAnteriores, Map<String, Object> valoresNuevos) {
@@ -67,7 +69,7 @@ public class AuditoriaService {
     /**
      * Registra un login exitoso o fallido
      */
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarLogin(Usuario usuario, String ip, boolean exitoso) {
         try {
             AuditoriaAccion auditoria = new AuditoriaAccion();
@@ -92,7 +94,7 @@ public class AuditoriaService {
     /**
      * Registra un logout
      */
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarLogout(Usuario usuario) {
         registrarAccion(usuario, "LOGOUT", null, null,
                 "Usuario cerró sesión", "AUTENTICACION", null, null);
@@ -101,7 +103,7 @@ public class AuditoriaService {
     /**
      * Registra un acceso denegado
      */
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarAccesoDenegado(Usuario usuario, String modulo, String accion) {
         try {
             AuditoriaAccion auditoria = new AuditoriaAccion();
@@ -123,41 +125,56 @@ public class AuditoriaService {
     /**
      * Registra una creación de entidad
      */
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarCreacion(Usuario usuario, String entidadTipo, String entidadId, String descripcion) {
-        registrarAccion(usuario, "CREAR", entidadTipo, entidadId, descripcion, null, null, null);
+        registrarAccion(usuario, "CREAR", entidadTipo, entidadId, descripcion, moduloDeEntidad(entidadTipo), null, null);
     }
 
     /**
      * Registra una actualización de entidad
      */
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarActualizacion(Usuario usuario, String entidadTipo, String entidadId, String descripcion) {
-        registrarAccion(usuario, "ACTUALIZAR", entidadTipo, entidadId, descripcion, null, null, null);
+        registrarAccion(usuario, "ACTUALIZAR", entidadTipo, entidadId, descripcion, moduloDeEntidad(entidadTipo), null, null);
     }
 
     /**
      * Registra una actualización con valores anteriores y nuevos
      */
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarCambio(Usuario usuario, String entidadTipo, String entidadId,
                                 Map<String, Object> valoresAnteriores, Map<String, Object> valoresNuevos) {
         registrarAccion(usuario, "ACTUALIZAR", entidadTipo, entidadId,
-                "Entidad actualizada", null, valoresAnteriores, valoresNuevos);
+                "Entidad actualizada", moduloDeEntidad(entidadTipo), valoresAnteriores, valoresNuevos);
     }
 
     /**
      * Registra una eliminación de entidad
      */
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarEliminacion(Usuario usuario, String entidadTipo, String entidadId, String descripcion) {
-        registrarAccion(usuario, "ELIMINAR", entidadTipo, entidadId, descripcion, null, null, null);
+        registrarAccion(usuario, "ELIMINAR", entidadTipo, entidadId, descripcion, moduloDeEntidad(entidadTipo), null, null);
+    }
+
+    private static String moduloDeEntidad(String entidadTipo) {
+        if (entidadTipo == null) return null;
+        return switch (entidadTipo) {
+            case "Factura", "AlbaranVenta", "Presupuesto", "PedidoVenta", "Cliente", "DireccionEnvio" -> "VENTAS";
+            case "FacturaCompra", "PedidoCompra", "Proveedor" -> "COMPRAS";
+            case "Articulo", "Almacen", "ArticuloAlmacen", "Lote", "Merma" -> "ALMACEN";
+            case "OrdenProduccion", "Horneada", "Receta" -> "PRODUCCION";
+            case "HojaRuta", "Reparto" -> "REPARTO";
+            case "MovimientoCaja", "MovimientoBanco", "AsientoContable" -> "FINANZAS";
+            case "Usuario", "Rol" -> "ADMINISTRACION";
+            case "EmpresaConfig" -> "CONFIGURACION";
+            default -> entidadTipo.toUpperCase();
+        };
     }
 
     /**
      * Registra un error
      */
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarError(Usuario usuario, String entidadTipo, String entidadId, String descripcion) {
         try {
             AuditoriaAccion auditoria = new AuditoriaAccion();
@@ -180,7 +197,7 @@ public class AuditoriaService {
     /**
      * Registra una exportación de datos
      */
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarExportacion(Usuario usuario, String tipoExportacion, String descripcion) {
         registrarAccion(usuario, "EXPORTAR", tipoExportacion, null, descripcion, "EXPORTACION", null, null);
     }
@@ -188,7 +205,7 @@ public class AuditoriaService {
     /**
      * Registra una impresión
      */
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void registrarImpresion(Usuario usuario, String tipoDocumento, String documentoId, String descripcion) {
         registrarAccion(usuario, "IMPRIMIR", tipoDocumento, documentoId, descripcion, "IMPRESION", null, null);
     }

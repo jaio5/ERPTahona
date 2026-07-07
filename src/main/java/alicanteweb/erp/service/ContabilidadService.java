@@ -1,5 +1,6 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.repository.AsientoContableRepository;
 import alicanteweb.erp.repository.PlanCuentasRepository;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -46,14 +48,14 @@ public class ContabilidadService {
         log.info("📝 Generando asiento contable para factura: {}", factura.getNumero());
 
         try {
-            if (factura.getCliente() == null) {
-                throw new IllegalArgumentException("La factura debe tener un cliente asociado");
-            }
+            // Las facturas simplificadas (venta mostrador) no llevan cliente identificado
+            String nombreCliente = factura.getCliente() != null
+                    ? factura.getCliente().getNombre() : "Venta mostrador";
 
             AsientoContable asiento = new AsientoContable();
             asiento.setNumero(generarNumeroAsiento());
             asiento.setFecha(factura.getFecha() != null ? factura.getFecha() : LocalDate.now());
-            asiento.setConcepto("Factura de venta " + factura.getNumero() + " - " + factura.getCliente().getNombre());
+            asiento.setConcepto("Factura de venta " + factura.getNumero() + " - " + nombreCliente);
             asiento.setTipo("OPERACION");
             asiento.setUsuario(usuario);
             asiento.setFactura(factura);
@@ -74,7 +76,7 @@ public class ContabilidadService {
             lineaCliente.setCuenta(cuentaClientes);
             lineaCliente.setDebe(factura.getTotal() != null ? factura.getTotal() : BigDecimal.ZERO);
             lineaCliente.setHaber(BigDecimal.ZERO);
-            lineaCliente.setConcepto("Cliente: " + factura.getCliente().getNombre());
+            lineaCliente.setConcepto("Cliente: " + nombreCliente);
             lineaCliente.setOrden(1);
 
             // Línea 2: HABER - Ventas (Base imponible)
@@ -86,12 +88,14 @@ public class ContabilidadService {
             lineaVentas.setConcepto("Venta según factura " + factura.getNumero());
             lineaVentas.setOrden(2);
 
-            // Línea 3: HABER - IVA Repercutido
+            // Línea 3: HABER - IVA repercutido (incluye recargo de equivalencia si lo hay)
+            BigDecimal ivaMasRecargo = (factura.getTotalIva() != null ? factura.getTotalIva() : BigDecimal.ZERO)
+                    .add(factura.getTotalRecargo() != null ? factura.getTotalRecargo() : BigDecimal.ZERO);
             LineaAsiento lineaIVA = new LineaAsiento();
             lineaIVA.setAsiento(asiento);
             lineaIVA.setCuenta(cuentaIVA);
             lineaIVA.setDebe(BigDecimal.ZERO);
-            lineaIVA.setHaber(factura.getTotalIva() != null ? factura.getTotalIva() : BigDecimal.ZERO);
+            lineaIVA.setHaber(ivaMasRecargo);
             lineaIVA.setConcepto("IVA repercutido");
             lineaIVA.setOrden(3);
 
@@ -100,33 +104,47 @@ public class ContabilidadService {
             asiento.getLineas().add(lineaVentas);
             asiento.getLineas().add(lineaIVA);
 
+            // Línea 4: DEBE - Retención IRPF soportada (si la factura la lleva)
+            BigDecimal retencion = factura.getRetencionIrpf() != null ? factura.getRetencionIrpf() : BigDecimal.ZERO;
+            if (retencion.compareTo(BigDecimal.ZERO) > 0) {
+                LineaAsiento lineaRetencion = new LineaAsiento();
+                lineaRetencion.setAsiento(asiento);
+                lineaRetencion.setCuenta(obtenerCuenta("473"));
+                lineaRetencion.setDebe(retencion);
+                lineaRetencion.setHaber(BigDecimal.ZERO);
+                lineaRetencion.setConcepto("Retención IRPF factura " + factura.getNumero());
+                lineaRetencion.setOrden(4);
+                asiento.getLineas().add(lineaRetencion);
+            }
+
             // Calcular totales
             asiento.calcularTotales();
 
             // Verificar cuadre
             if (!asiento.estaCuadrado()) {
-                log.error("❌ El asiento no cuadra: Debe={}, Haber={}", asiento.getDebe(), asiento.getHaber());
+                log.error("[ERROR] El asiento no cuadra: Debe={}, Haber={}", asiento.getDebe(), asiento.getHaber());
                 throw new IllegalStateException("El asiento contable no cuadra");
             }
 
             // Guardar asiento
             AsientoContable guardado = asientoRepository.save(asiento);
 
-            log.info("✅ Asiento contable generado: {} - Debe={}, Haber={}",
+            log.info("[OK] Asiento contable generado: {} - Debe={}, Haber={}",
                 guardado.getNumero(), guardado.getDebe(), guardado.getHaber());
 
             // Auditar
             if (auditoriaService != null && usuario != null) {
-                auditoriaService.registrarAccion(usuario, "CONTABILIDAD", "CREAR_ASIENTO",
-                    "Asiento generado automáticamente para factura " + factura.getNumero(),
-                    "EXITOSO");
+                String idStr = guardado.getId() != null ? guardado.getId().toString() : null;
+                auditoriaService.registrarAccion(usuario, "CREAR_ASIENTO", "AsientoContable",
+                    idStr,
+                    "Asiento generado automáticamente para factura " + factura.getNumero());
             }
 
             return guardado;
 
         } catch (Exception e) {
-            log.error("❌ Error generando asiento de factura", e);
-            throw new RuntimeException("Error al generar asiento contable", e);
+            log.error("[ERROR] Error generando asiento de factura", e);
+            throw new ErpException("Error al generar asiento contable", e);
         }
     }
 
@@ -194,13 +212,79 @@ public class ContabilidadService {
 
             // Guardar
             AsientoContable guardado = asientoRepository.save(asiento);
-            log.info("✅ Asiento de pago generado: {}", guardado.getNumero());
+            log.info("[OK] Asiento de pago generado: {}", guardado.getNumero());
 
             return guardado;
 
         } catch (Exception e) {
-            log.error("❌ Error generando asiento de pago", e);
-            throw new RuntimeException("Error al generar asiento de pago", e);
+            log.error("[ERROR] Error generando asiento de pago", e);
+            throw new ErpException("Error al generar asiento de pago", e);
+        }
+    }
+
+    /**
+     * Generar asiento de pago a proveedor (400 a 570/572)
+     */
+    public AsientoContable generarAsientoPagoCompra(alicanteweb.erp.entities.FacturaCompra facturaCompra,
+                                                    BigDecimal importe, String formaPago, Usuario usuario) {
+        Objects.requireNonNull(facturaCompra, "Factura de compra no puede ser null");
+        Objects.requireNonNull(importe, "Importe no puede ser null");
+        Objects.requireNonNull(formaPago, "Forma de pago no puede ser null");
+
+        if (importe.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El importe debe ser mayor que cero");
+        }
+
+        log.info("💸 Generando asiento de pago a proveedor: Factura={}, Importe={}", facturaCompra.getNumero(), importe);
+
+        try {
+            AsientoContable asiento = new AsientoContable();
+            asiento.setNumero(generarNumeroAsiento());
+            asiento.setFecha(LocalDate.now());
+            asiento.setConcepto("Pago factura compra " + facturaCompra.getNumero() + " - " +
+                (facturaCompra.getProveedor() != null ? facturaCompra.getProveedor().getNombre() : "Proveedor desconocido"));
+            asiento.setTipo("OPERACION");
+            asiento.setUsuario(usuario);
+            asiento.setFacturaCompraId(facturaCompra.getId());
+
+            PlanCuentas cuentaProveedores = obtenerCuenta("400"); // 400 - Proveedores
+            PlanCuentas cuentaCaja = "EFECTIVO".equalsIgnoreCase(formaPago) ?
+                obtenerCuenta("570") :
+                obtenerCuenta("572");
+
+            if (asiento.getLineas() == null) asiento.setLineas(new LinkedHashSet<>());
+
+            LineaAsiento lineaProveedor = new LineaAsiento();
+            lineaProveedor.setAsiento(asiento);
+            lineaProveedor.setCuenta(cuentaProveedores);
+            lineaProveedor.setDebe(importe);
+            lineaProveedor.setHaber(BigDecimal.ZERO);
+            lineaProveedor.setConcepto("Proveedor: " + (facturaCompra.getProveedor() != null ? facturaCompra.getProveedor().getNombre() : "(sin proveedor)"));
+            lineaProveedor.setOrden(1);
+
+            LineaAsiento lineaCaja = new LineaAsiento();
+            lineaCaja.setAsiento(asiento);
+            lineaCaja.setCuenta(cuentaCaja);
+            lineaCaja.setDebe(BigDecimal.ZERO);
+            lineaCaja.setHaber(importe);
+            lineaCaja.setConcepto("Pago " + formaPago);
+            lineaCaja.setOrden(2);
+
+            asiento.getLineas().add(lineaProveedor);
+            asiento.getLineas().add(lineaCaja);
+
+            asiento.calcularTotales();
+            if (!asiento.estaCuadrado()) {
+                throw new IllegalStateException("El asiento de pago a proveedor no cuadra");
+            }
+
+            AsientoContable guardado = asientoRepository.save(asiento);
+            log.info("[OK] Asiento de pago a proveedor generado: {}", guardado.getNumero());
+            return guardado;
+
+        } catch (Exception e) {
+            log.error("[ERROR] Error generando asiento de pago a proveedor", e);
+            throw new ErpException("Error al generar asiento de pago a proveedor", e);
         }
     }
 
@@ -276,21 +360,107 @@ public class ContabilidadService {
 
             // Guardar
             AsientoContable guardado = asientoRepository.save(asiento);
-            log.info("✅ Asiento de compra generado: {}", guardado.getNumero());
+            log.info("[OK] Asiento de compra generado: {}", guardado.getNumero());
 
             // Auditar (solo si usuario proporcionado)
             if (auditoriaService != null && usuario != null) {
-                auditoriaService.registrarAccion(usuario, "CONTABILIDAD", "CREAR_ASIENTO_COMPRA",
-                    "Asiento de compra generado: " + guardado.getNumero(),
-                    "EXITOSO");
+                auditoriaService.registrarAccion(usuario, "CREAR_ASIENTO_COMPRA", "AsientoContable",
+                    guardado.getId().toString(),
+                    "Asiento de compra generado: " + guardado.getNumero());
             }
 
             return guardado;
 
         } catch (Exception e) {
-            log.error("❌ Error generando asiento de compra", e);
-            throw new RuntimeException("Error al generar asiento de compra", e);
+            log.error("[ERROR] Error generando asiento de compra", e);
+            throw new ErpException("Error al generar asiento de compra", e);
         }
+    }
+
+    /**
+     * Asiento de compra completo desde la factura de compra: contempla recargo
+     * de equivalencia soportado (a 472) y retención IRPF (a 475).
+     */
+    public AsientoContable generarAsientoCompra(alicanteweb.erp.entities.FacturaCompra facturaCompra, Usuario usuario) {
+        Objects.requireNonNull(facturaCompra, "Factura de compra no puede ser null");
+        BigDecimal base = nvlImporte(facturaCompra.getBaseImponible());
+        BigDecimal iva = nvlImporte(facturaCompra.getImporteIva());
+        BigDecimal recargo = nvlImporte(facturaCompra.getImporteRecargo());
+        BigDecimal retencion = nvlImporte(facturaCompra.getImporteRetencion());
+        BigDecimal total = nvlImporte(facturaCompra.getTotal());
+
+        log.info("🛒 Generando asiento de compra {}: Base={}, IVA={}, Recargo={}, Retención={}",
+                facturaCompra.getNumero(), base, iva, recargo, retencion);
+        try {
+            AsientoContable asiento = new AsientoContable();
+            asiento.setNumero(generarNumeroAsiento());
+            asiento.setFecha(facturaCompra.getFecha() != null ? facturaCompra.getFecha() : LocalDate.now());
+            asiento.setConcepto("Factura de compra " + facturaCompra.getNumero() + " - "
+                    + (facturaCompra.getProveedor() != null ? facturaCompra.getProveedor().getNombre() : "Proveedor"));
+            asiento.setTipo("OPERACION");
+            asiento.setUsuario(usuario);
+            asiento.setFacturaCompraId(facturaCompra.getId());
+            asiento.setLineas(new LinkedHashSet<>());
+
+            int orden = 1;
+            LineaAsiento lineaCompras = new LineaAsiento();
+            lineaCompras.setAsiento(asiento);
+            lineaCompras.setCuenta(obtenerCuenta("600"));
+            lineaCompras.setDebe(base);
+            lineaCompras.setHaber(BigDecimal.ZERO);
+            lineaCompras.setConcepto("Compra según factura " + facturaCompra.getNumero());
+            lineaCompras.setOrden(orden++);
+            asiento.getLineas().add(lineaCompras);
+
+            BigDecimal ivaMasRecargo = iva.add(recargo);
+            if (ivaMasRecargo.compareTo(BigDecimal.ZERO) > 0) {
+                LineaAsiento lineaIVA = new LineaAsiento();
+                lineaIVA.setAsiento(asiento);
+                lineaIVA.setCuenta(obtenerCuenta("472"));
+                lineaIVA.setDebe(ivaMasRecargo);
+                lineaIVA.setHaber(BigDecimal.ZERO);
+                lineaIVA.setConcepto("IVA soportado" + (recargo.compareTo(BigDecimal.ZERO) > 0 ? " + recargo" : ""));
+                lineaIVA.setOrden(orden++);
+                asiento.getLineas().add(lineaIVA);
+            }
+
+            LineaAsiento lineaProveedor = new LineaAsiento();
+            lineaProveedor.setAsiento(asiento);
+            lineaProveedor.setCuenta(obtenerCuenta("400"));
+            lineaProveedor.setDebe(BigDecimal.ZERO);
+            lineaProveedor.setHaber(total);
+            lineaProveedor.setConcepto("Proveedor: "
+                    + (facturaCompra.getProveedor() != null ? facturaCompra.getProveedor().getNombre() : "(sin proveedor)"));
+            lineaProveedor.setOrden(orden++);
+            asiento.getLineas().add(lineaProveedor);
+
+            if (retencion.compareTo(BigDecimal.ZERO) > 0) {
+                LineaAsiento lineaRetencion = new LineaAsiento();
+                lineaRetencion.setAsiento(asiento);
+                lineaRetencion.setCuenta(obtenerCuenta("475"));
+                lineaRetencion.setDebe(BigDecimal.ZERO);
+                lineaRetencion.setHaber(retencion);
+                lineaRetencion.setConcepto("Retención IRPF factura " + facturaCompra.getNumero());
+                lineaRetencion.setOrden(orden);
+                asiento.getLineas().add(lineaRetencion);
+            }
+
+            asiento.calcularTotales();
+            if (!asiento.estaCuadrado()) {
+                throw new IllegalStateException("El asiento de compra no cuadra (Debe=" + asiento.getDebe()
+                        + ", Haber=" + asiento.getHaber() + ")");
+            }
+            AsientoContable guardado = asientoRepository.save(asiento);
+            log.info("[OK] Asiento de compra generado: {}", guardado.getNumero());
+            return guardado;
+        } catch (Exception e) {
+            log.error("[ERROR] Error generando asiento de compra", e);
+            throw new ErpException("Error al generar asiento de compra", e);
+        }
+    }
+
+    private static BigDecimal nvlImporte(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 
     // ==========================================
@@ -353,13 +523,214 @@ public class ContabilidadService {
 
         for (AsientoContable asiento : asientos) {
             if (!asiento.estaCuadrado()) {
-                log.warn("⚠️ Asiento descuadrado: {}", asiento.getNumero());
+                log.warn("[AVISO] Asiento descuadrado: {}", asiento.getNumero());
                 return false;
             }
         }
 
-        log.info("✅ Todos los asientos están cuadrados");
+        log.info("[OK] Todos los asientos están cuadrados");
         return true;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> calcularBalanceSimple(LocalDate desde, LocalDate hasta) {
+        List<AsientoContable> asientos = asientoRepository.findByFechaBetween(desde, hasta);
+        BigDecimal totalDebe = BigDecimal.ZERO;
+        BigDecimal totalHaber = BigDecimal.ZERO;
+        for (AsientoContable a : asientos) {
+            totalDebe = totalDebe.add(a.getDebe() != null ? a.getDebe() : BigDecimal.ZERO);
+            totalHaber = totalHaber.add(a.getHaber() != null ? a.getHaber() : BigDecimal.ZERO);
+        }
+        return java.util.Map.of(
+            "totalDebe", totalDebe,
+            "totalHaber", totalHaber,
+            "diferencia", totalDebe.subtract(totalHaber),
+            "asientos", asientos.size()
+        );
+    }
+
+    public Map<String, Object> cerrarEjercicio(int año) {
+        LocalDate inicio = LocalDate.of(año, 1, 1);
+        LocalDate fin = LocalDate.of(año, 12, 31);
+        List<AsientoContable> asientos = asientoRepository.findByFechaBetween(inicio, fin);
+        boolean yaExisteCierre = asientos.stream().anyMatch(a -> Boolean.TRUE.equals(a.getAsientoCierre()));
+        if (yaExisteCierre) {
+            throw new IllegalStateException("Ya existe un cierre contable para el ejercicio " + año);
+        }
+        BigDecimal totalDebe = asientos.stream()
+                .map(a -> a.getDebe() != null ? a.getDebe() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalHaber = asientos.stream()
+                .map(a -> a.getHaber() != null ? a.getHaber() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        AsientoContable cierre = new AsientoContable();
+        cierre.setNumero(generarNumeroAsiento());
+        cierre.setFecha(fin);
+        cierre.setConcepto("Cierre ejercicio " + año);
+        cierre.setTipo("CIERRE");
+        cierre.setDebe(totalHaber);
+        cierre.setHaber(totalDebe);
+        cierre.setAsientoCierre(true);
+        asientoRepository.save(cierre);
+        return java.util.Map.of(
+            "mensaje", "Cierre del ejercicio " + año + " completado",
+            "totalDebe", totalDebe,
+            "totalHaber", totalHaber,
+            "asientoCierreId", cierre.getId()
+        );
+    }
+
+    /**
+     * Asiento de apertura del ejercicio: traslada al 1 de enero los saldos de
+     * las cuentas de balance (activo, pasivo y patrimonio) a 31/12 del año anterior.
+     * La diferencia (resultado del ejercicio anterior) se lleva a la cuenta 129.
+     */
+    @Transactional
+    public AsientoContable generarAsientoApertura(int año) {
+        LocalDate fechaApertura = LocalDate.of(año, 1, 1);
+        boolean yaExiste = asientoRepository.findByAsientoAperturaTrue().stream()
+                .anyMatch(a -> a.getFecha() != null && a.getFecha().getYear() == año);
+        if (yaExiste) {
+            throw new IllegalStateException("Ya existe un asiento de apertura para el ejercicio " + año);
+        }
+
+        List<BalanceCuentaConTipo> cuentasBalance = obtenerBalanceConTipoCompleto(LocalDate.of(año - 1, 12, 31)).stream()
+                .filter(c -> {
+                    String tipo = c.tipo() != null ? c.tipo().toUpperCase() : "";
+                    return tipo.equals("ACTIVO") || tipo.equals("PASIVO") || tipo.equals("PATRIMONIO");
+                })
+                .toList();
+        AsientoContable apertura = new AsientoContable();
+        apertura.setNumero(generarNumeroAsiento());
+        apertura.setFecha(fechaApertura);
+        apertura.setConcepto("Apertura ejercicio " + año);
+        apertura.setTipo("APERTURA");
+        apertura.setAsientoApertura(true);
+        apertura.setLineas(new LinkedHashSet<>());
+
+        int orden = 1;
+        BigDecimal descuadre = BigDecimal.ZERO; // debe - haber acumulado
+        for (BalanceCuentaConTipo cuenta : cuentasBalance) {
+            if (cuenta.saldo().compareTo(BigDecimal.ZERO) == 0) {
+                continue;
+            }
+            LineaAsiento linea = new LineaAsiento();
+            linea.setAsiento(apertura);
+            linea.setCuenta(obtenerCuenta(cuenta.codigo()));
+            linea.setConcepto("Apertura " + cuenta.nombre());
+            boolean esActivo = "ACTIVO".equalsIgnoreCase(cuenta.tipo());
+            BigDecimal saldo = cuenta.saldo().abs();
+            boolean alDebe = esActivo == (cuenta.saldo().compareTo(BigDecimal.ZERO) > 0);
+            linea.setDebe(alDebe ? saldo : BigDecimal.ZERO);
+            linea.setHaber(alDebe ? BigDecimal.ZERO : saldo);
+            linea.setOrden(orden++);
+            apertura.getLineas().add(linea);
+            descuadre = descuadre.add(linea.getDebe()).subtract(linea.getHaber());
+        }
+
+        if (descuadre.compareTo(BigDecimal.ZERO) != 0) {
+            LineaAsiento resultado = new LineaAsiento();
+            resultado.setAsiento(apertura);
+            resultado.setCuenta(obtenerCuenta("129"));
+            resultado.setConcepto("Resultado del ejercicio " + (año - 1));
+            resultado.setDebe(descuadre.compareTo(BigDecimal.ZERO) < 0 ? descuadre.abs() : BigDecimal.ZERO);
+            resultado.setHaber(descuadre.compareTo(BigDecimal.ZERO) > 0 ? descuadre : BigDecimal.ZERO);
+            resultado.setOrden(orden);
+            apertura.getLineas().add(resultado);
+        }
+
+        if (apertura.getLineas().isEmpty()) {
+            throw new IllegalStateException("No hay saldos de balance a 31/12/" + (año - 1) + " que abrir");
+        }
+
+        apertura.calcularTotales();
+        if (!apertura.estaCuadrado()) {
+            throw new IllegalStateException("El asiento de apertura no cuadra");
+        }
+        AsientoContable guardado = asientoRepository.save(apertura);
+        log.info("[OK] Asiento de apertura {} generado ({} líneas)", guardado.getNumero(), guardado.getLineas().size());
+        return guardado;
+    }
+
+    /**
+     * Libro mayor de una cuenta con saldo acumulado por movimiento.
+     */
+    @Transactional(readOnly = true)
+    public List<MovimientoMayor> obtenerLibroMayor(String codigoCuenta, LocalDate desde, LocalDate hasta) {
+        Objects.requireNonNull(codigoCuenta, "Código de cuenta obligatorio");
+        List<Object[]> filas = asientoRepository.movimientosDeCuenta(codigoCuenta.trim(), desde, hasta);
+        List<MovimientoMayor> mayor = new ArrayList<>(filas.size());
+        BigDecimal saldo = BigDecimal.ZERO;
+        for (Object[] fila : filas) {
+            LocalDate fecha = (LocalDate) fila[0];
+            String numero = (String) fila[1];
+            String concepto = (String) fila[2];
+            BigDecimal debe = fila[3] != null ? new BigDecimal(fila[3].toString()) : BigDecimal.ZERO;
+            BigDecimal haber = fila[4] != null ? new BigDecimal(fila[4].toString()) : BigDecimal.ZERO;
+            saldo = saldo.add(debe).subtract(haber);
+            mayor.add(new MovimientoMayor(fecha, numero, concepto, debe, haber, saldo));
+        }
+        return mayor;
+    }
+
+    /**
+     * Balance de situación y cuenta de pérdidas y ganancias agrupados según
+     * el criterio del PGC pymes (por tipo de cuenta y grupo).
+     */
+    @Transactional(readOnly = true)
+    public BalancePgc obtenerBalancePgc(LocalDate fecha) {
+        List<BalanceCuentaConTipo> cuentas = obtenerBalanceConTipoCompleto(fecha);
+
+        List<BalanceCuenta> activo = new ArrayList<>();
+        List<BalanceCuenta> pasivoYNeto = new ArrayList<>();
+        List<BalanceCuenta> gastos = new ArrayList<>();
+        List<BalanceCuenta> ingresos = new ArrayList<>();
+        BigDecimal totalActivo = BigDecimal.ZERO;
+        BigDecimal totalPasivoNeto = BigDecimal.ZERO;
+        BigDecimal totalGastos = BigDecimal.ZERO;
+        BigDecimal totalIngresos = BigDecimal.ZERO;
+
+        for (BalanceCuentaConTipo cuenta : cuentas) {
+            BalanceCuenta bc = new BalanceCuenta(cuenta.codigo(), cuenta.nombre(), cuenta.debe(), cuenta.haber(), cuenta.saldo());
+            switch (cuenta.tipo() != null ? cuenta.tipo().toUpperCase() : "") {
+                case "GASTO" -> {
+                    gastos.add(bc);
+                    totalGastos = totalGastos.add(cuenta.saldo());
+                }
+                case "INGRESO" -> {
+                    ingresos.add(bc);
+                    totalIngresos = totalIngresos.add(cuenta.saldo());
+                }
+                case "ACTIVO" -> {
+                    activo.add(bc);
+                    totalActivo = totalActivo.add(cuenta.saldo());
+                }
+                default -> { // PASIVO, PATRIMONIO
+                    pasivoYNeto.add(bc);
+                    totalPasivoNeto = totalPasivoNeto.add(cuenta.saldo());
+                }
+            }
+        }
+        BigDecimal resultado = totalIngresos.subtract(totalGastos);
+        return new BalancePgc(fecha, activo, totalActivo, pasivoYNeto, totalPasivoNeto,
+                ingresos, totalIngresos, gastos, totalGastos, resultado,
+                totalPasivoNeto.add(resultado));
+    }
+
+    private List<BalanceCuentaConTipo> obtenerBalanceConTipoCompleto(LocalDate fecha) {
+        List<Object[]> filas = asientoRepository.calcularBalanceHasta(fecha);
+        List<BalanceCuentaConTipo> balance = new ArrayList<>(filas.size());
+        for (Object[] fila : filas) {
+            String codigo = (String) fila[0];
+            String nombre = (String) fila[1];
+            String tipo = (String) fila[2];
+            BigDecimal debe = fila[3] != null ? new BigDecimal(fila[3].toString()) : BigDecimal.ZERO;
+            BigDecimal haber = fila[4] != null ? new BigDecimal(fila[4].toString()) : BigDecimal.ZERO;
+            BigDecimal saldo = "ACTIVO".equalsIgnoreCase(tipo) || "GASTO".equalsIgnoreCase(tipo)
+                    ? debe.subtract(haber) : haber.subtract(debe);
+            balance.add(new BalanceCuentaConTipo(codigo, nombre, tipo, debe, haber, saldo));
+        }
+        return balance;
     }
 
     // Comprueba la integridad contable al iniciar
@@ -408,5 +779,20 @@ public class ContabilidadService {
         BigDecimal haber,
         BigDecimal saldo
     ) {}
+
+    public record BalanceCuentaConTipo(String codigo, String nombre, String tipo,
+                                       BigDecimal debe, BigDecimal haber, BigDecimal saldo) {}
+
+    /** Movimiento del libro mayor con saldo acumulado. */
+    public record MovimientoMayor(LocalDate fecha, String numeroAsiento, String concepto,
+                                  BigDecimal debe, BigDecimal haber, BigDecimal saldo) {}
+
+    /** Balance de situación + PyG agrupados según PGC pymes. */
+    public record BalancePgc(LocalDate fecha,
+                             List<BalanceCuenta> activo, BigDecimal totalActivo,
+                             List<BalanceCuenta> pasivoYNeto, BigDecimal totalPasivoYNeto,
+                             List<BalanceCuenta> ingresos, BigDecimal totalIngresos,
+                             List<BalanceCuenta> gastos, BigDecimal totalGastos,
+                             BigDecimal resultado, BigDecimal totalPasivoYNetoConResultado) {}
 }
 

@@ -1,0 +1,39 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Hoja de ruta</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/hojas-ruta}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+    <div class="form-card" style="max-width:520px;">
+        <p class="text-muted small mb-3">Selecciona la ruta maestra y la fecha. Se generará la hoja de ruta con las paradas planificadas de esa ruta.</p>
+        <form th:action="@{/web/hojas-ruta}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${hojaRuta?.id}">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="rutaId">Ruta *</label>
+                    <select id="rutaId" name="rutaId" class="form-select" data-searchable required>
+                        <option value="">-- Selecciona ruta --</option>
+                        <option th:each="r : ${rutas}" th:value="${r.id}" th:text="${r.nombre}" th:selected="${hojaRuta?.ruta?.id == r.id}"></option>
+                    </select>
+                    <div class="invalid-feedback">La ruta es obligatoria</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="fecha">Fecha de reparto *</label>
+                    <input type="date" id="fecha" name="fecha" class="form-control" required>
+                    <div class="invalid-feedback">La fecha es obligatoria</div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1"></i>Generar hoja de ruta
+                </button>
+                <a th:href="@{/web/hojas-ruta}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

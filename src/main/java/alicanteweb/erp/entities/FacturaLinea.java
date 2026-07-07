@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import alicanteweb.erp.util.FinancialMath;
 import java.math.BigDecimal;
 
 @Getter
@@ -68,11 +69,29 @@ public class FacturaLinea {
         BigDecimal subtotal = cantidad.multiply(getPrecioUnitario());
 
         if (descuento != null && descuento.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal importeDescuento = subtotal.multiply(descuento)
-                    .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-            subtotal = subtotal.subtract(importeDescuento);
+            subtotal = subtotal.subtract(FinancialMath.porcentaje(subtotal, descuento));
         }
 
         return subtotal;
+    }
+
+    /**
+     * Inalterabilidad RRSIF: las líneas de una factura ya emitida no se modifican,
+     * añaden ni borran (las correcciones van por factura rectificativa). Se compara
+     * contra el estado persistido de la factura para no interferir con la propia
+     * transacción de emisión.
+     */
+    @PreUpdate
+    @PreRemove
+    @PrePersist
+    private void protegerLineaDeFacturaEmitida() {
+        if (factura == null) {
+            return;
+        }
+        String estado = factura.getEstadoPersistido();
+        if (estado != null && java.util.Set.of("EMITIDA", "PAGADA", "VENCIDA", "ANULADA", "RECTIFICADA").contains(estado)) {
+            throw new IllegalStateException("La factura " + factura.getNumero()
+                    + " está " + estado + ": sus líneas son inalterables (RRSIF). Emita una rectificativa.");
+        }
     }
 }

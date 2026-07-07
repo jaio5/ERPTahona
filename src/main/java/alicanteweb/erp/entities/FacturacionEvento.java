@@ -44,6 +44,15 @@ public class FacturacionEvento {
     @Column(name = "payload_hash", length = 128)
     private String payloadHash;
 
+    @Column(name = "version_normativa", length = 50)
+    private String versionNormativa;
+
+    @Column(name = "modalidad_sif", length = 20)
+    private String modalidadSif;
+
+    @Column(name = "origen_sistema", length = 100)
+    private String origenSistema;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata")
     private Map<String, Object> metadata;

@@ -1,5 +1,6 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.exception.ErpException;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -8,6 +9,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -28,6 +30,13 @@ public class QrCodeService {
 
     private static final int QR_WIDTH = 300;
     private static final int QR_HEIGHT = 300;
+
+    /**
+     * URL base oficial de cotejo del QR tributario (producción).
+     * Para el entorno de pruebas de AEAT usar: https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR
+     */
+    @Value("${verifactu.qr.base-url:https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR}")
+    private String qrBaseUrl;
 
     /**
      * Genera un código QR a partir de un texto
@@ -70,53 +79,47 @@ public class QrCodeService {
 
         } catch (WriterException | IOException e) {
             log.error("Error generando código QR", e);
-            throw new RuntimeException("Error generando código QR", e);
+            throw new ErpException("Error generando código QR", e);
         }
     }
 
     /**
-     * Genera un QR para VeriFactu con la URL de verificación de AEAT
-     * @param hash Hash de la factura (Base64 o similar)
-     * @param nif NIF del emisor
-     * @param numeroFactura Número de factura
+     * Genera el QR tributario de VeriFactu con la URL de cotejo de la AEAT.
+     * Formato oficial según la Orden HAC/1177/2024 (art. 20-21 y anexo II):
+     * {@code <base>?nif=...&numserie=...&fecha=...&importe=...}
+     *
+     * @param nif NIF del emisor (obligado a expedir la factura)
+     * @param numSerieFactura Número de serie y número de la factura
      * @param fechaExpedicion Fecha de expedición (formato dd-MM-yyyy)
-     * @param importeTotal Importe total de la factura
+     * @param importeTotal Importe total de la factura (con punto decimal)
      * @return Imagen QR en Base64
      */
-    public String generarQRVeriFactu(String hash, String nif, String numeroFactura,
+    public String generarQRVeriFactu(String nif, String numSerieFactura,
                                      String fechaExpedicion, String importeTotal) {
         try {
-            // Asegurar que el hash es seguro para la URL: preferimos Base64 URL-safe sin padding
-            String hashUrlSafe;
-            if (hash == null) {
-                hashUrlSafe = "";
-            } else {
-                // Si parece un Base64 estándar, intentar convertir a URL-safe
-                try {
-                    byte[] decoded = Base64.getDecoder().decode(hash);
-                    hashUrlSafe = Base64.getUrlEncoder().withoutPadding().encodeToString(decoded);
-                } catch (IllegalArgumentException e) {
-                    // No es Base64: hacer URLEncode del valor tal cual
-                    hashUrlSafe = URLEncoder.encode(hash, StandardCharsets.UTF_8);
-                }
-            }
-
-            // URL de verificación de AEAT
-            String url = String.format(
-                    "https://www2.agenciatributaria.gob.es/wlpl/AVAC-FACT/verificar?hash=%s&nif=%s&numero=%s&fecha=%s&importe=%s",
-                    URLEncoder.encode(hashUrlSafe, StandardCharsets.UTF_8),
-                    URLEncoder.encode(nif != null ? nif : "", StandardCharsets.UTF_8),
-                    URLEncoder.encode(numeroFactura != null ? numeroFactura : "", StandardCharsets.UTF_8),
-                    URLEncoder.encode(fechaExpedicion != null ? fechaExpedicion : "", StandardCharsets.UTF_8),
-                    URLEncoder.encode(importeTotal != null ? importeTotal : "", StandardCharsets.UTF_8)
-            );
-
-            log.info("Generando QR VeriFactu para factura: {} -> URL length {}", numeroFactura, url.length());
+            String url = construirUrlVerificacionQr(nif, numSerieFactura, fechaExpedicion, importeTotal);
+            log.info("Generando QR VeriFactu para factura: {} -> URL length {}", numSerieFactura, url.length());
             return generarQR(url);
         } catch (Exception e) {
             log.error("Error preparando QR VeriFactu", e);
-            throw new RuntimeException("Error preparando QR VeriFactu", e);
+            throw new ErpException("Error preparando QR VeriFactu", e);
         }
+    }
+
+    /**
+     * Construye la URL de cotejo del QR tributario según la especificación oficial de AEAT.
+     * Los parámetros oficiales son exactamente: nif, numserie, fecha e importe.
+     */
+    public String construirUrlVerificacionQr(String nif, String numSerieFactura,
+                                             String fechaExpedicion, String importeTotal) {
+        return String.format(
+                "%s?nif=%s&numserie=%s&fecha=%s&importe=%s",
+                qrBaseUrl,
+                URLEncoder.encode(nif != null ? nif : "", StandardCharsets.UTF_8),
+                URLEncoder.encode(numSerieFactura != null ? numSerieFactura : "", StandardCharsets.UTF_8),
+                URLEncoder.encode(fechaExpedicion != null ? fechaExpedicion : "", StandardCharsets.UTF_8),
+                URLEncoder.encode(importeTotal != null ? importeTotal : "", StandardCharsets.UTF_8)
+        );
     }
 
     /**
@@ -134,7 +137,7 @@ public class QrCodeService {
      * @return true si es válido
      */
     public boolean esQRValido(String qrBase64) {
-        if (qrBase64 == null || qrBase64.trim().isEmpty()) {
+        if (qrBase64 == null || qrBase64.isBlank()) {
             return false;
         }
 
@@ -153,7 +156,7 @@ public class QrCodeService {
      * @return Tamño en bytes
      */
     public int obtenerTamanoQR(String qrBase64) {
-        if (qrBase64 == null || qrBase64.trim().isEmpty()) {
+        if (qrBase64 == null || qrBase64.isBlank()) {
             return 0;
         }
 

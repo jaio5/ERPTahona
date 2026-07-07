@@ -1,0 +1,103 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Libros de IVA</h4>
+            <small class="text-muted" th:text="${#temporals.format(desde,'dd/MM/yyyy')} + ' – ' + ${#temporals.format(hasta,'dd/MM/yyyy')}"></small>
+        </div>
+        <div class="page-header-actions">
+            <form method="get" th:action="@{/web/fiscal/libros-iva}" class="d-flex gap-2 align-items-center">
+                <input type="number" name="ejercicio" class="form-control form-control-sm" style="width:6.5rem" th:value="${ejercicio}" min="2020" max="2100" aria-label="Ejercicio">
+                <select name="trimestre" class="form-select form-select-sm" style="width:6.5rem" aria-label="Trimestre">
+                    <option th:each="t : ${#numbers.sequence(1,4)}" th:value="${t}" th:text="'T' + ${t}" th:selected="${t == trimestre}"></option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary">Ver</button>
+            </form>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#panel-emitidas" type="button" role="tab">Emitidas</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#panel-recibidas" type="button" role="tab">Recibidas</button>
+        </li>
+    </ul>
+
+    <div class="tab-content pt-3">
+        <div class="tab-pane fade show active" id="panel-emitidas" role="tabpanel">
+            <div class="d-flex justify-content-end mb-2">
+                <a class="btn btn-sm btn-outline-secondary"
+                   th:href="@{/web/fiscal/libros-iva/emitidas.csv(ejercicio=${ejercicio},trimestre=${trimestre})}">
+                    <i class="bi bi-download me-1"></i>Exportar CSV
+                </a>
+            </div>
+            <div class="table-card"><div class="table-responsive"><table class="table table-hover table-sm mb-0">
+                <thead><tr><th>Fecha</th><th>Número</th><th>NIF</th><th>Cliente</th><th>Tipo</th><th class="text-end">% IVA</th><th class="text-end">Base</th><th class="text-end">Cuota</th><th class="text-end">Recargo</th><th class="text-end">Retención</th><th class="text-end">Total</th></tr></thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(emitidas)}"><td colspan="11" class="empty-state"><i class="bi bi-journal-x"></i><div>Sin facturas emitidas en el periodo</div></td></tr>
+                    <tr th:each="l : ${emitidas}">
+                        <td th:text="${#temporals.format(l.fecha,'dd/MM/yyyy')}"></td>
+                        <td th:text="${l.numero}"></td>
+                        <td th:text="${l.nif ?: '—'}"></td>
+                        <td th:text="${l.nombre}"></td>
+                        <td th:text="${l.tipoFactura}"></td>
+                        <td class="text-end" th:text="${l.tipoIva}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(l.base)}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(l.cuotaIva)}"></td>
+                        <td class="text-end" th:text="${l.cuotaRecargo != null ? #numbers.formatCurrency(l.cuotaRecargo) : '—'}"></td>
+                        <td class="text-end" th:text="${l.retencion != null ? #numbers.formatCurrency(l.retencion) : '—'}"></td>
+                        <td class="text-end" th:text="${l.total != null ? #numbers.formatCurrency(l.total) : '—'}"></td>
+                    </tr>
+                </tbody>
+                <tfoot th:unless="${#lists.isEmpty(emitidas)}">
+                    <tr class="fw-bold">
+                        <td colspan="6">Totales</td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![base]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![cuotaIva]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![cuotaRecargo ?: 0]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![retencion ?: 0]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(emitidas.![total ?: 0]))}"></td>
+                    </tr>
+                </tfoot>
+            </table></div></div>
+        </div>
+
+        <div class="tab-pane fade" id="panel-recibidas" role="tabpanel">
+            <div class="d-flex justify-content-end mb-2">
+                <a class="btn btn-sm btn-outline-secondary"
+                   th:href="@{/web/fiscal/libros-iva/recibidas.csv(ejercicio=${ejercicio},trimestre=${trimestre})}">
+                    <i class="bi bi-download me-1"></i>Exportar CSV
+                </a>
+            </div>
+            <div class="table-card"><div class="table-responsive"><table class="table table-hover table-sm mb-0">
+                <thead><tr><th>Fecha</th><th>Número</th><th>NIF</th><th>Proveedor</th><th class="text-end">% IVA</th><th class="text-end">Base</th><th class="text-end">Cuota</th><th class="text-end">Recargo</th><th class="text-end">Retención</th><th class="text-end">Total</th></tr></thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(recibidas)}"><td colspan="10" class="empty-state"><i class="bi bi-journal-x"></i><div>Sin facturas recibidas en el periodo</div></td></tr>
+                    <tr th:each="l : ${recibidas}">
+                        <td th:text="${#temporals.format(l.fecha,'dd/MM/yyyy')}"></td>
+                        <td th:text="${l.numero}"></td>
+                        <td th:text="${l.nif ?: '—'}"></td>
+                        <td th:text="${l.nombre}"></td>
+                        <td class="text-end" th:text="${l.tipoIva}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(l.base)}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(l.cuotaIva)}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(l.cuotaRecargo)}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(l.retencion)}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(l.total)}"></td>
+                    </tr>
+                </tbody>
+                <tfoot th:unless="${#lists.isEmpty(recibidas)}">
+                    <tr class="fw-bold">
+                        <td colspan="5">Totales</td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(recibidas.![base]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(recibidas.![cuotaIva]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(recibidas.![cuotaRecargo]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(recibidas.![retencion]))}"></td>
+                        <td class="text-end" th:text="${#numbers.formatCurrency(#aggregates.sum(recibidas.![total]))}"></td>
+                    </tr>
+                </tfoot>
+            </table></div></div>
+        </div>
+    </div>
+</div>

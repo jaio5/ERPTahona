@@ -2,6 +2,7 @@
 *.class
 target/
 dist/
+node_modules/
 
 # Log files
 *.log
@@ -60,7 +61,19 @@ app_output.log
 certs/*
 !certs/.gitkeep
 
+# Capturas de sesiones de revisión con navegador: material de trabajo local,
+# fuera del control de versiones (retirado del índice en la fase 4 pre-lanzamiento)
+/*.png
+audit/
+screenshots/
+.playwright-mcp/
+
+# Artefactos de revisiones pasadas, obsoletos pero conservados en disco
+FRONTEND_ANALISIS.md
+test-erp-flows.mjs
+
 # Local config overrides
 application-local.properties
+.env
 .env.production.local
 .env.*.local

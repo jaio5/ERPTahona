@@ -8,6 +8,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -22,6 +27,9 @@ import java.util.Optional;
 @Transactional
 public class PedidoService {
     private static final Logger log = LoggerFactory.getLogger(PedidoService.class);
+
+    private static final PageRequest LISTA_PAGEABLE =
+            PageRequest.of(0, 200, Sort.by(Sort.Direction.DESC, "fecha"));
 
     private final PedidoRepository pedidoRepository;
     private final AlbaranService albaranService;
@@ -38,6 +46,17 @@ public class PedidoService {
     public List<Pedido> obtenerTodos() {
         log.debug("Obteniendo todos los pedidos");
         return pedidoRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Pedido> obtenerTodosLimitado() {
+        return pedidoRepository.findAll(LISTA_PAGEABLE).getContent();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Pedido> obtenerTodos(Pageable pageable) {
+        log.debug("Obteniendo todos los pedidos paginados");
+        return pedidoRepository.findAll(pageable);
     }
 
     /**
@@ -74,6 +93,44 @@ public class PedidoService {
     public List<Pedido> buscarPorEstado(String estado) {
         log.debug("Buscando pedidos con estado: {}", estado);
         return pedidoRepository.findByEstado(estado);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Pedido> buscarPorEstado(String estado, Pageable pageable) {
+        log.debug("Buscando pedidos con estado: {} (paginado)", estado);
+        return pedidoRepository.findByEstado(estado, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Pedido> buscar(String q) {
+        log.debug("Buscando pedidos: {}", q);
+        return pedidoRepository.findByNumeroContainingIgnoreCaseOrCliente_NombreContainingIgnoreCase(q, q);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Pedido> buscar(String q, Pageable pageable) {
+        log.debug("Buscando pedidos: {} (paginado)", q);
+        return pedidoRepository.findByNumeroContainingIgnoreCaseOrCliente_NombreContainingIgnoreCase(q, q, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public long countByEstado(String estado) {
+        return pedidoRepository.countByEstado(estado);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Pedido> findByFechaBetween(LocalDate inicio, LocalDate fin) {
+        return pedidoRepository.findByFechaBetween(inicio, fin);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Pedido> obtenerRecientesPorCliente(Long clienteId) {
+        List<Pedido> pedidos = pedidoRepository.findTop10ByCliente_IdOrderByFechaDescIdDesc(clienteId);
+        // Forzar inicialización de proxies lazy dentro de la transacción
+        pedidos.forEach(p -> p.getPedidoLineas().forEach(l -> {
+            if (l.getArticulo() != null) org.hibernate.Hibernate.initialize(l.getArticulo());
+        }));
+        return pedidos;
     }
 
     /**
@@ -130,7 +187,7 @@ public class PedidoService {
      * Convierte un pedido en albarán de venta
      */
     public AlbaranVenta convertirAAlbaran(Long pedidoId, Usuario usuario) {
-        log.info("🔄 Convirtiendo pedido {} a albarán", pedidoId);
+        log.info("[CONVERSION] Convirtiendo pedido {} a albarán", pedidoId);
 
         Pedido pedido = pedidoRepository.findById(pedidoId)
             .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado"));
@@ -163,7 +220,7 @@ public class PedidoService {
             lineaAlbaran.setDescuento(lineaPedido.getDescuento() != null ? lineaPedido.getDescuento() : BigDecimal.ZERO);
             lineaAlbaran.setIva(lineaPedido.getIva() != null ? lineaPedido.getIva() : new BigDecimal("21"));
 
-            albaran.getLineas().add(lineaAlbaran);
+            albaran.getAlbaranVentaLineas().add(lineaAlbaran);
         }
 
         // Guardar albarán
@@ -173,13 +230,13 @@ public class PedidoService {
         pedido.setEstado("SERVIDO");
         pedidoRepository.save(pedido);
 
-        log.info("✅ Pedido convertido a albarán: {} -> {}", pedido.getNumero(), albaranGuardado.getNumero());
+        log.info("[OK] Pedido convertido a albarán: {} -> {}", pedido.getNumero(), albaranGuardado.getNumero());
 
         // Auditar
         if (auditoriaService != null) {
-            auditoriaService.registrarAccion(usuario, "PEDIDO", "CONVERTIR_ALBARAN",
-                "Pedido " + pedido.getNumero() + " convertido a albarán " + albaranGuardado.getNumero(),
-                "EXITOSO");
+            auditoriaService.registrarAccion(usuario, "CONVERTIR_ALBARAN", "Pedido",
+                pedido.getId().toString(),
+                "Pedido " + pedido.getNumero() + " convertido a albarán " + albaranGuardado.getNumero());
         }
 
         return albaranGuardado;
@@ -189,7 +246,7 @@ public class PedidoService {
      * Convierte un pedido en albarán con entrega parcial
      */
     public AlbaranVenta convertirAAlbaranParcial(Long pedidoId, List<EntregaParcial> entregas, Usuario usuario) {
-        log.info("🔄 Convirtiendo pedido {} a albarán parcial", pedidoId);
+        log.info("[CONVERSION] Convirtiendo pedido {} a albarán parcial", pedidoId);
 
         Pedido pedido = pedidoRepository.findById(pedidoId)
             .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado"));
@@ -220,7 +277,7 @@ public class PedidoService {
             lineaAlbaran.setDescuento(lineaPedido.getDescuento() != null ? lineaPedido.getDescuento() : BigDecimal.ZERO);
             lineaAlbaran.setIva(lineaPedido.getIva() != null ? lineaPedido.getIva() : new BigDecimal("21"));
 
-            albaran.getLineas().add(lineaAlbaran);
+            albaran.getAlbaranVentaLineas().add(lineaAlbaran);
         }
 
         // Guardar albarán
@@ -235,7 +292,7 @@ public class PedidoService {
         }
         pedidoRepository.save(pedido);
 
-        log.info("✅ Pedido convertido a albarán parcial: {} -> {}", pedido.getNumero(), albaranGuardado.getNumero());
+        log.info("[OK] Pedido convertido a albarán parcial: {} -> {}", pedido.getNumero(), albaranGuardado.getNumero());
 
         return albaranGuardado;
     }
@@ -271,7 +328,7 @@ public class PedidoService {
         }
 
         Pedido guardado = pedidoRepository.save(duplicado);
-        log.info("✅ Pedido duplicado: {}", guardado.getNumero());
+        log.info("[OK] Pedido duplicado: {}", guardado.getNumero());
 
         return guardado;
     }
@@ -305,36 +362,9 @@ public class PedidoService {
         }
         return true;
     }
-
-    // ── Métodos alias — @deprecated, usar métodos primarios ─────────────────
-
-    /** @deprecated Usar {@link #obtenerTodos()} */
-    @Deprecated(since = "1.0", forRemoval = true)
-    @Transactional(readOnly = true)
-    public List<Pedido> findAll() { return obtenerTodos(); }
-
-    /** @deprecated Usar {@link #obtenerPorId(Long)} */
-    @Deprecated(since = "1.0", forRemoval = true)
-    @Transactional(readOnly = true)
-    public Optional<Pedido> findById(Long id) { return obtenerPorId(id); }
-
-    /** @deprecated Usar {@link #guardar(Pedido)} */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public Pedido save(Pedido pedido) { return guardar(pedido); }
-
-    /** @deprecated Usar {@link #eliminar(Long)} */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public void deleteById(Long id) { eliminar(id); }
-
-    /** @deprecated Usar {@link #buscarPorCliente(Long)} */
-    @Deprecated(since = "1.0", forRemoval = true)
-    @Transactional(readOnly = true)
-    public List<Pedido> findByCliente(Long clienteId) { return buscarPorCliente(clienteId); }
-
-    /** @deprecated Usar {@link #buscarPorEstado(String)} con "PENDIENTE" */
-    @Deprecated(since = "1.0", forRemoval = true)
-    @Transactional(readOnly = true)
-    public List<Pedido> findPendientes() { return buscarPorEstado("PENDIENTE"); }
+    public long count() {
+        return pedidoRepository.count();
+    }
 
     /** Record para entregas parciales */
     public record EntregaParcial(Long lineaPedidoId, BigDecimal cantidad) {}

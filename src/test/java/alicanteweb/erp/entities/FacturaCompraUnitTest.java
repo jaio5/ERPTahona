@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class FacturaCompraUnitTest {
 
     @Test
-    void calcularTotal_y_getters_alias_funcionan() {
+    void calcularTotal_y_getters_canónicos_funcionan() {
         FacturaCompra fc = new FacturaCompra();
         fc.setBaseImponible(new BigDecimal("100.00"));
         fc.setImporteIva(new BigDecimal("21.00"));
@@ -20,8 +20,8 @@ class FacturaCompraUnitTest {
         fc.calcularTotal();
 
         assertEquals(new BigDecimal("121.00"), fc.getTotal());
-        assertEquals(new BigDecimal("121.00"), fc.getTotalFactura());
-        assertEquals(new BigDecimal("21.00"), fc.getCuotaIva());
+        assertEquals(new BigDecimal("121.00"), fc.getTotal());
+        assertEquals(new BigDecimal("21.00"), fc.getImporteIva());
 
         // marcar como pagada
         fc.marcarComoPagada(LocalDate.now());
@@ -36,6 +36,6 @@ class FacturaCompraUnitTest {
 
         // fecha alias
         fc.setFecha(LocalDate.of(2026,1,1));
-        assertEquals(LocalDate.of(2026,1,1), fc.getFechaFactura());
+        assertEquals(LocalDate.of(2026,1,1), fc.getFecha());
     }
 }

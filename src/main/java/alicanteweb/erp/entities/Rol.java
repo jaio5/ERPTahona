@@ -72,12 +72,7 @@ public class Rol {
     @Column(name = "es_sistema", nullable = false)
     private Boolean esSistema;
 
-    /**
-     * Usuarios con este rol
-     * TODO: La base de datos actual no soporta esta relación - el rol está en la columna 'role' de 'users'
-     */
-    // @OneToMany(mappedBy = "rol")
-    // private Set<Usuario> usuarios = new LinkedHashSet<>();
+    // Relación omitida: el rol se almacena en la columna `role` de `users`.
 
     @PrePersist
     protected void onCreate() {
@@ -88,8 +83,7 @@ public class Rol {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Rol)) return false;
-        Rol that = (Rol) o;
+        if (!(o instanceof Rol that)) return false;
         return Objects.equals(id, that.id);
     }
 

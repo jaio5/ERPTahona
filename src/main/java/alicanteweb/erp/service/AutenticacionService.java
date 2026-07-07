@@ -15,12 +15,20 @@ public class AutenticacionService {
 
     private final UsuarioService usuarioService;
     private final AuditoriaService auditoriaService;
+    private final CifradoService cifradoService;
 
-    private final ThreadLocal<Usuario> usuarioActual = new ThreadLocal<>();
+    /**
+     * Hash de sacrificio para igualar el tiempo de respuesta cuando el usuario no
+     * existe o no puede autenticarse: sin él, la ausencia del cómputo PBKDF2
+     * (~cientos de ms) delata por timing qué usuarios existen.
+     */
+    private volatile String hashSacrificio;
 
-    public AutenticacionService(UsuarioService usuarioService, AuditoriaService auditoriaService) {
+    public AutenticacionService(UsuarioService usuarioService, AuditoriaService auditoriaService,
+                                CifradoService cifradoService) {
         this.usuarioService = usuarioService;
         this.auditoriaService = auditoriaService;
+        this.cifradoService = cifradoService;
     }
 
     /**
@@ -30,14 +38,17 @@ public class AutenticacionService {
      * @return Usuario si las credenciales son válidas, null si no
      */
     public Usuario login(String username, String password) {
-        log.info("Intento de login: {}", username);
+        log.info("Intento de login: {}", redactUsername(username));
 
         // Buscar usuario
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorUsername(username);
 
         if (usuarioOpt.isEmpty()) {
-            log.warn("Usuario no encontrado: {}", username);
-            auditoriaService.registrarError(null, "Usuario", username,
+            log.warn("Usuario no encontrado: {}", redactUsername(username));
+            igualarTiempoDeRespuesta(password);
+            // Redactado también en auditoría: un usuario inexistente puede ser una
+            // contraseña tecleada por error en el campo de usuario, y no debe persistirse.
+            auditoriaService.registrarError(null, "Usuario", redactUsername(username),
                     "Intento de login - usuario no encontrado");
             return null;
         }
@@ -46,7 +57,8 @@ public class AutenticacionService {
 
         // Verificar si está activo (enabled)
         if (!Boolean.TRUE.equals(usuario.getEnabled())) {
-            log.warn("Usuario deshabilitado: {}", username);
+            log.warn("Usuario deshabilitado: {}", redactUsername(username));
+            igualarTiempoDeRespuesta(password);
             auditoriaService.registrarError(usuario, "Usuario", usuario.getId().toString(),
                     "Intento de login - usuario deshabilitado");
             return null;
@@ -54,7 +66,8 @@ public class AutenticacionService {
 
         // Verificar si está bloqueado
         if (Boolean.TRUE.equals(usuario.getBloqueado())) {
-            log.warn("Usuario bloqueado: {}", username);
+            log.warn("Usuario bloqueado: {}", redactUsername(username));
+            igualarTiempoDeRespuesta(password);
             auditoriaService.registrarError(usuario, "Usuario", usuario.getId().toString(),
                     "Intento de login - usuario bloqueado");
             return null;
@@ -64,156 +77,39 @@ public class AutenticacionService {
         boolean credencialesValidas = usuarioService.validarCredenciales(username, password);
 
         if (!credencialesValidas) {
-            log.warn("Credenciales inválidas para: {}", username);
+            log.warn("Credenciales inválidas para: {}", redactUsername(username));
+            // El incremento de intentosFallidos ya lo hace validarCredenciales internamente
             auditoriaService.registrarLogin(usuario, null, false);
             return null;
         }
 
-        // Login exitoso
-        usuarioActual.set(usuario);
+        // Login exitoso: resetear contador de intentos fallidos y actualizar último acceso
+        // El reset ya lo hace validarCredenciales internamente; actualizarUltimoLogin persiste la fecha
         usuarioService.actualizarUltimoLogin(usuario.getId());
         auditoriaService.registrarLogin(usuario, null, true);
 
-        log.info("Login exitoso: {}", username);
+        log.info("Login exitoso: {}", redactUsername(username));
         return usuario;
     }
 
-    /**
-     * Realiza el logout del usuario actual
-     */
-    public void logout() {
-        Usuario u = usuarioActual.get();
-        if (u != null) {
-            log.info("Logout: {}", u.getUsername());
-            auditoriaService.registrarLogout(u);
-            usuarioActual.remove();
-        }
+    private String redactUsername(String username) {
+        return username.substring(0, Math.min(2, username.length())) + "***";
     }
 
-    /**
-     * Obtiene el usuario actualmente autenticado
-     * @return Usuario actual o null si no hay sesión
-     */
-    public Usuario getUsuarioActual() {
-        return usuarioActual.get();
-    }
-
-    public boolean haySesionActiva() {
-        return usuarioActual.get() != null;
-    }
-
-    public boolean tienePermiso(String modulo, String accion) {
-        Usuario u = usuarioActual.get();
-        if (u == null) {
-            return false;
-        }
-        if (esAdministrador()) {
-            return true;
-        }
-
-        alicanteweb.erp.entities.Rol rol = u.getRol();
-        if (rol != null && rol.getPermisos() != null) {
-            java.util.Map<String, Boolean> permisosModulo = rol.getPermisos().get(modulo);
-            if (permisosModulo != null) {
-                return Boolean.TRUE.equals(permisosModulo.get(accion));
+    /** Verifica la contraseña contra un hash de sacrificio para que las ramas que no
+     *  autentican tarden lo mismo que una verificación real. El resultado se descarta. */
+    private void igualarTiempoDeRespuesta(String password) {
+        try {
+            String hash = hashSacrificio;
+            if (hash == null) {
+                hash = cifradoService.hashPassword("igualador-de-tiempo-no-usar");
+                hashSacrificio = hash;
             }
-        }
-
-        return tienePermisoLegacy(modulo, accion);
-    }
-
-    /**
-     * Verifica si el usuario actual es administrador
-     * @return true si es administrador
-     */
-    public boolean esAdministrador() {
-        Usuario u = usuarioActual.get();
-        if (u == null) {
-            return false;
-        }
-        String role = u.getRole();
-        String rolNombre = u.getRol() != null ? u.getRol().getNombre() : null;
-        return esAdminRole(role) || esAdminRole(rolNombre);
-    }
-
-    /**
-     * Obtiene el nombre del usuario actual
-     * @return Nombre del usuario o "Invitado" si no hay sesión
-     */
-    public String getNombreUsuarioActual() {
-        Usuario u = usuarioActual.get();
-        if (u == null) {
-            return "Invitado";
-        }
-        return u.getNombre() != null ?
-                u.getNombre() : u.getUsername();
-    }
-
-    /**
-     * Obtiene el ID del usuario actual
-     * @return ID del usuario o null si no hay sesión
-     */
-    public Long getIdUsuarioActual() {
-        Usuario u = usuarioActual.get();
-        return u != null ? u.getId() : null;
-    }
-
-    /**
-     * Verifica que haya sesión activa, lanza excepción si no
-     */
-    public void verificarSesion() {
-        if (!haySesionActiva()) {
-            throw new IllegalStateException("No hay sesión activa. Por favor, inicie sesión.");
+            cifradoService.verificarPassword(password != null ? password : "", hash);
+        } catch (Exception e) {
+            log.debug("No se pudo igualar el tiempo de respuesta: {}", e.getMessage());
         }
     }
-
-    /**
-     * Verifica que el usuario tenga un permiso, lanza excepción si no
-     */
-    public void verificarPermiso(String modulo, String accion) {
-        verificarSesion();
-        if (!tienePermiso(modulo, accion)) {
-            throw new SecurityException("No tiene permisos para realizar esta acción: " +
-                    modulo + " - " + accion);
-        }
-    }
-
-    /**
-     * Establece manualmente el usuario actual (útil para testing)
-     */
-    public void setUsuarioActual(Usuario usuario) {
-        if (usuario != null) {
-            this.usuarioActual.set(usuario);
-        } else {
-            this.usuarioActual.remove();
-        }
-    }
-
-    private boolean tienePermisoLegacy(String modulo, String accion) {
-        Usuario u = usuarioActual.get();
-        if (u == null) return false;
-        String role = u.getRole();
-        if (role == null) {
-            return false;
-        }
-        return switch (role.toUpperCase()) {
-            case "MANAGER", "GERENTE", "GESTOR" -> !"usuarios".equals(modulo) || !"eliminar".equals(accion);
-            case "VENDEDOR", "USER", "USUARIO" -> switch (modulo) {
-                case "dashboard", "clientes", "articulos", "ventas", "almacen" -> "ver".equals(accion);
-                default -> false;
-            };
-            case "CONTABLE" -> switch (modulo) {
-                case "dashboard", "compras", "tesoreria", "contabilidad", "fiscal" -> true;
-                default -> false;
-            };
-            default -> false;
-        };
-    }
-
-    private boolean esAdminRole(String role) {
-        return role != null && ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role));
-    }
-
 }
 
 

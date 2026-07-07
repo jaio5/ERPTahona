@@ -1,0 +1,134 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4>Conciliación bancaria</h4>
+        </div>
+        <div class="page-header-actions">
+            <a href="/web/tesoreria/extractos" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Extractos
+            </a>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <p class="text-muted mb-3">
+            Movimientos bancarios pendientes de conciliar. Selecciona una factura candidata o marca como conciliado manualmente.
+        </p>
+        <div th:if="${#lists.isEmpty(pendientes)}" class="empty-state">
+            <i class="bi bi-check2-all"></i>
+            <div>No hay movimientos pendientes de conciliar</div>
+        </div>
+        <table class="table table-sm table-hover" th:unless="${#lists.isEmpty(pendientes)}">
+            <thead class="table-light">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Banco</th>
+                    <th>Tipo</th>
+                    <th>Concepto</th>
+                    <th class="text-end">Importe</th>
+                    <th style="width:200px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="mov : ${pendientes}" th:id="'row-' + ${mov.id}">
+                    <td class="text-muted small" th:text="${#temporals.format(mov.fecha,'dd/MM/yyyy')}"></td>
+                    <td th:text="${mov.banco?.nombre ?: '—'}"></td>
+                    <td>
+                        <span class="badge-status" th:attr="data-status=${mov.tipo?.toLowerCase()}"
+                              th:text="${mov.tipo ?: '—'}"></span>
+                    </td>
+                    <td th:text="${mov.concepto ?: '—'}"></td>
+                    <td class="text-end fw-semibold"
+                        th:text="${mov.importe != null ? #numbers.formatDecimal(mov.importe,1,2) + ' €' : '—'}"></td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-sm btn-outline-primary me-1 btn-buscar-candidatos"
+                                th:attr="data-id=${mov.id}" title="Buscar facturas candidatas">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                        <button type="button" class="btn btn-sm btn-ghost btn-conciliar-manual"
+                                th:attr="data-id=${mov.id}" title="Marcar conciliado">
+                            <i class="bi bi-check"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal candidatos -->
+    <div class="modal fade" id="modalCandidatos" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Candidatos de conciliación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="candidatosBody">
+                    <div class="text-center text-muted">Cargando...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:attr="nonce=${cspNonce}" th:inline="javascript">
+    (function() {
+        // Sin handlers inline (los bloquea la CSP): delegación de eventos
+        let movimientoActivo = null;
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const csrfHeader = document.querySelector('meta[name="csrf-header"]')?.content || 'X-CSRF-TOKEN';
+
+        function buscarCandidatos(btn) {
+            movimientoActivo = btn.dataset.id;
+            document.getElementById('candidatosBody').innerHTML = '<div class="text-center text-muted">Cargando...</div>';
+            new bootstrap.Modal(document.getElementById('modalCandidatos')).show();
+            fetch('/web/tesoreria/conciliacion/' + movimientoActivo + '/candidatos')
+                .then(r => r.json())
+                .then(data => {
+                    const body = document.getElementById('candidatosBody');
+                    if (!data.length) {
+                        body.innerHTML =
+                            '<p class="text-muted mb-0">No se encontraron candidatos por importe.</p>' +
+                            '<button type="button" class="btn btn-sm btn-ghost mt-2 btn-sin-enlazar">Marcar conciliado sin enlazar</button>';
+                        return;
+                    }
+                    let html = '<div class="list-group">';
+                    data.forEach(c => {
+                        html += '<button type="button" class="list-group-item list-group-item-action d-flex justify-content-between btn-candidato"' +
+                            ' data-doc-id="' + c.id + '" data-tipo="' + c.tipo + '">' +
+                            '<span>' + c.referencia + '</span>' +
+                            '<span class="fw-bold">' + parseFloat(c.importe).toFixed(2) + ' €</span></button>';
+                    });
+                    html += '</div><button type="button" class="btn btn-sm btn-ghost mt-2 btn-sin-enlazar">Sin enlazar</button>';
+                    body.innerHTML = html;
+                });
+        }
+
+        async function aprobar(docId, tipo) {
+            if (!movimientoActivo) return;
+            const url = '/web/tesoreria/conciliacion/' + movimientoActivo + '/aprobar';
+            const params = new URLSearchParams();
+            if (tipo === 'FACTURA' && docId) params.append('facturaId', docId);
+            if (tipo === 'FACTURA_COMPRA' && docId) params.append('facturaCompraId', docId);
+            const r = await fetch(url + '?' + params, { method: 'POST', headers: { [csrfHeader]: csrf } });
+            const data = await r.json();
+            if (data.ok) {
+                const row = document.getElementById('row-' + movimientoActivo);
+                if (row) row.remove();
+                bootstrap.Modal.getInstance(document.getElementById('modalCandidatos'))?.hide();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const buscar = e.target.closest('.btn-buscar-candidatos');
+            if (buscar) { buscarCandidatos(buscar); return; }
+            const manual = e.target.closest('.btn-conciliar-manual');
+            if (manual) { movimientoActivo = manual.dataset.id; aprobar(null, null); return; }
+            const candidato = e.target.closest('.btn-candidato');
+            if (candidato) { aprobar(candidato.dataset.docId, candidato.dataset.tipo); return; }
+            if (e.target.closest('.btn-sin-enlazar')) { aprobar(null, null); }
+        });
+    })();
+    </script>
+</div>

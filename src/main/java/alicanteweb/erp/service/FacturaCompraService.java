@@ -5,6 +5,8 @@ import alicanteweb.erp.repository.FacturaCompraRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class FacturaCompraService {
     private static final Logger log = LoggerFactory.getLogger(FacturaCompraService.class);
 
     private final FacturaCompraRepository facturaCompraRepository;
+    private final ContabilidadService contabilidadService;
 
     /**
      * Obtiene todas las facturas de compra
@@ -39,6 +42,11 @@ public class FacturaCompraService {
     public Optional<FacturaCompra> obtenerPorId(Long id) {
         log.debug("Obteniendo factura con ID: {}", id);
         return facturaCompraRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<FacturaCompra> obtenerDetallePorId(Long id) {
+        return facturaCompraRepository.findDetailById(id);
     }
 
     /**
@@ -86,11 +94,17 @@ public class FacturaCompraService {
         return facturaCompraRepository.buscar(busqueda);
     }
 
+    @Transactional(readOnly = true)
+    public Page<FacturaCompra> findPage(String q, String estado, Pageable pageable) {
+        return facturaCompraRepository.findPage(q, estado, pageable);
+    }
+
     /**
      * Guarda una factura de compra
      */
     public FacturaCompra guardar(FacturaCompra facturaCompra) {
         log.info("Guardando factura de compra: {}", facturaCompra.getId());
+        boolean nueva = facturaCompra.getId() == null;
 
         // Establecer fecha si no existe
         if (facturaCompra.getFecha() == null) {
@@ -102,7 +116,15 @@ public class FacturaCompraService {
             facturaCompra.setEstado("PENDIENTE");
         }
 
-        return facturaCompraRepository.save(facturaCompra);
+        FacturaCompra guardada = facturaCompraRepository.save(facturaCompra);
+
+        // Contabilizar la primera vez (600/472 a 400, con recargo y retención)
+        if (nueva && !Boolean.TRUE.equals(guardada.getContabilizada())) {
+            contabilidadService.generarAsientoCompra(guardada, null);
+            guardada.marcarComoContabilizada();
+            guardada = facturaCompraRepository.save(guardada);
+        }
+        return guardada;
     }
 
     /**

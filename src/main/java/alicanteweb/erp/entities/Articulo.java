@@ -27,6 +27,10 @@ public class Articulo {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
+
     @Size(max = 50)
     @NotNull
     @Column(name = "codigo", nullable = false, length = 50)
@@ -67,6 +71,10 @@ public class Articulo {
     @Column(name = "coste", precision = 10, scale = 2)
     private BigDecimal coste;
 
+    /** Coste medio ponderado (PMP), actualizado con cada entrada de compra. */
+    @Column(name = "coste_medio", precision = 10, scale = 4)
+    private BigDecimal costeMedio;
+
     @Column(name = "stock", precision = 10, scale = 2)
     private BigDecimal stock;
 
@@ -101,8 +109,7 @@ public class Articulo {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Articulo)) return false;
-        Articulo that = (Articulo) o;
+        if (!(o instanceof Articulo that)) return false;
         return Objects.equals(id, that.id);
     }
 

@@ -1,0 +1,77 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Recepción</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="${recepcion?.id != null ? '/web/recepciones/' + recepcion.id : '/web/recepciones'}"
+               class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+
+    <div class="form-card">
+        <div class="form-section-title">
+            <i class="bi bi-box-arrow-in-down"></i> Datos de la recepción
+        </div>
+        <form th:action="${recepcion?.id != null ? '/web/recepciones/' + recepcion.id : '/web/recepciones'}"
+              method="post" class="needs-validation" novalidate>
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label" for="numero">Número (opcional)</label>
+                    <input id="numero" name="numero" class="form-control" placeholder="Auto"
+                           th:value="${recepcion?.numero}">
+                    <div class="form-text">Albarán o referencia del proveedor</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="proveedorId">Proveedor *</label>
+                    <select id="proveedorId" name="proveedorId" class="form-select" required>
+                        <option value="">— Selecciona proveedor —</option>
+                        <option th:each="p : ${proveedores}"
+                                th:value="${p.id}"
+                                th:text="${p.nombre}"
+                                th:selected="${recepcion?.proveedor?.id == p.id}"></option>
+                    </select>
+                    <div class="invalid-feedback">El proveedor es obligatorio.</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="almacenId">Almacén destino</label>
+                    <select id="almacenId" name="almacenId" class="form-select">
+                        <option value="">— Sin almacén específico —</option>
+                        <option th:each="a : ${almacenes}"
+                                th:value="${a.id}"
+                                th:text="${a.nombre}"
+                                th:selected="${recepcion?.almacen?.id == a.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label" for="pedidoCompraId">Pedido de compra relacionado</label>
+                    <select id="pedidoCompraId" name="pedidoCompraId" class="form-select">
+                        <option value="">— Ninguno —</option>
+                        <option th:each="pc : ${pedidosCompra}"
+                                th:value="${pc.id}"
+                                th:text="${pc.numero ?: '#' + pc.id}"
+                                th:selected="${recepcion?.pedidoCompra?.id == pc.id}"></option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="observaciones">Observaciones</label>
+                    <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
+                              th:text="${recepcion?.observaciones}"></textarea>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-check-lg me-1"></i>
+                    <span th:text="${recepcion?.id != null ? 'Guardar cambios' : 'Crear recepción'}">Guardar</span>
+                </button>
+                <a th:href="@{/web/recepciones}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

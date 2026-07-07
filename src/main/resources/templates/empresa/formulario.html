@@ -1,31 +1,38 @@
-<section>
-    <div class="topbar"><h4 th:text="${titulo}">Empresa</h4></div>
-    <div th:if="${vatValidation}" th:class="${vatValidation.valido ? 'alert alert-success' : 'alert alert-warning'}">
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Configuración de empresa</h4>
+        </div>
+    </div>
+    <div th:if="${vatValidation}" th:class="${vatValidation.valido ? 'alert alert-success mb-3' : 'alert alert-warning mb-3'}">
         <div><strong th:text="${vatValidation.mensaje}">Resultado VIES</strong></div>
         <div th:if="${vatValidation.countryCode}">
             <span th:text="${vatValidation.countryCode + vatValidation.vatNumber}">ESB00000000</span>
             <span th:if="${vatValidation.requestDate}" th:text="' - Consulta: ' + ${vatValidation.requestDate}"></span>
         </div>
         <div th:if="${vatValidation.nombre}"><strong>Nombre VIES:</strong> <span th:text="${vatValidation.nombre}"></span></div>
-        <div th:if="${vatValidation.direccion}"><strong>Direccion VIES:</strong> <span style="white-space: pre-line" th:text="${vatValidation.direccion}"></span></div>
+        <div th:if="${vatValidation.direccion}"><strong>Dirección VIES:</strong> <span style="white-space: pre-line" th:text="${vatValidation.direccion}"></span></div>
     </div>
-    <form th:action="@{/web/empresa}" method="post" class="card p-3">
+    <form th:action="@{/web/empresa}" method="post" class="form-card needs-validation" novalidate>
+        <input type="hidden" name="id" th:value="${empresa?.id}">
         <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">Nombre empresa</label><input name="nombreEmpresa" th:value="${empresa?.nombreEmpresa}" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label">VAT / NIF europeo</label><input name="cif" th:value="${empresa?.cif}" class="form-control" placeholder="ESB12345678" required></div>
-            <div class="col-md-6"><label class="form-label">Direccion</label><input name="direccion" th:value="${empresa?.direccion}" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label">Codigo postal</label><input name="codigoPostal" th:value="${empresa?.codigoPostal}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label">Ciudad</label><input name="ciudad" th:value="${empresa?.ciudad}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label">Provincia</label><input name="provincia" th:value="${empresa?.provincia}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label">Telefono</label><input name="telefono" th:value="${empresa?.telefono}" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label">Email</label><input name="email" th:value="${empresa?.email}" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label">Web</label><input name="web" th:value="${empresa?.web}" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label">Registro sanitario</label><input name="registroSanitario" th:value="${empresa?.registroSanitario}" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label">Registro mercantil</label><input name="registroMercantil" th:value="${empresa?.registroMercantil}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label" for="nombreEmpresa">Nombre empresa</label><input id="nombreEmpresa" name="nombreEmpresa" th:value="${empresa?.nombreEmpresa}" class="form-control" required></div>
+            <div class="col-md-3"><label class="form-label" for="cif">CIF / NIF</label><input id="cif" name="cif" th:value="${empresa?.cif}" class="form-control" placeholder="B12345678" required></div>
+            <div class="col-md-6"><label class="form-label" for="direccion">Dirección</label><input id="direccion" name="direccion" th:value="${empresa?.direccion}" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label" for="codigoPostal">Código postal</label><input id="codigoPostal" name="codigoPostal" th:value="${empresa?.codigoPostal}" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label" for="ciudad">Ciudad</label><input id="ciudad" name="ciudad" th:value="${empresa?.ciudad}" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label" for="provincia">Provincia</label><input id="provincia" name="provincia" th:value="${empresa?.provincia}" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label" for="telefono">Teléfono</label><input id="telefono" name="telefono" th:value="${empresa?.telefono}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label" for="email">Email</label><input id="email" name="email" th:value="${empresa?.email}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label" for="web">Web</label><input id="web" name="web" th:value="${empresa?.web}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label" for="registroSanitario">Registro sanitario</label><input id="registroSanitario" name="registroSanitario" th:value="${empresa?.registroSanitario}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label" for="registroMercantil">Registro mercantil</label><input id="registroMercantil" name="registroMercantil" th:value="${empresa?.registroMercantil}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label" for="iban">IBAN (remesas SEPA)</label><input id="iban" name="iban" th:value="${empresa?.iban}" class="form-control" maxlength="34" placeholder="ES00 0000 0000 0000 0000 0000"></div>
+            <div class="col-md-6"><label class="form-label" for="sepaCreditorId">Identificador acreedor SEPA</label><input id="sepaCreditorId" name="sepaCreditorId" th:value="${empresa?.sepaCreditorId}" class="form-control" maxlength="35" placeholder="ES12000B12345678"></div>
         </div>
         <div class="mt-4 d-flex gap-2">
-            <button class="btn btn-primary" type="submit">Guardar</button>
-            <button class="btn btn-outline-primary" type="submit" formaction="/web/empresa/validar-vat">Validar VAT/NIF UE</button>
+            <button class="btn btn-primary" type="submit" data-no-double-click>Guardar</button>
+            <button class="btn btn-outline-primary" type="submit" data-no-double-click th:formaction="@{/web/empresa/validar-vat}">Validar VAT/NIF UE</button>
         </div>
     </form>
-</section>
+</div>

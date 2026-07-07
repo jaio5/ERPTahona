@@ -39,7 +39,7 @@ public interface AsientoContableRepository extends JpaRepository<AsientoContable
     /**
      * Obtener último número de asiento del año
      */
-    @Query("SELECT MAX(CAST(SUBSTRING(a.numero, 5) AS int)) FROM AsientoContable a WHERE a.numero LIKE :pattern")
+    @Query("SELECT MAX(CAST(SUBSTRING(a.numero, 6) AS int)) FROM AsientoContable a WHERE a.numero LIKE :pattern")
     Integer findMaxNumeroByYear(String pattern);
 
     /**
@@ -79,5 +79,16 @@ public interface AsientoContableRepository extends JpaRepository<AsientoContable
      */
     @Query("SELECT a FROM AsientoContable a WHERE a.tipo = 'CIERRE' ORDER BY a.fecha DESC")
     List<AsientoContable> findByAsientoCierreTrue();
+
+    /**
+     * Movimientos de una cuenta (libro mayor): fecha, número, concepto, debe, haber.
+     */
+    @Query("""
+        SELECT a.fecha, a.numero, a.concepto, l.debe, l.haber
+        FROM AsientoContable a JOIN a.lineas l
+        WHERE l.cuenta.codigo = :codigo AND a.fecha >= :desde AND a.fecha <= :hasta
+        ORDER BY a.fecha, a.numero
+        """)
+    List<Object[]> movimientosDeCuenta(String codigo, LocalDate desde, LocalDate hasta);
 }
 

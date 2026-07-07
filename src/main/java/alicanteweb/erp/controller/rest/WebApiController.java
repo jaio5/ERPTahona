@@ -1,18 +1,22 @@
 package alicanteweb.erp.controller.rest;
 
+import alicanteweb.erp.controller.dto.ArticuloDto;
+import alicanteweb.erp.controller.dto.ClienteDto;
 import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.entities.Cliente;
-import alicanteweb.erp.repository.FacturaRepository;
-import alicanteweb.erp.repository.PedidoCompraRepository;
-import alicanteweb.erp.repository.PedidoRepository;
-import alicanteweb.erp.repository.ProveedorRepository;
+import alicanteweb.erp.service.AlbaranService;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.ClienteService;
+import alicanteweb.erp.service.FacturaService;
+import alicanteweb.erp.service.PedidoCompraService;
+import alicanteweb.erp.service.PedidoService;
+import alicanteweb.erp.service.ProveedorService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/web")
@@ -20,46 +24,53 @@ public class WebApiController {
 
     private final ClienteService clienteService;
     private final ArticuloService articuloService;
-    private final ProveedorRepository proveedorRepository;
-    private final FacturaRepository facturaRepository;
-    private final PedidoRepository pedidoRepository;
-    private final PedidoCompraRepository pedidoCompraRepository;
+    private final ProveedorService proveedorService;
+    private final FacturaService facturaService;
+    private final PedidoService pedidoService;
+    private final PedidoCompraService pedidoCompraService;
+    private final AlbaranService albaranService;
 
     public WebApiController(ClienteService clienteService,
                             ArticuloService articuloService,
-                            ProveedorRepository proveedorRepository,
-                            FacturaRepository facturaRepository,
-                            PedidoRepository pedidoRepository,
-                            PedidoCompraRepository pedidoCompraRepository) {
+                            ProveedorService proveedorService,
+                            FacturaService facturaService,
+                            PedidoService pedidoService,
+                            PedidoCompraService pedidoCompraService,
+                            AlbaranService albaranService) {
         this.clienteService = clienteService;
         this.articuloService = articuloService;
-        this.proveedorRepository = proveedorRepository;
-        this.facturaRepository = facturaRepository;
-        this.pedidoRepository = pedidoRepository;
-        this.pedidoCompraRepository = pedidoCompraRepository;
+        this.proveedorService = proveedorService;
+        this.facturaService = facturaService;
+        this.pedidoService = pedidoService;
+        this.pedidoCompraService = pedidoCompraService;
+        this.albaranService = albaranService;
     }
 
     @GetMapping("/resumen")
+    @PreAuthorize("@permisos.puede('dashboard', 'ver')")
     public WebResumen resumen() {
         return new WebResumen(
-                clienteService.findAll().size(),
-                articuloService.findAll().size(),
-                proveedorRepository.count(),
-                facturaRepository.count(),
-                pedidoRepository.count(),
-                pedidoCompraRepository.count()
+                clienteService.count(),
+                articuloService.count(),
+                proveedorService.count(),
+                facturaService.count(),
+                pedidoService.count(),
+                pedidoCompraService.count()
         );
     }
 
     @GetMapping("/clientes")
-    public List<ClienteDto> clientes(@RequestParam(required = false) String q) {
-        return clienteService.findAll().stream()
-                .filter(cliente -> matches(q, cliente.getCodigo(), cliente.getNombre(), cliente.getCif(), cliente.getPoblacion()))
+    @PreAuthorize("@permisos.puede('clientes', 'ver')")
+    public List<ClienteDto> clientes(@RequestParam(required = false) String q,
+                                     @RequestParam(defaultValue = "100") int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 500));
+        return clienteService.buscarParaApi(q, PageRequest.of(0, safeLimit)).stream()
                 .map(ClienteDto::from)
                 .toList();
     }
 
     @GetMapping("/clientes/{id}")
+    @PreAuthorize("@permisos.puede('clientes', 'ver')")
     public ResponseEntity<ClienteDto> cliente(@PathVariable Long id) {
         return clienteService.findById(id)
                 .map(ClienteDto::from)
@@ -68,11 +79,13 @@ public class WebApiController {
     }
 
     @PostMapping("/clientes")
+    @PreAuthorize("@permisos.puede('clientes', 'crear')")
     public ClienteDto crearCliente(@RequestBody ClienteDto dto) {
         return ClienteDto.from(clienteService.save(dto.toEntity(new Cliente())));
     }
 
     @PutMapping("/clientes/{id}")
+    @PreAuthorize("@permisos.puede('clientes', 'editar')")
     public ResponseEntity<ClienteDto> actualizarCliente(@PathVariable Long id, @RequestBody ClienteDto dto) {
         return clienteService.findById(id)
                 .map(cliente -> {
@@ -83,28 +96,32 @@ public class WebApiController {
     }
 
     @PostMapping("/clientes/{id}/baja")
+    @PreAuthorize("@permisos.puede('clientes', 'editar')")
     public ResponseEntity<Void> bajaCliente(@PathVariable Long id) {
         clienteService.darDeBaja(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/clientes/{id}/activar")
+    @PreAuthorize("@permisos.puede('clientes', 'editar')")
     public ResponseEntity<Void> activarCliente(@PathVariable Long id) {
         clienteService.activar(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/articulos")
+    @PreAuthorize("@permisos.puede('articulos', 'ver')")
     public List<ArticuloDto> articulos(@RequestParam(required = false) String q,
-                                       @RequestParam(required = false) Boolean activo) {
-        List<Articulo> base = activo == null ? articuloService.findAll() : articuloService.findByActivo(activo);
-        return base.stream()
-                .filter(articulo -> matches(q, articulo.getCodigo(), articulo.getNombre(), articulo.getDescripcion(), articulo.getCategoria()))
+                                       @RequestParam(required = false) Boolean activo,
+                                       @RequestParam(defaultValue = "500") int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 1000));
+        return articuloService.buscarParaApi(q, activo, PageRequest.of(0, safeLimit)).stream()
                 .map(ArticuloDto::from)
                 .toList();
     }
 
     @GetMapping("/articulos/{id}")
+    @PreAuthorize("@permisos.puede('articulos', 'ver')")
     public ResponseEntity<ArticuloDto> articulo(@PathVariable Long id) {
         return articuloService.findById(id)
                 .map(ArticuloDto::from)
@@ -113,11 +130,13 @@ public class WebApiController {
     }
 
     @PostMapping("/articulos")
+    @PreAuthorize("@permisos.puede('articulos', 'crear')")
     public ArticuloDto crearArticulo(@RequestBody ArticuloDto dto) {
         return ArticuloDto.from(articuloService.save(dto.toEntity(new Articulo())));
     }
 
     @PutMapping("/articulos/{id}")
+    @PreAuthorize("@permisos.puede('articulos', 'editar')")
     public ResponseEntity<ArticuloDto> actualizarArticulo(@PathVariable Long id, @RequestBody ArticuloDto dto) {
         return articuloService.findById(id)
                 .map(articulo -> {
@@ -128,29 +147,48 @@ public class WebApiController {
     }
 
     @PostMapping("/articulos/{id}/baja")
+    @PreAuthorize("@permisos.puede('articulos', 'editar')")
     public ResponseEntity<Void> bajaArticulo(@PathVariable Long id) {
         articuloService.darDeBaja(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/articulos/{id}/activar")
+    @PreAuthorize("@permisos.puede('articulos', 'editar')")
     public ResponseEntity<Void> activarArticulo(@PathVariable Long id) {
         articuloService.activar(id);
         return ResponseEntity.noContent().build();
     }
 
-    private boolean matches(String query, String... values) {
-        if (query == null || query.isBlank()) {
-            return true;
-        }
-        String normalized = query.trim().toLowerCase();
-        for (String value : values) {
-            if (value != null && value.toLowerCase().contains(normalized)) {
-                return true;
-            }
-        }
-        return false;
+    @GetMapping("/clientes/{clienteId}/albaranes-recientes")
+    @PreAuthorize("@permisos.puede('ventas', 'ver')")
+    public List<AlbaranResumen> albaranesRecientes(@PathVariable Long clienteId) {
+        return albaranService.obtenerRecientesPorCliente(clienteId).stream()
+                .map(a -> new AlbaranResumen(
+                        a.getId(),
+                        a.getNumero(),
+                        a.getFecha() != null ? a.getFecha().toString() : null,
+                        a.getTotal(),
+                        a.getAlbaranVentaLineas().stream()
+                                .map(l -> new LineaResumen(
+                                        l.getArticulo() != null ? l.getArticulo().getId() : null,
+                                        l.getCantidad(),
+                                        l.getPrecio(),
+                                        l.getIva()))
+                                .toList()))
+                .toList();
     }
+
+    public record AlbaranResumen(Long id,
+                                 String numero,
+                                 String fecha,
+                                 java.math.BigDecimal total,
+                                 List<LineaResumen> lineas) {}
+
+    public record LineaResumen(Long articuloId,
+                               java.math.BigDecimal cantidad,
+                               java.math.BigDecimal precio,
+                               java.math.BigDecimal iva) {}
 
     public record WebResumen(long clientes,
                              long articulos,
@@ -158,105 +196,5 @@ public class WebApiController {
                              long facturas,
                              long pedidosVenta,
                              long pedidosCompra) {
-    }
-
-    public record ClienteDto(Long id,
-                             String codigo,
-                             String nombre,
-                             String cif,
-                             String telefono,
-                             String email,
-                             String direccion,
-                             String poblacion,
-                             String codigoPostal,
-                             String provincia,
-                             Boolean activo) {
-
-        static ClienteDto from(Cliente cliente) {
-            return new ClienteDto(
-                    cliente.getId(),
-                    cliente.getCodigo(),
-                    cliente.getNombre(),
-                    cliente.getCif(),
-                    cliente.getTelefono(),
-                    cliente.getEmail(),
-                    cliente.getDireccion(),
-                    cliente.getPoblacion(),
-                    cliente.getCodigoPostal(),
-                    cliente.getProvincia(),
-                    cliente.getActivo()
-            );
-        }
-
-        Cliente toEntity(Cliente cliente) {
-            applyTo(cliente);
-            return cliente;
-        }
-
-        void applyTo(Cliente cliente) {
-            cliente.setCodigo(codigo);
-            cliente.setNombre(nombre);
-            cliente.setCif(cif);
-            cliente.setTelefono(telefono);
-            cliente.setEmail(email);
-            cliente.setDireccion(direccion);
-            cliente.setPoblacion(poblacion);
-            cliente.setCodigoPostal(codigoPostal);
-            cliente.setProvincia(provincia);
-            cliente.setActivo(activo == null ? Boolean.TRUE : activo);
-        }
-    }
-
-    public record ArticuloDto(Long id,
-                              String codigo,
-                              String nombre,
-                              String descripcion,
-                              String categoria,
-                              String familia,
-                              String unidad,
-                              BigDecimal iva,
-                              BigDecimal pvp,
-                              BigDecimal coste,
-                              BigDecimal stock,
-                              BigDecimal stockMinimo,
-                              Boolean activo) {
-
-        static ArticuloDto from(Articulo articulo) {
-            return new ArticuloDto(
-                    articulo.getId(),
-                    articulo.getCodigo(),
-                    articulo.getNombre(),
-                    articulo.getDescripcion(),
-                    articulo.getCategoria(),
-                    articulo.getFamilia(),
-                    articulo.getUnidad(),
-                    articulo.getIva(),
-                    articulo.getPvp(),
-                    articulo.getCoste(),
-                    articulo.getStock(),
-                    articulo.getStockMinimo(),
-                    articulo.getActivo()
-            );
-        }
-
-        Articulo toEntity(Articulo articulo) {
-            applyTo(articulo);
-            return articulo;
-        }
-
-        void applyTo(Articulo articulo) {
-            articulo.setCodigo(codigo);
-            articulo.setNombre(nombre);
-            articulo.setDescripcion(descripcion);
-            articulo.setCategoria(categoria);
-            articulo.setFamilia(familia);
-            articulo.setUnidad(unidad);
-            articulo.setIva(iva);
-            articulo.setPvp(pvp);
-            articulo.setCoste(coste);
-            articulo.setStock(stock);
-            articulo.setStockMinimo(stockMinimo);
-            articulo.setActivo(activo == null ? Boolean.TRUE : activo);
-        }
     }
 }

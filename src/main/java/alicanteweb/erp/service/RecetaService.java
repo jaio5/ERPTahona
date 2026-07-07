@@ -26,8 +26,16 @@ public class RecetaService {
         return recetaRepository.findAll();
     }
 
+    public long count() {
+        return recetaRepository.count();
+    }
+
     public Optional<Receta> findById(Long id) {
         return recetaRepository.findById(id);
+    }
+
+    public Optional<Receta> findDetailById(Long id) {
+        return recetaRepository.findDetailById(id);
     }
 
     public Optional<Receta> findByCodigo(String codigo) {
@@ -45,7 +53,7 @@ public class RecetaService {
     @Transactional
     public Receta save(Receta receta) {
         if (receta == null) throw new IllegalArgumentException("Receta nula");
-        if (receta.getCodigo() == null || receta.getCodigo().trim().isEmpty()) {
+        if (receta.getCodigo() == null || receta.getCodigo().isBlank()) {
             throw new IllegalArgumentException("El código de la receta es obligatorio");
         }
         var opt = recetaRepository.findByCodigo(receta.getCodigo().trim());
@@ -61,7 +69,7 @@ public class RecetaService {
     }
 
     public List<RecetaIngrediente> getIngredientes(Long recetaId) {
-        return ingredienteRepository.findByRecetaIdOrderByOrden(recetaId);
+        return ingredienteRepository.findDetailByRecetaId(recetaId);
     }
 
     @Transactional

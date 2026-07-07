@@ -1,58 +1,134 @@
 <div th:fragment="content">
-    <div class="topbar">
-        <h4>Facturas</h4>
-        <a th:href="@{/web/facturas/nueva}" class="btn btn-success btn-sm">+ Nueva factura</a>
-    </div>
-
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
-
-    <div class="row g-2 mb-3">
-        <div class="col-md-5">
-            <form class="d-flex gap-2">
-                <input type="search" name="q" class="form-control form-control-sm" placeholder="Buscar por número o cliente..." th:value="${q}">
-                <select name="estado" class="form-select form-select-sm" style="width:140px;">
-                    <option value="">Todos</option>
-                    <option value="BORRADOR" th:selected="${estado == 'BORRADOR'}">Borrador</option>
-                    <option value="EMITIDA" th:selected="${estado == 'EMITIDA'}">Emitida</option>
-                    <option value="ANULADA" th:selected="${estado == 'ANULADA'}">Anulada</option>
-                </select>
-                <button class="btn btn-outline-primary btn-sm">Filtrar</button>
-            </form>
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Facturas</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/facturas/nueva}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nueva factura
+            </a>
         </div>
     </div>
 
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/facturas}">
+        <input type="hidden" name="sort" th:value="${sort}">
+        <input type="hidden" name="dir"  th:value="${dir}">
+        <div class="filter-bar-search">
+            <label for="facturas-search" class="visually-hidden">Buscar facturas</label>
+            <i class="bi bi-search"></i>
+            <input id="facturas-search" type="search" name="q" class="form-control form-control-sm"
+                   placeholder="Número o cliente..." th:value="${q}" autocomplete="off">
+        </div>
+        <div class="filter-bar-filters">
+            <select name="estado" class="form-select form-select-sm" style="width:150px;">
+                <option value="">Todos los estados</option>
+                <option value="BORRADOR"       th:selected="${estado == 'BORRADOR'}">Borrador</option>
+                <option value="REVISION"       th:selected="${estado == 'REVISION'}">Revisión</option>
+                <option value="EMITIDA"        th:selected="${estado == 'EMITIDA'}">Emitida</option>
+                <option value="PAGADA"         th:selected="${estado == 'PAGADA'}">Pagada</option>
+                <option value="VENCIDA"        th:selected="${estado == 'VENCIDA'}">Vencida</option>
+                <option value="ANULADA"        th:selected="${estado == 'ANULADA'}">Anulada</option>
+                <option value="RECTIFICADA"    th:selected="${estado == 'RECTIFICADA'}">Rectificada</option>
+            </select>
+        </div>
+        <div class="filter-bar-actions">
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-funnel me-1"></i>Filtrar
+            </button>
+            <a th:href="@{/web/facturas}" class="btn btn-ghost btn-sm">Limpiar</a>
+            <span class="text-muted small" th:if="${page != null}">
+                <span th:text="${page.totalElements}">0</span> facturas
+            </span>
+        </div>
+    </form>
+
     <div class="table-card">
-        <table class="table table-hover">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0" style="min-width:800px;">
             <thead>
                 <tr>
-                    <th>Número</th><th>Fecha</th><th>Cliente</th>
-                    <th class="text-end">Total</th><th>Estado</th><th style="width:180px;"></th>
+                    <th style="min-width:130px;">
+                        <a th:href="@{/web/facturas(q=${q},estado=${estado},sort='numero',dir=${sort == 'numero' and dir == 'asc' ? 'desc' : 'asc'})}"
+                           class="text-decoration-none text-body d-flex align-items-center gap-1">
+                            Número
+                            <i class="bi" th:classappend="${sort == 'numero'} ? (${dir == 'asc'} ? 'bi-sort-up' : 'bi-sort-down') : 'bi-arrow-down-up opacity-25'"></i>
+                        </a>
+                    </th>
+                    <th style="min-width:100px;">
+                        <a th:href="@{/web/facturas(q=${q},estado=${estado},sort='fecha',dir=${sort == 'fecha' and dir == 'asc' ? 'desc' : 'asc'})}"
+                           class="text-decoration-none text-body d-flex align-items-center gap-1">
+                            Fecha
+                            <i class="bi" th:classappend="${sort == 'fecha'} ? (${dir == 'asc'} ? 'bi-sort-up' : 'bi-sort-down') : 'bi-arrow-down-up opacity-25'"></i>
+                        </a>
+                    </th>
+                    <th style="min-width:160px;">Cliente</th>
+                    <th class="text-end" style="min-width:100px;">
+                        <a th:href="@{/web/facturas(q=${q},estado=${estado},sort='total',dir=${sort == 'total' and dir == 'asc' ? 'desc' : 'asc'})}"
+                           class="text-decoration-none text-body d-flex align-items-center justify-content-end gap-1">
+                            Total
+                            <i class="bi" th:classappend="${sort == 'total'} ? (${dir == 'asc'} ? 'bi-sort-up' : 'bi-sort-down') : 'bi-arrow-down-up opacity-25'"></i>
+                        </a>
+                    </th>
+                    <th style="min-width:100px;">Estado</th>
+                    <th style="width:120px;"></th>
                 </tr>
             </thead>
             <tbody>
+                <tr th:if="${#lists.isEmpty(facturas)}">
+                    <td colspan="6" class="empty-state">
+                        <i class="bi bi-receipt"></i>
+                        <div>No hay facturas</div>
+                        <small th:if="${q != null and !q.isEmpty()}">Prueba con otros términos de búsqueda</small>
+                    </td>
+                </tr>
                 <tr th:each="f : ${facturas}">
-                    <td th:text="${f.numero}"></td>
-                    <td th:text="${f.fecha != null ? #temporals.format(f.fecha, 'dd/MM/yyyy') : '-'}"></td>
+                    <td><a th:href="@{/web/facturas/{id}(id=${f.id})}" class="fw-medium text-decoration-none" th:text="${f.numero}"></a></td>
+                    <td class="text-muted small" th:text="${f.fecha != null ? #temporals.format(f.fecha, 'dd/MM/yyyy') : '-'}"></td>
                     <td th:text="${f.cliente?.nombre}"></td>
-                    <td class="text-end" th:text="${f.total != null ? #numbers.formatCurrency(f.total) : '0,00 €'}"></td>
+                    <td class="text-end fw-medium" th:text="${f.total != null ? #numbers.formatCurrency(f.total) : '0,00 €'}"></td>
                     <td>
-                        <span class="badge-status" th:classappend="${f.estado == 'EMITIDA' ? 'bg-emitted' : f.estado == 'ANULADA' ? 'bg-cancelled' : 'bg-draft'}" th:text="${f.estado}"></span>
+                        <span class="badge-status" th:attr="data-status=${f.estado?.toLowerCase()}" th:text="${f.estado}">-</span>
                     </td>
                     <td>
-                        <div class="d-flex gap-1">
-                            <a th:href="@{/web/facturas/{id}(id=${f.id})}" class="btn btn-outline-secondary btn-sm">Ver</a>
-                            <form th:if="${f.estado == 'REVISION'}" th:action="@{/web/facturas/{id}/emitir(id=${f.id})}" method="post" class="d-inline">
-                                <button class="btn btn-outline-success btn-sm">Emitir</button>
+                        <div class="d-flex gap-1 justify-content-end">
+                            <a th:href="@{/web/facturas/{id}(id=${f.id})}" class="btn btn-ghost btn-sm"
+                               th:attr="aria-label='Ver factura ' + ${f.numero}" title="Ver">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a th:if="${f.estado == 'BORRADOR' or f.estado == 'REVISION'}"
+                               th:href="@{/web/facturas/{id}/editar(id=${f.id})}" class="btn btn-ghost btn-sm"
+                               th:attr="aria-label='Editar factura ' + ${f.numero}" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form th:if="${f.estado == 'BORRADOR'}"
+                                  th:action="@{/web/facturas/{id}/revision(id=${f.id})}" method="post" class="d-inline">
+                                <button class="btn btn-ghost btn-sm text-warning" data-no-double-click
+                                        th:attr="aria-label='Enviar a revisión factura ' + ${f.numero}" title="Enviar a revisión">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
                             </form>
-                            <form th:if="${f.estado != 'ANULADA'}" th:action="@{/web/facturas/{id}/anular(id=${f.id})}" method="post" class="d-inline"
-                                  onsubmit="return confirm('¿Anular esta factura?')">
-                                <button class="btn btn-outline-danger btn-sm">Anular</button>
+                            <form th:if="${f.estado == 'REVISION'}"
+                                  th:action="@{/web/facturas/{id}/emitir(id=${f.id})}" method="post" class="d-inline">
+                                <button class="btn btn-ghost btn-sm text-success" data-no-double-click
+                                        th:attr="aria-label='Emitir factura ' + ${f.numero}" title="Emitir">
+                                    <i class="bi bi-send-check"></i>
+                                </button>
+                            </form>
+                            <form th:if="${f.estado != null and f.estado != 'ANULADA' and f.estado != 'RECTIFICADA'}"
+                                  th:action="@{/web/facturas/{id}/anular(id=${f.id})}" method="post" class="d-inline">
+                                <button class="btn btn-ghost btn-sm text-danger" data-no-double-click
+                                        data-confirm="¿Anular esta factura?"
+                                        th:attr="aria-label='Anular factura ' + ${f.numero}" title="Anular">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
                             </form>
                         </div>
                     </td>
                 </tr>
             </tbody>
         </table>
+        </div>
     </div>
+
+    <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/facturas')}"></div>
 </div>
