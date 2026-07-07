@@ -1,6 +1,7 @@
 package alicanteweb.erp.repository;
 
 import alicanteweb.erp.entities.Receta;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,6 +14,9 @@ import java.util.Collection;
 public interface RecetaRepository extends JpaRepository<Receta, Long> {
     Optional<Receta> findByCodigo(String codigo);
     boolean existsByCodigo(String codigo);
+
+    // Carga articuloResultante para mapear a DTO sin sesión abierta (open-in-view desactivado).
+    @EntityGraph(attributePaths = {"articuloResultante"})
     List<Receta> findByActivo(Boolean activo);
     List<Receta> findByNombreContainingIgnoreCase(String texto);
     List<Receta> findByArticuloResultante_IdAndActivoTrue(Long articuloId);

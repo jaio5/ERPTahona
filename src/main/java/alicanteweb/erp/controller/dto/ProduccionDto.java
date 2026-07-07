@@ -1,7 +1,9 @@
 package alicanteweb.erp.controller.dto;
 
+import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.entities.Horneada;
 import alicanteweb.erp.entities.OrdenProduccion;
+import alicanteweb.erp.entities.Receta;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -9,6 +11,29 @@ import java.time.LocalTime;
 
 public final class ProduccionDto {
     private ProduccionDto() {
+    }
+
+    /**
+     * Receta sin la colección {@code ingredientes} (lazy): se consulta aparte en
+     * {@code /recetas/{id}/ingredientes}. Evita LazyInitializationException al
+     * serializar con open-in-view desactivado.
+     */
+    public record RecetaItem(
+            Long id, String codigo, String nombre, String descripcion,
+            Integer tiempoPreparacion, Integer tiempoHorneado, Integer temperaturaHorneado,
+            BigDecimal rendimientoCantidad, String unidadRendimiento,
+            Long articuloResultanteId, String articuloResultante,
+            Boolean activo, String alergenos
+    ) {
+        public static RecetaItem from(Receta r) {
+            Articulo a = r.getArticuloResultante();
+            return new RecetaItem(r.getId(), r.getCodigo(), r.getNombre(), r.getDescripcion(),
+                    r.getTiempoPreparacion(), r.getTiempoHorneado(), r.getTemperaturaHorneado(),
+                    r.getRendimientoCantidad(), r.getUnidadRendimiento(),
+                    a != null ? a.getId() : null,
+                    a != null ? a.getNombre() : null,
+                    r.getActivo(), r.getAlergenos());
+        }
     }
 
     public record Orden(

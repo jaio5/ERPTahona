@@ -33,13 +33,14 @@ public class ProduccionRestController {
     }
 
     @GetMapping("/recetas")
-    public List<Receta> listRecetas(@RequestParam(defaultValue = "true") boolean activo) {
-        return recetaService.findByActivo(activo);
+    public List<ProduccionDto.RecetaItem> listRecetas(@RequestParam(defaultValue = "true") boolean activo) {
+        return recetaService.findByActivo(activo).stream().map(ProduccionDto.RecetaItem::from).toList();
     }
 
     @GetMapping("/recetas/{id}")
-    public ResponseEntity<Receta> getReceta(@PathVariable Long id) {
-        return recetaService.findById(id)
+    public ResponseEntity<ProduccionDto.RecetaItem> getReceta(@PathVariable Long id) {
+        return recetaService.findDetailById(id)
+                .map(ProduccionDto.RecetaItem::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -51,17 +52,24 @@ public class ProduccionRestController {
 
     @PostMapping("/recetas")
     @PreAuthorize("@permisos.puede('produccion', 'crear')")
-    public Receta createReceta(@RequestBody Receta receta) {
-        return recetaService.save(receta);
+    public ProduccionDto.RecetaItem createReceta(@RequestBody Receta receta) {
+        Receta saved = recetaService.save(receta);
+        return recetaService.findDetailById(saved.getId())
+                .map(ProduccionDto.RecetaItem::from)
+                .orElseGet(() -> ProduccionDto.RecetaItem.from(saved));
     }
 
     @PutMapping("/recetas/{id}")
     @PreAuthorize("@permisos.puede('produccion', 'editar')")
-    public ResponseEntity<Receta> updateReceta(@PathVariable Long id, @RequestBody Receta receta) {
+    public ResponseEntity<ProduccionDto.RecetaItem> updateReceta(@PathVariable Long id, @RequestBody Receta receta) {
         return recetaService.findById(id)
                 .map(existing -> {
                     receta.setId(id);
-                    return ResponseEntity.ok(recetaService.save(receta));
+                    Receta saved = recetaService.save(receta);
+                    ProduccionDto.RecetaItem dto = recetaService.findDetailById(saved.getId())
+                            .map(ProduccionDto.RecetaItem::from)
+                            .orElseGet(() -> ProduccionDto.RecetaItem.from(saved));
+                    return ResponseEntity.ok(dto);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -78,48 +86,60 @@ public class ProduccionRestController {
     }
 
     @GetMapping("/ordenes/{id}")
-    public ResponseEntity<OrdenProduccion> getOrden(@PathVariable Long id) {
-        return ordenProduccionService.findById(id)
+    public ResponseEntity<ProduccionDto.Orden> getOrden(@PathVariable Long id) {
+        return ordenProduccionService.findDetailById(id)
+                .map(ProduccionDto.Orden::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/ordenes")
     @PreAuthorize("@permisos.puede('produccion', 'crear')")
-    public OrdenProduccion createOrden(@RequestBody OrdenProduccion orden) {
-        return ordenProduccionService.save(orden);
+    public ProduccionDto.Orden createOrden(@RequestBody OrdenProduccion orden) {
+        return ordenDto(ordenProduccionService.save(orden));
     }
 
     @PutMapping("/ordenes/{id}")
     @PreAuthorize("@permisos.puede('produccion', 'editar')")
-    public ResponseEntity<OrdenProduccion> updateOrden(@PathVariable Long id, @RequestBody OrdenProduccion orden) {
+    public ResponseEntity<ProduccionDto.Orden> updateOrden(@PathVariable Long id, @RequestBody OrdenProduccion orden) {
         return ordenProduccionService.findById(id)
                 .map(existing -> {
                     orden.setId(id);
-                    return ResponseEntity.ok(ordenProduccionService.save(orden));
+                    return ResponseEntity.ok(ordenDto(ordenProduccionService.save(orden)));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/ordenes/{id}/iniciar")
     @PreAuthorize("@permisos.puede('produccion', 'editar')")
-    public ResponseEntity<OrdenProduccion> iniciarOrden(@PathVariable Long id) {
-        return ResponseEntity.ok(ordenProduccionService.iniciarProduccion(id));
+    public ResponseEntity<ProduccionDto.Orden> iniciarOrden(@PathVariable Long id) {
+        return ResponseEntity.ok(ordenDto(ordenProduccionService.iniciarProduccion(id)));
     }
 
     @PostMapping(value = "/ordenes/{id}/finalizar", consumes = "application/json")
     @PreAuthorize("@permisos.puede('produccion', 'editar')")
-    public ResponseEntity<OrdenProduccion> finalizarOrden(@PathVariable Long id,
-                                                           @Valid @RequestBody FinalizarOrdenRequest request) {
-        return ResponseEntity.ok(ordenProduccionService.finalizarProduccion(id, request.cantidad(), request.merma()));
+    public ResponseEntity<ProduccionDto.Orden> finalizarOrden(@PathVariable Long id,
+                                                              @Valid @RequestBody FinalizarOrdenRequest request) {
+        return ResponseEntity.ok(ordenDto(
+                ordenProduccionService.finalizarProduccion(id, request.cantidad(), request.merma())));
     }
 
     @PostMapping(value = "/ordenes/{id}/finalizar", params = {"cantidad", "merma"})
     @PreAuthorize("@permisos.puede('produccion', 'editar')")
-    public ResponseEntity<OrdenProduccion> finalizarOrdenCompat(@PathVariable Long id,
-                                                                @RequestParam @DecimalMin("0.01") java.math.BigDecimal cantidad,
-                                                                @RequestParam @DecimalMin("0.00") java.math.BigDecimal merma) {
-        return ResponseEntity.ok(ordenProduccionService.finalizarProduccion(id, cantidad, merma));
+    public ResponseEntity<ProduccionDto.Orden> finalizarOrdenCompat(@PathVariable Long id,
+                                                                    @RequestParam @DecimalMin("0.01") java.math.BigDecimal cantidad,
+                                                                    @RequestParam @DecimalMin("0.00") java.math.BigDecimal merma) {
+        return ResponseEntity.ok(ordenDto(ordenProduccionService.finalizarProduccion(id, cantidad, merma)));
+    }
+
+    /**
+     * Mapea una orden recién guardada/mutada a DTO recargándola con fetch de sus
+     * asociaciones (receta/artículo), para no serializar proxies lazy sin sesión.
+     */
+    private ProduccionDto.Orden ordenDto(OrdenProduccion orden) {
+        return ordenProduccionService.findDetailById(orden.getId())
+                .map(ProduccionDto.Orden::from)
+                .orElseGet(() -> ProduccionDto.Orden.from(orden));
     }
 
     @GetMapping("/horneadas")
