@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Pedido;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.ClienteService;
@@ -93,7 +94,7 @@ public class PedidoVentaWebController {
             model.addAttribute("articulos", articuloService.findAll());
             model.addAttribute("lineasJson", lineasJson);
             return WebController.layout(model, "pedidos-venta/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/pedidos-venta"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/pedidos-venta"; });
     }
 
     @GetMapping("/{id}")
@@ -104,7 +105,7 @@ public class PedidoVentaWebController {
             model.addAttribute("pedido", p);
             model.addAttribute("totalCalculado", calcularTotal(p));
             return WebController.layout(model, "pedidos-venta/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/pedidos-venta"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/pedidos-venta"; });
     }
 
     // El total almacenado puede ser 0 en pedidos antiguos; en ese caso se recalcula desde las líneas
@@ -138,10 +139,10 @@ public class PedidoVentaWebController {
                 request.getParameterValues("lineaDescuento")
             ));
             documentoService.guardarPedido(id, datos);
-            ra.addFlashAttribute("exito", "Pedido guardado correctamente");
+            Flash.exito(ra, "Pedido guardado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar pedido: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/pedidos-venta";
     }
@@ -150,10 +151,10 @@ public class PedidoVentaWebController {
     public String confirmar(@PathVariable Long id, RedirectAttributes ra) {
         try {
             pedidoService.cambiarEstado(id, "CONFIRMADO");
-            ra.addFlashAttribute("exito", "Pedido confirmado");
+            Flash.exito(ra, "Pedido confirmado");
         } catch (RuntimeException e) {
             log.error("Error al confirmar pedido {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/pedidos-venta/" + id;
     }

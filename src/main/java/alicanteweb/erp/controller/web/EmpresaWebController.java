@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.service.EmpresaConfigService;
 import alicanteweb.erp.service.VatValidationService;
@@ -73,10 +74,10 @@ public class EmpresaWebController {
             e.setRegistroMercantil(registroMercantil);
             e.setWeb(web);
             s.save(e);
-            ra.addFlashAttribute("exito", "Configuración guardada");
+            Flash.exito(ra, "Configuración guardada");
         } catch (RuntimeException ex) {
             log.error("Error al guardar configuración de empresa: {}", ex.getMessage(), ex);
-            ra.addFlashAttribute("error", ex.getMessage());
+            Flash.error(ra, ex.getMessage());
         }
         return "redirect:/web/empresa";
     }

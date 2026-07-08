@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.SifModalidad;
 import alicanteweb.erp.service.DeclaracionResponsableService;
@@ -110,7 +111,7 @@ public class FiscalWebController {
                     BreadcrumbBuilder.link("VERI*FACTU", "/web/verifactu"),
                     BreadcrumbBuilder.active("Evidencia #" + id)));
             return WebController.layout(model, "fiscal/verifactu-ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/verifactu"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/verifactu"; });
     }
 
     @PostMapping("/web/verifactu/{id}/reenviar")
@@ -118,10 +119,10 @@ public class FiscalWebController {
     public String reenviar(@PathVariable Long id, RedirectAttributes ra) {
         try {
             evidenceService.reenviarEvidencia(id);
-            ra.addFlashAttribute("exito", "Reenvío procesado");
+            Flash.exito(ra, "Reenvío procesado");
         } catch (RuntimeException e) {
             log.error("Error reenviando evidencia {}", id, e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/verifactu/" + id;
     }
@@ -130,10 +131,10 @@ public class FiscalWebController {
     public String verificar(@PathVariable Long id, RedirectAttributes ra) {
         try {
             evidenceService.verificarEstadoAEAT(id);
-            ra.addFlashAttribute("exito", "Estado verificado");
+            Flash.exito(ra, "Estado verificado");
         } catch (RuntimeException e) {
             log.error("Error verificando evidencia {}", id, e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/verifactu/" + id;
     }
@@ -177,10 +178,10 @@ public class FiscalWebController {
                 config.setSifModalidad(SifModalidad.valueOf(sifModalidad));
             }
             empresaConfigService.save(config);
-            ra.addFlashAttribute("exito", "Datos del sistema de facturación guardados");
+            Flash.exito(ra, "Datos del sistema de facturación guardados");
         } catch (RuntimeException e) {
             log.error("Error guardando datos SIF: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/fiscal/cumplimiento";
     }
@@ -190,10 +191,10 @@ public class FiscalWebController {
     public String emitirDeclaracionResponsable(RedirectAttributes ra) {
         try {
             var pdf = declaracionResponsableService.generarDeclaracionResponsable();
-            ra.addFlashAttribute("exito", "Declaración responsable emitida: " + pdf.getName());
+            Flash.exito(ra, "Declaración responsable emitida: " + pdf.getName());
         } catch (RuntimeException e) {
             log.error("Error generando declaración responsable: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/fiscal/cumplimiento";
     }
@@ -207,12 +208,12 @@ public class FiscalWebController {
         EmpresaConfig config = empresaConfigService.getConfiguracionActiva().orElse(null);
         String ruta = config != null ? config.getDeclaracionResponsableRuta() : null;
         if (ruta == null || ruta.isBlank()) {
-            ra.addFlashAttribute("error", "Aún no se ha emitido la declaración responsable del sistema.");
+            Flash.error(ra, "Aún no se ha emitido la declaración responsable del sistema.");
             return "redirect:/web/fiscal/cumplimiento";
         }
         java.io.File pdf = new java.io.File(ruta);
         if (!pdf.exists()) {
-            ra.addFlashAttribute("error",
+            Flash.error(ra,
                     "No se encuentra el fichero de la declaración responsable. Vuelve a emitirla.");
             return "redirect:/web/fiscal/cumplimiento";
         }
@@ -225,10 +226,10 @@ public class FiscalWebController {
         try {
             EmpresaConfig config = empresaConfigService.getConfiguracionActivaOrThrow();
             empresaConfigService.iniciarFuncionamientoVerifactu(config.getVerifactuNifEmisor());
-            ra.addFlashAttribute("exito", "Funcionamiento VERI*FACTU iniciado");
+            Flash.exito(ra, "Funcionamiento VERI*FACTU iniciado");
         } catch (RuntimeException e) {
             log.error("Error iniciando VERI*FACTU: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/fiscal/cumplimiento";
     }
@@ -238,10 +239,10 @@ public class FiscalWebController {
     public String programarRenuncia(RedirectAttributes ra) {
         try {
             empresaConfigService.programarRenunciaVerifactuFinDeAnio();
-            ra.addFlashAttribute("exito", "Renuncia programada para el 31 de diciembre");
+            Flash.exito(ra, "Renuncia programada para el 31 de diciembre");
         } catch (RuntimeException e) {
             log.error("Error programando renuncia VERI*FACTU: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/fiscal/cumplimiento";
     }

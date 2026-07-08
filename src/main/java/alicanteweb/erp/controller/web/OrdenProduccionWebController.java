@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.service.*;
 import org.slf4j.Logger;
@@ -85,7 +86,7 @@ public class OrdenProduccionWebController {
                 BreadcrumbBuilder.link("Órdenes de producción", "/web/ordenes-produccion"),
                 BreadcrumbBuilder.active("Editar " + o.getNumero())));
             return WebController.layout(m, "ordenes-produccion/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/ordenes-produccion"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/ordenes-produccion"; });
     }
 
     @GetMapping("/{id}")
@@ -100,7 +101,7 @@ public class OrdenProduccionWebController {
                     BreadcrumbBuilder.link("Órdenes de producción", "/web/ordenes-produccion"),
                     BreadcrumbBuilder.active(o.getNumero())));
             return WebController.layout(m, "ordenes-produccion/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/ordenes-produccion"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/ordenes-produccion"; });
     }
 
     @PostMapping
@@ -132,10 +133,10 @@ public class OrdenProduccionWebController {
                 o.setEstado("PLANIFICADA");
             }
             service.save(o);
-            ra.addFlashAttribute("exito", "Orden guardada correctamente");
+            Flash.exito(ra, "Orden guardada correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar orden de producción: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/ordenes-produccion";
     }
@@ -145,10 +146,10 @@ public class OrdenProduccionWebController {
     public String iniciar(@PathVariable Long id, RedirectAttributes ra) {
         try {
             service.iniciarProduccion(id);
-            ra.addFlashAttribute("exito", "Producción iniciada");
+            Flash.exito(ra, "Producción iniciada");
         } catch (RuntimeException e) {
             log.error("Error al iniciar orden {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/ordenes-produccion/" + id;
     }
@@ -163,10 +164,10 @@ public class OrdenProduccionWebController {
             service.finalizarProduccion(id,
                     cantidadProducida != null ? cantidadProducida : BigDecimal.ZERO,
                     merma != null ? merma : BigDecimal.ZERO);
-            ra.addFlashAttribute("exito", "Producción finalizada");
+            Flash.exito(ra, "Producción finalizada");
         } catch (RuntimeException e) {
             log.error("Error al finalizar orden {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/ordenes-produccion/" + id;
     }
@@ -178,10 +179,10 @@ public class OrdenProduccionWebController {
                            RedirectAttributes ra) {
         try {
             service.cancelarProduccion(id, motivo);
-            ra.addFlashAttribute("exito", "Orden cancelada");
+            Flash.exito(ra, "Orden cancelada");
         } catch (RuntimeException e) {
             log.error("Error al cancelar orden {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/ordenes-produccion/" + id;
     }

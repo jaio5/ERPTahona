@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.service.BackupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,11 +47,11 @@ public class BackupWebController {
     public String crear(RedirectAttributes ra) {
         try {
             s.realizarBackup();
-            ra.addFlashAttribute("exito", "Backup creado");
+            Flash.exito(ra, "Backup creado");
         } catch (java.io.IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Error al crear backup: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/backups";
     }
@@ -66,25 +67,25 @@ public class BackupWebController {
                             @RequestParam String confirmacion,
                             RedirectAttributes ra) {
         if (!archivo.equals(confirmacion == null ? "" : confirmacion.trim())) {
-            ra.addFlashAttribute("error",
+            Flash.error(ra,
                 "Confirmación incorrecta: escribe exactamente el nombre del fichero (" + archivo + ") para restaurar");
             return "redirect:/web/backups";
         }
         log.warn("Restauración de backup solicitada: {} ", archivo);
         try {
             s.restaurarBackup(archivo);
-            ra.addFlashAttribute("exito", "Base de datos restaurada desde " + archivo
+            Flash.exito(ra, "Base de datos restaurada desde " + archivo
                 + ". Revisa los datos y reinicia sesión el resto de usuarios.");
         } catch (IllegalArgumentException e) {
             log.warn("Restauración rechazada para '{}': {}", archivo, e.getMessage());
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         } catch (java.io.IOException e) {
             log.error("Error al restaurar backup {}: {}", archivo, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Restauración interrumpida para {}", archivo, e);
-            ra.addFlashAttribute("error", "Restauración interrumpida: " + e.getMessage());
+            Flash.error(ra, "Restauración interrumpida: " + e.getMessage());
         }
         return "redirect:/web/backups";
     }

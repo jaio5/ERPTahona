@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.RemesaSepa;
 import alicanteweb.erp.service.SepaService;
 import alicanteweb.erp.service.UsuarioService;
@@ -59,11 +60,11 @@ public class RemesaWebController extends BaseWebController {
                         RedirectAttributes ra) {
         try {
             RemesaSepa remesa = sepaService.crearRemesa(facturaIds, fechaCobro, concepto, usuarioActual(session));
-            ra.addFlashAttribute("exito", "Remesa " + remesa.getId() + " generada con "
+            Flash.exito(ra, "Remesa " + remesa.getId() + " generada con "
                     + remesa.getNumRecibos() + " recibos");
         } catch (RuntimeException e) {
             log.error("Error al crear remesa SEPA: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/remesas";
     }
@@ -82,10 +83,10 @@ public class RemesaWebController extends BaseWebController {
     public String marcarCobrada(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
         try {
             sepaService.marcarCobrada(id, usuarioActual(session));
-            ra.addFlashAttribute("exito", "Remesa marcada como cobrada; cobros registrados en cartera");
+            Flash.exito(ra, "Remesa marcada como cobrada; cobros registrados en cartera");
         } catch (RuntimeException e) {
             log.error("Error al cobrar remesa {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/remesas";
     }
@@ -95,10 +96,10 @@ public class RemesaWebController extends BaseWebController {
     public String anular(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
         try {
             sepaService.anular(id, usuarioActual(session));
-            ra.addFlashAttribute("exito", "Remesa anulada");
+            Flash.exito(ra, "Remesa anulada");
         } catch (RuntimeException e) {
             log.error("Error al anular remesa {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/remesas";
     }

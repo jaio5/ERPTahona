@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Almacen;
 import alicanteweb.erp.service.AlmacenService;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ public class AlmacenWebController {
                 BreadcrumbBuilder.link("Almacenes", "/web/almacenes"),
                 BreadcrumbBuilder.active("Editar " + a.getNombre())));
             return WebController.layout(m, "almacenes/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/almacenes"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/almacenes"; });
     }
 
     @GetMapping("/{id}")
@@ -76,7 +77,7 @@ public class AlmacenWebController {
                     BreadcrumbBuilder.link("Almacenes", "/web/almacenes"),
                     BreadcrumbBuilder.active(a.getNombre())));
             return WebController.layout(m, "almacenes/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/almacenes"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/almacenes"; });
     }
 
     @PostMapping
@@ -97,10 +98,10 @@ public class AlmacenWebController {
             a.setLocalidad(localidad);
             a.setResponsable(responsable);
             service.save(a);
-            ra.addFlashAttribute("exito", "Almacén guardado correctamente");
+            Flash.exito(ra, "Almacén guardado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar almacén: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/almacenes";
     }

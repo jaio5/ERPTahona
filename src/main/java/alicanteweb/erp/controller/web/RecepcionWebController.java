@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Recepcion;
 import alicanteweb.erp.entities.RecepcionLinea;
 import alicanteweb.erp.service.AlmacenService;
@@ -83,11 +84,11 @@ public class RecepcionWebController {
             r.setEstado("PENDIENTE");
             r.setObservaciones(observaciones);
             Recepcion saved = recepcionService.save(r);
-            ra.addFlashAttribute("exito", "Recepción creada. Añade las líneas de productos recibidos.");
+            Flash.exito(ra, "Recepción creada. Añade las líneas de productos recibidos.");
             return "redirect:/web/recepciones/" + saved.getId();
         } catch (RuntimeException e) {
             log.error("Error al crear recepción: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
             return "redirect:/web/recepciones/nuevo";
         }
     }
@@ -140,10 +141,10 @@ public class RecepcionWebController {
             if (numero != null && !numero.isBlank()) r.setNumero(numero.trim());
             r.setObservaciones(observaciones);
             recepcionService.save(r);
-            ra.addFlashAttribute("exito", "Recepción actualizada");
+            Flash.exito(ra, "Recepción actualizada");
         } catch (RuntimeException e) {
             log.error("Error al actualizar recepción {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/recepciones/" + id;
     }
@@ -180,7 +181,7 @@ public class RecepcionWebController {
             recepcionService.saveLinea(linea);
         } catch (RuntimeException e) {
             log.error("Error al añadir línea a recepción {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/recepciones/" + id;
     }
@@ -191,7 +192,7 @@ public class RecepcionWebController {
             recepcionService.deleteLinea(lineaId);
         } catch (RuntimeException e) {
             log.error("Error al eliminar línea {} de recepción {}: {}", lineaId, id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/recepciones/" + id;
     }
@@ -200,10 +201,10 @@ public class RecepcionWebController {
     public String confirmar(@PathVariable Long id, RedirectAttributes ra) {
         try {
             recepcionService.confirmar(id);
-            ra.addFlashAttribute("exito", "Recepción confirmada. Stock actualizado.");
+            Flash.exito(ra, "Recepción confirmada. Stock actualizado.");
         } catch (RuntimeException e) {
             log.error("Error al confirmar recepción {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/recepciones/" + id;
     }

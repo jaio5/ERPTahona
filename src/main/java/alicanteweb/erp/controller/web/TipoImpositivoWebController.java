@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.TipoImpositivo;
 import alicanteweb.erp.service.TipoImpositivoService;
 import org.slf4j.Logger;
@@ -48,7 +49,7 @@ public class TipoImpositivoWebController {
         return service.findById(id)
             .map(t -> formulario(m, t, "Editar tipo de IVA"))
             .orElseGet(() -> {
-                ra.addFlashAttribute("error", "Tipo de IVA no encontrado");
+                Flash.error(ra, "Tipo de IVA no encontrado");
                 return "redirect:/web/tipos-iva";
             });
     }
@@ -85,10 +86,10 @@ public class TipoImpositivoWebController {
             t.setActivo(activo);
             t.setEsDefecto(esDefecto);
             service.save(t);
-            ra.addFlashAttribute("exito", "Tipo de IVA guardado");
+            Flash.exito(ra, "Tipo de IVA guardado");
         } catch (RuntimeException e) {
             log.error("Error al guardar tipo de IVA: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
             if (id != null) return "redirect:/web/tipos-iva/" + id + "/editar";
             return "redirect:/web/tipos-iva/nuevo";
         }
@@ -99,10 +100,10 @@ public class TipoImpositivoWebController {
     public String eliminar(@PathVariable Long id, RedirectAttributes ra) {
         try {
             service.deleteById(id);
-            ra.addFlashAttribute("exito", "Tipo de IVA eliminado");
+            Flash.exito(ra, "Tipo de IVA eliminado");
         } catch (RuntimeException e) {
             log.error("Error al eliminar tipo de IVA {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", "No se pudo eliminar el tipo de IVA");
+            Flash.error(ra, "No se pudo eliminar el tipo de IVA");
         }
         return "redirect:/web/tipos-iva";
     }

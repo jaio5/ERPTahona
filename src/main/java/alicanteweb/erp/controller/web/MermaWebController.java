@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Merma;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.MermaService;
@@ -61,7 +62,7 @@ public class MermaWebController {
                     BreadcrumbBuilder.link("Mermas", "/web/mermas"),
                     BreadcrumbBuilder.active("Merma #" + id)));
             return WebController.layout(model, "mermas/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/mermas"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/mermas"; });
     }
 
     @PostMapping
@@ -84,10 +85,10 @@ public class MermaWebController {
             merma.setObservaciones(observaciones);
             if (fecha != null && !fecha.isBlank()) merma.setFecha(LocalDate.parse(fecha));
             mermaService.save(merma);
-            ra.addFlashAttribute("exito", "Merma registrada correctamente");
+            Flash.exito(ra, "Merma registrada correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar merma: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/mermas";
     }

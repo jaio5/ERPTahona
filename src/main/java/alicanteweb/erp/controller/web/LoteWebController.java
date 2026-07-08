@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Lote;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.LoteService;
@@ -75,7 +76,7 @@ public class LoteWebController {
                 BreadcrumbBuilder.link("Lotes", "/web/lotes"),
                 BreadcrumbBuilder.active("Editar " + l.getCodigo())));
             return WebController.layout(m, "lotes/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/lotes"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/lotes"; });
     }
 
     @GetMapping("/{id}")
@@ -91,7 +92,7 @@ public class LoteWebController {
                     BreadcrumbBuilder.link("Lotes", "/web/lotes"),
                     BreadcrumbBuilder.active(l.getCodigo())));
             return WebController.layout(m, "lotes/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/lotes"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/lotes"; });
     }
 
     @PostMapping
@@ -118,10 +119,10 @@ public class LoteWebController {
             l.setOrigen(origen);
             l.setNumeroRegistroSanitario(registroSanitario);
             service.save(l);
-            ra.addFlashAttribute("exito", "Lote guardado correctamente");
+            Flash.exito(ra, "Lote guardado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar lote: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/lotes";
     }

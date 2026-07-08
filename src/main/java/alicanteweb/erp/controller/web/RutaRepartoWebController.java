@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.RutaReparto;
 import alicanteweb.erp.service.RutaRepartoService;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class RutaRepartoWebController {
             model.addAttribute("titulo", "Editar ruta " + r.getNombre());
             model.addAttribute("ruta", r);
             return WebController.layout(model, "rutas/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/rutas"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/rutas"; });
     }
 
     @GetMapping("/{id}")
@@ -65,7 +66,7 @@ public class RutaRepartoWebController {
                     BreadcrumbBuilder.link("Rutas", "/web/rutas"),
                     BreadcrumbBuilder.active(r.getNombre())));
             return WebController.layout(model, "rutas/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/rutas"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/rutas"; });
     }
 
     @PostMapping
@@ -82,10 +83,10 @@ public class RutaRepartoWebController {
             ruta.setConductor(conductor);
             ruta.setDescripcion(descripcion);
             rutaRepartoService.save(ruta);
-            ra.addFlashAttribute("exito", "Ruta guardada correctamente");
+            Flash.exito(ra, "Ruta guardada correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar ruta: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/rutas";
     }

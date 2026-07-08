@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Horneada;
 import alicanteweb.erp.service.HorneadaService;
 import org.slf4j.Logger;
@@ -57,7 +58,7 @@ public class HorneadaWebController {
             model.addAttribute("titulo", "Horneada del " + h.getFecha());
             model.addAttribute("horneada", h);
             return WebController.layout(model, "horneadas/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/horneadas"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/horneadas"; });
     }
 
     @PostMapping
@@ -85,10 +86,10 @@ public class HorneadaWebController {
             horneada.setCosteEnergia(costeEnergia);
             horneada.setCosteMateriales(costeMateriales);
             horneadaService.save(horneada);
-            ra.addFlashAttribute("exito", "Horneada registrada correctamente");
+            Flash.exito(ra, "Horneada registrada correctamente");
         } catch (RuntimeException e) {
             log.error("Error al registrar horneada: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/horneadas";
     }

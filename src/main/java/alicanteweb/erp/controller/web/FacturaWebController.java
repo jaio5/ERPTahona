@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.service.*;
@@ -73,7 +74,7 @@ public class FacturaWebController extends BaseWebController {
                     .body(xml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         } catch (RuntimeException e) {
             log.error("Error generando Facturae de {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
             return "redirect:/web/facturas/" + id;
         }
     }
@@ -85,10 +86,10 @@ public class FacturaWebController extends BaseWebController {
                               RedirectAttributes ra) {
         try {
             String destino = emailService.enviarFacturaPorEmail(id, emailDestino, usuarioActual(session));
-            ra.addFlashAttribute("exito", "Factura enviada por email a " + destino);
+            Flash.exito(ra, "Factura enviada por email a " + destino);
         } catch (RuntimeException e) {
             log.error("Error al enviar factura {} por email: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/facturas/" + id;
     }
@@ -160,7 +161,7 @@ public class FacturaWebController extends BaseWebController {
             ).collect(Collectors.joining(",", "[", "]"));
             model.addAttribute("lineasJson", lineasJson);
             return WebController.layout(model, "facturas/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/facturas"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/facturas"; });
     }
 
     @GetMapping("/{id}")
@@ -174,7 +175,7 @@ public class FacturaWebController extends BaseWebController {
                 BreadcrumbBuilder.link("Facturas", "/web/facturas"),
                 BreadcrumbBuilder.active(f.getNumero())));
             return WebController.layout(model, "facturas/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/facturas"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/facturas"; });
     }
 
     @PostMapping
@@ -211,11 +212,11 @@ public class FacturaWebController extends BaseWebController {
                 request.getParameterValues("lineaDescuentoTipo")
             ));
             Factura factura = documentoService.guardarFactura(id, datos);
-            ra.addFlashAttribute("exito", "Factura guardada correctamente");
+            Flash.exito(ra, "Factura guardada correctamente");
             return "redirect:/web/facturas/" + factura.getId();
         } catch (RuntimeException e) {
             log.error("Error al guardar factura: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/facturas";
     }
@@ -237,7 +238,7 @@ public class FacturaWebController extends BaseWebController {
                 BreadcrumbBuilder.link(f.getNumero(), "/web/facturas/" + f.getId()),
                 BreadcrumbBuilder.active("Rectificativa")));
             return WebController.layout(model, "facturas/rectificativa");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/facturas"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/facturas"; });
     }
 
     @PostMapping("/{id}/rectificar")
@@ -250,11 +251,11 @@ public class FacturaWebController extends BaseWebController {
         try {
             LocalDate fechaRectificativa = (fecha != null && !fecha.isBlank()) ? LocalDate.parse(fecha) : LocalDate.now();
             Factura rectificativa = facturaService.crearRectificativa(id, motivo, tipoRectificacion, fechaRectificativa);
-            ra.addFlashAttribute("exito", "Factura rectificativa " + rectificativa.getNumero() + " creada correctamente");
+            Flash.exito(ra, "Factura rectificativa " + rectificativa.getNumero() + " creada correctamente");
             return "redirect:/web/facturas/" + rectificativa.getId();
         } catch (RuntimeException e) {
             log.error("Error al crear rectificativa de factura {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
             return "redirect:/web/facturas/" + id;
         }
     }
@@ -264,10 +265,10 @@ public class FacturaWebController extends BaseWebController {
     public String enviarARevision(@PathVariable Long id, RedirectAttributes ra) {
         try {
             facturaService.pasarARevision(id);
-            ra.addFlashAttribute("exito", "Factura enviada a revisión");
+            Flash.exito(ra, "Factura enviada a revisión");
         } catch (RuntimeException e) {
             log.error("Error al enviar factura {} a revisión: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/facturas/" + id;
     }
@@ -277,10 +278,10 @@ public class FacturaWebController extends BaseWebController {
     public String emitir(@PathVariable Long id, RedirectAttributes ra) {
         try {
             facturaService.aprobarYEmitir(id);
-            ra.addFlashAttribute("exito", "Factura emitida");
+            Flash.exito(ra, "Factura emitida");
         } catch (RuntimeException e) {
             log.error("Error al emitir factura {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/facturas/" + id;
     }
@@ -290,10 +291,10 @@ public class FacturaWebController extends BaseWebController {
     public String anular(@PathVariable Long id, RedirectAttributes ra) {
         try {
             facturaService.anularFactura(id, "Anulada desde web");
-            ra.addFlashAttribute("exito", "Factura anulada");
+            Flash.exito(ra, "Factura anulada");
         } catch (RuntimeException e) {
             log.error("Error al anular factura {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/facturas/" + id;
     }

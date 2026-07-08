@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.PedidoCompra;
 import alicanteweb.erp.service.PedidoCompraService;
 import alicanteweb.erp.service.ProveedorService;
@@ -63,7 +64,7 @@ public class PedidoCompraWebController {
             model.addAttribute("titulo", "Pedido compra " + p.getNumero());
             model.addAttribute("pedido", p);
             return WebController.layout(model, "pedidos-compra/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/pedidos-compra"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/pedidos-compra"; });
     }
 
     @PostMapping
@@ -80,10 +81,10 @@ public class PedidoCompraWebController {
             if (pedido.getEstado() == null) pedido.setEstado("BORRADOR");
             pedido.setObservaciones(observaciones);
             pedidoCompraService.save(pedido);
-            ra.addFlashAttribute("exito", "Pedido de compra guardado correctamente");
+            Flash.exito(ra, "Pedido de compra guardado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar pedido compra: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/pedidos-compra";
     }
@@ -93,10 +94,10 @@ public class PedidoCompraWebController {
     public String cambiarEstado(@PathVariable Long id, @RequestParam String estado, RedirectAttributes ra) {
         try {
             pedidoCompraService.cambiarEstado(id, estado);
-            ra.addFlashAttribute("exito", "Estado actualizado a " + estado);
+            Flash.exito(ra, "Estado actualizado a " + estado);
         } catch (RuntimeException e) {
             log.error("Error al cambiar estado pedido compra {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/pedidos-compra/" + id;
     }

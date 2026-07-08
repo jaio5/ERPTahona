@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.service.*;
 import org.slf4j.Logger;
@@ -42,11 +43,11 @@ public class HojaRutaWebController {
                           RedirectAttributes ra) {
         try {
             HojaRuta h = service.generarDesdeRuta(rutaId, LocalDate.parse(fecha));
-            ra.addFlashAttribute("exito", "Hoja de ruta generada");
+            Flash.exito(ra, "Hoja de ruta generada");
             return "redirect:/web/hojas-ruta/" + h.getId();
         } catch (RuntimeException e) {
             log.error("Error al generar hoja de ruta: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
             return "redirect:/web/hojas-ruta";
         }
     }
@@ -57,6 +58,6 @@ public class HojaRutaWebController {
             m.addAttribute("moduloActivo","hojas-ruta"); m.addAttribute("titulo","Hoja "+h.getFecha());
             m.addAttribute("hoja",h); m.addAttribute("entregas", service.getEntregasDetalle(id));
             return WebController.layout(m, "hojas-ruta/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/hojas-ruta"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/hojas-ruta"; });
     }
 }

@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.AppccControl;
 import alicanteweb.erp.service.AppccControlService;
 import org.slf4j.Logger;
@@ -54,7 +55,7 @@ public class AppccWebController {
             model.addAttribute("titulo", "Control APPCC");
             model.addAttribute("control", c);
             return WebController.layout(model, "appcc/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/appcc"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/appcc"; });
     }
 
     @PostMapping
@@ -77,10 +78,10 @@ public class AppccWebController {
             control.setAccionCorrectiva(accion);
             control.setResponsable(responsable);
             appccControlService.save(control);
-            ra.addFlashAttribute("exito", "Control APPCC guardado correctamente");
+            Flash.exito(ra, "Control APPCC guardado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar control APPCC: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/appcc";
     }

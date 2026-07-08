@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Usuario;
 import alicanteweb.erp.service.UsuarioService;
 import org.slf4j.Logger;
@@ -61,10 +62,10 @@ public class UsuarioWebController {
             u.setEmail(email);
             u.setRole(role);
             s.crearUsuario(u, password);
-            ra.addFlashAttribute("exito", "Usuario creado correctamente");
+            Flash.exito(ra, "Usuario creado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al crear usuario: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/usuarios";
     }
@@ -99,10 +100,10 @@ public class UsuarioWebController {
             u.setEmail(email);
             u.setRole(role);
             s.actualizarUsuario(u);
-            ra.addFlashAttribute("exito", "Usuario actualizado correctamente");
+            Flash.exito(ra, "Usuario actualizado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al actualizar usuario {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/usuarios/" + id;
     }
@@ -113,10 +114,10 @@ public class UsuarioWebController {
                                   RedirectAttributes ra) {
         try {
             s.cambiarPasswordAdmin(id, newPassword);
-            ra.addFlashAttribute("exito", "Contraseña cambiada correctamente");
+            Flash.exito(ra, "Contraseña cambiada correctamente");
         } catch (RuntimeException e) {
             log.error("Error al cambiar contraseña de usuario {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/usuarios/" + id + "/editar";
     }
@@ -125,10 +126,10 @@ public class UsuarioWebController {
     public String bloquear(@PathVariable Long id, RedirectAttributes ra) {
         try {
             s.bloquearUsuario(id);
-            ra.addFlashAttribute("exito", "Usuario bloqueado");
+            Flash.exito(ra, "Usuario bloqueado");
         } catch (RuntimeException e) {
             log.error("Error al bloquear usuario {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/usuarios/" + id;
     }
@@ -137,10 +138,10 @@ public class UsuarioWebController {
     public String desbloquear(@PathVariable Long id, RedirectAttributes ra) {
         try {
             s.desbloquearUsuario(id);
-            ra.addFlashAttribute("exito", "Usuario desbloqueado");
+            Flash.exito(ra, "Usuario desbloqueado");
         } catch (RuntimeException e) {
             log.error("Error al desbloquear usuario {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/usuarios/" + id;
     }
@@ -149,10 +150,10 @@ public class UsuarioWebController {
     public String desactivar(@PathVariable Long id, RedirectAttributes ra) {
         try {
             s.eliminarUsuario(id);
-            ra.addFlashAttribute("exito", "Usuario desactivado");
+            Flash.exito(ra, "Usuario desactivado");
         } catch (RuntimeException e) {
             log.error("Error al desactivar usuario {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/usuarios/" + id;
     }
@@ -161,10 +162,10 @@ public class UsuarioWebController {
     public String activar(@PathVariable Long id, RedirectAttributes ra) {
         try {
             s.activarUsuario(id);
-            ra.addFlashAttribute("exito", "Usuario activado");
+            Flash.exito(ra, "Usuario activado");
         } catch (RuntimeException e) {
             log.error("Error al activar usuario {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/usuarios/" + id;
     }

@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.service.ContabilidadService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -78,9 +79,9 @@ public class ContabilidadWebController {
                                   org.springframework.web.servlet.mvc.support.RedirectAttributes ra) {
         try {
             var asiento = s.generarAsientoApertura(ejercicio);
-            ra.addFlashAttribute("exito", "Asiento de apertura " + asiento.getNumero() + " generado");
+            Flash.exito(ra, "Asiento de apertura " + asiento.getNumero() + " generado");
         } catch (RuntimeException e) {
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/contabilidad/balance-pgc";
     }

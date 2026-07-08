@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.service.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -108,7 +109,7 @@ public class WebController {
     }
 
     public static String redirectWithError(RedirectAttributes ra, String error) {
-        ra.addFlashAttribute("error", error);
+        Flash.error(ra, error);
         return "redirect:../";
     }
 }

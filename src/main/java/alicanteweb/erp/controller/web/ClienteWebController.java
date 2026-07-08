@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.service.*;
@@ -110,7 +111,7 @@ public class ClienteWebController extends BaseWebController {
                 BreadcrumbBuilder.active(c.getNombre())));
             return WebController.layout(m, "clientes/ver");
         }).orElseGet(() -> {
-            ra.addFlashAttribute("error", "Registro no encontrado");
+            Flash.error(ra, "Registro no encontrado");
             return "redirect:/web/clientes";
         });
     }
@@ -128,7 +129,7 @@ public class ClienteWebController extends BaseWebController {
                 BreadcrumbBuilder.active("Editar")));
             return WebController.layout(m, "clientes/formulario");
         }).orElseGet(() -> {
-            ra.addFlashAttribute("error", "Registro no encontrado");
+            Flash.error(ra, "Registro no encontrado");
             return "redirect:/web/clientes";
         });
     }
@@ -167,10 +168,10 @@ public class ClienteWebController extends BaseWebController {
             c.setMandatoSepaFecha(mandatoSepaFecha);
             service.save(c);
             log.info("Cliente guardado correctamente [id={}, nombre={}]", c.getId(), c.getNombre());
-            ra.addFlashAttribute("exito", "Cliente guardado correctamente");
+            Flash.exito(ra, "Cliente guardado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar cliente [id={}]: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
             if (id != null) return "redirect:/web/clientes/" + id + "/editar";
         }
         return "redirect:/web/clientes";

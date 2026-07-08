@@ -3,7 +3,6 @@ package alicanteweb.erp.controller.web;
 import alicanteweb.erp.entities.Usuario;
 import alicanteweb.erp.service.UsuarioService;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 public abstract class BaseWebController {
 
@@ -22,13 +21,5 @@ public abstract class BaseWebController {
             return usuarioService.buscarPorId(n.longValue()).orElse(null);
         }
         return null;
-    }
-
-    protected void flashError(RedirectAttributes ra, String mensaje) {
-        ra.addFlashAttribute("error", mensaje);
-    }
-
-    protected void flashSuccess(RedirectAttributes ra, String mensaje) {
-        ra.addFlashAttribute("exito", mensaje);
     }
 }

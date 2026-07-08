@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Vehiculo;
 import alicanteweb.erp.service.VehiculoService;
 import org.slf4j.Logger;
@@ -52,7 +53,7 @@ public class VehiculoWebController {
             model.addAttribute("titulo", "Editar vehículo " + v.getMatricula());
             model.addAttribute("vehiculo", v);
             return WebController.layout(model, "vehiculos/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/vehiculos"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/vehiculos"; });
     }
 
     @GetMapping("/{id}")
@@ -66,7 +67,7 @@ public class VehiculoWebController {
                     BreadcrumbBuilder.link("Vehículos", "/web/vehiculos"),
                     BreadcrumbBuilder.active(v.getMatricula())));
             return WebController.layout(model, "vehiculos/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/vehiculos"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/vehiculos"; });
     }
 
     @PostMapping
@@ -85,10 +86,10 @@ public class VehiculoWebController {
             vehiculo.setTipo(tipo);
             vehiculo.setCapacidadKg(capacidad);
             vehiculoService.save(vehiculo);
-            ra.addFlashAttribute("exito", "Vehículo guardado correctamente");
+            Flash.exito(ra, "Vehículo guardado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar vehículo: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/vehiculos";
     }

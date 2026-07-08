@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Receta;
 import alicanteweb.erp.service.RecetaService;
 import org.slf4j.Logger;
@@ -61,7 +62,7 @@ public class RecetaWebController {
                 BreadcrumbBuilder.link("Recetas", "/web/recetas"),
                 BreadcrumbBuilder.active("Editar " + r.getNombre())));
             return WebController.layout(m, "recetas/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/recetas"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/recetas"; });
     }
 
     @GetMapping("/{id}")
@@ -76,7 +77,7 @@ public class RecetaWebController {
                     BreadcrumbBuilder.link("Recetas", "/web/recetas"),
                     BreadcrumbBuilder.active(r.getNombre())));
             return WebController.layout(m, "recetas/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/recetas"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/recetas"; });
     }
 
     @PostMapping
@@ -99,10 +100,10 @@ public class RecetaWebController {
             r.setTemperaturaHorneado(temperatura);
             r.setAlergenos(alergenos);
             service.save(r);
-            ra.addFlashAttribute("exito", "Receta guardada correctamente");
+            Flash.exito(ra, "Receta guardada correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar receta: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/recetas";
     }

@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.service.ArticuloService;
 import org.slf4j.Logger;
@@ -72,7 +73,7 @@ public class ArticuloWebController {
                     BreadcrumbBuilder.link("Artículos", "/web/articulos"),
                     BreadcrumbBuilder.active(a.getNombre())));
             return WebController.layout(m, "articulos/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/articulos"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/articulos"; });
     }
 
     @GetMapping("/{id}/editar")
@@ -86,7 +87,7 @@ public class ArticuloWebController {
                     BreadcrumbBuilder.link("Artículos", "/web/articulos"),
                     BreadcrumbBuilder.active("Editar")));
             return WebController.layout(m, "articulos/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/articulos"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/articulos"; });
     }
 
     @PostMapping
@@ -113,10 +114,10 @@ public class ArticuloWebController {
             a.setStock(parseDecimal(stock, "stock"));
             a.setAlergenos(alergenos);
             service.save(a);
-            ra.addFlashAttribute("exito", "Artículo guardado correctamente");
+            Flash.exito(ra, "Artículo guardado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar artículo: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/articulos";
     }

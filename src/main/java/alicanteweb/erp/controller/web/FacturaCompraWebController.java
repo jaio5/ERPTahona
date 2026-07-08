@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.FacturaCompra;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.FacturaCompraService;
@@ -72,7 +73,7 @@ public class FacturaCompraWebController {
             model.addAttribute("titulo", "Factura compra " + f.getNumero());
             model.addAttribute("factura", f);
             return WebController.layout(model, "facturas-compra/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/facturas-compra"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/facturas-compra"; });
     }
 
     @PostMapping
@@ -103,10 +104,10 @@ public class FacturaCompraWebController {
             if (factura.getEstado() == null) factura.setEstado("PENDIENTE");
             factura.setObservaciones(observaciones);
             facturaCompraService.guardar(factura);
-            ra.addFlashAttribute("exito", "Factura de compra guardada correctamente");
+            Flash.exito(ra, "Factura de compra guardada correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar factura compra: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/facturas-compra";
     }

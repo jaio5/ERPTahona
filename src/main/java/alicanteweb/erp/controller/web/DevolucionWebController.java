@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Devolucion;
 import alicanteweb.erp.service.ClienteService;
 import alicanteweb.erp.service.DevolucionService;
@@ -63,7 +64,7 @@ public class DevolucionWebController {
             model.addAttribute("devolucion", d);
             model.addAttribute("clientes", clienteService.findAll());
             return WebController.layout(model, "devoluciones/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/devoluciones"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/devoluciones"; });
     }
 
     @GetMapping("/{id}")
@@ -73,7 +74,7 @@ public class DevolucionWebController {
             model.addAttribute("titulo", "Devolución " + d.getNumero());
             model.addAttribute("devolucion", d);
             return WebController.layout(model, "devoluciones/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/devoluciones"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/devoluciones"; });
     }
 
     @PostMapping
@@ -91,10 +92,10 @@ public class DevolucionWebController {
             devolucion.setMotivo(motivo);
             devolucion.setObservaciones(observaciones);
             devolucionService.save(devolucion);
-            ra.addFlashAttribute("exito", "Devolución guardada correctamente");
+            Flash.exito(ra, "Devolución guardada correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar devolución: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/devoluciones";
     }

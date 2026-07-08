@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Proveedor;
 import alicanteweb.erp.service.ProveedorService;
 import org.slf4j.Logger;
@@ -65,7 +66,7 @@ public class ProveedorWebController {
                 BreadcrumbBuilder.link("Proveedores", "/web/proveedores"),
                 BreadcrumbBuilder.active(p.getNombre())));
             return WebController.layout(m, "proveedores/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/proveedores"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/proveedores"; });
     }
 
     @GetMapping("/{id}/editar")
@@ -79,7 +80,7 @@ public class ProveedorWebController {
                 BreadcrumbBuilder.link("Proveedores", "/web/proveedores"),
                 BreadcrumbBuilder.active("Editar")));
             return WebController.layout(m, "proveedores/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/proveedores"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/proveedores"; });
     }
 
     @PostMapping
@@ -98,10 +99,10 @@ public class ProveedorWebController {
             p.setTelefono(telefono);
             p.setEmail(email);
             service.save(p);
-            ra.addFlashAttribute("exito", "Proveedor guardado correctamente");
+            Flash.exito(ra, "Proveedor guardado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar proveedor: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/proveedores";
     }

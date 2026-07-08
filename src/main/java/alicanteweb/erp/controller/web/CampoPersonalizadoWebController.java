@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.CampoPersonalizado;
 import alicanteweb.erp.entities.Cliente;
 import alicanteweb.erp.service.CampoPersonalizadoService;
@@ -58,7 +59,7 @@ public class CampoPersonalizadoWebController {
         return service.findById(id)
             .map(c -> formulario(m, c, "Editar campo de impresión"))
             .orElseGet(() -> {
-                ra.addFlashAttribute("error", "Campo no encontrado");
+                Flash.error(ra, "Campo no encontrado");
                 return "redirect:/web/campos-impresion";
             });
     }
@@ -99,10 +100,10 @@ public class CampoPersonalizadoWebController {
             c.setOrden(orden != null ? orden : 0);
             c.setActivo(activo);
             service.save(c);
-            ra.addFlashAttribute("exito", "Campo guardado");
+            Flash.exito(ra, "Campo guardado");
         } catch (RuntimeException e) {
             log.error("Error al guardar campo de impresión: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
             if (id != null) return "redirect:/web/campos-impresion/" + id + "/editar";
             return "redirect:/web/campos-impresion/nuevo";
         }
@@ -113,10 +114,10 @@ public class CampoPersonalizadoWebController {
     public String eliminar(@PathVariable Long id, RedirectAttributes ra) {
         try {
             service.deleteById(id);
-            ra.addFlashAttribute("exito", "Campo eliminado");
+            Flash.exito(ra, "Campo eliminado");
         } catch (RuntimeException e) {
             log.error("Error al eliminar campo de impresión {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", "No se pudo eliminar el campo");
+            Flash.error(ra, "No se pudo eliminar el campo");
         }
         return "redirect:/web/campos-impresion";
     }

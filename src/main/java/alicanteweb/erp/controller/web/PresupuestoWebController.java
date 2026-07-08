@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.ClienteService;
 import alicanteweb.erp.service.DocumentoService;
@@ -99,7 +100,7 @@ public class PresupuestoWebController {
                 BreadcrumbBuilder.link("Presupuestos", "/web/presupuestos"),
                 BreadcrumbBuilder.active("Editar " + p.getNumero())));
             return WebController.layout(model, "presupuestos/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/presupuestos"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/presupuestos"; });
     }
 
     @GetMapping("/{id}")
@@ -113,7 +114,7 @@ public class PresupuestoWebController {
                 BreadcrumbBuilder.link("Presupuestos", "/web/presupuestos"),
                 BreadcrumbBuilder.active(p.getNumero())));
             return WebController.layout(model, "presupuestos/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/presupuestos"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/presupuestos"; });
     }
 
     @PostMapping
@@ -134,11 +135,11 @@ public class PresupuestoWebController {
                 request.getParameterValues("lineaDescuento")
             ));
             var presupuesto = documentoService.guardarPresupuesto(id, datos);
-            ra.addFlashAttribute("exito", "Presupuesto " + presupuesto.getNumero() + " guardado");
+            Flash.exito(ra, "Presupuesto " + presupuesto.getNumero() + " guardado");
             return "redirect:/web/presupuestos/" + presupuesto.getId();
         } catch (RuntimeException e) {
             log.error("Error al guardar presupuesto: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
             return "redirect:/web/presupuestos";
         }
     }
@@ -147,10 +148,10 @@ public class PresupuestoWebController {
     public String aprobar(@PathVariable Long id, RedirectAttributes ra) {
         try {
             presupuestoService.aceptar(id);
-            ra.addFlashAttribute("exito", "Presupuesto aprobado");
+            Flash.exito(ra, "Presupuesto aprobado");
         } catch (RuntimeException e) {
             log.error("Error al aprobar presupuesto {}: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/presupuestos/" + id;
     }

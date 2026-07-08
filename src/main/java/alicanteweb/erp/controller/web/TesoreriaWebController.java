@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.MovimientoBanco;
 import alicanteweb.erp.service.MovimientoBancoService;
 import alicanteweb.erp.service.MovimientoCajaService;
@@ -57,10 +58,10 @@ public class TesoreriaWebController {
             } else {
                 cajaS.registrarGasto(concepto, importe, categoria);
             }
-            ra.addFlashAttribute("exito", "Movimiento de caja registrado");
+            Flash.exito(ra, "Movimiento de caja registrado");
         } catch (RuntimeException e) {
             log.error("Error al registrar movimiento de caja: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/tesoreria";
     }

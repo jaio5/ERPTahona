@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.service.CarteraService;
 import alicanteweb.erp.service.UsuarioService;
 import jakarta.servlet.http.HttpSession;
@@ -63,10 +64,10 @@ public class CarteraWebController extends BaseWebController {
         try {
             carteraService.registrarCobro(facturaId, fecha, importe, formaPago, referencia,
                     observaciones, usuarioActual(session));
-            ra.addFlashAttribute("exito", "Cobro registrado");
+            Flash.exito(ra, "Cobro registrado");
         } catch (RuntimeException e) {
             log.error("Error al registrar cobro de factura {}: {}", facturaId, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/cartera";
     }
@@ -84,10 +85,10 @@ public class CarteraWebController extends BaseWebController {
         try {
             carteraService.registrarPago(facturaCompraId, fecha, importe, formaPago, referencia,
                     observaciones, usuarioActual(session));
-            ra.addFlashAttribute("exito", "Pago registrado");
+            Flash.exito(ra, "Pago registrado");
         } catch (RuntimeException e) {
             log.error("Error al registrar pago de factura de compra {}: {}", facturaCompraId, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/cartera";
     }

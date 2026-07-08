@@ -1,5 +1,6 @@
 package alicanteweb.erp.controller.web;
 
+import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.*;
 import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.service.*;
@@ -123,7 +124,7 @@ public class AlbaranWebController extends BaseWebController {
                 BreadcrumbBuilder.link("Albaranes", "/web/albaranes"),
                 BreadcrumbBuilder.active(a.getNumero())));
             return WebController.layout(model, "albaranes/ver");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/albaranes"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/albaranes"; });
     }
 
     @GetMapping("/{id}/editar")
@@ -143,7 +144,7 @@ public class AlbaranWebController extends BaseWebController {
                 BreadcrumbBuilder.link("Albaranes", "/web/albaranes"),
                 BreadcrumbBuilder.active("Editar " + a.getNumero())));
             return WebController.layout(model, "albaranes/formulario");
-        }).orElseGet(() -> { ra.addFlashAttribute("error", "Registro no encontrado"); return "redirect:/web/albaranes"; });
+        }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/albaranes"; });
     }
 
     @PostMapping
@@ -174,11 +175,11 @@ public class AlbaranWebController extends BaseWebController {
                 request.getParameterValues("lineaDescuentoTipo")
             ));
             AlbaranVenta albaran = documentoService.guardarAlbaran(id, datos);
-            ra.addFlashAttribute("exito", "Albarán guardado correctamente");
+            Flash.exito(ra, "Albarán guardado correctamente");
             return "redirect:/web/albaranes/" + albaran.getId();
         } catch (RuntimeException e) {
             log.error("Error al guardar albarán: {}", e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
             if (id != null) return "redirect:/web/albaranes/" + id + "/editar";
         }
         return "redirect:/web/albaranes/nuevo";
@@ -201,10 +202,10 @@ public class AlbaranWebController extends BaseWebController {
     public String marcarEntregado(@PathVariable Long id, RedirectAttributes ra) {
         try {
             albaranService.marcarEntregado(id);
-            ra.addFlashAttribute("exito", "Albarán marcado como entregado");
+            Flash.exito(ra, "Albarán marcado como entregado");
         } catch (RuntimeException e) {
             log.error("Error al marcar albarán {} como entregado: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/albaranes/" + id;
     }
@@ -220,11 +221,11 @@ public class AlbaranWebController extends BaseWebController {
         try {
             Factura factura = albaranService.convertirAFactura(
                 id, usuarioActual(session), fecha, medioCobro, fechaVencimiento, observaciones);
-            ra.addFlashAttribute("exito", "Factura " + factura.getNumero() + " creada correctamente");
+            Flash.exito(ra, "Factura " + factura.getNumero() + " creada correctamente");
             return "redirect:/web/facturas/" + factura.getId();
         } catch (RuntimeException e) {
             log.error("Error al convertir albarán {} a factura: {}", id, e.getMessage(), e);
-            ra.addFlashAttribute("error", e.getMessage());
+            Flash.error(ra, e.getMessage());
             return "redirect:/web/albaranes/" + id;
         }
     }
