@@ -1,0 +1,71 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Tipos de IVA</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/tipos-iva/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo tipo
+            </a>
+        </div>
+    </div>
+
+    <p class="text-muted small mb-3">
+        Estos tipos alimentan el desplegable de IVA al crear facturas y albaranes. Cambiar el
+        catálogo no altera documentos ya emitidos: cada línea conserva el tipo con el que se creó.
+    </p>
+
+    <div class="table-card">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th style="width:60px;">Orden</th>
+                    <th>Nombre</th>
+                    <th class="text-end">Porcentaje</th>
+                    <th class="text-end">Recargo eq.</th>
+                    <th class="text-center">Activo</th>
+                    <th class="text-center">Por defecto</th>
+                    <th style="width:110px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(tipos)}">
+                    <td colspan="7" class="empty-state">
+                        <i class="bi bi-percent"></i>
+                        <div>No hay tipos de IVA</div>
+                    </td>
+                </tr>
+                <tr th:each="t : ${tipos}">
+                    <td class="text-muted small" th:text="${t.orden}">0</td>
+                    <td class="fw-medium" th:text="${t.nombre}">General</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(t.porcentaje, 1, 'POINT', 2, 'COMMA')} + ' %'">21,00 %</td>
+                    <td class="text-end text-muted small"
+                        th:text="${t.recargoEquivalencia != null ? #numbers.formatDecimal(t.recargoEquivalencia, 1, 'POINT', 2, 'COMMA') + ' %' : '—'}">5,20 %</td>
+                    <td class="text-center">
+                        <span th:if="${t.activo}" class="badge bg-success-subtle text-success">Sí</span>
+                        <span th:unless="${t.activo}" class="badge bg-secondary-subtle text-secondary">No</span>
+                    </td>
+                    <td class="text-center">
+                        <i th:if="${t.esDefecto}" class="bi bi-check-circle-fill text-primary" title="Tipo por defecto"></i>
+                        <span th:unless="${t.esDefecto}" class="text-muted">—</span>
+                    </td>
+                    <td class="text-end">
+                        <a th:href="@{/web/tipos-iva/{id}/editar(id=${t.id})}" class="btn btn-ghost btn-sm"
+                           th:attr="aria-label='Editar ' + ${t.nombre}" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form th:action="@{/web/tipos-iva/{id}/eliminar(id=${t.id})}" method="post"
+                              class="d-inline" onsubmit="return confirm('¿Eliminar este tipo de IVA?');">
+                            <button type="submit" class="btn btn-ghost btn-sm text-danger"
+                                    th:attr="aria-label='Eliminar ' + ${t.nombre}" title="Eliminar">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>

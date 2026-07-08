@@ -58,7 +58,7 @@ class CriticalWebControllersCoverageTest {
 
         FacturaWebController controller = new FacturaWebController(
                 facturas, clientes, articulos, impresion, auditoria, usuarios, documentos,
-                mock(EmailService.class), mock(FacturaeService.class));
+                mock(EmailService.class), mock(FacturaeService.class), mock(TipoImpositivoService.class));
 
         assertEquals("layout", controller.listado(new ExtendedModelMap(), null, null, 0, 25, "fecha", "desc"));
         assertEquals("layout", controller.formularioNueva(new ExtendedModelMap()));
@@ -129,7 +129,8 @@ class CriticalWebControllersCoverageTest {
         Files.writeString(pdf.toPath(), "ALB");
         when(impresion.generarAlbaranPdf(albaran)).thenReturn(pdf);
         AlbaranWebController controller = new AlbaranWebController(
-                albaranes, clientes, articulos, almacenes, impresion, auditoria, usuarios, documentos);
+                albaranes, clientes, articulos, almacenes, impresion, auditoria, usuarios, documentos,
+                mock(TipoImpositivoService.class));
 
         assertEquals("layout", controller.listado(new ExtendedModelMap(), null, null, 0, 25, "fecha", "desc"));
         assertEquals("layout", controller.nuevo(new ExtendedModelMap()));

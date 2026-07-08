@@ -40,10 +40,13 @@ public class AlbaranWebController extends BaseWebController {
     private final AuditoriaService auditoriaService;
     private final DocumentoService documentoService;
 
+    private final TipoImpositivoService tipoImpositivoService;
+
     public AlbaranWebController(AlbaranService albaranService, ClienteService clienteService,
                                  ArticuloService articuloService, AlmacenService almacenService,
                                  ImpresionService impresionService, AuditoriaService auditoriaService,
-                                 UsuarioService usuarioService, DocumentoService documentoService) {
+                                 UsuarioService usuarioService, DocumentoService documentoService,
+                                 TipoImpositivoService tipoImpositivoService) {
         super(usuarioService);
         this.albaranService = albaranService;
         this.clienteService = clienteService;
@@ -52,6 +55,7 @@ public class AlbaranWebController extends BaseWebController {
         this.impresionService = impresionService;
         this.auditoriaService = auditoriaService;
         this.documentoService = documentoService;
+        this.tipoImpositivoService = tipoImpositivoService;
     }
 
     @GetMapping
@@ -97,6 +101,7 @@ public class AlbaranWebController extends BaseWebController {
             model.addAttribute("almacenPorDefectoId", almacenes.get(0).getId());
         }
         model.addAttribute("articulos", articuloService.findAll());
+        model.addAttribute("tiposIva", tipoImpositivoService.findActivos());
         model.addAttribute("lineasJson", "[]");
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
             BreadcrumbBuilder.inicio(),
@@ -129,6 +134,7 @@ public class AlbaranWebController extends BaseWebController {
             model.addAttribute("clientes", clienteService.findAll());
             model.addAttribute("almacenes", almacenService.findAll());
             model.addAttribute("articulos", articuloService.findAll());
+            model.addAttribute("tiposIva", tipoImpositivoService.findActivos());
             model.addAttribute("lineasJson", lineasToJson(a));
             model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
                 BreadcrumbBuilder.inicio(),

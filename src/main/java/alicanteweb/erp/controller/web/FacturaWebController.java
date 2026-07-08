@@ -42,11 +42,13 @@ public class FacturaWebController extends BaseWebController {
     private final EmailService emailService;
     private final FacturaeService facturaeService;
 
+    private final TipoImpositivoService tipoImpositivoService;
+
     public FacturaWebController(FacturaService facturaService, ClienteService clienteService,
                                  ArticuloService articuloService, ImpresionService impresionService,
                                  AuditoriaService auditoriaService, UsuarioService usuarioService,
                                  DocumentoService documentoService, EmailService emailService,
-                                 FacturaeService facturaeService) {
+                                 FacturaeService facturaeService, TipoImpositivoService tipoImpositivoService) {
         super(usuarioService);
         this.facturaService = facturaService;
         this.clienteService = clienteService;
@@ -56,6 +58,7 @@ public class FacturaWebController extends BaseWebController {
         this.documentoService = documentoService;
         this.emailService = emailService;
         this.facturaeService = facturaeService;
+        this.tipoImpositivoService = tipoImpositivoService;
     }
 
     @GetMapping("/{id}/facturae")
@@ -123,6 +126,7 @@ public class FacturaWebController extends BaseWebController {
         model.addAttribute("factura", new Factura());
         model.addAttribute("clientes", clienteService.findAll());
         model.addAttribute("articulos", articuloService.findAll());
+        model.addAttribute("tiposIva", tipoImpositivoService.findActivos());
         model.addAttribute("lineasJson", "[]");
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
             BreadcrumbBuilder.inicio(),
@@ -144,6 +148,7 @@ public class FacturaWebController extends BaseWebController {
             model.addAttribute("factura", f);
             model.addAttribute("clientes", clienteService.findAll());
             model.addAttribute("articulos", articuloService.findAll());
+            model.addAttribute("tiposIva", tipoImpositivoService.findActivos());
             String lineasJson = f.getFacturaLineas().stream().map(l ->
                 String.format("{\"articuloId\":%s,\"cantidad\":\"%s\",\"precio\":\"%s\",\"iva\":\"%s\",\"descuento\":\"%s\"}",
                     l.getArticulo() != null ? l.getArticulo().getId() : "null",

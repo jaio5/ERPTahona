@@ -132,6 +132,9 @@
         <span th:each="a : ${articulos}"
               th:attr="data-id=${a.id},data-texto=${(a.codigo ?: '') + ' — ' + (a.nombre ?: '')},data-pvp=${a.pvp != null ? a.pvp : 0},data-iva=${a.iva != null ? a.iva : 0}"
               style="display:none"></span>
+        <span th:each="t : ${tiposIva}" class="tipo-iva-opt"
+              th:attr="data-valor=${t.porcentaje},data-nombre=${t.nombre},data-defecto=${t.esDefecto}"
+              style="display:none"></span>
     </div>
     <script th:attr="nonce=${cspNonce}">
         /* global TomSelect */
@@ -152,6 +155,14 @@
                     iva: parseFloat(el.getAttribute('data-iva') || '0')
                 };
             });
+            const _tiposIva = [];
+            document.querySelectorAll('#albaran-form-data span.tipo-iva-opt').forEach(function(el) {
+                _tiposIva.push({
+                    valor: String(el.getAttribute('data-valor') || '').replace(',', '.'),
+                    nombre: el.getAttribute('data-nombre') || '',
+                    defecto: el.getAttribute('data-defecto') === 'true'
+                });
+            });
 
             const tbody    = document.getElementById('albaranLineasBody');
             const addBtn   = document.getElementById('addLineBtn');
@@ -167,6 +178,50 @@
             function fmtDec(val) {
                 if (val === null || val === undefined || val === '') return '';
                 return String(val).replace('.', ',');
+            }
+
+            function ivaNum(v) { return parseFloat(String(v == null ? '' : v).replace(',', '.')); }
+
+            function setIvaValue(field, val) {
+                if (!field || field.tagName !== 'SELECT') { if (field) field.value = fmtDec(val); return; }
+                const target = ivaNum(val);
+                let found = false;
+                Array.prototype.forEach.call(field.options, function(o) {
+                    if (ivaNum(o.value) === target) { o.selected = true; found = true; }
+                });
+                if (!found && !isNaN(target)) {
+                    const opt = document.createElement('option');
+                    opt.value = String(target); opt.textContent = fmtDec(val) + ' %'; opt.selected = true;
+                    field.appendChild(opt);
+                }
+            }
+
+            // Campo de IVA de la línea: <select> del catálogo, o input libre si no hay catálogo.
+            function buildIvaField(selectedVal) {
+                if (_tiposIva.length === 0) {
+                    const inp = document.createElement('input');
+                    inp.type = 'text'; inp.inputMode = 'decimal';
+                    inp.name = 'lineaIva';
+                    inp.className = 'form-control form-control-sm line-iva line-input';
+                    inp.placeholder = '21';
+                    if (selectedVal != null) inp.value = fmtDec(selectedVal);
+                    return inp;
+                }
+                const sel = document.createElement('select');
+                sel.name = 'lineaIva';
+                sel.className = 'form-select form-select-sm line-iva line-input';
+                _tiposIva.forEach(function(t) {
+                    const opt = document.createElement('option');
+                    opt.value = t.valor; opt.textContent = t.nombre;
+                    sel.appendChild(opt);
+                });
+                if (selectedVal != null && String(selectedVal).trim() !== '') {
+                    setIvaValue(sel, selectedVal);
+                } else {
+                    const def = _tiposIva.find(function(t) { return t.defecto; });
+                    if (def) setIvaValue(sel, def.valor);
+                }
+                return sel;
             }
 
             const gValEl  = document.getElementById('descuentoGlobalValor');
@@ -255,12 +310,7 @@
                 tdPrecio.appendChild(precio);
 
                 const tdIva = document.createElement('td');
-                const iva = document.createElement('input');
-                iva.type = 'text'; iva.inputMode = 'decimal';
-                iva.name = 'lineaIva';
-                iva.className = 'form-control form-control-sm line-iva line-input';
-                iva.placeholder = '21';
-                if (data && data.iva) iva.value = fmtDec(data.iva);
+                const iva = buildIvaField(data ? data.iva : null);
                 tdIva.appendChild(iva);
 
                 const tdDto = document.createElement('td');
@@ -298,7 +348,7 @@
                     const art = _articulosData[sel.value];
                     if (art) {
                         if (!precio.value) precio.value = (Number(art.pvp) || 0).toFixed(2).replace('.', ',');
-                        if (!iva.value)    iva.value    = String(art.iva != null ? art.iva : 0).replace('.', ',');
+                        setIvaValue(iva, art.iva != null ? art.iva : 0);
                     }
                     recalcTotal();
                 });
