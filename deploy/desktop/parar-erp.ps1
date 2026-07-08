@@ -15,6 +15,8 @@ for ($i = 0; $i -lt 5 -and $dir; $i++) {
 }
 if (-not $composeDir) { Write-Host "No encuentro docker-compose.yml." -ForegroundColor Red; exit 1 }
 Set-Location $composeDir
+# Mismo nombre de proyecto fijo que iniciar-erp.ps1, para operar sobre el stack correcto.
+$env:COMPOSE_PROJECT_NAME = "erp-tahona"
 
 Write-Host "==> Deteniendo ERP Tahona (los datos se conservan)..." -ForegroundColor Cyan
 docker compose stop

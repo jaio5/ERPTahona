@@ -21,6 +21,23 @@ function Write-Ok($msg)   { Write-Host "    $msg" -ForegroundColor Green }
 function Write-Warn2($msg){ Write-Host "    $msg" -ForegroundColor Yellow }
 function Fail($msg)       { Write-Host ""; Write-Host "ERROR: $msg" -ForegroundColor Red; Read-Host "Pulsa Enter para cerrar"; exit 1 }
 
+# Ejecuta un comando docker "de sondeo" (info, inspect...) devolviendo exito/salida SIN
+# abortar el script. En Windows PowerShell 5.1 (el que invoca iniciar-erp.cmd), con
+# $ErrorActionPreference='Stop', redirigir el stderr de un comando nativo (2>$null / *>$null)
+# convierte cualquier mensaje de error (p.ej. "No such image" cuando la imagen aun no se ha
+# cargado) en un error TERMINANTE que mataria el script. Bajamos el nivel solo aqui.
+function Invoke-DockerQuiet {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$DockerArgs)
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $out = & docker @DockerArgs 2>$null
+        return [pscustomobject]@{ Ok = ($LASTEXITCODE -eq 0); Output = $out }
+    } finally {
+        $ErrorActionPreference = $prev
+    }
+}
+
 # Inserta o actualiza claves KEY=valor en un fichero .env conservando el resto.
 function Set-EnvValues([string]$path, [System.Collections.IDictionary]$kv) {
     $lines = @()
@@ -44,6 +61,10 @@ for ($i = 0; $i -lt 5 -and $dir; $i++) {
 }
 if (-not $composeDir) { Fail "No encuentro docker-compose.yml junto al lanzador." }
 Set-Location $composeDir
+# Nombre de proyecto Compose fijo e independiente de la carpeta de instalacion. Asi los
+# volumenes (BD, backups...) son deterministas ("erp-tahona_*") y no chocan con otros stacks
+# del mismo equipo (p.ej. un repo de desarrollo llamado ERPTahona daria el mismo proyecto).
+$env:COMPOSE_PROJECT_NAME = "erp-tahona"
 Write-Step "Carpeta de la aplicacion: $composeDir"
 
 # --- 1. Docker disponible y arrancado ---
@@ -51,18 +72,18 @@ Write-Step "Comprobando Docker..."
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     Fail "Docker no esta instalado. Instala Docker Desktop desde https://www.docker.com/products/docker-desktop y vuelve a ejecutar."
 }
-docker info *> $null
-if ($LASTEXITCODE -ne 0) {
+if (-not (Invoke-DockerQuiet 'info').Ok) {
     Write-Warn2 "El motor de Docker no responde. Intentando arrancar Docker Desktop..."
     $dd = Join-Path $env:ProgramFiles "Docker\Docker\Docker Desktop.exe"
     if (Test-Path $dd) { Start-Process $dd | Out-Null } else { Fail "Docker Desktop no encontrado. Arrancalo manualmente y reintenta." }
     $deadline = (Get-Date).AddMinutes(3)
+    $dockerOk = $false
     do {
         Start-Sleep -Seconds 5
-        docker info *> $null
+        $dockerOk = (Invoke-DockerQuiet 'info').Ok
         Write-Host "    ...esperando a Docker" -ForegroundColor DarkGray
-    } while ($LASTEXITCODE -ne 0 -and (Get-Date) -lt $deadline)
-    if ($LASTEXITCODE -ne 0) { Fail "Docker no arranco a tiempo. Abre Docker Desktop y reintenta." }
+    } while (-not $dockerOk -and (Get-Date) -lt $deadline)
+    if (-not $dockerOk) { Fail "Docker no arranco a tiempo. Abre Docker Desktop y reintenta." }
 }
 Write-Ok "Docker operativo."
 
@@ -139,8 +160,7 @@ if (Test-Path $confPath) {
 
 # --- 3. Imagen pre-construida ---
 Write-Step "Comprobando la imagen de la aplicacion..."
-docker image inspect erp-tahona:latest *> $null
-if ($LASTEXITCODE -ne 0) {
+if (-not (Invoke-DockerQuiet 'image' 'inspect' 'erp-tahona:latest').Ok) {
     $tar = Join-Path $composeDir "erp-tahona-image.tar"
     if (Test-Path $tar) {
         Write-Warn2 "Cargando imagen desde erp-tahona-image.tar (puede tardar)..."
