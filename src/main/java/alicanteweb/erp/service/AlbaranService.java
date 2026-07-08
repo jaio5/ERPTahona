@@ -104,10 +104,11 @@ public class AlbaranService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AlbaranVenta> buscarPaginado(String q, String estado, Pageable pageable) {
+    public Page<AlbaranVenta> buscarPaginado(String q, String estado, LocalDate fechaDesde, LocalDate fechaHasta, Pageable pageable) {
         return albaranRepository.buscarPaginado(
             (q != null && !q.isBlank()) ? q : null,
             (estado != null && !estado.isBlank()) ? estado : null,
+            fechaDesde, fechaHasta,
             pageable);
     }
 

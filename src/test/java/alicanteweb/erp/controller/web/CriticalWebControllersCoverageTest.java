@@ -45,7 +45,7 @@ class CriticalWebControllersCoverageTest {
         linea.setDescuento(BigDecimal.ZERO);
         factura.getFacturaLineas().add(linea);
 
-        when(facturas.buscarPaginado(any(), any(), any())).thenReturn(new PageImpl<>(List.of(factura)));
+        when(facturas.buscarPaginado(any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of(factura)));
         when(facturas.findByIdParaPdf(1L)).thenReturn(Optional.of(factura));
         when(clientes.findAll()).thenReturn(List.of());
         when(articulos.findAll()).thenReturn(List.of(articulo));
@@ -60,7 +60,7 @@ class CriticalWebControllersCoverageTest {
                 facturas, clientes, articulos, impresion, auditoria, usuarios, documentos,
                 mock(EmailService.class), mock(FacturaeService.class), mock(TipoImpositivoService.class));
 
-        assertEquals("layout", controller.listado(new ExtendedModelMap(), null, null, 0, 25, "fecha", "desc"));
+        assertEquals("layout", controller.listado(new ExtendedModelMap(), null, null, null, null, 0, 25, "fecha", "desc"));
         assertEquals("layout", controller.formularioNueva(new ExtendedModelMap()));
         assertEquals("layout", controller.formularioEditar(1L, new ExtendedModelMap(), new RedirectAttributesModelMap()));
         assertEquals("layout", controller.ver(1L, new ExtendedModelMap(), new RedirectAttributesModelMap()));
@@ -126,7 +126,7 @@ class CriticalWebControllersCoverageTest {
         albaran.getAlbaranVentaLineas().add(linea);
         Factura factura = factura(5L, "F-5", "BORRADOR");
 
-        when(albaranes.buscarPaginado(any(), any(), any())).thenReturn(new PageImpl<>(List.of(albaran)));
+        when(albaranes.buscarPaginado(any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of(albaran)));
         when(albaranes.obtenerPorIdParaPdf(1L)).thenReturn(Optional.of(albaran));
         when(documentos.guardarAlbaran(any(), any())).thenReturn(albaran);
         when(albaranes.convertirAFactura(eq(1L), any(), any(), any(), any(), any())).thenReturn(factura);
@@ -137,7 +137,7 @@ class CriticalWebControllersCoverageTest {
                 albaranes, clientes, articulos, almacenes, impresion, auditoria, usuarios, documentos,
                 mock(TipoImpositivoService.class));
 
-        assertEquals("layout", controller.listado(new ExtendedModelMap(), null, null, 0, 25, "fecha", "desc"));
+        assertEquals("layout", controller.listado(new ExtendedModelMap(), null, null, null, null, 0, 25, "fecha", "desc"));
         assertEquals("layout", controller.nuevo(new ExtendedModelMap()));
         assertEquals("layout", controller.ver(1L, new ExtendedModelMap(), new RedirectAttributesModelMap()));
         assertEquals("layout", controller.editar(1L, new ExtendedModelMap(), new RedirectAttributesModelMap()));

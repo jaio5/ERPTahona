@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -72,10 +73,16 @@ public interface AlbaranVentaRepository extends JpaRepository<AlbaranVenta, Long
 
     @Query(value = "SELECT a FROM AlbaranVenta a LEFT JOIN FETCH a.cliente c WHERE " +
            "(:q IS NULL OR LOWER(a.numero) LIKE LOWER(CONCAT('%',:q,'%')) OR LOWER(c.nombre) LIKE LOWER(CONCAT('%',:q,'%'))) " +
-           "AND (:estado IS NULL OR a.estado = :estado)",
+           "AND (:estado IS NULL OR a.estado = :estado) " +
+           "AND (:fechaDesde IS NULL OR a.fecha >= :fechaDesde) " +
+           "AND (:fechaHasta IS NULL OR a.fecha <= :fechaHasta)",
            countQuery = "SELECT COUNT(a) FROM AlbaranVenta a LEFT JOIN a.cliente c WHERE " +
            "(:q IS NULL OR LOWER(a.numero) LIKE LOWER(CONCAT('%',:q,'%')) OR LOWER(c.nombre) LIKE LOWER(CONCAT('%',:q,'%'))) " +
-           "AND (:estado IS NULL OR a.estado = :estado)")
-    Page<AlbaranVenta> buscarPaginado(@Param("q") String q, @Param("estado") String estado, Pageable pageable);
+           "AND (:estado IS NULL OR a.estado = :estado) " +
+           "AND (:fechaDesde IS NULL OR a.fecha >= :fechaDesde) " +
+           "AND (:fechaHasta IS NULL OR a.fecha <= :fechaHasta)")
+    Page<AlbaranVenta> buscarPaginado(@Param("q") String q, @Param("estado") String estado,
+                                      @Param("fechaDesde") LocalDate fechaDesde, @Param("fechaHasta") LocalDate fechaHasta,
+                                      Pageable pageable);
 }
 

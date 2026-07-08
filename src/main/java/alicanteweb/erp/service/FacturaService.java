@@ -55,10 +55,11 @@ public class FacturaService {
         return repository.count();
     }
 
-    public Page<Factura> buscarPaginado(String q, String estado, Pageable pageable) {
+    public Page<Factura> buscarPaginado(String q, String estado, LocalDate fechaDesde, LocalDate fechaHasta, Pageable pageable) {
         return repository.buscarPaginado(
             (q != null && !q.isBlank()) ? q : null,
             (estado != null && !estado.isBlank()) ? estado : null,
+            fechaDesde, fechaHasta,
             pageable);
     }
 

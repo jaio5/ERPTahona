@@ -50,11 +50,17 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
 
     @Query(value = "SELECT f FROM Factura f LEFT JOIN FETCH f.cliente c WHERE " +
            "(:q IS NULL OR LOWER(f.numero) LIKE LOWER(CONCAT('%',:q,'%')) OR LOWER(c.nombre) LIKE LOWER(CONCAT('%',:q,'%'))) " +
-           "AND (:estado IS NULL OR f.estado = :estado)",
+           "AND (:estado IS NULL OR f.estado = :estado) " +
+           "AND (:fechaDesde IS NULL OR f.fecha >= :fechaDesde) " +
+           "AND (:fechaHasta IS NULL OR f.fecha <= :fechaHasta)",
            countQuery = "SELECT COUNT(f) FROM Factura f LEFT JOIN f.cliente c WHERE " +
            "(:q IS NULL OR LOWER(f.numero) LIKE LOWER(CONCAT('%',:q,'%')) OR LOWER(c.nombre) LIKE LOWER(CONCAT('%',:q,'%'))) " +
-           "AND (:estado IS NULL OR f.estado = :estado)")
-    Page<Factura> buscarPaginado(@Param("q") String q, @Param("estado") String estado, Pageable pageable);
+           "AND (:estado IS NULL OR f.estado = :estado) " +
+           "AND (:fechaDesde IS NULL OR f.fecha >= :fechaDesde) " +
+           "AND (:fechaHasta IS NULL OR f.fecha <= :fechaHasta)")
+    Page<Factura> buscarPaginado(@Param("q") String q, @Param("estado") String estado,
+                                 @Param("fechaDesde") LocalDate fechaDesde, @Param("fechaHasta") LocalDate fechaHasta,
+                                 Pageable pageable);
 
     @Query("SELECT DISTINCT f FROM Factura f LEFT JOIN FETCH f.cliente LEFT JOIN FETCH f.facturaLineas l LEFT JOIN FETCH l.articulo WHERE f.id = :id")
     Optional<Factura> findByIdWithPdfData(Long id);

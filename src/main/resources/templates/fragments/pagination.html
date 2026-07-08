@@ -11,7 +11,7 @@
     <!-- Anterior -->
     <li class="page-item" th:classappend="${page.first} ? 'disabled'">
       <a class="page-link"
-         th:href="@{${baseUrl}(page=${page.number - 1}, size=${page.size}, q=${param.q}, estado=${param.estado}, sort=${param.sort}, dir=${param.dir})}"
+         th:href="@{${baseUrl}(page=${page.number - 1}, size=${page.size}, q=${param.q}, estado=${param.estado}, fechaDesde=${param.fechaDesde}, fechaHasta=${param.fechaHasta}, sort=${param.sort}, dir=${param.dir})}"
          aria-label="Anterior">
         <i class="bi bi-chevron-left"></i>
       </a>
@@ -23,7 +23,7 @@
       <li th:each="i : ${#numbers.sequence(start, end)}"
           class="page-item" th:classappend="${i == page.number} ? 'active'">
         <a class="page-link"
-           th:href="@{${baseUrl}(page=${i}, size=${page.size}, q=${param.q}, estado=${param.estado}, sort=${param.sort}, dir=${param.dir})}"
+           th:href="@{${baseUrl}(page=${i}, size=${page.size}, q=${param.q}, estado=${param.estado}, fechaDesde=${param.fechaDesde}, fechaHasta=${param.fechaHasta}, sort=${param.sort}, dir=${param.dir})}"
            th:text="${i + 1}">1</a>
       </li>
     </th:block>
@@ -31,7 +31,7 @@
     <!-- Siguiente -->
     <li class="page-item" th:classappend="${page.last} ? 'disabled'">
       <a class="page-link"
-         th:href="@{${baseUrl}(page=${page.number + 1}, size=${page.size}, q=${param.q}, estado=${param.estado}, sort=${param.sort}, dir=${param.dir})}"
+         th:href="@{${baseUrl}(page=${page.number + 1}, size=${page.size}, q=${param.q}, estado=${param.estado}, fechaDesde=${param.fechaDesde}, fechaHasta=${param.fechaHasta}, sort=${param.sort}, dir=${param.dir})}"
          aria-label="Siguiente">
         <i class="bi bi-chevron-right"></i>
       </a>

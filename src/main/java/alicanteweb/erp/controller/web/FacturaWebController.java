@@ -35,6 +35,9 @@ public class FacturaWebController extends BaseWebController {
 
     private static final Logger log = LoggerFactory.getLogger(FacturaWebController.class);
 
+    /** Campos por los que se permite ordenar el listado (evita inyección en el Sort). */
+    private static final java.util.Set<String> SORTS_PERMITIDOS = java.util.Set.of("fecha", "numero", "total");
+
     private final FacturaService facturaService;
     private final ClienteService clienteService;
     private final ArticuloService articuloService;
@@ -98,13 +101,16 @@ public class FacturaWebController extends BaseWebController {
     public String listado(Model model,
                           @RequestParam(required = false) String q,
                           @RequestParam(required = false) String estado,
+                          @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+                          @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
                           @RequestParam(defaultValue = "0") int page,
                           @RequestParam(defaultValue = "25") int size,
                           @RequestParam(defaultValue = "fecha") String sort,
                           @RequestParam(defaultValue = "desc") String dir) {
+        String sortSeguro = SORTS_PERMITIDOS.contains(sort) ? sort : "fecha";
         Sort.Direction direction = "asc".equalsIgnoreCase(dir) ? Sort.Direction.ASC : Sort.Direction.DESC;
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(direction, sort));
-        Page<Factura> pageResult = facturaService.buscarPaginado(q, estado, pageable);
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(direction, sortSeguro));
+        Page<Factura> pageResult = facturaService.buscarPaginado(q, estado, fechaDesde, fechaHasta, pageable);
 
         model.addAttribute("moduloActivo", "facturas");
         model.addAttribute("titulo", "Facturas");
@@ -112,7 +118,9 @@ public class FacturaWebController extends BaseWebController {
         model.addAttribute("page", pageResult);
         model.addAttribute("q", q);
         model.addAttribute("estado", estado);
-        model.addAttribute("sort", sort);
+        model.addAttribute("fechaDesde", fechaDesde);
+        model.addAttribute("fechaHasta", fechaHasta);
+        model.addAttribute("sort", sortSeguro);
         model.addAttribute("dir", dir);
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
             BreadcrumbBuilder.inicio(),
