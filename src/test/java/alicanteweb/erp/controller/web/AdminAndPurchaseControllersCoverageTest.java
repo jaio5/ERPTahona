@@ -30,17 +30,17 @@ class AdminAndPurchaseControllersCoverageTest {
         assertEquals("layout", controller.form(new ExtendedModelMap()));
         RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
         assertEquals("redirect:/web/empresa", controller.guardar(
-                "Tahona", "B123", "Calle", "03001", "Alicante", "Alicante",
-                "1", "a@b.es", "RS", "RM", "https://example.test",
+                "Tahona", "B123", "Tahona Comercial", "Calle", "03001", "Alicante", "Alicante",
+                "1", "600111222", "a@b.es", "RS", "RM", "https://example.test",
                 "ES9121000418450200051332", "ES12000B12345678", ra));
         verify(empresas).save(empresa);
 
         assertEquals("layout", controller.validarVat(new ExtendedModelMap(),
-                "Tahona", "B123", null, null, null, null, null, null, null, null, null));
+                "Tahona", "B123", null, null, null, null, null, null, null, null, null, null, null));
         verify(vat).validar("B123");
 
         doThrow(new IllegalArgumentException("cif")).when(empresas).save(any());
-        controller.guardar("X", "X", null, null, null, null, null, null, null, null, null, null, null, ra);
+        controller.guardar("X", "X", null, null, null, null, null, null, null, null, null, null, null, null, null, ra);
         assertEquals("cif", ra.getFlashAttributes().get("error"));
     }
 

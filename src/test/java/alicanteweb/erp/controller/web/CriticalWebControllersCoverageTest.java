@@ -69,7 +69,7 @@ class CriticalWebControllersCoverageTest {
         MockHttpServletRequest request = lineRequest();
         RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
         assertEquals("redirect:/web/facturas/1",
-                controller.guardar(null, 4L, "2026-06-19", "EFECTIVO", null, "Obs", request, ra));
+                controller.guardar(null, 4L, "2026-06-19", "EFECTIVO", null, "Obs", null, null, request, ra));
         verify(documentos).guardarFactura(isNull(), any());
 
         factura.setEstado("EMITIDA");
@@ -90,7 +90,7 @@ class CriticalWebControllersCoverageTest {
 
         when(documentos.guardarFactura(any(), any())).thenThrow(new IllegalArgumentException("lineas"));
         assertEquals("redirect:/web/facturas",
-                controller.guardar(1L, 4L, "2026-06-19", null, null, null, request, ra));
+                controller.guardar(1L, 4L, "2026-06-19", null, null, null, null, null, request, ra));
         doThrow(new IllegalStateException("emitida")).when(facturas).aprobarYEmitir(8L);
         controller.emitir(8L, ra);
         assertEquals("emitida", ra.getFlashAttributes().get("error"));
@@ -139,7 +139,7 @@ class CriticalWebControllersCoverageTest {
 
         RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
         assertEquals("redirect:/web/albaranes/1",
-                controller.guardar(null, 2L, 3L, "2026-06-19", "Obs", lineRequest(), ra));
+                controller.guardar(null, 2L, 3L, "2026-06-19", "Obs", null, lineRequest(), ra));
         assertEquals("redirect:/web/albaranes/1", controller.marcarEntregado(1L, ra));
         assertEquals("redirect:/web/facturas/5",
                 controller.facturar(new MockHttpSession(), 1L, "2026-06-19", "EFECTIVO", null, "Obs", ra));
@@ -147,7 +147,7 @@ class CriticalWebControllersCoverageTest {
 
         when(documentos.guardarAlbaran(any(), any())).thenThrow(new IllegalArgumentException("lineas"));
         assertEquals("redirect:/web/albaranes/1/editar",
-                controller.guardar(1L, 2L, null, "2026-06-19", null, lineRequest(), ra));
+                controller.guardar(1L, 2L, null, "2026-06-19", null, null, lineRequest(), ra));
         doThrow(new IllegalArgumentException("stock")).when(albaranes).marcarEntregado(8L);
         controller.marcarEntregado(8L, ra);
         assertEquals("stock", ra.getFlashAttributes().get("error"));

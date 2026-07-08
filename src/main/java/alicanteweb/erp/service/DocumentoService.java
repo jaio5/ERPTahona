@@ -170,6 +170,7 @@ public class DocumentoService {
         }
         alb.setFecha(parseDate(datos.get("fecha")));
         alb.setObservaciones(parseString(datos.get("observaciones")));
+        alb.setNumeroLote(parseString(datos.get("numeroLote")));
         boolean esNuevo = alb.getId() == null;
         alb = albaranService.guardar(alb);
         guardarLineasAlbaran(alb, datos, esNuevo);
@@ -231,6 +232,8 @@ public class DocumentoService {
         fac.setMedioCobro(parseString(datos.get("medioCobro")));
         fac.setObservaciones(parseString(datos.get("observaciones")));
         fac.setFechaVencimiento(parseDate(datos.get("fechaVencimiento")));
+        if (datos.containsKey("rappelPorcentaje")) fac.setRappelPorcentaje(parseDecimal(datos.get("rappelPorcentaje")));
+        if (datos.containsKey("rappelImporte")) fac.setRappelImporte(parseDecimal(datos.get("rappelImporte")));
         if (fac.getEstado() == null || fac.getEstado().isBlank()) fac.setEstado("BORRADOR");
         boolean esNuevo = fac.getId() == null;
         fac = facturaService.save(fac);

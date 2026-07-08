@@ -18,11 +18,13 @@
         <div class="row g-3">
             <div class="col-md-6"><label class="form-label" for="nombreEmpresa">Nombre empresa</label><input id="nombreEmpresa" name="nombreEmpresa" th:value="${empresa?.nombreEmpresa}" class="form-control" required></div>
             <div class="col-md-3"><label class="form-label" for="cif">CIF / NIF</label><input id="cif" name="cif" th:value="${empresa?.cif}" class="form-control" placeholder="B12345678" required></div>
+            <div class="col-md-6"><label class="form-label" for="nombreComercial">Nombre comercial (cabecera de factura/albarán)</label><input id="nombreComercial" name="nombreComercial" th:value="${empresa?.nombreComercial}" class="form-control" placeholder="Tahona de Fernando"></div>
             <div class="col-md-6"><label class="form-label" for="direccion">Dirección</label><input id="direccion" name="direccion" th:value="${empresa?.direccion}" class="form-control"></div>
             <div class="col-md-3"><label class="form-label" for="codigoPostal">Código postal</label><input id="codigoPostal" name="codigoPostal" th:value="${empresa?.codigoPostal}" class="form-control"></div>
             <div class="col-md-4"><label class="form-label" for="ciudad">Ciudad</label><input id="ciudad" name="ciudad" th:value="${empresa?.ciudad}" class="form-control"></div>
             <div class="col-md-4"><label class="form-label" for="provincia">Provincia</label><input id="provincia" name="provincia" th:value="${empresa?.provincia}" class="form-control"></div>
             <div class="col-md-4"><label class="form-label" for="telefono">Teléfono</label><input id="telefono" name="telefono" th:value="${empresa?.telefono}" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label" for="whatsapp">Whatsapp (cabecera de albarán)</label><input id="whatsapp" name="whatsapp" th:value="${empresa?.whatsapp}" class="form-control"></div>
             <div class="col-md-6"><label class="form-label" for="email">Email</label><input id="email" name="email" th:value="${empresa?.email}" class="form-control"></div>
             <div class="col-md-6"><label class="form-label" for="web">Web</label><input id="web" name="web" th:value="${empresa?.web}" class="form-control"></div>
             <div class="col-md-6"><label class="form-label" for="registroSanitario">Registro sanitario</label><input id="registroSanitario" name="registroSanitario" th:value="${empresa?.registroSanitario}" class="form-control"></div>

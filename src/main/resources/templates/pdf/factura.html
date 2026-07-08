@@ -3,192 +3,212 @@
 <head>
 <meta charset="UTF-8"/>
 <style>
-@page { size: A4; margin: 15mm 12mm; }
-* { box-sizing: border-box; }
-body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #222; margin: 0; }
-.header { width: 100%; border-bottom: 3px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 14px; }
-.empresa-nombre { font-size: 16px; font-weight: bold; color: #1a3a5c; }
-.empresa-datos { font-size: 9px; color: #555; margin-top: 2px; }
-.doc-titulo { font-size: 22px; font-weight: bold; text-align: right; color: #1a3a5c; }
-.doc-numero { font-size: 13px; text-align: right; color: #444; }
-.section-box { border: 1px solid #ddd; padding: 8px 10px; margin-bottom: 10px; font-size: 10px; }
-.section-box .label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-.datos-table { width: 50%; font-size: 10px; }
-.datos-table td { padding: 2px 8px 2px 0; }
-.datos-table td:first-child { color: #666; width: 110px; }
-table.lineas { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10px; }
-table.lineas thead tr { background-color: #1a3a5c; color: white; }
-table.lineas thead th { padding: 6px 8px; text-align: left; }
-table.lineas tbody tr:nth-child(even) { background-color: #f7f9fb; }
-table.lineas tbody td { padding: 5px 8px; border-bottom: 1px solid #eee; }
-.totales-box { text-align: right; margin-top: 12px; }
-.totales-box table { display: inline-table; border-collapse: collapse; font-size: 11px; }
-.totales-box td { padding: 3px 8px; }
-.totales-box .total-row { font-size: 14px; font-weight: bold; color: #1a3a5c; border-top: 2px solid #1a3a5c; }
-.verifactu { margin-top: 20px; padding: 10px; background-color: #f0f7f0; border: 1px solid #4caf50; font-size: 9px; }
-.verifactu-title { font-weight: bold; color: #2e7d32; font-size: 11px; margin-bottom: 6px; }
-/* QR tributario: 30-40 mm según Orden HAC/1177/2024 (132px ≈ 35 mm) */
-.qr-img { width: 132px; height: 132px; }
-.qr-top { text-align: center; margin: 6px 0 10px 0; }
-.qr-top .leyenda { font-size: 9px; color: #2e7d32; font-weight: bold; margin-top: 2px; }
-.rectificativa-box { margin: 8px 0; padding: 8px; border: 1px solid #e65100; background: #fff3e0; font-size: 10px; }
-.footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 8px; color: #999; text-align: center; }
-.two-col { width: 100%; border-collapse: collapse; }
-.two-col td { vertical-align: top; }
+  @page { size: A4; margin: 12mm 10mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #000; margin: 0; }
+
+  /* Cabecera */
+  .marca { font-family: 'Times New Roman', Georgia, serif; font-style: italic;
+           font-size: 34px; font-weight: bold; line-height: 1; }
+  .marca-tel { font-size: 15px; font-weight: bold; margin-top: 2px; }
+  .emisor { text-align: right; }
+  .emisor .logo { height: 92px; }
+  .emisor-nombre { font-size: 20px; font-weight: bold; }
+  .emisor-datos { font-size: 13px; font-weight: bold; line-height: 1.25; }
+
+  .two-col { width: 100%; border-collapse: collapse; }
+  .two-col td { vertical-align: top; }
+
+  /* Caja de cliente (borde redondeado) */
+  .cliente-box { border: 1px solid #000; border-radius: 10px; padding: 10px 12px;
+                 min-height: 92px; font-size: 11px; line-height: 1.35; }
+
+  /* Caja meta: Fecha / Núm / Cod. Cliente / Repres. */
+  table.meta { border-collapse: collapse; width: 100%; margin-top: 10px; }
+  table.meta td { border: 1px solid #000; padding: 3px 6px; text-align: center; vertical-align: top; }
+  table.meta .cap { font-size: 9px; padding-bottom: 0; border-bottom: none; }
+  table.meta .val { font-size: 12px; border-top: none; height: 22px; }
+
+  /* QR tributario (discreto, esquina) */
+  .qr { text-align: center; }
+  .qr img { width: 84px; height: 84px; }
+  .qr .leyenda { font-size: 7px; margin-top: 1px; }
+
+  /* Tabla de líneas */
+  table.lineas { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  table.lineas th, table.lineas td { border: 1px solid #000; padding: 3px 6px; font-size: 10px; }
+  table.lineas thead th { font-size: 10px; font-weight: bold; text-align: center; background: #fff; }
+  table.lineas td.num { text-align: right; }
+  table.lineas td.desc { text-align: left; }
+  table.lineas .filler td { border: 1px solid #000; height: 260px; }
+
+  /* Pie de totales */
+  table.totales { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  table.totales td { border: 1px solid #000; padding: 3px 6px; vertical-align: top; }
+  table.totales .cap { font-size: 9px; font-weight: bold; text-align: left; }
+  table.totales .val { font-size: 11px; text-align: right; }
+  table.totales .total-cap { font-size: 11px; font-weight: bold; text-align: center; }
+  table.totales .total-val { font-size: 13px; font-weight: bold; text-align: right; }
+  .iva-linea { text-align: right; white-space: nowrap; }
+  .iva-linea .tipo { float: left; }
+
+  .observaciones { margin-top: 10px; font-size: 10px; }
+  .observaciones .titulo { font-weight: bold; }
+  .observaciones .rule { border-bottom: 3px solid #000; height: 0; margin-top: 2px; }
+
+  .rectificativa-box { margin: 8px 0; padding: 6px 8px; border: 1px solid #000; font-size: 10px; }
+  .verifactu-pie { margin-top: 8px; font-size: 8px; color: #333; }
 </style>
 </head>
 <body>
 
-<!-- Cabecera: empresa + título -->
-<table class="two-col header">
+<!-- ===== Cabecera: marca (izq) + escudo/emisor (der) ===== -->
+<table class="two-col">
   <tr>
-    <td style="width:60%">
-      <div class="empresa-nombre" th:text="${empresa.nombreEmpresa}">Empresa</div>
-      <div class="empresa-datos">
-        <span th:text="${empresa.cif}"></span> ·
-        <span th:text="${empresa.direccion}"></span><br/>
-        <span th:text="${empresa.codigoPostal}"></span>
-        <span th:text="${empresa.ciudad}"></span>
-        <span th:if="${empresa.telefono != null}"> · Tel: <span th:text="${empresa.telefono}"></span></span>
-        <span th:if="${empresa.email != null}"> · <span th:text="${empresa.email}"></span></span>
-      </div>
+    <td style="width:54%;">
+      <div class="marca" th:text="${empresa.nombreComercial != null ? empresa.nombreComercial : empresa.nombreEmpresa}">Tahona de Fernando</div>
+      <div class="marca-tel" th:if="${empresa.telefono != null}">Tel. <span th:text="${empresa.telefono}"></span></div>
     </td>
-    <td style="text-align:right;">
-      <div class="doc-titulo"
-           th:text="${#strings.equalsIgnoreCase(factura.tipoFactura, 'RECTIFICATIVA') ? 'FACTURA RECTIFICATIVA' : 'FACTURA'}">FACTURA</div>
-      <div class="doc-numero" th:text="${factura.numero}"></div>
+    <td style="width:46%;" class="emisor">
+      <img th:if="${logo != null and !logo.isEmpty()}" th:src="${logo}" class="logo" alt="Logo"/>
+      <div class="emisor-nombre" th:text="${empresa.nombreEmpresa}">Grupo BABO, S.C.V.L.</div>
+      <div class="emisor-datos">
+        <span th:if="${empresa.direccion != null}" th:text="${empresa.direccion}"></span><br th:if="${empresa.direccion != null}"/>
+        <span th:if="${empresa.codigoPostal != null}" th:text="${empresa.codigoPostal}"></span>
+        <span th:if="${empresa.ciudad != null}" th:text="${empresa.ciudad}"></span><br/>
+        <span>CIF <span th:text="${empresa.cif}"></span></span>
+        <span th:if="${empresa.registroSanitario != null}"><br/>Reg.Sanitario.<span th:text="${empresa.registroSanitario}"></span></span>
+      </div>
     </td>
   </tr>
 </table>
 
-<!-- QR tributario al comienzo de la factura (Orden HAC/1177/2024, art. 21) -->
-<div class="qr-top" th:if="${factura.verifactuQr != null}">
-  <img th:src="'data:image/png;base64,' + ${factura.verifactuQr}" class="qr-img" alt="QR tributario VeriFactu"/>
-  <div class="leyenda" th:if="${factura.verifactuEnviada}">VERI*FACTU — Factura verificable en la sede electrónica de la AEAT</div>
-  <div class="leyenda" th:unless="${factura.verifactuEnviada}">QR tributario del sistema de facturación</div>
-</div>
-
-<!-- Referencia de la rectificativa (RD 1619/2012, art. 15) -->
 <div class="rectificativa-box" th:if="${#strings.equalsIgnoreCase(factura.tipoFactura, 'RECTIFICATIVA')}">
-  <strong>Factura rectificativa</strong>
+  <strong>FACTURA RECTIFICATIVA</strong>
   <span th:text="${factura.tipoRectificacion == 'DIFERENCIAS' ? '(por diferencias)' : '(por sustitución)'}"></span>
   <span th:if="${factura.facturaRectificadaNumero != null}">
     — Rectifica a la factura <strong th:text="${factura.facturaRectificadaNumero}"></strong>
     <span th:if="${factura.facturaRectificadaFecha != null}"
           th:text="'de fecha ' + ${#temporals.format(factura.facturaRectificadaFecha, 'dd/MM/yyyy')}"></span>
   </span>
-  <div th:if="${factura.motivoRectificacion != null}">
-    <span style="color:#666;">Motivo:</span> <span th:text="${factura.motivoRectificacion}"></span>
-  </div>
+  <span th:if="${factura.motivoRectificacion != null}"> · Motivo: <span th:text="${factura.motivoRectificacion}"></span></span>
 </div>
 
-<!-- Datos cliente + meta -->
-<table class="two-col" style="margin-bottom:12px;">
+<!-- ===== Cliente (izq) + QR (der) ===== -->
+<table class="two-col" style="margin-top:12px;">
   <tr>
-    <td style="width:55%">
-      <div class="section-box" th:if="${factura.cliente != null}">
-        <div class="label">Cliente</div>
-        <strong th:text="${factura.cliente.nombre}"></strong><br/>
-        <span th:text="${factura.cliente.cif}"></span>
-        <span th:if="${factura.cliente.direccion != null}"><br/><span th:text="${factura.cliente.direccion}"></span></span>
-        <span th:if="${factura.cliente.poblacion != null}">
-          <br/><span th:text="${factura.cliente.codigoPostal}"></span>
-          <span th:text="${factura.cliente.poblacion}"></span>
-        </span>
+    <td style="width:70%; padding-right:12px;">
+      <div class="cliente-box" th:if="${factura.cliente != null}">
+        <strong th:text="${factura.cliente.nombre}">Cliente</strong><br/>
+        <span th:if="${factura.cliente.direccion != null}" th:text="${factura.cliente.direccion}"></span>
+        <br th:if="${factura.cliente.direccion != null}"/>
+        <span th:if="${factura.cliente.poblacion != null}" th:text="${factura.cliente.poblacion}"></span>
+        <br th:if="${factura.cliente.poblacion != null}"/>
+        <span th:if="${factura.cliente.codigoPostal != null}" th:text="${factura.cliente.codigoPostal}"></span>
+        <span th:if="${factura.cliente.provincia != null}" th:text="${factura.cliente.provincia}"></span>
+        <br th:if="${factura.cliente.codigoPostal != null or factura.cliente.provincia != null}"/>
+        <span th:if="${factura.cliente.cif != null}" th:text="${factura.cliente.cif}"></span>
       </div>
     </td>
-    <td style="width:5%"></td>
-    <td style="width:40%">
-      <table class="datos-table">
-        <tr>
-          <td>Fecha</td>
-          <td><strong th:text="${#temporals.format(factura.fecha, 'dd/MM/yyyy')}"></strong></td>
-        </tr>
-        <tr th:if="${factura.fechaVencimiento != null}">
-          <td>Vencimiento</td>
-          <td th:text="${#temporals.format(factura.fechaVencimiento, 'dd/MM/yyyy')}"></td>
-        </tr>
-        <tr>
-          <td>Forma de pago</td>
-          <td th:text="${factura.medioCobro != null ? factura.medioCobro : 'Contado'}"></td>
-        </tr>
-      </table>
+    <td style="width:30%;" class="qr">
+      <div th:if="${factura.verifactuQr != null}">
+        <img th:src="'data:image/png;base64,' + ${factura.verifactuQr}" alt="QR tributario"/>
+        <div class="leyenda" th:if="${factura.verifactuEnviada}">VERI*FACTU · verificable en la AEAT</div>
+        <div class="leyenda" th:unless="${factura.verifactuEnviada}">QR tributario del sistema</div>
+      </div>
     </td>
   </tr>
 </table>
 
-<!-- Líneas -->
+<!-- ===== Meta: Fecha / Núm. Factura / Cod. Cliente / Repres. ===== -->
+<table class="meta">
+  <tr>
+    <td class="cap" style="width:22%;">Fecha</td>
+    <td class="cap" style="width:26%;">Núm. Factura</td>
+    <td class="cap" style="width:26%;">Cod. Cliente</td>
+    <td class="cap" style="width:26%;">Repres.</td>
+  </tr>
+  <tr>
+    <td class="val" th:text="${factura.fecha != null ? #temporals.format(factura.fecha, 'dd/MM/yyyy') : ''}"></td>
+    <td class="val" th:text="${factura.numero}"></td>
+    <td class="val" th:text="${factura.cliente != null ? factura.cliente.codigo : ''}"></td>
+    <td class="val" th:text="${factura.cliente != null and factura.cliente.representante != null ? factura.cliente.representante : ''}"></td>
+  </tr>
+</table>
+
+<!-- ===== Líneas ===== -->
 <table class="lineas">
   <thead>
     <tr>
-      <th>Artículo / Descripción</th>
-      <th style="text-align:right;width:70px;">Cant.</th>
-      <th style="text-align:right;width:80px;">Precio</th>
-      <th style="text-align:right;width:55px;">Dto.%</th>
-      <th style="text-align:right;width:55px;">IVA%</th>
-      <th style="text-align:right;width:85px;">Total</th>
+      <th style="width:12%;">Cantidad</th>
+      <th style="width:8%;">IVA</th>
+      <th style="width:52%;">Descripción</th>
+      <th style="width:14%;">Precio</th>
+      <th style="width:14%;">Total</th>
     </tr>
   </thead>
   <tbody>
     <tr th:each="linea : ${factura.facturaLineas}">
-      <td th:text="${linea.articulo != null ? linea.articulo.nombre : linea.descripcion}">-</td>
-      <td style="text-align:right;" th:text="${linea.cantidad}">1</td>
-      <td style="text-align:right;" th:text="${#numbers.formatDecimal(linea.precioUnitario != null ? linea.precioUnitario : 0, 1, 2)}">0,00</td>
-      <td style="text-align:right;" th:text="${linea.descuento != null and linea.descuento.signum() > 0 ? linea.descuento + '%' : '-'}">-</td>
-      <td style="text-align:right;" th:text="${linea.iva != null ? linea.iva + '%' : '-'}">21%</td>
-      <td style="text-align:right;font-weight:bold;"
-          th:text="${#numbers.formatDecimal(linea.total, 1, 2)}">0,00</td>
+      <td class="num" th:text="${linea.cantidad != null ? #numbers.formatDecimal(linea.cantidad, 1, 'POINT', 2, 'COMMA') : ''}">0,00</td>
+      <td class="num" th:text="${linea.iva != null ? #numbers.formatInteger(linea.iva, 1) : ''}">10</td>
+      <td class="desc" th:text="${linea.articulo != null ? linea.articulo.nombre : linea.descripcion}">-</td>
+      <td class="num" th:text="${linea.precioUnitario != null ? #numbers.formatDecimal(linea.precioUnitario, 1, 'POINT', 4, 'COMMA') : ''}">0,0000</td>
+      <td class="num" th:text="${linea.total != null ? #numbers.formatDecimal(linea.total, 1, 'POINT', 2, 'COMMA') : ''}">0,00</td>
+    </tr>
+    <tr class="filler">
+      <td></td><td></td><td></td><td></td><td></td>
     </tr>
   </tbody>
 </table>
 
-<!-- Totales -->
-<div class="totales-box">
-  <table>
-    <tr>
-      <td style="color:#666;">Base imponible</td>
-      <td th:text="${#numbers.formatDecimal(factura.baseImponible != null ? factura.baseImponible : 0, 1, 'COMMA', 2, 'POINT') + ' €'}">0,00 €</td>
-    </tr>
-    <tr>
-      <td style="color:#666;">IVA</td>
-      <td th:text="${#numbers.formatDecimal(factura.totalIva != null ? factura.totalIva : 0, 1, 'COMMA', 2, 'POINT') + ' €'}">0,00 €</td>
-    </tr>
-    <tr th:if="${factura.retencionIrpf != null and factura.retencionIrpf.signum() > 0}">
-      <td style="color:#666;">Retención IRPF</td>
-      <td th:text="'-' + ${#numbers.formatDecimal(factura.retencionIrpf, 1, 'COMMA', 2, 'POINT')} + ' €'">-0,00 €</td>
-    </tr>
-    <tr class="total-row">
-      <td>TOTAL</td>
-      <td th:text="${#numbers.formatDecimal(factura.total != null ? factura.total : 0, 1, 'COMMA', 2, 'POINT') + ' €'}">0,00 €</td>
-    </tr>
-  </table>
+<!-- ===== Pie de totales ===== -->
+<table class="totales">
+  <tr>
+    <td style="width:11%;">
+      <div class="cap">%RAPPEL</div>
+      <div class="val" th:text="${factura.rappelPorcentaje != null ? #numbers.formatDecimal(factura.rappelPorcentaje, 1, 'POINT', 0, 'COMMA') : '0'}">0</div>
+    </td>
+    <td style="width:15%;">
+      <div class="cap">Importe RAPPEL</div>
+      <div class="val" th:text="${#numbers.formatDecimal(factura.rappelImporte != null ? factura.rappelImporte : 0, 1, 'POINT', 2, 'COMMA')}">0,00</div>
+    </td>
+    <td style="width:22%;">
+      <div class="cap">Base Imponible</div>
+      <div class="val" th:each="d : ${desgloseIva}" th:text="${#numbers.formatDecimal(d.base, 1, 'POINT', 2, 'COMMA')}">0,00</div>
+      <div class="val" th:if="${desgloseIva == null or desgloseIva.isEmpty()}"
+           th:text="${#numbers.formatDecimal(factura.baseImponible != null ? factura.baseImponible : 0, 1, 'POINT', 2, 'COMMA')}">0,00</div>
+    </td>
+    <td style="width:17%;">
+      <div class="cap">I.V.A.</div>
+      <div class="iva-linea" th:each="d : ${desgloseIva}">
+        <span class="tipo" th:text="${#numbers.formatInteger(d.tipo, 1)}">4</span>
+        <span th:text="${#numbers.formatDecimal(d.cuota, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+      </div>
+      <div class="val" th:if="${desgloseIva == null or desgloseIva.isEmpty()}"
+           th:text="${#numbers.formatDecimal(factura.totalIva != null ? factura.totalIva : 0, 1, 'POINT', 2, 'COMMA')}">0,00</div>
+    </td>
+    <td style="width:17%;">
+      <div class="cap">Recargo.Equivalencia</div>
+      <div class="val" th:text="${#numbers.formatDecimal(factura.totalRecargo != null ? factura.totalRecargo : 0, 1, 'POINT', 2, 'COMMA')}">0,00</div>
+    </td>
+    <td style="width:18%;">
+      <div class="total-cap">TOTAL FACTURA</div>
+      <div class="total-val" th:text="${#numbers.formatDecimal(factura.total != null ? factura.total : 0, 1, 'POINT', 2, 'COMMA')}">0,00</div>
+    </td>
+  </tr>
+</table>
+
+<!-- ===== Observaciones ===== -->
+<div class="observaciones">
+  <span class="titulo">OBSERVACIONES</span>
+  <div th:if="${factura.observaciones != null and !factura.observaciones.isEmpty()}" th:text="${factura.observaciones}"></div>
+  <div class="rule"></div>
 </div>
 
-<!-- VeriFactu block -->
-<div class="verifactu" th:if="${factura.verifactuHash != null or factura.verifactuEnviada}">
-  <div class="verifactu-title">VERI*FACTU</div>
-  <table class="two-col" style="width:100%">
-    <tr>
-      <td style="vertical-align:top;">
-        <p th:if="${factura.verifactuEnviada}">Factura verificable en la sede electrónica de la AEAT.</p>
-        <p th:unless="${factura.verifactuEnviada}">Factura con huella y datos de trazabilidad generados por el sistema.</p>
-        <p th:text="${datosVerificacion}" style="word-break:break-all;font-size:8px;"></p>
-        <p th:if="${factura.verifactuCsv != null}"><strong>CSV:</strong> <span th:text="${factura.verifactuCsv}"></span></p>
-      </td>
-    </tr>
-  </table>
-</div>
-
-<!-- Observaciones -->
-<div th:if="${factura.observaciones != null and !factura.observaciones.isEmpty()}"
-     style="margin-top:12px;font-size:10px;color:#555;">
-  <strong>Observaciones:</strong> <span th:text="${factura.observaciones}"></span>
-</div>
-
-<!-- Pie -->
-<div class="footer">
-  Factura generada electrónicamente · Sistema ERP Tahona ·
-  <span th:text="${#temporals.format(now, 'dd/MM/yyyy HH:mm')}"></span>
+<!-- Trazabilidad VeriFactu (discreta, obligatoria) -->
+<div class="verifactu-pie" th:if="${factura.verifactuHash != null or factura.verifactuEnviada}">
+  <span th:text="${datosVerificacion}"></span>
+  <span th:if="${factura.verifactuCsv != null}"> · CSV: <span th:text="${factura.verifactuCsv}"></span></span>
 </div>
 
 </body>

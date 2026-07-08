@@ -50,7 +50,12 @@
                                 th:selected="${albaran?.almacen?.id != null ? albaran.almacen.id == a.id : almacenPorDefectoId == a.id}"></option>
                     </select>
                 </div>
-                <div class="col-md-9">
+                <div class="col-md-3">
+                    <label class="form-label" for="numeroLote">Nº de lote</label>
+                    <input type="text" id="numeroLote" name="numeroLote" class="form-control"
+                           th:value="${albaran?.numeroLote}" placeholder="Nº lote del albarán">
+                </div>
+                <div class="col-md-6">
                     <label class="form-label" for="observaciones">Observaciones</label>
                     <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
                               th:text="${albaran?.observaciones}"></textarea>

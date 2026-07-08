@@ -41,11 +41,13 @@ public class EmpresaWebController {
     @PostMapping
     public String guardar(@RequestParam String nombreEmpresa,
                           @RequestParam String cif,
+                          @RequestParam(required = false) String nombreComercial,
                           @RequestParam(required = false) String direccion,
                           @RequestParam(required = false) String codigoPostal,
                           @RequestParam(required = false) String ciudad,
                           @RequestParam(required = false) String provincia,
                           @RequestParam(required = false) String telefono,
+                          @RequestParam(required = false) String whatsapp,
                           @RequestParam(required = false) String email,
                           @RequestParam(required = false) String registroSanitario,
                           @RequestParam(required = false) String registroMercantil,
@@ -59,11 +61,13 @@ public class EmpresaWebController {
             e.setSepaCreditorId(sepaCreditorId != null && !sepaCreditorId.isBlank() ? sepaCreditorId.trim() : null);
             e.setNombreEmpresa(nombreEmpresa);
             e.setCif(cif);
+            e.setNombreComercial(nombreComercial);
             e.setDireccion(direccion);
             e.setCodigoPostal(codigoPostal);
             e.setCiudad(ciudad);
             e.setProvincia(provincia);
             e.setTelefono(telefono);
+            e.setWhatsapp(whatsapp);
             e.setEmail(email);
             e.setRegistroSanitario(registroSanitario);
             e.setRegistroMercantil(registroMercantil);
@@ -81,11 +85,13 @@ public class EmpresaWebController {
     public String validarVat(Model m,
                              @RequestParam String nombreEmpresa,
                              @RequestParam String cif,
+                             @RequestParam(required = false) String nombreComercial,
                              @RequestParam(required = false) String direccion,
                              @RequestParam(required = false) String codigoPostal,
                              @RequestParam(required = false) String ciudad,
                              @RequestParam(required = false) String provincia,
                              @RequestParam(required = false) String telefono,
+                             @RequestParam(required = false) String whatsapp,
                              @RequestParam(required = false) String email,
                              @RequestParam(required = false) String registroSanitario,
                              @RequestParam(required = false) String registroMercantil,
@@ -93,11 +99,13 @@ public class EmpresaWebController {
         EmpresaConfig e = s.getConfiguracionActiva().orElse(new EmpresaConfig());
         e.setNombreEmpresa(nombreEmpresa);
         e.setCif(cif);
+        e.setNombreComercial(nombreComercial);
         e.setDireccion(direccion);
         e.setCodigoPostal(codigoPostal);
         e.setCiudad(ciudad);
         e.setProvincia(provincia);
         e.setTelefono(telefono);
+        e.setWhatsapp(whatsapp);
         e.setEmail(email);
         e.setRegistroSanitario(registroSanitario);
         e.setRegistroMercantil(registroMercantil);

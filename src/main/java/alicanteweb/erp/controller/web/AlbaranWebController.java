@@ -143,6 +143,7 @@ public class AlbaranWebController extends BaseWebController {
     public String guardar(@RequestParam(required = false) Long id,
                            @RequestParam Long clienteId, @RequestParam(required = false) Long almacenId,
                            @RequestParam String fecha, @RequestParam(required = false) String observaciones,
+                           @RequestParam(required = false) String numeroLote,
                            HttpServletRequest request,
                            RedirectAttributes ra) {
         try {
@@ -151,6 +152,7 @@ public class AlbaranWebController extends BaseWebController {
             datos.put("almacenId", almacenId);
             datos.put("fecha", fecha);
             datos.put("observaciones", observaciones);
+            datos.put("numeroLote", numeroLote);
             datos.put("lineas", DocumentoParserUtil.construirLineas(
                 request.getParameterValues("lineaArticuloId"),
                 request.getParameterValues("lineaCantidad"),

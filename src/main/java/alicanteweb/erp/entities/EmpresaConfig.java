@@ -64,6 +64,11 @@ public class EmpresaConfig {
     @Column(name = "telefono", length = 20)
     private String telefono;
 
+    /** Whatsapp de contacto (cabecera del albarán clásico). */
+    @Size(max = 20)
+    @Column(name = "whatsapp", length = 20)
+    private String whatsapp;
+
     // ── SEPA (remesas de adeudos) ──
     @Size(max = 34)
     @Column(name = "iban", length = 34)

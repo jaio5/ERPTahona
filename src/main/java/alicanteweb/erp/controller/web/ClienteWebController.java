@@ -141,6 +141,7 @@ public class ClienteWebController extends BaseWebController {
                           @RequestParam(required = false) String cif,
                           @RequestParam(required = false) String telefono,
                           @RequestParam(required = false) String email,
+                          @RequestParam(required = false) String representante,
                           @RequestParam(required = false) String direccion,
                           @RequestParam(required = false) String poblacion,
                           @RequestParam(required = false) String codigoPostal,
@@ -157,6 +158,7 @@ public class ClienteWebController extends BaseWebController {
             c.setCif(cif);
             c.setTelefono(telefono);
             c.setEmail(email);
+            c.setRepresentante(representante);
             c.setDireccion(direccion);
             c.setPoblacion(poblacion);
             c.setCodigoPostal(codigoPostal);

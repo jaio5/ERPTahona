@@ -206,6 +206,17 @@ public class Factura {
     private BigDecimal totalRecargo;
 
     /**
+     * RAPPEL (descuento por volumen) — % e importe, informativos en el pie clásico.
+     */
+    @ColumnDefault("0.00")
+    @Column(name = "rappel_porcentaje", precision = 5, scale = 2)
+    private BigDecimal rappelPorcentaje;
+
+    @ColumnDefault("0.00")
+    @Column(name = "rappel_importe", precision = 10, scale = 2)
+    private BigDecimal rappelImporte;
+
+    /**
      * Observaciones generales de la factura
      */
     @Column(name = "observaciones", columnDefinition = "TEXT")
@@ -265,6 +276,12 @@ public class Factura {
         }
         if (totalRecargo == null) {
             totalRecargo = BigDecimal.ZERO;
+        }
+        if (rappelPorcentaje == null) {
+            rappelPorcentaje = BigDecimal.ZERO;
+        }
+        if (rappelImporte == null) {
+            rappelImporte = BigDecimal.ZERO;
         }
         if (retencionIrpf == null) {
             retencionIrpf = BigDecimal.ZERO;

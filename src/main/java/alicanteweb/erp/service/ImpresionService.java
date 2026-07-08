@@ -5,6 +5,7 @@ import alicanteweb.erp.entities.AlbaranVenta;
 import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.Factura;
+import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.entities.HojaRuta;
 import alicanteweb.erp.entities.HojaRutaEntrega;
 import alicanteweb.erp.entities.Lote;
@@ -18,14 +19,21 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 
 @Slf4j
 @Service
@@ -33,6 +41,10 @@ public class ImpresionService {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String OUTPUT_DIR = "impresiones/";
+    private static final String LOGO_RESOURCE = "/img/logo-empresa.png";
+
+    /** Logo/escudo incrustado (data URI base64), cargado una sola vez desde el classpath. */
+    private volatile String logoDataUri;
 
     private final EmpresaConfigService empresaConfigService;
     private final FacturacionEventoService facturacionEventoService;
@@ -86,6 +98,8 @@ public class ImpresionService {
                 "factura", factura,
                 "empresa", empresaConfigService.getConfiguracionActivaOrThrow(),
                 "datosVerificacion", generarDatosVerificacion(factura),
+                "desgloseIva", desgloseIva(factura),
+                "logo", getLogoDataUri(),
                 "now", LocalDateTime.now()
             ));
             File pdfFile = buildOutputFile("Factura", factura.getNumero());
@@ -101,6 +115,8 @@ public class ImpresionService {
             String html = renderTemplate("pdf/albaran", Map.of(
                 "albaran", albaran,
                 "empresa", empresaConfigService.getConfiguracionActivaOrThrow(),
+                "resumen", resumenAlbaran(albaran),
+                "logo", getLogoDataUri(),
                 "now", LocalDateTime.now()
             ));
             File pdfFile = buildOutputFile("Albaran", albaran.getNumero());
@@ -211,6 +227,88 @@ public class ImpresionService {
             throw new ErpException("Error generando PDF de etiqueta", e);
         }
         return outputFile;
+    }
+
+    /**
+     * Logo/escudo de la empresa como data URI base64, leído del classpath una sola vez.
+     * Devuelve cadena vacía si no está disponible (la plantilla lo omite).
+     */
+    private String getLogoDataUri() {
+        if (logoDataUri == null) {
+            synchronized (this) {
+                if (logoDataUri == null) {
+                    String cargado = "";
+                    try (InputStream is = getClass().getResourceAsStream(LOGO_RESOURCE)) {
+                        if (is != null) {
+                            cargado = "data:image/png;base64,"
+                                + Base64.getEncoder().encodeToString(is.readAllBytes());
+                        } else {
+                            log.warn("Logo de empresa no encontrado en el classpath: {}", LOGO_RESOURCE);
+                        }
+                    } catch (Exception e) {
+                        log.warn("No se pudo cargar el logo de empresa: {}", e.getMessage());
+                    }
+                    logoDataUri = cargado;
+                }
+            }
+        }
+        return logoDataUri;
+    }
+
+    /**
+     * Desglose de la factura por tipo de IVA (base + cuota por cada tipo), como en el
+     * pie del formato clásico. La base de cada línea es su total (cantidad x precio - dto),
+     * sin IVA; la cuota se calcula a partir del tipo de la línea. Orden ascendente por tipo.
+     */
+    private List<Map<String, Object>> desgloseIva(Factura factura) {
+        Map<BigDecimal, BigDecimal> basePorTipo = new TreeMap<>();
+        if (factura.getFacturaLineas() != null) {
+            for (FacturaLinea linea : factura.getFacturaLineas()) {
+                BigDecimal tipo = linea.getIva() != null ? linea.getIva() : BigDecimal.ZERO;
+                BigDecimal base = linea.getTotal() != null ? linea.getTotal() : BigDecimal.ZERO;
+                basePorTipo.merge(tipo, base, BigDecimal::add);
+            }
+        }
+        List<Map<String, Object>> resumen = new ArrayList<>();
+        for (Map.Entry<BigDecimal, BigDecimal> entrada : basePorTipo.entrySet()) {
+            BigDecimal tipo = entrada.getKey();
+            BigDecimal base = entrada.getValue().setScale(2, RoundingMode.HALF_UP);
+            BigDecimal cuota = base.multiply(tipo)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            Map<String, Object> fila = new LinkedHashMap<>();
+            fila.put("tipo", tipo);
+            fila.put("base", base);
+            fila.put("cuota", cuota);
+            resumen.add(fila);
+        }
+        return resumen;
+    }
+
+    /**
+     * Resumen de importes del albarán para el pie: base imponible, IVA y total a pagar.
+     * La base de cada línea es cantidad x precio; el IVA se calcula con el tipo de la línea.
+     */
+    private Map<String, BigDecimal> resumenAlbaran(AlbaranVenta albaran) {
+        BigDecimal base = BigDecimal.ZERO;
+        BigDecimal iva = BigDecimal.ZERO;
+        if (albaran.getAlbaranVentaLineas() != null) {
+            for (var linea : albaran.getAlbaranVentaLineas()) {
+                BigDecimal cantidad = linea.getCantidad() != null ? linea.getCantidad() : BigDecimal.ZERO;
+                BigDecimal precio = linea.getPrecio() != null ? linea.getPrecio() : BigDecimal.ZERO;
+                BigDecimal tipo = linea.getIva() != null ? linea.getIva() : BigDecimal.ZERO;
+                BigDecimal importe = cantidad.multiply(precio);
+                base = base.add(importe);
+                iva = iva.add(importe.multiply(tipo).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+            }
+        }
+        base = base.setScale(2, RoundingMode.HALF_UP);
+        iva = iva.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = albaran.getTotal() != null ? albaran.getTotal() : base.add(iva);
+        Map<String, BigDecimal> resumen = new LinkedHashMap<>();
+        resumen.put("base", base);
+        resumen.put("iva", iva);
+        resumen.put("total", total);
+        return resumen;
     }
 
     private void generarPdf(String html, File outputFile) throws Exception {

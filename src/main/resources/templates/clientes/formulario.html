@@ -45,6 +45,11 @@
                     <input type="email" id="email" name="email" class="form-control"
                            th:value="${cliente?.email}">
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="representante">Representante / comercial</label>
+                    <input type="text" id="representante" name="representante" class="form-control"
+                           th:value="${cliente?.representante}" placeholder="Casilla «Repres.» de la factura">
+                </div>
             </div>
 
             <div class="form-section-divider">

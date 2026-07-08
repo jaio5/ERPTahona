@@ -57,6 +57,11 @@ public class AlbaranVenta {
     @Column(name = "observaciones")
     private String observaciones;
 
+    /** Nº de lote de trazabilidad mostrado en el albarán ("ARTICULOS CON Nº LOTE"). */
+    @Size(max = 50)
+    @Column(name = "numero_lote", length = 50)
+    private String numeroLote;
+
     @ColumnDefault("0.00")
     @Column(name = "total", precision = 10, scale = 2)
     private BigDecimal total;

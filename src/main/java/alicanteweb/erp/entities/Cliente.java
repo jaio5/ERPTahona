@@ -57,6 +57,11 @@ public class Cliente {
     @Column(name = "provincia", length = 50)
     private String provincia;
 
+    /** Representante/comercial asignado (casilla "Repres." de la factura clásica). */
+    @Size(max = 100)
+    @Column(name = "representante", length = 100)
+    private String representante;
+
     @Lob
     @Column(name = "notas")
     private String notas;

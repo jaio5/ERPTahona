@@ -3,127 +3,141 @@
 <head>
 <meta charset="UTF-8"/>
 <style>
-@page { size: A4; margin: 15mm 12mm; }
-* { box-sizing: border-box; }
-body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #222; margin: 0; }
-.header { width: 100%; border-bottom: 3px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 14px; }
-.empresa-nombre { font-size: 16px; font-weight: bold; color: #1a3a5c; }
-.empresa-datos { font-size: 9px; color: #555; margin-top: 2px; }
-.doc-titulo { font-size: 22px; font-weight: bold; text-align: right; color: #1a3a5c; }
-.doc-numero { font-size: 13px; text-align: right; color: #444; }
-.section-box { border: 1px solid #ddd; padding: 8px 10px; margin-bottom: 10px; font-size: 10px; }
-.label-caption { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-table.lineas { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10px; }
-table.lineas thead tr { background-color: #1a3a5c; color: white; }
-table.lineas thead th { padding: 6px 8px; text-align: left; }
-table.lineas tbody tr:nth-child(even) { background-color: #f7f9fb; }
-table.lineas tbody td { padding: 5px 8px; border-bottom: 1px solid #eee; }
-.firma-box { margin-top: 40px; border-top: 1px solid #999; padding-top: 6px; font-size: 9px; color: #666; width: 200px; text-align: center; }
-.footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 8px; color: #999; text-align: center; }
-.two-col { width: 100%; border-collapse: collapse; }
-.two-col td { vertical-align: top; }
+  @page { size: A4; margin: 12mm 12mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #000; margin: 0; }
+
+  .marca { font-family: 'Times New Roman', Georgia, serif; font-style: italic;
+           font-size: 26px; font-weight: bold; line-height: 1.05; }
+  .marca-contacto { font-size: 11px; line-height: 1.3; }
+  .emisor { text-align: right; font-size: 12px; line-height: 1.35; }
+  .emisor .nombre { font-weight: bold; }
+
+  .two-col { width: 100%; border-collapse: collapse; }
+  .two-col td { vertical-align: top; }
+
+  /* Banda de datos cliente / documento */
+  .datos { width: 100%; border-collapse: collapse; margin-top: 14px;
+           border-top: 1px solid #000; border-bottom: 1px solid #000; }
+  .datos td { padding: 4px 2px; vertical-align: top; font-size: 11px; }
+  .datos .etq { color: #000; }
+  .datos .r { text-align: right; }
+
+  table.lineas { width: 100%; border-collapse: collapse; margin-top: 2px; }
+  table.lineas thead th { border-bottom: 1px solid #000; padding: 3px 6px; font-size: 10px;
+                          font-weight: bold; text-align: left; }
+  table.lineas thead th.r { text-align: right; }
+  table.lineas tbody td { padding: 3px 6px; font-size: 10px; }
+  table.lineas tbody td.num { text-align: right; }
+
+  .pie { width: 100%; border-collapse: collapse; margin-top: 30px;
+         border-top: 1px solid #000; border-bottom: 1px solid #000; }
+  .pie td { padding: 5px 6px; vertical-align: top; }
+  .pie .cap { font-size: 10px; font-weight: bold; }
+  .pie .val { font-size: 11px; }
+  .pie .c { text-align: center; }
+  .pie .r { text-align: right; }
+
+  .obs { margin-top: 12px; font-size: 10px; }
+  .obs .titulo { font-weight: bold; }
 </style>
 </head>
 <body>
 
-<!-- Cabecera -->
-<table class="two-col header">
+<!-- ===== Cabecera ===== -->
+<table class="two-col">
   <tr>
-    <td style="width:60%">
-      <div class="empresa-nombre" th:text="${empresa.nombreEmpresa}">Empresa</div>
-      <div class="empresa-datos">
-        <span th:text="${empresa.cif}"></span> ·
-        <span th:text="${empresa.direccion}"></span><br/>
-        <span th:text="${empresa.codigoPostal}"></span>
-        <span th:text="${empresa.ciudad}"></span>
-        <span th:if="${empresa.telefono != null}"> · Tel: <span th:text="${empresa.telefono}"></span></span>
+    <td style="width:55%;">
+      <div class="marca" th:text="${empresa.nombreComercial != null ? empresa.nombreComercial : empresa.nombreEmpresa}">La Tahona de Fernando</div>
+      <div class="marca-contacto">
+        <span th:if="${empresa.telefono != null}">Tel. <span th:text="${empresa.telefono}"></span></span>
+        <span th:if="${empresa.whatsapp != null}"><br/>Whatsapp. <span th:text="${empresa.whatsapp}"></span></span>
       </div>
     </td>
-    <td style="text-align:right;">
-      <div class="doc-titulo">ALBARÁN</div>
-      <div class="doc-numero" th:text="${albaran.numero}"></div>
+    <td style="width:45%;" class="emisor">
+      <div class="nombre"><span th:text="${empresa.nombreEmpresa}">Grupo babo, s.coop.v.l.</span>
+        <span th:if="${empresa.cif != null}"> CIF <span th:text="${empresa.cif}"></span></span></div>
+      <div th:if="${empresa.direccion != null}" th:text="${empresa.direccion}"></div>
+      <div>
+        <span th:if="${empresa.codigoPostal != null}" th:text="${empresa.codigoPostal}"></span>
+        <span th:if="${empresa.ciudad != null}" th:text="${empresa.ciudad}"></span>
+      </div>
     </td>
   </tr>
 </table>
 
-<!-- Cliente + fecha -->
-<table class="two-col" style="margin-bottom:12px;">
+<!-- ===== Datos cliente / documento ===== -->
+<table class="datos">
   <tr>
-    <td style="width:55%">
-      <div class="section-box" th:if="${albaran.cliente != null}">
-        <div class="label-caption">Cliente</div>
-        <strong th:text="${albaran.cliente.nombre}"></strong>
-        <span th:if="${albaran.cliente.cif != null}"><br/><span th:text="${albaran.cliente.cif}"></span></span>
-        <span th:if="${albaran.cliente.direccion != null}"><br/><span th:text="${albaran.cliente.direccion}"></span></span>
-        <span th:if="${albaran.cliente.poblacion != null}">
-          <br/><span th:text="${albaran.cliente.codigoPostal}"></span>
-          <span th:text="${albaran.cliente.poblacion}"></span>
-        </span>
-      </div>
+    <td style="width:60%;">
+      <span class="etq">CLIENTE</span> <strong th:text="${albaran.cliente != null ? albaran.cliente.nombre : ''}"></strong>
     </td>
-    <td style="width:5%"></td>
-    <td style="width:40%">
-      <table style="width:100%;font-size:10px;border-collapse:collapse;">
-        <tr>
-          <td style="color:#666;width:80px;">Fecha</td>
-          <td><strong th:text="${albaran.fecha != null ? #temporals.format(albaran.fecha, 'dd/MM/yyyy') : '-'}"></strong></td>
-        </tr>
-        <tr th:if="${albaran.almacen != null}">
-          <td style="color:#666;">Almacén</td>
-          <td th:text="${albaran.almacen.nombre}"></td>
-        </tr>
-        <tr>
-          <td style="color:#666;">Estado</td>
-          <td th:text="${albaran.estado}">PENDIENTE</td>
-        </tr>
-      </table>
+    <td style="width:40%;" class="r">
+      <span class="etq">FECHA</span>
+      <span th:text="${albaran.fecha != null ? #temporals.format(albaran.fecha, 'dd/MM/yyyy') : ''}"></span>
     </td>
+  </tr>
+  <tr>
+    <td>
+      <span class="etq">DIRECCION</span>
+      <span th:text="${albaran.cliente != null and albaran.cliente.direccion != null ? albaran.cliente.direccion : ''}"></span>
+    </td>
+    <td class="r">
+      <span class="etq">Nº ALBARAN</span> <span th:text="${albaran.numero}"></span>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <span th:if="${albaran.cliente != null and albaran.cliente.poblacion != null}" th:text="${albaran.cliente.poblacion}"></span>
+    </td>
+    <td class="r" th:if="${albaran.numeroLote != null}">
+      <span class="etq">ARTICULOS CON Nº LOTE:</span> <span th:text="${albaran.numeroLote}"></span>
+    </td>
+    <td class="r" th:unless="${albaran.numeroLote != null}"></td>
   </tr>
 </table>
 
-<!-- Líneas -->
+<!-- ===== Líneas ===== -->
 <table class="lineas">
   <thead>
     <tr>
-      <th>Artículo / Descripción</th>
-      <th style="text-align:right;width:80px;">Cantidad</th>
-      <th style="text-align:right;width:80px;">Precio</th>
-      <th style="text-align:right;width:80px;">Total</th>
+      <th class="r" style="width:14%;">CANTIDAD</th>
+      <th style="width:54%;">DESCRIPCION / ARTICULOS</th>
+      <th class="r" style="width:16%;">PRECIO</th>
+      <th class="r" style="width:16%;">IMPORTE</th>
     </tr>
   </thead>
   <tbody>
     <tr th:each="linea : ${albaran.albaranVentaLineas}">
+      <td class="num" th:text="${linea.cantidad != null ? #numbers.formatDecimal(linea.cantidad, 1, 'POINT', 2, 'COMMA') : ''}">0,00</td>
       <td th:text="${linea.articulo != null ? linea.articulo.nombre : linea.descripcion}">-</td>
-      <td style="text-align:right;" th:text="${linea.cantidad}">0</td>
-      <td style="text-align:right;" th:text="${linea.precio != null ? #numbers.formatDecimal(linea.precio, 1, 'COMMA', 2, 'POINT') + ' €' : '-'}">-</td>
-      <td style="text-align:right;font-weight:bold;"
-          th:text="${linea.cantidad != null and linea.precio != null ? #numbers.formatDecimal(linea.cantidad.multiply(linea.precio), 1, 'COMMA', 2, 'POINT') + ' €' : '-'}">-</td>
+      <td class="num" th:text="${linea.precio != null ? #numbers.formatDecimal(linea.precio, 1, 'POINT', 4, 'COMMA') : '0,0000'}">0,0000</td>
+      <td class="num" th:text="${linea.cantidad != null and linea.precio != null ? #numbers.formatDecimal(linea.cantidad.multiply(linea.precio), 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</td>
     </tr>
   </tbody>
 </table>
 
-<!-- Total si existe -->
-<div th:if="${albaran.total != null}" style="text-align:right;margin-top:8px;font-size:13px;">
-  <strong>Total: <span th:text="${#numbers.formatDecimal(albaran.total, 1, 'COMMA', 2, 'POINT') + ' €'}"></span></strong>
-</div>
+<!-- ===== Pie ===== -->
+<table class="pie">
+  <tr>
+    <td style="width:33%;">
+      <span class="cap">BASE IMPONIBLE</span><br/>
+      <span class="val" th:text="${#numbers.formatDecimal(resumen.base, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+    </td>
+    <td style="width:34%;" class="c">
+      <span class="cap">IVA</span><br/>
+      <span class="val" th:text="${#numbers.formatDecimal(resumen.iva, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+    </td>
+    <td style="width:33%;" class="r">
+      <span class="cap">TOTAL A PAGAR</span><br/>
+      <span class="val" th:text="${#numbers.formatDecimal(resumen.total, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+    </td>
+  </tr>
+</table>
 
-<!-- Observaciones -->
-<div th:if="${albaran.observaciones != null and !albaran.observaciones.isEmpty()}"
-     style="margin-top:12px;font-size:10px;color:#555;">
-  <strong>Observaciones:</strong> <span th:text="${albaran.observaciones}"></span>
-</div>
-
-<!-- Firma del receptor -->
-<div style="margin-top:30px;">
-  <div class="firma-box">
-    Firma y sello del receptor
-  </div>
-</div>
-
-<!-- Pie -->
-<div class="footer">
-  Albarán generado · Sistema ERP Tahona ·
-  <span th:text="${#temporals.format(now, 'dd/MM/yyyy HH:mm')}"></span>
+<!-- ===== Observaciones ===== -->
+<div class="obs" th:if="${albaran.observaciones != null and !albaran.observaciones.isEmpty()}">
+  <span class="titulo">OBSERVACIONES:</span> <span th:text="${albaran.observaciones}"></span>
 </div>
 
 </body>

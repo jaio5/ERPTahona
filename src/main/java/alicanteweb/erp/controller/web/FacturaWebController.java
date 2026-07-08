@@ -179,6 +179,8 @@ public class FacturaWebController extends BaseWebController {
                            @RequestParam(required = false) String medioCobro,
                            @RequestParam(required = false) String fechaVencimiento,
                            @RequestParam(required = false) String observaciones,
+                           @RequestParam(required = false) String rappelPorcentaje,
+                           @RequestParam(required = false) String rappelImporte,
                            HttpServletRequest request,
                            RedirectAttributes ra) {
         try {
@@ -188,6 +190,8 @@ public class FacturaWebController extends BaseWebController {
             datos.put("medioCobro", medioCobro);
             datos.put("fechaVencimiento", fechaVencimiento);
             datos.put("observaciones", observaciones);
+            if (rappelPorcentaje != null) datos.put("rappelPorcentaje", rappelPorcentaje);
+            if (rappelImporte != null) datos.put("rappelImporte", rappelImporte);
             datos.put("lineas", DocumentoParserUtil.construirLineas(
                 request.getParameterValues("lineaArticuloId"),
                 request.getParameterValues("lineaCantidad"),
