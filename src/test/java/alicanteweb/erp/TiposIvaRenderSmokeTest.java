@@ -57,4 +57,11 @@ class TiposIvaRenderSmokeTest {
     void listadoAlbaranesRenderizaConSeleccionMultiple() throws Exception {
         mockMvc.perform(get("/web/albaranes")).andExpect(status().isOk());
     }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void camposImpresionRenderiza() throws Exception {
+        mockMvc.perform(get("/web/campos-impresion")).andExpect(status().isOk());
+        mockMvc.perform(get("/web/campos-impresion/nuevo")).andExpect(status().isOk());
+    }
 }

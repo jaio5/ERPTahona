@@ -66,6 +66,13 @@
   </tr>
 </table>
 
+<!-- Campos personalizados: zona CABECERA -->
+<div th:if="${campos != null}" style="margin-top:6px; font-size:11px;">
+  <div th:each="c : ${campos}" th:if="${c.ubicacion == 'CABECERA'}">
+    <strong th:text="${c.etiqueta} + ':'">Etiqueta:</strong> <span th:text="${c.valor}"></span>
+  </div>
+</div>
+
 <!-- ===== Datos cliente / documento ===== -->
 <table class="datos">
   <tr>
@@ -96,6 +103,13 @@
     <td class="r" th:unless="${albaran.numeroLote != null}"></td>
   </tr>
 </table>
+
+<!-- Campos personalizados: zona CLIENTE -->
+<div th:if="${campos != null}" style="margin-top:4px; font-size:11px;">
+  <div th:each="c : ${campos}" th:if="${c.ubicacion == 'CLIENTE'}">
+    <strong th:text="${c.etiqueta} + ':'">Etiqueta:</strong> <span th:text="${c.valor}"></span>
+  </div>
+</div>
 
 <!-- ===== Líneas ===== -->
 <table class="lineas">
@@ -144,9 +158,22 @@
   </tr>
 </table>
 
+<!-- Campos personalizados: zona PIE -->
+<div th:if="${campos != null}" style="margin-top:8px; font-size:11px;">
+  <div th:each="c : ${campos}" th:if="${c.ubicacion == 'PIE'}">
+    <strong th:text="${c.etiqueta} + ':'">Etiqueta:</strong> <span th:text="${c.valor}"></span>
+  </div>
+</div>
+
 <!-- ===== Observaciones ===== -->
 <div class="obs" th:if="${albaran.observaciones != null and !albaran.observaciones.isEmpty()}">
   <span class="titulo">OBSERVACIONES:</span> <span th:text="${albaran.observaciones}"></span>
+</div>
+<!-- Campos personalizados: zona OBSERVACIONES -->
+<div class="obs" th:if="${campos != null}" th:each="c : ${campos}" th:remove="tag">
+  <div th:if="${c.ubicacion == 'OBSERVACIONES'}" style="font-size:10px;">
+    <strong th:text="${c.etiqueta} + ':'"></strong> <span th:text="${c.valor}"></span>
+  </div>
 </div>
 
 </body>

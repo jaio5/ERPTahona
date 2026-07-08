@@ -7,6 +7,10 @@
 
 Fecha: 2026-07-08 · Rama base: `main`
 
+> **Estado (2026-07-08): pipeline COMPLETO.** ✅ Fase 1 (descuentos), ✅ Fase 2 (tipos de IVA
+> configurables), ✅ Fase 3 (impresión por lotes), ✅ Fase 4 (campos personalizados). Todo en
+> `main` y `desarrollo`, con 305 tests en verde.
+
 ---
 
 ## 1. Objetivo

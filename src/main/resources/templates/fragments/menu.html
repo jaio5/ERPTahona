@@ -248,7 +248,7 @@
 
     <!-- Grupo: Admin -->
     <div th:if="${@permisos.puedeVerAlguno('usuarios', 'backup', 'auditoria', 'configuracion')}"
-         th:with="enAdmin=${moduloActivo == 'usuarios' || moduloActivo == 'empresa' || moduloActivo == 'tiposIva' || moduloActivo == 'auditoria' || moduloActivo == 'backups' || moduloActivo == 'buscar' || moduloActivo == 'importar'}">
+         th:with="enAdmin=${moduloActivo == 'usuarios' || moduloActivo == 'empresa' || moduloActivo == 'tiposIva' || moduloActivo == 'camposImpresion' || moduloActivo == 'auditoria' || moduloActivo == 'backups' || moduloActivo == 'buscar' || moduloActivo == 'importar'}">
         <button class="sidebar-group-toggle"
                 th:classappend="${!enAdmin ? 'collapsed' : ''}"
                 data-bs-toggle="collapse" data-bs-target="#nav-admin"
@@ -271,6 +271,10 @@
             <a class="sidebar-link" th:href="@{/web/tipos-iva}"
                th:classappend="${moduloActivo == 'tiposIva' ? 'active' : ''}">
                 <i class="bi bi-percent"></i><span>Tipos de IVA</span>
+            </a>
+            <a class="sidebar-link" th:href="@{/web/campos-impresion}"
+               th:classappend="${moduloActivo == 'camposImpresion' ? 'active' : ''}">
+                <i class="bi bi-input-cursor-text"></i><span>Campos de impresión</span>
             </a>
             <a class="sidebar-link" th:href="@{/web/auditoria}"
                th:classappend="${moduloActivo == 'auditoria' ? 'active' : ''}">

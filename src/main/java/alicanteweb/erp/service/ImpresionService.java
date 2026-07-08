@@ -3,6 +3,7 @@ package alicanteweb.erp.service;
 import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.entities.AlbaranVenta;
 import alicanteweb.erp.entities.Articulo;
+import alicanteweb.erp.entities.CampoPersonalizado;
 import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
@@ -53,15 +54,18 @@ public class ImpresionService {
     private final EmpresaConfigService empresaConfigService;
     private final FacturacionEventoService facturacionEventoService;
     private final HojaRutaService hojaRutaService;
+    private final CampoPersonalizadoService campoPersonalizadoService;
     private final SpringTemplateEngine templateEngine;
 
     public ImpresionService(EmpresaConfigService empresaConfigService,
                             FacturacionEventoService facturacionEventoService,
                             HojaRutaService hojaRutaService,
+                            CampoPersonalizadoService campoPersonalizadoService,
                             SpringTemplateEngine templateEngine) {
         this.empresaConfigService = empresaConfigService;
         this.facturacionEventoService = facturacionEventoService;
         this.hojaRutaService = hojaRutaService;
+        this.campoPersonalizadoService = campoPersonalizadoService;
         this.templateEngine = templateEngine;
         try {
             Files.createDirectories(Paths.get(OUTPUT_DIR));
@@ -106,6 +110,8 @@ public class ImpresionService {
             vars.put("datosVerificacion", generarDatosVerificacion(factura));
             vars.put("desgloseIva", filasIva(desglose));
             vars.put("descuentoGlobal", desglose.descuentoGlobal());
+            vars.put("campos", campoPersonalizadoService.aplicables(CampoPersonalizado.DOC_FACTURA,
+                factura.getCliente() != null ? factura.getCliente().getId() : null));
             vars.put("logo", getLogoDataUri());
             vars.put("now", LocalDateTime.now());
             String html = renderTemplate("pdf/factura", vars);
@@ -123,6 +129,8 @@ public class ImpresionService {
                 "albaran", albaran,
                 "empresa", empresaConfigService.getConfiguracionActivaOrThrow(),
                 "resumen", resumenAlbaran(albaran),
+                "campos", campoPersonalizadoService.aplicables(CampoPersonalizado.DOC_ALBARAN,
+                    albaran.getCliente() != null ? albaran.getCliente().getId() : null),
                 "logo", getLogoDataUri(),
                 "now", LocalDateTime.now()
             ));

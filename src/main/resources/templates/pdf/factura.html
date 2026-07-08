@@ -83,6 +83,13 @@
   </tr>
 </table>
 
+<!-- Campos personalizados: zona CABECERA -->
+<div th:if="${campos != null}" style="margin-top:6px; font-size:10px;">
+  <div th:each="c : ${campos}" th:if="${c.ubicacion == 'CABECERA'}">
+    <strong th:text="${c.etiqueta} + ':'">Etiqueta:</strong> <span th:text="${c.valor}"></span>
+  </div>
+</div>
+
 <div class="rectificativa-box" th:if="${#strings.equalsIgnoreCase(factura.tipoFactura, 'RECTIFICATIVA')}">
   <strong>FACTURA RECTIFICATIVA</strong>
   <span th:text="${factura.tipoRectificacion == 'DIFERENCIAS' ? '(por diferencias)' : '(por sustitución)'}"></span>
@@ -108,6 +115,10 @@
         <span th:if="${factura.cliente.provincia != null}" th:text="${factura.cliente.provincia}"></span>
         <br th:if="${factura.cliente.codigoPostal != null or factura.cliente.provincia != null}"/>
         <span th:if="${factura.cliente.cif != null}" th:text="${factura.cliente.cif}"></span>
+        <!-- Campos personalizados: zona CLIENTE -->
+        <span th:if="${campos != null}" th:each="c : ${campos}" th:remove="tag">
+          <span th:if="${c.ubicacion == 'CLIENTE'}"><br/><strong th:text="${c.etiqueta} + ':'"></strong> <span th:text="${c.valor}"></span></span>
+        </span>
       </div>
     </td>
     <td style="width:30%;" class="qr">
@@ -220,7 +231,18 @@
 <div class="observaciones">
   <span class="titulo">OBSERVACIONES</span>
   <div th:if="${factura.observaciones != null and !factura.observaciones.isEmpty()}" th:text="${factura.observaciones}"></div>
+  <!-- Campos personalizados: zona OBSERVACIONES -->
+  <div th:if="${campos != null}" th:each="c : ${campos}" th:remove="tag">
+    <div th:if="${c.ubicacion == 'OBSERVACIONES'}"><strong th:text="${c.etiqueta} + ':'"></strong> <span th:text="${c.valor}"></span></div>
+  </div>
   <div class="rule"></div>
+</div>
+
+<!-- Campos personalizados: zona PIE -->
+<div th:if="${campos != null}" style="margin-top:6px; font-size:10px;">
+  <div th:each="c : ${campos}" th:if="${c.ubicacion == 'PIE'}">
+    <strong th:text="${c.etiqueta} + ':'">Etiqueta:</strong> <span th:text="${c.valor}"></span>
+  </div>
 </div>
 
 <!-- Trazabilidad VeriFactu (discreta, obligatoria) -->

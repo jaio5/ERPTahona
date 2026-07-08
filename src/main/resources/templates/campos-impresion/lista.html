@@ -1,0 +1,72 @@
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Campos de impresión</h4>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/campos-impresion/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo campo
+            </a>
+        </div>
+    </div>
+
+    <p class="text-muted small mb-3">
+        Añade información extra (etiqueta y valor) a tus facturas y albaranes sin tocar la plantilla:
+        de forma global o exclusiva para un cliente, en la zona del documento que elijas.
+    </p>
+
+    <div class="table-card">
+        <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Ámbito</th>
+                    <th>Cliente</th>
+                    <th>Etiqueta</th>
+                    <th>Valor</th>
+                    <th>Documento</th>
+                    <th>Zona</th>
+                    <th class="text-center">Activo</th>
+                    <th style="width:110px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(campos)}">
+                    <td colspan="8" class="empty-state">
+                        <i class="bi bi-input-cursor-text"></i>
+                        <div>No hay campos personalizados</div>
+                    </td>
+                </tr>
+                <tr th:each="c : ${campos}">
+                    <td>
+                        <span class="badge bg-secondary-subtle text-secondary" th:text="${c.ambito}">EMPRESA</span>
+                    </td>
+                    <td class="text-muted small"
+                        th:text="${c.clienteId != null ? clientesById.getOrDefault(c.clienteId, '—') : '(todos)'}">—</td>
+                    <td class="fw-medium" th:text="${c.etiqueta}">Etiqueta</td>
+                    <td class="text-muted small" th:text="${c.valor}">Valor</td>
+                    <td class="text-muted small" th:text="${c.documento}">AMBOS</td>
+                    <td class="text-muted small" th:text="${c.ubicacion}">PIE</td>
+                    <td class="text-center">
+                        <span th:if="${c.activo}" class="badge bg-success-subtle text-success">Sí</span>
+                        <span th:unless="${c.activo}" class="badge bg-secondary-subtle text-secondary">No</span>
+                    </td>
+                    <td class="text-end">
+                        <a th:href="@{/web/campos-impresion/{id}/editar(id=${c.id})}" class="btn btn-ghost btn-sm"
+                           th:attr="aria-label='Editar ' + ${c.etiqueta}" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form th:action="@{/web/campos-impresion/{id}/eliminar(id=${c.id})}" method="post"
+                              class="d-inline" onsubmit="return confirm('¿Eliminar este campo?');">
+                            <button type="submit" class="btn btn-ghost btn-sm text-danger"
+                                    th:attr="aria-label='Eliminar ' + ${c.etiqueta}" title="Eliminar">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
