@@ -5,6 +5,7 @@ import alicanteweb.erp.entities.FacturaCompra;
 import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.repository.FacturaCompraRepository;
 import alicanteweb.erp.repository.FacturaRepository;
+import alicanteweb.erp.util.DesgloseFiscal;
 import alicanteweb.erp.util.FinancialMath;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +43,7 @@ public class LibroIvaService {
     public List<LineaLibro> libroEmitidas(LocalDate desde, LocalDate hasta) {
         List<LineaLibro> lineas = new ArrayList<>();
         for (Factura factura : facturaRepository.findByFechaBetweenAndEstado(desde, hasta, "EMITIDA")) {
-            Map<BigDecimal, BigDecimal[]> porTipo = desglosePorTipo(factura.getFacturaLineas());
+            Map<BigDecimal, BigDecimal[]> porTipo = desglosePorTipo(factura);
             // En facturas con varios tipos impositivos el recargo, la retención y el
             // total de la factura solo van en la primera línea del desglose; en las
             // siguientes quedan a null (— en pantalla, vacío en CSV) para no sumar doble.
@@ -123,7 +124,7 @@ public class LibroIvaService {
         Map<BigDecimal, BigDecimal[]> devengado = new TreeMap<>();
         BigDecimal recargoDevengado = BigDecimal.ZERO;
         for (Factura factura : facturaRepository.findByFechaBetweenAndEstado(desde, hasta, "EMITIDA")) {
-            for (Map.Entry<BigDecimal, BigDecimal[]> e : desglosePorTipo(factura.getFacturaLineas()).entrySet()) {
+            for (Map.Entry<BigDecimal, BigDecimal[]> e : desglosePorTipo(factura).entrySet()) {
                 devengado.merge(e.getKey(), new BigDecimal[]{e.getValue()[0], e.getValue()[1]},
                         (a, b) -> new BigDecimal[]{a[0].add(b[0]), a[1].add(b[1])});
             }
@@ -180,22 +181,28 @@ public class LibroIvaService {
 
     // ───────────────────────── Auxiliares ─────────────────────────
 
-    /** Desglose base/cuota por tipo impositivo (mismo criterio que el registro VeriFactu). */
-    private Map<BigDecimal, BigDecimal[]> desglosePorTipo(Iterable<FacturaLinea> lineas) {
-        Map<BigDecimal, BigDecimal[]> porTipo = new TreeMap<>();
-        if (lineas != null) {
-            for (FacturaLinea linea : lineas) {
+    /**
+     * Desglose base/cuota por tipo impositivo con la fuente única {@link DesgloseFiscal}
+     * (incluye el descuento global prorrateado), de modo que el libro y el modelo 303 cuadran
+     * con la base/cuota declaradas en la factura y con el registro VeriFactu.
+     */
+    private Map<BigDecimal, BigDecimal[]> desglosePorTipo(Factura factura) {
+        List<DesgloseFiscal.Linea> calculo = new ArrayList<>();
+        if (factura.getFacturaLineas() != null) {
+            for (FacturaLinea linea : factura.getFacturaLineas()) {
                 if (linea.getCantidad() == null || linea.getPrecioUnitario() == null) {
                     continue;
                 }
-                BigDecimal tipo = (linea.getIva() != null ? linea.getIva() : BigDecimal.ZERO)
-                        .setScale(FinancialMath.SCALE, FinancialMath.ROUND);
-                BigDecimal base = FinancialMath.subtotalConDescuento(
-                        linea.getCantidad(), linea.getPrecioUnitario(), linea.getDescuento());
-                BigDecimal cuota = FinancialMath.porcentaje(base, tipo);
-                porTipo.merge(tipo, new BigDecimal[]{base, cuota},
-                        (a, b) -> new BigDecimal[]{a[0].add(b[0]), a[1].add(b[1])});
+                calculo.add(new DesgloseFiscal.Linea(linea.getCantidad(), linea.getPrecioUnitario(),
+                        linea.getIva(), linea.getDescuentoTipo(), linea.getDescuento()));
             }
+        }
+        DesgloseFiscal.Resultado resultado = DesgloseFiscal.calcular(
+                calculo, factura.getDescuentoGlobalTipo(), factura.getDescuentoGlobalValor());
+        Map<BigDecimal, BigDecimal[]> porTipo = new TreeMap<>();
+        for (DesgloseFiscal.TipoIva t : resultado.porTipo()) {
+            porTipo.put(t.tipo().setScale(FinancialMath.SCALE, FinancialMath.ROUND),
+                    new BigDecimal[]{t.base(), t.cuota()});
         }
         return porTipo;
     }

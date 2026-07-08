@@ -81,6 +81,28 @@ class FacturaeServiceTest {
     }
 
     @Test
+    void descuentoGlobalSeModelaComoGeneralDiscountsYCuadra() {
+        Factura f = facturaEmitida();
+        // 10% de descuento global sobre 100 -> base neta 90, IVA 18,90, total 108,90.
+        f.setDescuentoGlobalTipo("PORCENTAJE");
+        f.setDescuentoGlobalValor(new BigDecimal("10"));
+        f.setTotal(new BigDecimal("108.90"));
+        when(facturaRepository.findById(1L)).thenReturn(Optional.of(f));
+        when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(empresa()));
+
+        String xml = service.generarFacturaeXml(1L);
+
+        // Base bruta (100) - descuento general (10) = base neta (90); 90 + IVA 18,90 = total 108,90.
+        assertTrue(xml.contains("<TotalGrossAmount>100.00</TotalGrossAmount>"));
+        assertTrue(xml.contains("<TotalGeneralDiscounts>10.00</TotalGeneralDiscounts>"));
+        assertTrue(xml.contains("<DiscountAmount>10.00</DiscountAmount>"));
+        assertTrue(xml.contains("<TotalGrossAmountBeforeTaxes>90.00</TotalGrossAmountBeforeTaxes>"));
+        assertTrue(xml.contains("<TaxableBase><TotalAmount>90.00</TotalAmount></TaxableBase>"));
+        assertTrue(xml.contains("<TotalTaxOutputs>18.90</TotalTaxOutputs>"));
+        assertTrue(xml.contains("<InvoiceTotal>108.90</InvoiceTotal>"));
+    }
+
+    @Test
     void rechazaFacturaNoEmitida() {
         Factura borrador = facturaEmitida();
         borrador.setEstado("BORRADOR");

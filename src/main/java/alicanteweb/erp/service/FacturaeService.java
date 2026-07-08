@@ -5,14 +5,15 @@ import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.repository.FacturaRepository;
+import alicanteweb.erp.util.DesgloseFiscal;
 import alicanteweb.erp.util.FinancialMath;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Generación de facturas electrónicas Facturae 3.2.2 (formato exigido por las
@@ -50,13 +51,12 @@ public class FacturaeService {
         EmpresaConfig empresa = empresaConfigService.getConfiguracionActiva()
                 .orElseThrow(() -> new IllegalStateException("No hay configuración de empresa activa"));
 
-        Map<BigDecimal, BigDecimal[]> desglose = desglosePorTipo(factura);
-        BigDecimal totalBase = BigDecimal.ZERO;
-        BigDecimal totalCuota = BigDecimal.ZERO;
-        for (BigDecimal[] valores : desglose.values()) {
-            totalBase = totalBase.add(valores[0]);
-            totalCuota = totalCuota.add(valores[1]);
-        }
+        // Desglose neto por tipo con la fuente única DesgloseFiscal (incluye descuento global).
+        DesgloseFiscal.Resultado desg = calcularDesglose(factura);
+        BigDecimal netBase = desg.base();                    // base imponible neta del descuento global
+        BigDecimal totalCuota = desg.iva();
+        BigDecimal descuentoGlobal = desg.descuentoGlobal();
+        BigDecimal grossBase = netBase.add(descuentoGlobal); // base antes del descuento global
         BigDecimal retencion = nvl(factura.getRetencionIrpf());
         BigDecimal total = nvl(factura.getTotal());
 
@@ -100,18 +100,29 @@ public class FacturaeService {
         xml.append("        <LanguageName>es</LanguageName>\n");
         xml.append("      </InvoiceIssueData>\n");
         xml.append("      <TaxesOutputs>\n");
-        for (Map.Entry<BigDecimal, BigDecimal[]> entry : desglose.entrySet()) {
+        for (DesgloseFiscal.TipoIva t : desg.porTipo()) {
             xml.append("        <Tax>\n");
             xml.append("          <TaxTypeCode>01</TaxTypeCode>\n");
-            xml.append("          <TaxRate>").append(dec(entry.getKey())).append("</TaxRate>\n");
-            xml.append("          <TaxableBase><TotalAmount>").append(dec(entry.getValue()[0])).append("</TotalAmount></TaxableBase>\n");
-            xml.append("          <TaxAmount><TotalAmount>").append(dec(entry.getValue()[1])).append("</TotalAmount></TaxAmount>\n");
+            xml.append("          <TaxRate>").append(dec(t.tipo())).append("</TaxRate>\n");
+            xml.append("          <TaxableBase><TotalAmount>").append(dec(t.base())).append("</TotalAmount></TaxableBase>\n");
+            xml.append("          <TaxAmount><TotalAmount>").append(dec(t.cuota())).append("</TotalAmount></TaxAmount>\n");
             xml.append("        </Tax>\n");
         }
         xml.append("      </TaxesOutputs>\n");
         xml.append("      <InvoiceTotals>\n");
-        xml.append("        <TotalGrossAmount>").append(dec(totalBase)).append("</TotalGrossAmount>\n");
-        xml.append("        <TotalGrossAmountBeforeTaxes>").append(dec(totalBase)).append("</TotalGrossAmountBeforeTaxes>\n");
+        xml.append("        <TotalGrossAmount>").append(dec(grossBase)).append("</TotalGrossAmount>\n");
+        if (descuentoGlobal.signum() > 0) {
+            // El descuento global se modela como descuento general del documento, de modo que
+            // la suma de líneas (bruta) reconcilia con la base neta y el total.
+            xml.append("        <GeneralDiscounts>\n");
+            xml.append("          <Discount>\n");
+            xml.append("            <DiscountReason>Descuento</DiscountReason>\n");
+            xml.append("            <DiscountAmount>").append(dec(descuentoGlobal)).append("</DiscountAmount>\n");
+            xml.append("          </Discount>\n");
+            xml.append("        </GeneralDiscounts>\n");
+            xml.append("        <TotalGeneralDiscounts>").append(dec(descuentoGlobal)).append("</TotalGeneralDiscounts>\n");
+        }
+        xml.append("        <TotalGrossAmountBeforeTaxes>").append(dec(netBase)).append("</TotalGrossAmountBeforeTaxes>\n");
         xml.append("        <TotalTaxOutputs>").append(dec(totalCuota)).append("</TotalTaxOutputs>\n");
         xml.append("        <TotalTaxesWithheld>").append(dec(retencion)).append("</TotalTaxesWithheld>\n");
         xml.append("        <InvoiceTotal>").append(dec(total)).append("</InvoiceTotal>\n");
@@ -123,7 +134,9 @@ public class FacturaeService {
             if (linea.getCantidad() == null || linea.getPrecioUnitario() == null) {
                 continue;
             }
-            BigDecimal base = FinancialMath.subtotalConDescuento(linea.getCantidad(), linea.getPrecioUnitario(), linea.getDescuento());
+            BigDecimal base = DesgloseFiscal.baseLinea(new DesgloseFiscal.Linea(
+                    linea.getCantidad(), linea.getPrecioUnitario(), linea.getIva(),
+                    linea.getDescuentoTipo(), linea.getDescuento()));
             BigDecimal tipo = linea.getIva() != null ? linea.getIva() : BigDecimal.ZERO;
             xml.append("        <InvoiceLine>\n");
             xml.append("          <ItemDescription>").append(esc(linea.getDescripcion() != null ? linea.getDescripcion() : "Artículo")).append("</ItemDescription>\n");
@@ -171,20 +184,18 @@ public class FacturaeService {
         return sb.toString();
     }
 
-    private Map<BigDecimal, BigDecimal[]> desglosePorTipo(Factura factura) {
-        Map<BigDecimal, BigDecimal[]> porTipo = new TreeMap<>();
+    /** Desglose fiscal (base/IVA por tipo, con descuento global) usando la fuente única. */
+    private DesgloseFiscal.Resultado calcularDesglose(Factura factura) {
+        List<DesgloseFiscal.Linea> calculo = new ArrayList<>();
         for (FacturaLinea linea : factura.getFacturaLineas()) {
             if (linea.getCantidad() == null || linea.getPrecioUnitario() == null) {
                 continue;
             }
-            BigDecimal tipo = (linea.getIva() != null ? linea.getIva() : BigDecimal.ZERO)
-                    .setScale(FinancialMath.SCALE, FinancialMath.ROUND);
-            BigDecimal base = FinancialMath.subtotalConDescuento(linea.getCantidad(), linea.getPrecioUnitario(), linea.getDescuento());
-            BigDecimal cuota = FinancialMath.porcentaje(base, tipo);
-            porTipo.merge(tipo, new BigDecimal[]{base, cuota},
-                    (a, b) -> new BigDecimal[]{a[0].add(b[0]), a[1].add(b[1])});
+            calculo.add(new DesgloseFiscal.Linea(linea.getCantidad(), linea.getPrecioUnitario(),
+                    linea.getIva(), linea.getDescuentoTipo(), linea.getDescuento()));
         }
-        return porTipo;
+        return DesgloseFiscal.calcular(calculo,
+                factura.getDescuentoGlobalTipo(), factura.getDescuentoGlobalValor());
     }
 
     private static String numeroCompleto(Factura factura) {
