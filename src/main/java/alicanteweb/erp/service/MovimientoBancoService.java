@@ -158,12 +158,16 @@ public class MovimientoBancoService {
         List<String> errores = new ArrayList<>();
         int importados = 0;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(archivo.getInputStream(), StandardCharsets.UTF_8))) {
-            reader.readLine(); // saltar cabecera
+            String cabecera = reader.readLine(); // saltar cabecera
+            // Separador de columnas: ';' (habitual en export europeo, permite coma decimal)
+            // salvo que la cabecera no lo contenga, en cuyo caso es un CSV anglosajón con ','.
+            String separador = (cabecera != null && cabecera.contains(";")) ? ";" : ",";
             String linea;
             int numeroLinea = 1;
             while ((linea = reader.readLine()) != null) {
                 numeroLinea++;
-                String[] cols = linea.split(";|,");
+                if (linea.isBlank()) continue;
+                String[] cols = linea.split(separador, -1);
                 if (cols.length < 3) continue;
                 try {
                     MovimientoBanco mb = parsearLineaCSV(banco, cols);
@@ -294,11 +298,31 @@ public class MovimientoBancoService {
         mb.setBanco(banco);
         mb.setFecha(LocalDate.parse(cols[0].trim(), FMT_CSV));
         mb.setConcepto(cols.length > 1 ? cols[1].trim() : "");
-        BigDecimal importe = new BigDecimal(cols[2].trim().replace(",", "."));
+        BigDecimal importe = parsearImporte(cols[2]);
         mb.setImporte(importe.abs());
         mb.setTipo(importe.signum() >= 0 ? "INGRESO" : "GASTO");
         mb.setConciliado(false);
         return mb;
+    }
+
+    /**
+     * Parsea un importe monetario admitiendo formato europeo (coma decimal, punto
+     * de miles: {@code 1.234,56}) y anglosajón (punto decimal, coma de miles:
+     * {@code 1,234.56}). El separador decimal es el que aparece más a la derecha;
+     * el otro carácter, si existe, se trata como separador de miles y se elimina.
+     */
+    static BigDecimal parsearImporte(String raw) {
+        String s = raw.trim().replace(" ", "").replace(" ", "");
+        int ultimaComa = s.lastIndexOf(',');
+        int ultimoPunto = s.lastIndexOf('.');
+        if (ultimaComa >= 0 && ultimoPunto >= 0) {
+            s = ultimaComa > ultimoPunto
+                    ? s.replace(".", "").replace(',', '.')  // decimal europeo
+                    : s.replace(",", "");                    // decimal anglosajón
+        } else if (ultimaComa >= 0) {
+            s = s.replace(',', '.'); // solo coma → decimal europeo
+        }
+        return new BigDecimal(s);
     }
 
     private void recalcularSaldosBanco(Long bancoId) {

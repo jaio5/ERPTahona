@@ -78,4 +78,50 @@ class ExtractoCsvImportTest {
         assertEquals("GASTO", gasto.getTipo());
         assertEquals(new BigDecimal("89.90"), gasto.getImporte());
     }
+
+    /**
+     * Formato europeo: separador de columnas ';' y coma decimal (incl. punto de
+     * miles). Antes {@code split(";|,")} partía también por la coma decimal y
+     * perdía los decimales del importe.
+     */
+    @Test
+    void importarDesdeCSV_formatoEuropeoConComaDecimal() {
+        Banco banco = new Banco();
+        banco.setId(1L);
+        when(bancoRepository.findById(1L)).thenReturn(Optional.of(banco));
+        when(repository.save(any(MovimientoBanco.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        String contenido = String.join("\n",
+                "fecha;concepto;importe",
+                "02/07/2026;Venta pan;1.234,56",
+                "03/07/2026;Compra harina;-89,90");
+        MockMultipartFile archivo = new MockMultipartFile("archivo", "extracto.csv",
+                "text/csv", contenido.getBytes(StandardCharsets.UTF_8));
+
+        var resultado = service.importarDesdeCSV(1L, archivo);
+
+        assertEquals(2, resultado.importados());
+        assertTrue(resultado.errores().isEmpty(), "sin errores: " + resultado.errores());
+
+        ArgumentCaptor<MovimientoBanco> captor = ArgumentCaptor.forClass(MovimientoBanco.class);
+        verify(repository, times(2)).save(captor.capture());
+        List<MovimientoBanco> movimientos = captor.getAllValues();
+
+        assertEquals("INGRESO", movimientos.get(0).getTipo());
+        assertEquals(new BigDecimal("1234.56"), movimientos.get(0).getImporte());
+        assertEquals("GASTO", movimientos.get(1).getTipo());
+        assertEquals(new BigDecimal("89.90"), movimientos.get(1).getImporte());
+    }
+
+    @Test
+    void parsearImporte_admiteFormatoEuropeoYAnglosajon() {
+        assertEquals(new BigDecimal("1234.56"), MovimientoBancoService.parsearImporte("1234,56"));   // europeo simple
+        assertEquals(new BigDecimal("1234.56"), MovimientoBancoService.parsearImporte("1.234,56"));  // europeo con miles
+        assertEquals(new BigDecimal("1234.56"), MovimientoBancoService.parsearImporte("1234.56"));   // anglo simple
+        assertEquals(new BigDecimal("1234.56"), MovimientoBancoService.parsearImporte("1,234.56"));  // anglo con miles
+        assertEquals(new BigDecimal("1234"), MovimientoBancoService.parsearImporte("1234"));         // sin decimales
+        assertEquals(new BigDecimal("-89.90"), MovimientoBancoService.parsearImporte(" -89,90 "));   // negativo con espacios
+        assertEquals(new BigDecimal("1234567.89"),
+                MovimientoBancoService.parsearImporte("1.234.567,89"));                              // miles múltiples
+    }
 }
