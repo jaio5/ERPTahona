@@ -303,7 +303,8 @@ public class ImpresionService {
         }
         base = base.setScale(2, RoundingMode.HALF_UP);
         iva = iva.setScale(2, RoundingMode.HALF_UP);
-        BigDecimal total = albaran.getTotal() != null ? albaran.getTotal() : base.add(iva);
+        // Total coherente con lo mostrado: base + IVA (el total almacenado puede ser neto).
+        BigDecimal total = base.add(iva);
         Map<String, BigDecimal> resumen = new LinkedHashMap<>();
         resumen.put("base", base);
         resumen.put("iva", iva);

@@ -155,7 +155,7 @@
       <td class="num" th:text="${linea.precioUnitario != null ? #numbers.formatDecimal(linea.precioUnitario, 1, 'POINT', 4, 'COMMA') : ''}">0,0000</td>
       <td class="num" th:text="${linea.total != null ? #numbers.formatDecimal(linea.total, 1, 'POINT', 2, 'COMMA') : ''}">0,00</td>
     </tr>
-    <tr class="filler">
+    <tr class="filler" th:if="${factura.facturaLineas == null or factura.facturaLineas.size() lt 12}">
       <td></td><td></td><td></td><td></td><td></td>
     </tr>
   </tbody>
@@ -197,6 +197,15 @@
     </td>
   </tr>
 </table>
+
+<!-- Retención IRPF (solo si aplica; el formato clásico no tiene casilla propia) -->
+<div th:if="${factura.retencionIrpf != null and factura.retencionIrpf.signum() > 0}"
+     style="text-align:right; margin-top:6px; font-size:11px;">
+  Retención IRPF
+  <span th:if="${factura.porcentajeRetencion != null and factura.porcentajeRetencion.signum() > 0}"
+        th:text="'(' + ${#numbers.formatDecimal(factura.porcentajeRetencion, 1, 'POINT', 0, 'COMMA')} + '%)'"></span>:
+  <strong th:text="'-' + ${#numbers.formatDecimal(factura.retencionIrpf, 1, 'POINT', 2, 'COMMA')}">-0,00</strong>
+</div>
 
 <!-- ===== Observaciones ===== -->
 <div class="observaciones">
