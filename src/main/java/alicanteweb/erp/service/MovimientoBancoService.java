@@ -294,9 +294,9 @@ public class MovimientoBancoService {
         mb.setBanco(banco);
         mb.setFecha(LocalDate.parse(cols[0].trim(), FMT_CSV));
         mb.setConcepto(cols.length > 1 ? cols[1].trim() : "");
-        double importe = Double.parseDouble(cols[2].trim().replace(",", "."));
-        mb.setImporte(BigDecimal.valueOf(Math.abs(importe)));
-        mb.setTipo(importe >= 0 ? "INGRESO" : "GASTO");
+        BigDecimal importe = new BigDecimal(cols[2].trim().replace(",", "."));
+        mb.setImporte(importe.abs());
+        mb.setTipo(importe.signum() >= 0 ? "INGRESO" : "GASTO");
         mb.setConciliado(false);
         return mb;
     }
