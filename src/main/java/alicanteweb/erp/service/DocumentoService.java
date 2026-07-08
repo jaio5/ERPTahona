@@ -5,6 +5,7 @@ import alicanteweb.erp.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import alicanteweb.erp.util.DesgloseFiscal;
 import alicanteweb.erp.util.FinancialMath;
 
 import java.math.BigDecimal;
@@ -171,6 +172,8 @@ public class DocumentoService {
         alb.setFecha(parseDate(datos.get("fecha")));
         alb.setObservaciones(parseString(datos.get("observaciones")));
         alb.setNumeroLote(parseString(datos.get("numeroLote")));
+        if (datos.containsKey("descuentoGlobalTipo")) alb.setDescuentoGlobalTipo(descuentoTipo(datos.get("descuentoGlobalTipo")));
+        if (datos.containsKey("descuentoGlobalValor")) alb.setDescuentoGlobalValor(parseDecimal(datos.get("descuentoGlobalValor")));
         boolean esNuevo = alb.getId() == null;
         alb = albaranService.guardar(alb);
         guardarLineasAlbaran(alb, datos, esNuevo);
@@ -192,32 +195,30 @@ public class DocumentoService {
             linea.setAlbaran(alb);
             Long artId = parseLong(l.get("articuloId"));
             asignarArticulo(linea, artId, articuloById);
+            BigDecimal descuentoManual = parseDecimal(l.get("descuento"));
             PrecioDescuento pd = resolverPrecioDescuento(clienteId, artId,
-                    parseDecimal(l.get("precio")), parseDecimal(l.get("descuento")));
+                    parseDecimal(l.get("precio")), descuentoManual);
+            String descTipo = descuentoManual.signum() > 0 ? descuentoTipo(l.get("descuentoTipo")) : DesgloseFiscal.PORCENTAJE;
             linea.setCantidad(parseDecimal(l.get("cantidad")));
             linea.setPrecio(pd.precio());
             linea.setIva(parseDecimal(l.get("iva")));
             linea.setDescuento(pd.descuento());
+            linea.setDescuentoTipo(descTipo);
             alb.getAlbaranVentaLineas().add(linea);
         }
         albaranRepository.save(alb);
     }
 
+    /** Recalcula el total del albarán con la fuente única {@link DesgloseFiscal} (incluye descuento global). */
     private void recalcularTotalAlbaran(AlbaranVenta alb) {
-        BigDecimal total = BigDecimal.ZERO;
+        List<DesgloseFiscal.Linea> calculo = new ArrayList<>();
         for (AlbaranVentaLinea linea : alb.getAlbaranVentaLineas()) {
-            BigDecimal cantidad = linea.getCantidad() != null ? linea.getCantidad() : BigDecimal.ZERO;
-            BigDecimal precio = linea.getPrecio() != null ? linea.getPrecio() : BigDecimal.ZERO;
-            BigDecimal descuento = linea.getDescuento() != null ? linea.getDescuento() : BigDecimal.ZERO;
-            BigDecimal iva = linea.getIva() != null ? linea.getIva() : BigDecimal.ZERO;
-
-            BigDecimal subtotal = FinancialMath.subtotalConDescuento(cantidad, precio, descuento);
-            if (iva.compareTo(BigDecimal.ZERO) > 0) {
-                subtotal = subtotal.add(FinancialMath.porcentaje(subtotal, iva));
-            }
-            total = total.add(subtotal);
+            calculo.add(new DesgloseFiscal.Linea(linea.getCantidad(), linea.getPrecio(), linea.getIva(),
+                    linea.getDescuentoTipo(), linea.getDescuento()));
         }
-        alb.setTotal(total);
+        DesgloseFiscal.Resultado r = DesgloseFiscal.calcular(
+                calculo, alb.getDescuentoGlobalTipo(), alb.getDescuentoGlobalValor());
+        alb.setTotal(r.total());
     }
 
     // =========================== FACTURA ===========================
@@ -234,6 +235,8 @@ public class DocumentoService {
         fac.setFechaVencimiento(parseDate(datos.get("fechaVencimiento")));
         if (datos.containsKey("rappelPorcentaje")) fac.setRappelPorcentaje(parseDecimal(datos.get("rappelPorcentaje")));
         if (datos.containsKey("rappelImporte")) fac.setRappelImporte(parseDecimal(datos.get("rappelImporte")));
+        if (datos.containsKey("descuentoGlobalTipo")) fac.setDescuentoGlobalTipo(descuentoTipo(datos.get("descuentoGlobalTipo")));
+        if (datos.containsKey("descuentoGlobalValor")) fac.setDescuentoGlobalValor(parseDecimal(datos.get("descuentoGlobalValor")));
         if (fac.getEstado() == null || fac.getEstado().isBlank()) fac.setEstado("BORRADOR");
         boolean esNuevo = fac.getId() == null;
         fac = facturaService.save(fac);
@@ -249,8 +252,7 @@ public class DocumentoService {
         Long clienteId = fac.getCliente() != null ? fac.getCliente().getId() : null;
 
         fac.getFacturaLineas().clear();
-        BigDecimal baseTotal = BigDecimal.ZERO;
-        BigDecimal ivaTotal = BigDecimal.ZERO;
+        List<DesgloseFiscal.Linea> calculo = new ArrayList<>();
         for (Map<String, Object> l : lineas) {
             FacturaLinea linea = new FacturaLinea();
             linea.setFactura(fac);
@@ -258,23 +260,27 @@ public class DocumentoService {
             asignarArticuloFactura(linea, artId, articuloById);
             BigDecimal cantidad = parseDecimal(l.get("cantidad"));
             BigDecimal iva = parseDecimal(l.get("iva"));
+            BigDecimal descuentoManual = parseDecimal(l.get("descuento"));
             PrecioDescuento pd = resolverPrecioDescuento(clienteId, artId,
-                    parseDecimal(l.get("precio")), parseDecimal(l.get("descuento")));
+                    parseDecimal(l.get("precio")), descuentoManual);
+            // El tipo de descuento solo lo fija el usuario si el descuento es manual; si viene de
+            // la tarifa del cliente es un porcentaje.
+            String descTipo = descuentoManual.signum() > 0 ? descuentoTipo(l.get("descuentoTipo")) : DesgloseFiscal.PORCENTAJE;
             linea.setCantidad(cantidad);
             linea.setPrecioUnitario(pd.precio());
             linea.setIva(iva);
             linea.setDescuento(pd.descuento());
-            BigDecimal subtotal = FinancialMath.subtotalConDescuento(cantidad, pd.precio(), pd.descuento());
-            baseTotal = baseTotal.add(subtotal);
-            ivaTotal = ivaTotal.add(FinancialMath.porcentaje(subtotal, iva));
+            linea.setDescuentoTipo(descTipo);
             fac.getFacturaLineas().add(linea);
+            calculo.add(new DesgloseFiscal.Linea(cantidad, pd.precio(), iva, descTipo, pd.descuento()));
         }
-        BigDecimal total = baseTotal.add(ivaTotal);
-        fac.setBaseImponible(baseTotal);
-        fac.setTotalIva(ivaTotal);
-        fac.setTotal(total);
+        DesgloseFiscal.Resultado r = DesgloseFiscal.calcular(
+                calculo, fac.getDescuentoGlobalTipo(), fac.getDescuentoGlobalValor());
+        fac.setBaseImponible(r.base());
+        fac.setTotalIva(r.iva());
+        fac.setTotal(r.total());
         facturaRepository.save(fac);
-        facturaRepository.updateTotales(fac.getId(), total, baseTotal, ivaTotal);
+        facturaRepository.updateTotales(fac.getId(), r.total(), r.base(), r.iva());
     }
 
     // =========================== HELPERS LÍNEAS ===========================
@@ -309,13 +315,24 @@ public class DocumentoService {
     private PrecioDescuento resolverPrecioDescuento(Long clienteId, Long artId, BigDecimal precio, BigDecimal descuento) {
         if (artId != null && clienteId != null) {
             precio = tarifaClienteService.resolverPrecio(clienteId, artId, precio);
-            BigDecimal tarifaDesc = tarifaClienteService.resolverDescuento(clienteId, artId);
-            if (tarifaDesc.compareTo(BigDecimal.ZERO) > 0) descuento = tarifaDesc;
+            // La tarifa del cliente solo se aplica si NO se ha indicado un descuento manual
+            // en el documento (el manual, específico de esta factura/albarán, tiene prioridad).
+            boolean sinDescuentoManual = descuento == null || descuento.compareTo(BigDecimal.ZERO) == 0;
+            if (sinDescuentoManual) {
+                BigDecimal tarifaDesc = tarifaClienteService.resolverDescuento(clienteId, artId);
+                if (tarifaDesc.compareTo(BigDecimal.ZERO) > 0) descuento = tarifaDesc;
+            }
         }
         return new PrecioDescuento(precio, descuento);
     }
 
     private record PrecioDescuento(BigDecimal precio, BigDecimal descuento) {}
+
+    /** Normaliza el tipo de descuento a PORCENTAJE (por defecto) o IMPORTE. */
+    private static String descuentoTipo(Object v) {
+        String s = v == null ? null : String.valueOf(v).trim();
+        return DesgloseFiscal.IMPORTE.equalsIgnoreCase(s) ? DesgloseFiscal.IMPORTE : DesgloseFiscal.PORCENTAJE;
+    }
 
     // =========================== UTILIDADES ===========================
 

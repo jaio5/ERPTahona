@@ -6,7 +6,7 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import alicanteweb.erp.util.FinancialMath;
+import alicanteweb.erp.util.DesgloseFiscal;
 import java.math.BigDecimal;
 
 @Getter
@@ -43,6 +43,10 @@ public class FacturaLinea {
     @Column(name = "descuento", precision = 5, scale = 2)
     private BigDecimal descuento;
 
+    /** Interpreta {@link #descuento}: PORCENTAJE (por defecto) o IMPORTE (€ fijo por línea). */
+    @Column(name = "descuento_tipo", length = 10)
+    private String descuentoTipo;
+
     @Column(name = "iva", precision = 5, scale = 2)
     private BigDecimal iva;
 
@@ -57,22 +61,17 @@ public class FacturaLinea {
     }
 
     /**
-     * Calcular total de la línea
+     * Total (base) de la línea: cantidad·precio menos su descuento (% o importe fijo).
+     * Si hay un total persistido lo respeta; si no, lo calcula con la fuente única
+     * {@link DesgloseFiscal#baseLinea}.
      */
     public BigDecimal getTotal() {
         if (total != null) return total;
-
         if (cantidad == null || getPrecioUnitario() == null) {
             return BigDecimal.ZERO;
         }
-
-        BigDecimal subtotal = cantidad.multiply(getPrecioUnitario());
-
-        if (descuento != null && descuento.compareTo(BigDecimal.ZERO) > 0) {
-            subtotal = subtotal.subtract(FinancialMath.porcentaje(subtotal, descuento));
-        }
-
-        return subtotal;
+        return DesgloseFiscal.baseLinea(
+                new DesgloseFiscal.Linea(cantidad, getPrecioUnitario(), iva, descuentoTipo, descuento));
     }
 
     /**

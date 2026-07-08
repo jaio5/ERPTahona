@@ -10,10 +10,14 @@ public final class DocumentoParserUtil {
 
     private DocumentoParserUtil() {}
 
-    /** Construye la lista de líneas con descuento opcional. Omite líneas sin artículo o con cantidad 0. */
+    /**
+     * Construye la lista de líneas con descuento (valor + tipo) opcional. Omite líneas sin
+     * artículo o con cantidad 0. El tipo de descuento (PORCENTAJE|IMPORTE) se pasa tal cual;
+     * el dominio lo normaliza.
+     */
     public static List<Map<String, Object>> construirLineas(String[] articuloIds, String[] cantidades,
                                                              String[] precios, String[] ivas,
-                                                             String[] descuentos) {
+                                                             String[] descuentos, String[] descuentoTipos) {
         List<Map<String, Object>> lineas = new ArrayList<>();
         int total = maxLength(articuloIds, cantidades, precios, ivas);
         for (int i = 0; i < total; i++) {
@@ -26,15 +30,23 @@ public final class DocumentoParserUtil {
             linea.put("precio", parseDecimal(at(precios, i)));
             linea.put("iva", parseDecimal(at(ivas, i)));
             if (descuentos != null) linea.put("descuento", parseDecimal(at(descuentos, i)));
+            if (descuentoTipos != null) linea.put("descuentoTipo", at(descuentoTipos, i));
             lineas.add(linea);
         }
         return lineas;
     }
 
+    /** Variante con descuento (valor) sin tipo — delega con descuentoTipos=null. */
+    public static List<Map<String, Object>> construirLineas(String[] articuloIds, String[] cantidades,
+                                                             String[] precios, String[] ivas,
+                                                             String[] descuentos) {
+        return construirLineas(articuloIds, cantidades, precios, ivas, descuentos, null);
+    }
+
     /** Variante sin descuento — delega al método principal con descuentos=null. */
     public static List<Map<String, Object>> construirLineas(String[] articuloIds, String[] cantidades,
                                                              String[] precios, String[] ivas) {
-        return construirLineas(articuloIds, cantidades, precios, ivas, null);
+        return construirLineas(articuloIds, cantidades, precios, ivas, null, null);
     }
 
     public static Long parseLong(String value) {

@@ -144,6 +144,8 @@ public class AlbaranWebController extends BaseWebController {
                            @RequestParam Long clienteId, @RequestParam(required = false) Long almacenId,
                            @RequestParam String fecha, @RequestParam(required = false) String observaciones,
                            @RequestParam(required = false) String numeroLote,
+                           @RequestParam(required = false) String descuentoGlobalTipo,
+                           @RequestParam(required = false) String descuentoGlobalValor,
                            HttpServletRequest request,
                            RedirectAttributes ra) {
         try {
@@ -153,11 +155,15 @@ public class AlbaranWebController extends BaseWebController {
             datos.put("fecha", fecha);
             datos.put("observaciones", observaciones);
             datos.put("numeroLote", numeroLote);
+            if (descuentoGlobalTipo != null) datos.put("descuentoGlobalTipo", descuentoGlobalTipo);
+            if (descuentoGlobalValor != null) datos.put("descuentoGlobalValor", descuentoGlobalValor);
             datos.put("lineas", DocumentoParserUtil.construirLineas(
                 request.getParameterValues("lineaArticuloId"),
                 request.getParameterValues("lineaCantidad"),
                 request.getParameterValues("lineaPrecio"),
-                request.getParameterValues("lineaIva")
+                request.getParameterValues("lineaIva"),
+                request.getParameterValues("lineaDescuento"),
+                request.getParameterValues("lineaDescuentoTipo")
             ));
             AlbaranVenta albaran = documentoService.guardarAlbaran(id, datos);
             ra.addFlashAttribute("exito", "Albarán guardado correctamente");
@@ -173,11 +179,12 @@ public class AlbaranWebController extends BaseWebController {
     private String lineasToJson(AlbaranVenta alb) {
         if (alb.getAlbaranVentaLineas() == null || alb.getAlbaranVentaLineas().isEmpty()) return "[]";
         return alb.getAlbaranVentaLineas().stream().map(l ->
-            String.format("{\"articuloId\":%s,\"cantidad\":\"%s\",\"precio\":\"%s\",\"iva\":\"%s\"}",
+            String.format("{\"articuloId\":%s,\"cantidad\":\"%s\",\"precio\":\"%s\",\"iva\":\"%s\",\"descuento\":\"%s\"}",
                 l.getArticulo() != null ? l.getArticulo().getId() : "null",
                 DocumentoParserUtil.fmtDecimal(l.getCantidad()),
                 DocumentoParserUtil.fmtDecimal(l.getPrecio()),
-                DocumentoParserUtil.fmtDecimal(l.getIva()))
+                DocumentoParserUtil.fmtDecimal(l.getIva()),
+                DocumentoParserUtil.fmtDecimal(l.getDescuento()))
         ).collect(Collectors.joining(",", "[", "]"));
     }
 

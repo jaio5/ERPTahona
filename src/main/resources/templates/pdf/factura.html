@@ -198,6 +198,15 @@
   </tr>
 </table>
 
+<!-- Descuento global del documento (solo si aplica) -->
+<div th:if="${descuentoGlobal != null and descuentoGlobal.signum() > 0}"
+     style="text-align:right; margin-top:6px; font-size:11px;">
+  Descuento
+  <span th:if="${factura.descuentoGlobalValor != null and #strings.equalsIgnoreCase(factura.descuentoGlobalTipo, 'PORCENTAJE')}"
+        th:text="'(' + ${#numbers.formatDecimal(factura.descuentoGlobalValor, 1, 'POINT', 0, 'COMMA')} + '%)'"></span>:
+  <strong th:text="'-' + ${#numbers.formatDecimal(descuentoGlobal, 1, 'POINT', 2, 'COMMA')}">-0,00</strong>
+</div>
+
 <!-- Retención IRPF (solo si aplica; el formato clásico no tiene casilla propia) -->
 <div th:if="${factura.retencionIrpf != null and factura.retencionIrpf.signum() > 0}"
      style="text-align:right; margin-top:6px; font-size:11px;">

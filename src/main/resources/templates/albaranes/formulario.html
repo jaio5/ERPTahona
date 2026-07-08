@@ -60,6 +60,19 @@
                     <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
                               th:text="${albaran?.observaciones}"></textarea>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="descuentoGlobalValor">Descuento global</label>
+                    <input type="number" step="0.01" min="0" id="descuentoGlobalValor" name="descuentoGlobalValor"
+                           class="form-control" th:value="${albaran?.descuentoGlobalValor}"
+                           placeholder="Sobre el total">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="descuentoGlobalTipo">Tipo de descuento</label>
+                    <select id="descuentoGlobalTipo" name="descuentoGlobalTipo" class="form-select">
+                        <option value="PORCENTAJE" th:selected="${albaran?.descuentoGlobalTipo == null or albaran?.descuentoGlobalTipo == 'PORCENTAJE'}">% Porcentaje</option>
+                        <option value="IMPORTE" th:selected="${albaran?.descuentoGlobalTipo == 'IMPORTE'}">€ Importe fijo</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-section-divider">
@@ -87,6 +100,7 @@
                                 <th class="col-qty">Cantidad</th>
                                 <th class="col-price">Precio unit.</th>
                                 <th class="col-iva">IVA %</th>
+                                <th class="col-dto">Dto %</th>
                                 <th class="col-sub text-end">Subtotal</th>
                                 <th class="col-del"></th>
                             </tr>
@@ -155,19 +169,36 @@
                 return String(val).replace('.', ',');
             }
 
+            const gValEl  = document.getElementById('descuentoGlobalValor');
+            const gTipoEl = document.getElementById('descuentoGlobalTipo');
+
             function recalcTotal() {
-                let total = 0;
+                let base = 0, totalIva = 0;
                 tbody.querySelectorAll('tr').forEach(function(row) {
                     const c  = parseNum(row.querySelector('.line-cantidad').value);
                     const p  = parseNum(row.querySelector('.line-precio').value);
                     const iv = parseNum(row.querySelector('.line-iva').value);
-                    const sub = round2(c * p);
-                    const subConIva = round2(sub * (1 + iv / 100));
-                    row.querySelector('.line-subtotal').textContent = subConIva > 0 ? fmt.format(subConIva) : '—';
-                    total = round2(total + subConIva);
+                    const dtEl = row.querySelector('.line-dto');
+                    const dt = dtEl ? parseNum(dtEl.value) : 0;
+                    const sub = round2(c * p * (1 - dt / 100));
+                    const ivaAmt = round2(sub * iv / 100);
+                    row.querySelector('.line-subtotal').textContent = (sub + ivaAmt) > 0 ? fmt.format(round2(sub + ivaAmt)) : '—';
+                    base = round2(base + sub);
+                    totalIva = round2(totalIva + ivaAmt);
                 });
-                totalEl.textContent = fmt.format(total);
+                // Descuento global prorrateado (preview; cálculo exacto en servidor)
+                const gVal = parseNum(gValEl ? gValEl.value : 0);
+                const gTipo = gTipoEl ? gTipoEl.value : 'PORCENTAJE';
+                let gAmt = 0;
+                if (gVal > 0 && base > 0) {
+                    gAmt = gTipo === 'IMPORTE' ? Math.min(gVal, base) : round2(base * gVal / 100);
+                }
+                const baseNeta = round2(base - gAmt);
+                const ivaNeto  = base > 0 ? round2(totalIva * (baseNeta / base)) : 0;
+                totalEl.textContent = fmt.format(round2(baseNeta + ivaNeto));
             }
+            if (gValEl) gValEl.addEventListener('input', recalcTotal);
+            if (gTipoEl) gTipoEl.addEventListener('change', recalcTotal);
 
             function initTomSelect(sel) {
                 if (typeof TomSelect !== 'undefined' && !sel.tomselect) {
@@ -232,6 +263,15 @@
                 if (data && data.iva) iva.value = fmtDec(data.iva);
                 tdIva.appendChild(iva);
 
+                const tdDto = document.createElement('td');
+                const dto = document.createElement('input');
+                dto.type = 'text'; dto.inputMode = 'decimal';
+                dto.name = 'lineaDescuento';
+                dto.className = 'form-control form-control-sm line-dto line-input';
+                dto.placeholder = '0';
+                if (data && data.descuento) dto.value = fmtDec(data.descuento);
+                tdDto.appendChild(dto);
+
                 const tdSub = document.createElement('td');
                 tdSub.className = 'line-subtotal';
                 tdSub.textContent = '—';
@@ -248,6 +288,7 @@
                 tr.appendChild(tdCant);
                 tr.appendChild(tdPrecio);
                 tr.appendChild(tdIva);
+                tr.appendChild(tdDto);
                 tr.appendChild(tdSub);
                 tr.appendChild(tdDel);
 
@@ -262,7 +303,7 @@
                     recalcTotal();
                 });
 
-                [cant, precio, iva].forEach(function(inp) {
+                [cant, precio, iva, dto].forEach(function(inp) {
                     inp.addEventListener('input', recalcTotal);
                 });
 

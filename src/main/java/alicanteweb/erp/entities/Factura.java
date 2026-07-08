@@ -217,6 +217,18 @@ public class Factura {
     private BigDecimal rappelImporte;
 
     /**
+     * Descuento global del documento (sobre el conjunto): tipo PORCENTAJE|IMPORTE y valor.
+     * Se prorratea entre los tipos de IVA al calcular los totales.
+     */
+    @Size(max = 10)
+    @Column(name = "descuento_global_tipo", length = 10)
+    private String descuentoGlobalTipo;
+
+    @ColumnDefault("0.00")
+    @Column(name = "descuento_global_valor", precision = 10, scale = 2)
+    private BigDecimal descuentoGlobalValor;
+
+    /**
      * Observaciones generales de la factura
      */
     @Column(name = "observaciones", columnDefinition = "TEXT")

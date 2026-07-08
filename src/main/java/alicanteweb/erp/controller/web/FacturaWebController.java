@@ -181,6 +181,8 @@ public class FacturaWebController extends BaseWebController {
                            @RequestParam(required = false) String observaciones,
                            @RequestParam(required = false) String rappelPorcentaje,
                            @RequestParam(required = false) String rappelImporte,
+                           @RequestParam(required = false) String descuentoGlobalTipo,
+                           @RequestParam(required = false) String descuentoGlobalValor,
                            HttpServletRequest request,
                            RedirectAttributes ra) {
         try {
@@ -192,12 +194,15 @@ public class FacturaWebController extends BaseWebController {
             datos.put("observaciones", observaciones);
             if (rappelPorcentaje != null) datos.put("rappelPorcentaje", rappelPorcentaje);
             if (rappelImporte != null) datos.put("rappelImporte", rappelImporte);
+            if (descuentoGlobalTipo != null) datos.put("descuentoGlobalTipo", descuentoGlobalTipo);
+            if (descuentoGlobalValor != null) datos.put("descuentoGlobalValor", descuentoGlobalValor);
             datos.put("lineas", DocumentoParserUtil.construirLineas(
                 request.getParameterValues("lineaArticuloId"),
                 request.getParameterValues("lineaCantidad"),
                 request.getParameterValues("lineaPrecio"),
                 request.getParameterValues("lineaIva"),
-                request.getParameterValues("lineaDescuento")
+                request.getParameterValues("lineaDescuento"),
+                request.getParameterValues("lineaDescuentoTipo")
             ));
             Factura factura = documentoService.guardarFactura(id, datos);
             ra.addFlashAttribute("exito", "Factura guardada correctamente");

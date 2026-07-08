@@ -10,6 +10,7 @@ import alicanteweb.erp.entities.HojaRuta;
 import alicanteweb.erp.entities.HojaRutaEntrega;
 import alicanteweb.erp.entities.Lote;
 import alicanteweb.erp.entities.Receta;
+import alicanteweb.erp.util.DesgloseFiscal;
 import com.itextpdf.html2pdf.HtmlConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -33,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
 
 @Slf4j
 @Service
@@ -94,14 +93,17 @@ public class ImpresionService {
 
     public File generarFacturaPdf(Factura factura) {
         try {
-            String html = renderTemplate("pdf/factura", Map.of(
-                "factura", factura,
-                "empresa", empresaConfigService.getConfiguracionActivaOrThrow(),
-                "datosVerificacion", generarDatosVerificacion(factura),
-                "desgloseIva", desgloseIva(factura),
-                "logo", getLogoDataUri(),
-                "now", LocalDateTime.now()
-            ));
+            DesgloseFiscal.Resultado desglose = DesgloseFiscal.calcular(lineasDeFactura(factura),
+                factura.getDescuentoGlobalTipo(), factura.getDescuentoGlobalValor());
+            Map<String, Object> vars = new HashMap<>();
+            vars.put("factura", factura);
+            vars.put("empresa", empresaConfigService.getConfiguracionActivaOrThrow());
+            vars.put("datosVerificacion", generarDatosVerificacion(factura));
+            vars.put("desgloseIva", filasIva(desglose));
+            vars.put("descuentoGlobal", desglose.descuentoGlobal());
+            vars.put("logo", getLogoDataUri());
+            vars.put("now", LocalDateTime.now());
+            String html = renderTemplate("pdf/factura", vars);
             File pdfFile = buildOutputFile("Factura", factura.getNumero());
             generarPdf(html, pdfFile);
             return pdfFile;
@@ -119,6 +121,7 @@ public class ImpresionService {
                 "logo", getLogoDataUri(),
                 "now", LocalDateTime.now()
             ));
+            // (el resumen ya incluye base, IVA, descuento global y total)
             File pdfFile = buildOutputFile("Albaran", albaran.getNumero());
             generarPdf(html, pdfFile);
             return pdfFile;
@@ -255,33 +258,29 @@ public class ImpresionService {
         return logoDataUri;
     }
 
-    /**
-     * Desglose de la factura por tipo de IVA (base + cuota por cada tipo), como en el
-     * pie del formato clásico. La base de cada línea es su total (cantidad x precio - dto),
-     * sin IVA; la cuota se calcula a partir del tipo de la línea. Orden ascendente por tipo.
-     */
-    private List<Map<String, Object>> desgloseIva(Factura factura) {
-        Map<BigDecimal, BigDecimal> basePorTipo = new TreeMap<>();
+    /** Convierte las líneas de una factura al modelo de entrada de {@link DesgloseFiscal}. */
+    private List<DesgloseFiscal.Linea> lineasDeFactura(Factura factura) {
+        List<DesgloseFiscal.Linea> lineas = new ArrayList<>();
         if (factura.getFacturaLineas() != null) {
-            for (FacturaLinea linea : factura.getFacturaLineas()) {
-                BigDecimal tipo = linea.getIva() != null ? linea.getIva() : BigDecimal.ZERO;
-                BigDecimal base = linea.getTotal() != null ? linea.getTotal() : BigDecimal.ZERO;
-                basePorTipo.merge(tipo, base, BigDecimal::add);
+            for (FacturaLinea l : factura.getFacturaLineas()) {
+                lineas.add(new DesgloseFiscal.Linea(l.getCantidad(), l.getPrecioUnitario(), l.getIva(),
+                    l.getDescuentoTipo(), l.getDescuento()));
             }
         }
-        List<Map<String, Object>> resumen = new ArrayList<>();
-        for (Map.Entry<BigDecimal, BigDecimal> entrada : basePorTipo.entrySet()) {
-            BigDecimal tipo = entrada.getKey();
-            BigDecimal base = entrada.getValue().setScale(2, RoundingMode.HALF_UP);
-            BigDecimal cuota = base.multiply(tipo)
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        return lineas;
+    }
+
+    /** Mapea el desglose por tipo de IVA al modelo que consume la plantilla (tipo/base/cuota). */
+    private List<Map<String, Object>> filasIva(DesgloseFiscal.Resultado desglose) {
+        List<Map<String, Object>> filas = new ArrayList<>();
+        for (DesgloseFiscal.TipoIva t : desglose.porTipo()) {
             Map<String, Object> fila = new LinkedHashMap<>();
-            fila.put("tipo", tipo);
-            fila.put("base", base);
-            fila.put("cuota", cuota);
-            resumen.add(fila);
+            fila.put("tipo", t.tipo());
+            fila.put("base", t.base());
+            fila.put("cuota", t.cuota());
+            filas.add(fila);
         }
-        return resumen;
+        return filas;
     }
 
     /**
@@ -289,26 +288,20 @@ public class ImpresionService {
      * La base de cada línea es cantidad x precio; el IVA se calcula con el tipo de la línea.
      */
     private Map<String, BigDecimal> resumenAlbaran(AlbaranVenta albaran) {
-        BigDecimal base = BigDecimal.ZERO;
-        BigDecimal iva = BigDecimal.ZERO;
+        List<DesgloseFiscal.Linea> lineas = new ArrayList<>();
         if (albaran.getAlbaranVentaLineas() != null) {
-            for (var linea : albaran.getAlbaranVentaLineas()) {
-                BigDecimal cantidad = linea.getCantidad() != null ? linea.getCantidad() : BigDecimal.ZERO;
-                BigDecimal precio = linea.getPrecio() != null ? linea.getPrecio() : BigDecimal.ZERO;
-                BigDecimal tipo = linea.getIva() != null ? linea.getIva() : BigDecimal.ZERO;
-                BigDecimal importe = cantidad.multiply(precio);
-                base = base.add(importe);
-                iva = iva.add(importe.multiply(tipo).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+            for (var l : albaran.getAlbaranVentaLineas()) {
+                lineas.add(new DesgloseFiscal.Linea(l.getCantidad(), l.getPrecio(), l.getIva(),
+                    l.getDescuentoTipo(), l.getDescuento()));
             }
         }
-        base = base.setScale(2, RoundingMode.HALF_UP);
-        iva = iva.setScale(2, RoundingMode.HALF_UP);
-        // Total coherente con lo mostrado: base + IVA (el total almacenado puede ser neto).
-        BigDecimal total = base.add(iva);
+        DesgloseFiscal.Resultado r = DesgloseFiscal.calcular(lineas,
+            albaran.getDescuentoGlobalTipo(), albaran.getDescuentoGlobalValor());
         Map<String, BigDecimal> resumen = new LinkedHashMap<>();
-        resumen.put("base", base);
-        resumen.put("iva", iva);
-        resumen.put("total", total);
+        resumen.put("base", r.base());
+        resumen.put("iva", r.iva());
+        resumen.put("descuentoGlobal", r.descuentoGlobal());
+        resumen.put("total", r.total());
         return resumen;
     }
 

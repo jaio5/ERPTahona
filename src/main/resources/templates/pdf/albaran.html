@@ -117,6 +117,15 @@
   </tbody>
 </table>
 
+<!-- Descuento global del documento (solo si aplica) -->
+<div th:if="${resumen.descuentoGlobal != null and resumen.descuentoGlobal.signum() > 0}"
+     style="text-align:right; margin-top:24px; font-size:11px;">
+  Descuento
+  <span th:if="${albaran.descuentoGlobalValor != null and #strings.equalsIgnoreCase(albaran.descuentoGlobalTipo, 'PORCENTAJE')}"
+        th:text="'(' + ${#numbers.formatDecimal(albaran.descuentoGlobalValor, 1, 'POINT', 0, 'COMMA')} + '%)'"></span>:
+  <strong th:text="'-' + ${#numbers.formatDecimal(resumen.descuentoGlobal, 1, 'POINT', 2, 'COMMA')}">-0,00</strong>
+</div>
+
 <!-- ===== Pie ===== -->
 <table class="pie">
   <tr>

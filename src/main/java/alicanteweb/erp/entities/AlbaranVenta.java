@@ -66,6 +66,15 @@ public class AlbaranVenta {
     @Column(name = "total", precision = 10, scale = 2)
     private BigDecimal total;
 
+    /** Descuento global del documento (sobre el conjunto): tipo PORCENTAJE|IMPORTE y valor. */
+    @Size(max = 10)
+    @Column(name = "descuento_global_tipo", length = 10)
+    private String descuentoGlobalTipo;
+
+    @ColumnDefault("0.00")
+    @Column(name = "descuento_global_valor", precision = 10, scale = 2)
+    private BigDecimal descuentoGlobalValor;
+
     @OneToMany(mappedBy = "albaran", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AlbaranVentaLinea> albaranVentaLineas = new LinkedHashSet<>();
 

@@ -36,6 +36,10 @@ public class AlbaranVentaLinea {
     @Column(name = "descuento", precision = 10, scale = 2)
     private BigDecimal descuento;
 
+    /** Interpreta {@link #descuento}: PORCENTAJE (por defecto) o IMPORTE (€ fijo por línea). */
+    @Column(name = "descuento_tipo", length = 10)
+    private String descuentoTipo;
+
     @Column(name = "iva", precision = 5, scale = 2)
     private BigDecimal iva;
 

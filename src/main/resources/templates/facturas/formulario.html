@@ -58,6 +58,19 @@
                     <input type="number" step="0.01" min="0" id="rappelImporte" name="rappelImporte"
                            class="form-control" th:value="${factura?.rappelImporte}">
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="descuentoGlobalValor">Descuento global</label>
+                    <input type="number" step="0.01" min="0" id="descuentoGlobalValor" name="descuentoGlobalValor"
+                           class="form-control" th:value="${factura?.descuentoGlobalValor}"
+                           placeholder="Sobre el total del documento">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="descuentoGlobalTipo">Tipo de descuento</label>
+                    <select id="descuentoGlobalTipo" name="descuentoGlobalTipo" class="form-select">
+                        <option value="PORCENTAJE" th:selected="${factura?.descuentoGlobalTipo == null or factura?.descuentoGlobalTipo == 'PORCENTAJE'}">% Porcentaje</option>
+                        <option value="IMPORTE" th:selected="${factura?.descuentoGlobalTipo == 'IMPORTE'}">€ Importe fijo</option>
+                    </select>
+                </div>
                 <div class="col-12">
                     <label class="form-label" for="clienteId">Cliente *</label>
                     <select id="clienteId" name="clienteId" class="form-select" required data-searchable>
@@ -177,6 +190,9 @@
                 return String(val).replace('.', ',');
             }
 
+            const gValEl  = document.getElementById('descuentoGlobalValor');
+            const gTipoEl = document.getElementById('descuentoGlobalTipo');
+
             function recalcTotal() {
                 let base = 0, totalIva = 0;
                 tbody.querySelectorAll('tr').forEach(function(row) {
@@ -190,10 +206,21 @@
                     base     = round2(base + sub);
                     totalIva = round2(totalIva + ivaAmt);
                 });
-                if (baseEl) baseEl.textContent  = fmt.format(base);
-                if (ivaEl) ivaEl.textContent   = fmt.format(totalIva);
-                if (totalEl) totalEl.textContent = fmt.format(round2(base + totalIva));
+                // Descuento global prorrateado (preview; el cálculo exacto es servidor)
+                const gVal = parseNum(gValEl ? gValEl.value : 0);
+                const gTipo = gTipoEl ? gTipoEl.value : 'PORCENTAJE';
+                let gAmt = 0;
+                if (gVal > 0 && base > 0) {
+                    gAmt = gTipo === 'IMPORTE' ? Math.min(gVal, base) : round2(base * gVal / 100);
+                }
+                const baseNeta = round2(base - gAmt);
+                const ivaNeto  = base > 0 ? round2(totalIva * (baseNeta / base)) : 0;
+                if (baseEl) baseEl.textContent  = fmt.format(baseNeta);
+                if (ivaEl) ivaEl.textContent   = fmt.format(ivaNeto);
+                if (totalEl) totalEl.textContent = fmt.format(round2(baseNeta + ivaNeto));
             }
+            if (gValEl) gValEl.addEventListener('input', recalcTotal);
+            if (gTipoEl) gTipoEl.addEventListener('change', recalcTotal);
 
             function initTomSelect(sel) {
                 if (typeof TomSelect !== 'undefined' && !sel.tomselect) {

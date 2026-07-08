@@ -116,7 +116,7 @@ class DocumentoServiceTest {
         });
         when(articuloService.findAllById(List.of(10L))).thenReturn(List.of(articulo));
         when(tarifaClienteService.resolverPrecio(anyLong(), anyLong(), any())).thenAnswer(i -> i.getArgument(2));
-        when(tarifaClienteService.resolverDescuento(2L, 10L)).thenReturn(BigDecimal.ZERO);
+        // El descuento manual de la línea (10) tiene prioridad: no se consulta la tarifa.
 
         AlbaranVenta albaran = service.guardarAlbaran(null, Map.of(
                 "clienteId", 2,
@@ -146,7 +146,7 @@ class DocumentoServiceTest {
         when(articuloService.findAllById(List.of(10L))).thenReturn(List.of(articulo));
         when(tarifaClienteService.resolverPrecio(eq(2L), eq(10L), any(BigDecimal.class)))
                 .thenReturn(new BigDecimal("10"));
-        when(tarifaClienteService.resolverDescuento(2L, 10L)).thenReturn(BigDecimal.ZERO);
+        // El descuento manual de la línea (10) tiene prioridad: no se consulta la tarifa.
 
         Factura factura = service.guardarFactura(null, Map.of(
                 "clienteId", 2,
@@ -168,6 +168,65 @@ class DocumentoServiceTest {
         assertEquals(LocalDate.of(2026, 7, 18), factura.getFechaVencimiento());
         verify(facturaRepository).updateTotales(5L, new BigDecimal("21.78"),
                 new BigDecimal("18.00"), new BigDecimal("3.78"));
+    }
+
+    @Test
+    void guardarFacturaAplicaDescuentoGlobalPorcentaje() {
+        when(clienteService.findById(2L)).thenReturn(Optional.of(cliente));
+        when(facturaService.save(any())).thenAnswer(i -> {
+            Factura f = i.getArgument(0);
+            f.setId(7L);
+            return f;
+        });
+        when(articuloService.findAllById(List.of(10L))).thenReturn(List.of(articulo));
+        when(tarifaClienteService.resolverPrecio(eq(2L), eq(10L), any(BigDecimal.class)))
+                .thenAnswer(i -> i.getArgument(2));
+        when(tarifaClienteService.resolverDescuento(2L, 10L)).thenReturn(BigDecimal.ZERO);
+
+        // Línea sin descuento (base 2 x 10 = 20) y 10% de descuento global -> base 18.
+        Factura factura = service.guardarFactura(null, Map.of(
+                "clienteId", 2,
+                "descuentoGlobalTipo", "PORCENTAJE",
+                "descuentoGlobalValor", "10",
+                "lineas", List.of(Map.of(
+                        "articuloId", 10, "cantidad", 2, "precio", 10, "iva", 21
+                ))
+        ));
+
+        assertEquals("PORCENTAJE", factura.getDescuentoGlobalTipo());
+        assertEquals(new BigDecimal("18.00"), factura.getBaseImponible());
+        assertEquals(new BigDecimal("3.78"), factura.getTotalIva());   // 21% de 18
+        assertEquals(new BigDecimal("21.78"), factura.getTotal());
+        verify(facturaRepository).updateTotales(7L, new BigDecimal("21.78"),
+                new BigDecimal("18.00"), new BigDecimal("3.78"));
+    }
+
+    @Test
+    void guardarAlbaranAplicaDescuentoGlobalImporte() {
+        when(clienteService.findById(2L)).thenReturn(Optional.of(cliente));
+        when(albaranService.guardar(any())).thenAnswer(i -> {
+            AlbaranVenta a = i.getArgument(0);
+            a.setId(8L);
+            a.setNumero("ALB-8");
+            return a;
+        });
+        when(articuloService.findAllById(List.of(10L))).thenReturn(List.of(articulo));
+        when(tarifaClienteService.resolverPrecio(anyLong(), anyLong(), any())).thenAnswer(i -> i.getArgument(2));
+        when(tarifaClienteService.resolverDescuento(2L, 10L)).thenReturn(BigDecimal.ZERO);
+
+        // Base 20, descuento global de 5 € (importe fijo) -> base 15; IVA 21% -> 3,15; total 18,15.
+        AlbaranVenta albaran = service.guardarAlbaran(null, Map.of(
+                "clienteId", 2,
+                "descuentoGlobalTipo", "IMPORTE",
+                "descuentoGlobalValor", "5",
+                "lineas", List.of(Map.of(
+                        "articuloId", 10, "cantidad", 2, "precio", 10, "iva", 21
+                ))
+        ));
+
+        assertEquals("IMPORTE", albaran.getDescuentoGlobalTipo());
+        assertEquals(new BigDecimal("18.15"), albaran.getTotal());
+        verify(albaranRepository).updateTotal(8L, new BigDecimal("18.15"));
     }
 
     @Test
