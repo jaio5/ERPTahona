@@ -21,6 +21,7 @@ import org.springframework.data.domain.Sort;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -310,6 +311,26 @@ public class FacturaWebController extends BaseWebController {
             log.error("Error al generar PDF de factura {}: {}", id, e.getMessage(), e);
             throw new ErpException("Error al generar PDF: " + e.getMessage(), e);
         }
+    }
+
+    /** Impresión por lotes: un único PDF con las facturas seleccionadas en el listado. */
+    @PostMapping("/imprimir-lote")
+    public ResponseEntity<byte[]> imprimirLote(HttpSession session,
+                                               @RequestParam(name = "ids", required = false) List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new ErpException("Selecciona al menos una factura para imprimir");
+        }
+        List<Factura> facturas = new ArrayList<>();
+        for (Long id : ids) {
+            facturaService.findByIdParaPdf(id).ifPresent(facturas::add);
+        }
+        if (facturas.isEmpty()) {
+            throw new ErpException("No se encontraron las facturas seleccionadas");
+        }
+        byte[] pdf = impresionService.generarFacturasLotePdf(facturas);
+        auditoriaService.registrarImpresion(usuarioActual(session), "FACTURA", ids.toString(),
+            "PDF de lote generado (" + facturas.size() + " facturas)");
+        return Descargas.pdf(pdf, "facturas.pdf");
     }
 
 }

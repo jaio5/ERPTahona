@@ -88,6 +88,11 @@ class CriticalWebControllersCoverageTest {
         assertEquals("PDF", new String(controller.descargarPdf(new MockHttpSession(), 1L).getBody()));
         verify(auditoria).registrarImpresion(isNull(), eq("FACTURA"), eq("1"), contains("F-1"));
 
+        // Impresión por lotes
+        when(impresion.generarFacturasLotePdf(any())).thenReturn("LOTE".getBytes());
+        assertEquals("LOTE", new String(controller.imprimirLote(new MockHttpSession(), List.of(1L)).getBody()));
+        assertThrows(RuntimeException.class, () -> controller.imprimirLote(new MockHttpSession(), List.of()));
+
         when(documentos.guardarFactura(any(), any())).thenThrow(new IllegalArgumentException("lineas"));
         assertEquals("redirect:/web/facturas",
                 controller.guardar(1L, 4L, "2026-06-19", null, null, null, null, null, null, null, request, ra));
@@ -145,6 +150,11 @@ class CriticalWebControllersCoverageTest {
         assertEquals("redirect:/web/facturas/5",
                 controller.facturar(new MockHttpSession(), 1L, "2026-06-19", "EFECTIVO", null, "Obs", ra));
         assertEquals("ALB", new String(controller.descargarPdf(new MockHttpSession(), 1L).getBody()));
+
+        // Impresión por lotes
+        when(impresion.generarAlbaranesLotePdf(any())).thenReturn("LOTE".getBytes());
+        assertEquals("LOTE", new String(controller.imprimirLote(new MockHttpSession(), List.of(1L)).getBody()));
+        assertThrows(RuntimeException.class, () -> controller.imprimirLote(new MockHttpSession(), List.of()));
 
         when(documentos.guardarAlbaran(any(), any())).thenThrow(new IllegalArgumentException("lineas"));
         assertEquals("redirect:/web/albaranes/1/editar",

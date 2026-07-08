@@ -12,12 +12,17 @@ import alicanteweb.erp.entities.Lote;
 import alicanteweb.erp.entities.Receta;
 import alicanteweb.erp.util.DesgloseFiscal;
 import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfReader;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.utils.PdfMerger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.awt.Desktop;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -128,6 +133,46 @@ public class ImpresionService {
         } catch (Exception e) {
             throw new ErpException("Error generando PDF de albarán " + albaran.getNumero(), e);
         }
+    }
+
+    /**
+     * Genera un único PDF con todas las facturas indicadas, una tras otra (impresión por lotes).
+     * Reutiliza {@link #generarFacturaPdf} y combina los resultados con iText.
+     */
+    public byte[] generarFacturasLotePdf(List<Factura> facturas) {
+        List<File> pdfs = new ArrayList<>();
+        for (Factura f : facturas) {
+            pdfs.add(generarFacturaPdf(f));
+        }
+        return combinarPdfs(pdfs);
+    }
+
+    /** Igual que {@link #generarFacturasLotePdf} para albaranes. */
+    public byte[] generarAlbaranesLotePdf(List<AlbaranVenta> albaranes) {
+        List<File> pdfs = new ArrayList<>();
+        for (AlbaranVenta a : albaranes) {
+            pdfs.add(generarAlbaranPdf(a));
+        }
+        return combinarPdfs(pdfs);
+    }
+
+    /** Combina varios PDF (en disco) en uno solo, en el orden dado. */
+    private byte[] combinarPdfs(List<File> pdfs) {
+        if (pdfs == null || pdfs.isEmpty()) {
+            throw new ErpException("No hay documentos que combinar");
+        }
+        ByteArrayOutputStream salida = new ByteArrayOutputStream();
+        try (PdfDocument destino = new PdfDocument(new PdfWriter(salida))) {
+            PdfMerger merger = new PdfMerger(destino);
+            for (File pdf : pdfs) {
+                try (PdfDocument origen = new PdfDocument(new PdfReader(pdf.getAbsolutePath()))) {
+                    merger.merge(origen, 1, origen.getNumberOfPages());
+                }
+            }
+        } catch (Exception e) {
+            throw new ErpException("Error combinando los PDF del lote: " + e.getMessage(), e);
+        }
+        return salida.toByteArray();
     }
 
     public void imprimirPdf(File pdfFile, boolean abrirPdf) {

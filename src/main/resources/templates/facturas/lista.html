@@ -4,6 +4,9 @@
             <h4 th:text="${titulo}">Facturas</h4>
         </div>
         <div class="page-header-actions">
+            <button type="button" id="btnLoteFacturas" class="btn btn-outline-primary btn-sm" disabled>
+                <i class="bi bi-printer me-1"></i>Imprimir seleccionadas (<span id="loteCountFacturas">0</span>)
+            </button>
             <a th:href="@{/web/facturas/nueva}" class="btn btn-primary btn-sm">
                 <i class="bi bi-plus-lg me-1"></i>Nueva factura
             </a>
@@ -47,6 +50,9 @@
         <table class="table table-hover mb-0" style="min-width:800px;">
             <thead>
                 <tr>
+                    <th style="width:36px;">
+                        <input type="checkbox" id="selAllFacturas" class="form-check-input" aria-label="Seleccionar todo">
+                    </th>
                     <th style="min-width:130px;">
                         <a th:href="@{/web/facturas(q=${q},estado=${estado},sort='numero',dir=${sort == 'numero' and dir == 'asc' ? 'desc' : 'asc'})}"
                            class="text-decoration-none text-body d-flex align-items-center gap-1">
@@ -75,13 +81,15 @@
             </thead>
             <tbody>
                 <tr th:if="${#lists.isEmpty(facturas)}">
-                    <td colspan="6" class="empty-state">
+                    <td colspan="7" class="empty-state">
                         <i class="bi bi-receipt"></i>
                         <div>No hay facturas</div>
                         <small th:if="${q != null and !q.isEmpty()}">Prueba con otros términos de búsqueda</small>
                     </td>
                 </tr>
                 <tr th:each="f : ${facturas}">
+                    <td><input type="checkbox" class="form-check-input lote-check" th:value="${f.id}"
+                               th:attr="aria-label='Seleccionar factura ' + ${f.numero}"></td>
                     <td><a th:href="@{/web/facturas/{id}(id=${f.id})}" class="fw-medium text-decoration-none" th:text="${f.numero}"></a></td>
                     <td class="text-muted small" th:text="${f.fecha != null ? #temporals.format(f.fecha, 'dd/MM/yyyy') : '-'}"></td>
                     <td th:text="${f.cliente?.nombre}"></td>
@@ -131,4 +139,49 @@
     </div>
 
     <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/facturas')}"></div>
+
+    <!-- Form oculto para la impresión por lotes (evita anidar formularios en la tabla) -->
+    <form id="loteFormFacturas" method="post" th:action="@{/web/facturas/imprimir-lote}" style="display:none"></form>
+
+    <script th:attr="nonce=${cspNonce}">
+        (function() {
+            const selAll = document.getElementById('selAllFacturas');
+            const btn    = document.getElementById('btnLoteFacturas');
+            const count  = document.getElementById('loteCountFacturas');
+            const form   = document.getElementById('loteFormFacturas');
+            if (!btn || !form) return;
+            const checks = function() { return Array.prototype.slice.call(document.querySelectorAll('.lote-check')); };
+
+            function refresh() {
+                const sel = checks().filter(function(c) { return c.checked; });
+                if (count) count.textContent = sel.length;
+                btn.disabled = sel.length === 0;
+                if (selAll) {
+                    const all = checks();
+                    selAll.checked = all.length > 0 && sel.length === all.length;
+                    selAll.indeterminate = sel.length > 0 && sel.length < all.length;
+                }
+            }
+            if (selAll) selAll.addEventListener('change', function() {
+                checks().forEach(function(c) { c.checked = selAll.checked; });
+                refresh();
+            });
+            document.addEventListener('change', function(e) {
+                if (e.target && e.target.classList.contains('lote-check')) refresh();
+            });
+            btn.addEventListener('click', function() {
+                const sel = checks().filter(function(c) { return c.checked; });
+                if (!sel.length) return;
+                // Reconstruye los ids (conserva el token CSRF que inyecta Thymeleaf)
+                form.querySelectorAll('input[name="ids"]').forEach(function(i) { i.remove(); });
+                sel.forEach(function(c) {
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden'; hidden.name = 'ids'; hidden.value = c.value;
+                    form.appendChild(hidden);
+                });
+                form.submit();
+            });
+            refresh();
+        })();
+    </script>
 </div>

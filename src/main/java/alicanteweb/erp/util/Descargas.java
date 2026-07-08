@@ -49,4 +49,9 @@ public final class Descargas {
             throw new UncheckedIOException("Error al leer el PDF: " + pdf.getName(), e);
         }
     }
+
+    /** Descarga de un PDF ya generado en memoria (p. ej. un lote combinado). */
+    public static ResponseEntity<byte[]> pdf(byte[] cuerpo, String nombreArchivo) {
+        return adjunto(cuerpo, nombreArchivo, MediaType.APPLICATION_PDF);
+    }
 }

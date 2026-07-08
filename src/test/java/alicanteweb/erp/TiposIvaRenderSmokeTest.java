@@ -45,4 +45,16 @@ class TiposIvaRenderSmokeTest {
     void formularioAlbaranRenderizaConDesplegableIva() throws Exception {
         mockMvc.perform(get("/web/albaranes/nuevo")).andExpect(status().isOk());
     }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void listadoFacturasRenderizaConSeleccionMultiple() throws Exception {
+        mockMvc.perform(get("/web/facturas")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void listadoAlbaranesRenderizaConSeleccionMultiple() throws Exception {
+        mockMvc.perform(get("/web/albaranes")).andExpect(status().isOk());
+    }
 }

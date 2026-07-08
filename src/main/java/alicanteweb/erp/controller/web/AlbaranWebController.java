@@ -1,6 +1,7 @@
 package alicanteweb.erp.controller.web;
 
 import alicanteweb.erp.entities.*;
+import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.service.*;
 import alicanteweb.erp.util.Descargas;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Sort;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -240,6 +242,26 @@ public class AlbaranWebController extends BaseWebController {
             log.error("Error al generar PDF de albarán {}: {}", id, e.getMessage(), e);
             throw e;
         }
+    }
+
+    /** Impresión por lotes: un único PDF con los albaranes seleccionados en el listado. */
+    @PostMapping("/imprimir-lote")
+    public ResponseEntity<byte[]> imprimirLote(HttpSession session,
+                                               @RequestParam(name = "ids", required = false) List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new ErpException("Selecciona al menos un albarán para imprimir");
+        }
+        List<AlbaranVenta> albaranes = new ArrayList<>();
+        for (Long id : ids) {
+            albaranService.obtenerPorIdParaPdf(id).ifPresent(albaranes::add);
+        }
+        if (albaranes.isEmpty()) {
+            throw new ErpException("No se encontraron los albaranes seleccionados");
+        }
+        byte[] pdf = impresionService.generarAlbaranesLotePdf(albaranes);
+        auditoriaService.registrarImpresion(usuarioActual(session), "ALBARAN", ids.toString(),
+            "PDF de lote generado (" + albaranes.size() + " albaranes)");
+        return Descargas.pdf(pdf, "albaranes.pdf");
     }
 
 }
