@@ -6,6 +6,7 @@ import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.exception.ErpException;
 import alicanteweb.erp.repository.VerifactuEvidenceRepository;
+import alicanteweb.erp.util.DesgloseFiscal;
 import alicanteweb.erp.util.FinancialMath;
 import alicanteweb.erp.util.HashUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -466,7 +467,7 @@ public class VerifactuService implements InitializingBean {
                .append(escapeXml(descripcionOperacion(factura)))
                .append("</sum1:DescripcionOperacion>\n");
             appendDestinatarios(xml, factura);
-            appendDesgloseOficial(xml, lineas);
+            appendDesgloseOficial(xml, factura, lineas);
             xml.append("      <sum1:CuotaTotal>").append(normalizarImporte(cuotaTotal)).append("</sum1:CuotaTotal>\n");
             xml.append("      <sum1:ImporteTotal>").append(normalizarImporte(importeTotal)).append("</sum1:ImporteTotal>\n");
             appendEncadenamiento(xml, registroAnterior.orElse(null));
@@ -844,28 +845,34 @@ public class VerifactuService implements InitializingBean {
     /**
      * Desglose oficial agrupado por tipo impositivo: un DetalleDesglose por cada tipo de IVA.
      * Impuesto 01 = IVA; ClaveRegimen 01 = régimen general; CalificacionOperacion S1 = sujeta y no exenta.
+     *
+     * <p>Usa la misma fuente única {@link DesgloseFiscal} que los totales de la factura y que la
+     * impresión (incluye el descuento global prorrateado y redondea la cuota por tipo), de modo
+     * que la suma del desglose coincide siempre con la BaseImponible/CuotaTotal declaradas y
+     * firmadas — imprescindible para que el registro remitido a la AEAT sea consistente.
      */
-    private void appendDesgloseOficial(StringBuilder xml, List<FacturaLinea> lineas) {
+    private void appendDesgloseOficial(StringBuilder xml, Factura factura, List<FacturaLinea> lineas) {
         xml.append("      <sum1:Desglose>\n");
-        java.util.Map<BigDecimal, BigDecimal[]> porTipo = new java.util.TreeMap<>();
+        List<DesgloseFiscal.Linea> calculo = new java.util.ArrayList<>();
         if (lineas != null) {
             for (FacturaLinea linea : lineas) {
                 if (linea.getCantidad() == null || linea.getPrecioUnitario() == null) continue;
-                BigDecimal tipo = (linea.getIva() != null ? linea.getIva() : BigDecimal.ZERO).setScale(FinancialMath.SCALE, FinancialMath.ROUND);
-                BigDecimal base = FinancialMath.subtotalConDescuento(linea.getCantidad(), linea.getPrecioUnitario(), linea.getDescuento());
-                BigDecimal cuota = FinancialMath.porcentaje(base, tipo);
-                porTipo.merge(tipo, new BigDecimal[]{base, cuota},
-                        (a, b) -> new BigDecimal[]{a[0].add(b[0]), a[1].add(b[1])});
+                calculo.add(new DesgloseFiscal.Linea(linea.getCantidad(), linea.getPrecioUnitario(),
+                        linea.getIva(), linea.getDescuentoTipo(), linea.getDescuento()));
             }
         }
-        for (java.util.Map.Entry<BigDecimal, BigDecimal[]> e : porTipo.entrySet()) {
+        DesgloseFiscal.Resultado resultado = DesgloseFiscal.calcular(
+                calculo, factura.getDescuentoGlobalTipo(), factura.getDescuentoGlobalValor());
+        for (DesgloseFiscal.TipoIva t : resultado.porTipo()) {
             xml.append("        <sum1:DetalleDesglose>\n");
             xml.append("          <sum1:Impuesto>01</sum1:Impuesto>\n");
             xml.append("          <sum1:ClaveRegimen>01</sum1:ClaveRegimen>\n");
             xml.append("          <sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion>\n");
-            xml.append("          <sum1:TipoImpositivo>").append(e.getKey().toPlainString()).append("</sum1:TipoImpositivo>\n");
-            xml.append("          <sum1:BaseImponibleOimporteNoSujeto>").append(normalizarImporte(e.getValue()[0])).append("</sum1:BaseImponibleOimporteNoSujeto>\n");
-            xml.append("          <sum1:CuotaRepercutida>").append(normalizarImporte(e.getValue()[1])).append("</sum1:CuotaRepercutida>\n");
+            xml.append("          <sum1:TipoImpositivo>")
+               .append(t.tipo().setScale(FinancialMath.SCALE, FinancialMath.ROUND).toPlainString())
+               .append("</sum1:TipoImpositivo>\n");
+            xml.append("          <sum1:BaseImponibleOimporteNoSujeto>").append(normalizarImporte(t.base())).append("</sum1:BaseImponibleOimporteNoSujeto>\n");
+            xml.append("          <sum1:CuotaRepercutida>").append(normalizarImporte(t.cuota())).append("</sum1:CuotaRepercutida>\n");
             xml.append("        </sum1:DetalleDesglose>\n");
         }
         xml.append("      </sum1:Desglose>\n");

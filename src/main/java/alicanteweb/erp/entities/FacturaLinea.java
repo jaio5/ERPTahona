@@ -40,7 +40,8 @@ public class FacturaLinea {
     @Column(name = "precio", precision = 10, scale = 2)
     private BigDecimal precio;
 
-    @Column(name = "descuento", precision = 5, scale = 2)
+    // DECIMAL(10,2): el descuento puede ser % (0-100) o un importe fijo en euros (descuento_tipo).
+    @Column(name = "descuento", precision = 10, scale = 2)
     private BigDecimal descuento;
 
     /** Interpreta {@link #descuento}: PORCENTAJE (por defecto) o IMPORTE (€ fijo por línea). */

@@ -99,6 +99,40 @@ class VerifactuServiceTest {
     }
 
     @Test
+    void desgloseReflejaDescuentoGlobalYCuadraConElCuotaTotal() {
+        Cliente cliente = new Cliente();
+        cliente.setNombre("Cliente");
+        cliente.setCif("B87654321");
+        Factura f = new Factura();
+        f.setNumero("F-GEN-2026-0002");
+        f.setSerie("F-GEN");
+        f.setFecha(LocalDate.of(2026, 7, 2));
+        f.setTipoFactura("ORDINARIA");
+        f.setCliente(cliente);
+        // 10% de descuento global sobre 200 (100 al 21% + 100 al 10%) -> base 180, IVA 27,90.
+        f.setDescuentoGlobalTipo("PORCENTAJE");
+        f.setDescuentoGlobalValor(new BigDecimal("10"));
+        f.setTotalIva(new BigDecimal("27.90"));
+        f.setTotal(new BigDecimal("207.90"));
+
+        FacturaLinea l1 = new FacturaLinea();
+        l1.setCantidad(new BigDecimal("1")); l1.setPrecio(new BigDecimal("100.00")); l1.setIva(new BigDecimal("21"));
+        FacturaLinea l2 = new FacturaLinea();
+        l2.setCantidad(new BigDecimal("1")); l2.setPrecio(new BigDecimal("100.00")); l2.setIva(new BigDecimal("10"));
+
+        String xml = service.generarRegistroAltaXml(f, List.of(l1, l2));
+
+        // El desglose lleva el descuento global prorrateado (cada base 100 -> 90)...
+        assertTrue(xml.contains("<sum1:BaseImponibleOimporteNoSujeto>90.00</sum1:BaseImponibleOimporteNoSujeto>"),
+                "La base de cada tipo debe reflejar el descuento global");
+        assertTrue(xml.contains("<sum1:CuotaRepercutida>9.00</sum1:CuotaRepercutida>"));   // 10% de 90
+        assertTrue(xml.contains("<sum1:CuotaRepercutida>18.90</sum1:CuotaRepercutida>"));  // 21% de 90
+        // ...y la suma del desglose cuadra con el CuotaTotal firmado.
+        assertTrue(xml.contains("<sum1:CuotaTotal>27.90</sum1:CuotaTotal>"),
+                "El desglose debe cuadrar con el CuotaTotal");
+    }
+
+    @Test
     void registroAltaPrimerRegistroConEstructuraOficialYHuellaReproducible() {
         String xml = service.generarRegistroAltaXml(facturaBase(), lineaSimple());
 
