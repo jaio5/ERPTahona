@@ -60,8 +60,8 @@ public class EmpresaConfig {
     @Column(name = "pais", length = 100)
     private String pais;
 
-    @Size(max = 20)
-    @Column(name = "telefono", length = 20)
+    @Size(max = 40)
+    @Column(name = "telefono", length = 40)
     private String telefono;
 
     /** Whatsapp de contacto (cabecera del albarán clásico). */
