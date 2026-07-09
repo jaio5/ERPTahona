@@ -7,7 +7,9 @@ node_modules/
 # Log files
 *.log
 logs/
-backups/
+# Directorio de backups en runtime (raíz). Anclado con / para no ignorar
+# por error src/main/resources/templates/backups/.
+/backups/
 
 # Package Files
 *.jar
