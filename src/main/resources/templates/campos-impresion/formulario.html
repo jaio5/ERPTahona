@@ -64,12 +64,13 @@
                 </div>
                 <div class="col-md-6" id="clientesWrap">
                     <label class="form-label" for="clienteIds">Clientes</label>
-                    <select id="clienteIds" name="clienteIds" class="form-select" multiple size="6">
+                    <select id="clienteIds" name="clienteIds" class="form-select" multiple data-searchable
+                            data-placeholder="Busca por nombre o CIF…">
                         <option th:each="cl : ${clientes}" th:value="${cl.id}"
                                 th:text="${cl.nombre + (cl.cif != null ? ' (' + cl.cif + ')' : '')}"
                                 th:selected="${campo != null and campo.clientes.contains(cl.id)}"></option>
                     </select>
-                    <div class="form-text">Ctrl/Cmd + clic para elegir varios.</div>
+                    <div class="form-text">Escribe para buscar y selecciona uno o varios; se muestran como etiquetas.</div>
                 </div>
 
                 <div class="col-md-4">

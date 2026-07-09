@@ -211,6 +211,7 @@ function initTomSelect() {
         new TomSelect(el, {
             maxOptions: 500,
             searchField: ["text"],
+            placeholder: el.getAttribute("data-placeholder") || undefined,
             render: {
                 no_results: () => '<div class="no-results">Sin resultados</div>'
             }
