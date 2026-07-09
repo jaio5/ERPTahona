@@ -12,7 +12,10 @@ import alicanteweb.erp.entities.HojaRutaEntrega;
 import alicanteweb.erp.entities.Lote;
 import alicanteweb.erp.entities.Receta;
 import alicanteweb.erp.util.DesgloseFiscal;
+import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.html2pdf.resolver.font.DefaultFontProvider;
+import com.itextpdf.layout.font.FontProvider;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
@@ -47,9 +50,13 @@ public class ImpresionService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String OUTPUT_DIR = "impresiones/";
     private static final String LOGO_RESOURCE = "/img/logo-empresa.png";
+    /** Fuente caligráfica de la marca (nombre "Tahona de Fernando" en la cabecera). */
+    private static final String BRAND_FONT_RESOURCE = "/fonts/Gabriola.ttf";
 
     /** Logo/escudo incrustado (data URI base64), cargado una sola vez desde el classpath. */
     private volatile String logoDataUri;
+    /** Proveedor de fuentes con la caligráfica de la marca añadida, construido una sola vez. */
+    private volatile FontProvider fontProvider;
 
     private final EmpresaConfigService empresaConfigService;
     private final FacturacionEventoService facturacionEventoService;
@@ -360,8 +367,35 @@ public class ImpresionService {
 
     private void generarPdf(String html, File outputFile) throws Exception {
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-            HtmlConverter.convertToPdf(html, fos);
+            ConverterProperties props = new ConverterProperties().setFontProvider(getFontProvider());
+            HtmlConverter.convertToPdf(html, fos, props);
         }
+    }
+
+    /**
+     * Proveedor de fuentes de iText igual al por defecto (fuentes estándar PDF + empaquetadas +
+     * del sistema) más la caligráfica de la marca cargada del classpath, de modo que
+     * {@code font-family: 'Gabriola'} en las plantillas resuelva a la fuente incrustada.
+     */
+    private FontProvider getFontProvider() {
+        if (fontProvider == null) {
+            synchronized (this) {
+                if (fontProvider == null) {
+                    FontProvider fp = new DefaultFontProvider(true, true, true);
+                    try (InputStream is = getClass().getResourceAsStream(BRAND_FONT_RESOURCE)) {
+                        if (is != null) {
+                            fp.addFont(is.readAllBytes());
+                        } else {
+                            log.warn("Fuente de marca no encontrada en el classpath: {}", BRAND_FONT_RESOURCE);
+                        }
+                    } catch (Exception e) {
+                        log.warn("No se pudo cargar la fuente de marca: {}", e.getMessage());
+                    }
+                    fontProvider = fp;
+                }
+            }
+        }
+        return fontProvider;
     }
 
     private File buildOutputFile(String prefix, String numeroDocumento) {
