@@ -16,6 +16,7 @@ import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
 import com.itextpdf.html2pdf.resolver.font.DefaultFontProvider;
 import com.itextpdf.layout.font.FontProvider;
+import com.itextpdf.layout.font.FontSet;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
@@ -55,8 +56,12 @@ public class ImpresionService {
 
     /** Logo/escudo incrustado (data URI base64), cargado una sola vez desde el classpath. */
     private volatile String logoDataUri;
-    /** Proveedor de fuentes con la caligráfica de la marca añadida, construido una sola vez. */
-    private volatile FontProvider fontProvider;
+    /**
+     * Conjunto de fuentes (estándar + del sistema + la caligráfica de la marca) construido una sola
+     * vez. Es de solo lectura tras su construcción, así que se comparte de forma segura entre hilos;
+     * cada PDF envuelve este conjunto en un {@link FontProvider} propio (ver {@link #generarPdf}).
+     */
+    private volatile FontSet brandFontSet;
 
     private final EmpresaConfigService empresaConfigService;
     private final FacturacionEventoService facturacionEventoService;
@@ -371,35 +376,39 @@ public class ImpresionService {
 
     private void generarPdf(String html, File outputFile) throws Exception {
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
-            ConverterProperties props = new ConverterProperties().setFontProvider(getFontProvider());
+            // Un FontProvider nuevo por PDF: comparte el FontSet (caro, inmutable) pero aísla sus
+            // cachés internas (HashMap sin sincronizar), evitando corrupción en generación concurrente.
+            FontProvider fontProvider = new FontProvider(getBrandFontSet(), "Times");
+            ConverterProperties props = new ConverterProperties().setFontProvider(fontProvider);
             HtmlConverter.convertToPdf(html, fos, props);
         }
     }
 
     /**
-     * Proveedor de fuentes de iText igual al por defecto (fuentes estándar PDF + empaquetadas +
-     * del sistema) más la caligráfica de la marca cargada del classpath, de modo que
-     * {@code font-family: 'Gabriola'} en las plantillas resuelva a la fuente incrustada.
+     * Conjunto de fuentes de iText igual al por defecto (estándar PDF + empaquetadas + del sistema)
+     * más la caligráfica de la marca cargada del classpath, de modo que {@code font-family: 'Gabriola'}
+     * en las plantillas resuelva a la fuente incrustada. Se construye una sola vez (caro: escanea las
+     * fuentes del sistema) y se reutiliza; queda de solo lectura, apto para compartir entre hilos.
      */
-    private FontProvider getFontProvider() {
-        if (fontProvider == null) {
+    private FontSet getBrandFontSet() {
+        if (brandFontSet == null) {
             synchronized (this) {
-                if (fontProvider == null) {
-                    FontProvider fp = new DefaultFontProvider(true, true, true);
+                if (brandFontSet == null) {
+                    DefaultFontProvider seed = new DefaultFontProvider(true, true, true);
                     try (InputStream is = getClass().getResourceAsStream(BRAND_FONT_RESOURCE)) {
                         if (is != null) {
-                            fp.addFont(is.readAllBytes());
+                            seed.addFont(is.readAllBytes());
                         } else {
                             log.warn("Fuente de marca no encontrada en el classpath: {}", BRAND_FONT_RESOURCE);
                         }
                     } catch (Exception e) {
                         log.warn("No se pudo cargar la fuente de marca: {}", e.getMessage());
                     }
-                    fontProvider = fp;
+                    brandFontSet = seed.getFontSet();
                 }
             }
         }
-        return fontProvider;
+        return brandFontSet;
     }
 
     private File buildOutputFile(String prefix, String numeroDocumento) {
