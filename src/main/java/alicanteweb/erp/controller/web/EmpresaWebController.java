@@ -41,6 +41,7 @@ public class EmpresaWebController {
         return WebController.layout(m, "empresa/formulario");
     }
 
+    @PreAuthorize("@permisos.puede('configuracion', 'editar')")
     @PostMapping
     public String guardar(@ModelAttribute EmpresaForm form, RedirectAttributes ra) {
         try {

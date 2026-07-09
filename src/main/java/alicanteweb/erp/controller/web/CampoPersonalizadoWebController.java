@@ -94,6 +94,7 @@ public class CampoPersonalizadoWebController {
         return WebController.layout(m, "campos-impresion/formulario");
     }
 
+    @PreAuthorize("@permisos.puede('configuracion', 'editar')")
     @PostMapping
     public String guardar(@RequestParam(required = false) Long id,
                           @RequestParam(required = false) String claveSistema,
@@ -133,6 +134,7 @@ public class CampoPersonalizadoWebController {
         return "redirect:/web/campos-impresion";
     }
 
+    @PreAuthorize("@permisos.puede('configuracion', 'editar')")
     @PostMapping("/{id}/eliminar")
     public String eliminar(@PathVariable Long id, RedirectAttributes ra) {
         try {
