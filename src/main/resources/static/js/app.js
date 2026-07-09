@@ -123,7 +123,14 @@ function initTableSearch() {
         }
 
         const search = buildSearch(index);
-        insertSearchBeforeTable(table, search.wrapper);
+        // Si ya hay un filter-bar (p. ej. con un desplegable) sin buscador, integramos el
+        // buscador en esa misma fila en vez de apilar un segundo filter-bar debajo.
+        const existingBar = filterBarBefore(table);
+        if (existingBar && !existingBar.querySelector(".filter-bar-search")) {
+            existingBar.insertBefore(search.searchWrap, existingBar.firstChild);
+        } else {
+            insertSearchBeforeTable(table, search.wrapper);
+        }
         search.input.dataset.liveSearchBound = "true";
         let debounceTimer;
         search.input.addEventListener("input", () => {
@@ -184,7 +191,22 @@ function buildSearch(index) {
     searchWrap.appendChild(icon);
     searchWrap.appendChild(input);
     wrapper.appendChild(searchWrap);
-    return { wrapper, input };
+    return { wrapper, searchWrap, input };
+}
+
+/** Devuelve un .filter-bar existente inmediatamente antes de la tabla (saltando avisos), o null. */
+function filterBarBefore(table) {
+    const tableCard = table.closest(".table-card") || table;
+    let el = tableCard.previousElementSibling;
+    while (el) {
+        if (el.classList && el.classList.contains("filter-bar")) return el;
+        if (el.classList && (el.classList.contains("alert") || el.tagName === "SCRIPT")) {
+            el = el.previousElementSibling;
+            continue;
+        }
+        return null;
+    }
+    return null;
 }
 
 function filterTable(table, query) {

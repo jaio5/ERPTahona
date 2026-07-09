@@ -1,27 +1,55 @@
-<section>
-    <div class="topbar">
-        <h4 th:text="${titulo}">Backups</h4>
-        <form th:action="@{/web/backups/crear}" method="post"><button class="btn btn-success btn-sm" type="submit">Crear backup</button></form>
+<div th:fragment="content">
+    <div class="page-header">
+        <div class="page-header-title">
+            <h4 th:text="${titulo}">Backups</h4>
+        </div>
+        <div class="page-header-actions">
+            <form th:action="@{/web/backups/crear}" method="post" class="d-inline">
+                <button class="btn btn-success btn-sm" type="submit">
+                    <i class="bi bi-plus-lg me-1"></i>Crear backup
+                </button>
+            </form>
+        </div>
     </div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
-    <table class="table table-sm table-hover">
-        <thead><tr><th>Nombre</th><th>Tamano MB</th><th>Fecha</th><th>Restaurar</th></tr></thead>
-        <tbody><tr th:each="b : ${backups}">
-            <td th:text="${b.nombre}"></td>
-            <td th:text="${b.tamanoMB}"></td>
-            <td th:text="${b.fechaFormateada}"></td>
-            <td>
-                <!-- Operación destructiva: exige teclear el nombre exacto del fichero como confirmación -->
-                <form th:action="@{/web/backups/restaurar}" method="post" class="d-flex gap-1">
-                    <input type="hidden" name="archivo" th:value="${b.nombre}">
-                    <input type="text" name="confirmacion" class="form-control form-control-sm" style="max-width: 22rem"
-                           th:placeholder="'Escribe ' + ${b.nombre} + ' para confirmar'" autocomplete="off">
-                    <!-- Sin confirm() inline: el CSP (script-src con nonce) bloquea manejadores
-                         onclick; la confirmación explícita es teclear el nombre del fichero -->
-                    <button class="btn btn-outline-danger btn-sm" type="submit">Restaurar</button>
-                </form>
-            </td>
-        </tr></tbody>
-    </table>
-</section>
+
+    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Tamaño (MB)</th>
+                        <th>Fecha</th>
+                        <th>Restaurar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(backups)}">
+                        <td colspan="4" class="empty-state">
+                            <i class="bi bi-cloud-arrow-down"></i>
+                            <div>No hay backups</div>
+                        </td>
+                    </tr>
+                    <tr th:each="b : ${backups}">
+                        <td class="fw-medium" th:text="${b.nombre}"></td>
+                        <td class="text-muted" th:text="${b.tamanoMB}"></td>
+                        <td class="text-muted" th:text="${b.fechaFormateada}"></td>
+                        <td>
+                            <!-- Operación destructiva: exige teclear el nombre exacto del fichero como confirmación.
+                                 Sin confirm() inline: el CSP (script-src con nonce) bloquea manejadores onclick. -->
+                            <form th:action="@{/web/backups/restaurar}" method="post" class="d-flex gap-1">
+                                <input type="hidden" name="archivo" th:value="${b.nombre}">
+                                <input type="text" name="confirmacion" class="form-control form-control-sm" style="max-width: 22rem"
+                                       th:placeholder="'Escribe ' + ${b.nombre} + ' para confirmar'" autocomplete="off">
+                                <button class="btn btn-outline-danger btn-sm" type="submit">Restaurar</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -35,7 +35,7 @@
                         <th>CIF</th>
                         <th>Teléfono</th>
                         <th>Email</th>
-                        <th style="width:80px;"></th>
+                        <th style="width:130px;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,11 +52,21 @@
                         <td class="text-muted" th:text="${p.cif ?: '—'}"></td>
                         <td class="text-muted" th:text="${p.telefono ?: '—'}"></td>
                         <td class="text-muted small" th:text="${p.email ?: '—'}"></td>
-                        <td class="text-end">
+                        <td class="text-end text-nowrap">
                             <a th:href="@{/web/proveedores/{id}(id=${p.id})}"
                                class="btn btn-ghost btn-sm" title="Ver">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            <a th:href="@{/web/proveedores/{id}/editar(id=${p.id})}"
+                               class="btn btn-ghost btn-sm" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form th:action="@{/web/proveedores/{id}/eliminar(id=${p.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-ghost btn-sm text-danger" title="Eliminar"
+                                        data-confirm="¿Eliminar este proveedor? Si tiene documentos asociados no se podrá borrar.">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 </tbody>

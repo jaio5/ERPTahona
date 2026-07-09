@@ -5,6 +5,7 @@ import alicanteweb.erp.entities.Proveedor;
 import alicanteweb.erp.service.ProveedorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
@@ -102,6 +103,23 @@ public class ProveedorWebController {
             Flash.exito(ra, "Proveedor guardado correctamente");
         } catch (RuntimeException e) {
             log.error("Error al guardar proveedor: {}", e.getMessage(), e);
+            Flash.error(ra, e.getMessage());
+        }
+        return "redirect:/web/proveedores";
+    }
+
+    @PostMapping("/{id}/eliminar")
+    @PreAuthorize("@permisos.puede('proveedores', 'eliminar')")
+    public String eliminar(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            service.deleteById(id);
+            Flash.exito(ra, "Proveedor eliminado");
+        } catch (DataIntegrityViolationException e) {
+            log.warn("No se puede eliminar el proveedor {}: tiene documentos asociados", id);
+            Flash.error(ra, "No se puede eliminar: el proveedor tiene facturas o pedidos de "
+                + "compra asociados.");
+        } catch (RuntimeException e) {
+            log.error("Error al eliminar el proveedor {}: {}", id, e.getMessage(), e);
             Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/proveedores";

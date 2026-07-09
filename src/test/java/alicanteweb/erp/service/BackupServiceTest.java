@@ -170,7 +170,15 @@ class BackupServiceTest {
         BackupService.BackupInfo info = new BackupService.BackupInfo(
                 "backup.sql", "/backups/backup.sql", 5 * 1024 * 1024L, LocalDateTime.now());
 
-        assertEquals(5L, info.getTamanoMB());
+        assertEquals(5.0, info.getTamanoMB(), 0.001);
+    }
+
+    @Test
+    void backupInfo_getTamanoMB_pequeno_muestraDecimales() {
+        BackupService.BackupInfo info = new BackupService.BackupInfo(
+                "backup.sql", "/backups/backup.sql", 512 * 1024L, LocalDateTime.now());
+        // 512 KB = 0.5 MB (antes daba 0 por división entera)
+        assertEquals(0.5, info.getTamanoMB(), 0.001);
     }
 
     @Test

@@ -502,8 +502,9 @@ public class BackupService {
         long tamanoBytes,
         LocalDateTime fecha
     ) {
-        public long getTamanoMB() {
-            return tamanoBytes / (1024 * 1024);
+        /** Tamaño en MB con 2 decimales (los backups pequeños no se quedan en 0 por división entera). */
+        public double getTamanoMB() {
+            return Math.round(tamanoBytes / (1024.0 * 1024.0) * 100.0) / 100.0;
         }
 
         public String getFechaFormateada() {

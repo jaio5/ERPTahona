@@ -477,6 +477,20 @@ body {
 [data-status="servido"],
 [data-status="recibido"] { background: var(--color-success-bg); color: var(--color-success-text); }
 
+[data-status="ACEPTADO"],
+[data-status="FINALIZADA"],
+[data-status="COBRADA"],
+[data-status="aceptado"],
+[data-status="finalizada"],
+[data-status="cobrada"] { background: var(--color-success-bg); color: var(--color-success-text); }
+
+[data-status="RECHAZADO"],
+[data-status="CANCELADA"],
+[data-status="IMPAGADA"],
+[data-status="rechazado"],
+[data-status="cancelada"],
+[data-status="impagada"] { background: var(--color-danger-bg); color: var(--color-danger-text); }
+
 /* Legacy badge classes (kept for compatibility) */
 .bg-draft { background: #e2e8f0; color: #475569; }
 .bg-emitted { background: var(--color-success-bg); color: var(--color-success-text); }

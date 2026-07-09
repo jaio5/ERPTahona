@@ -48,21 +48,23 @@
         </div>
     </div>
 
-    <div class="stat-card">
-        <h6 class="mb-3">Necesidades de materia prima</h6>
-        <table class="table table-sm">
-            <thead><tr><th>Articulo</th><th class="text-end">Necesario</th><th class="text-end">Stock</th><th class="text-end">Diferencia</th></tr></thead>
-            <tbody>
-                <template x-for="n in necesidades" :key="n.articuloId">
-                    <tr>
-                        <td x-text="n.nombre"></td>
-                        <td class="text-end" x-text="n.necesario"></td>
-                        <td class="text-end" x-text="n.stock"></td>
-                        <td class="text-end" :class="n.diferencia < 0 ? 'text-danger fw-bold' : 'text-success'" x-text="n.diferencia"></td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
+    <div class="table-card mt-4">
+        <div class="form-section-title mb-3"><i class="bi bi-box-seam"></i> Necesidades de materia prima</div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Artículo</th><th class="text-end">Necesario</th><th class="text-end">Stock</th><th class="text-end">Diferencia</th></tr></thead>
+                <tbody>
+                    <template x-for="n in necesidades" :key="n.articuloId">
+                        <tr>
+                            <td x-text="n.nombre"></td>
+                            <td class="text-end" x-text="n.necesario"></td>
+                            <td class="text-end" x-text="n.stock"></td>
+                            <td class="text-end" :class="n.diferencia < 0 ? 'text-danger fw-bold' : 'text-success'" x-text="n.diferencia"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
         <div x-show="necesidades.length === 0" class="text-muted small">Sin necesidades calculadas</div>
     </div>
 
