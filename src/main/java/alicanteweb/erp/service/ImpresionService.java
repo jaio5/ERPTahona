@@ -390,7 +390,7 @@ public class ImpresionService {
 
     /**
      * Conjunto de fuentes de iText igual al por defecto (estándar PDF + empaquetadas + del sistema)
-     * más la caligráfica de la marca cargada del classpath, de modo que {@code font-family: 'Gabriola'}
+     * más la caligráfica de la marca cargada del classpath, de modo que {@code font-family: 'Pinyon Script'}
      * en las plantillas resuelva a la fuente incrustada. Se construye una sola vez (caro: escanea las
      * fuentes del sistema) y se reutiliza; queda de solo lectura, apto para compartir entre hilos.
      */
@@ -402,7 +402,7 @@ public class ImpresionService {
                     FontSet set = seed.getFontSet();
                     try (InputStream is = getClass().getResourceAsStream(BRAND_FONT_RESOURCE)) {
                         if (is != null) {
-                            // Registrar por su nombre real de familia (las plantillas usan font-family:'Gabriola').
+                            // Registrar por su nombre real de familia (las plantillas usan font-family:'Pinyon Script').
                             set.addFont(is.readAllBytes());
                         } else {
                             log.warn("Fuente de marca no encontrada en el classpath: {}", BRAND_FONT_RESOURCE);
