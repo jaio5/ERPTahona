@@ -51,21 +51,15 @@ public class ImpresionService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String OUTPUT_DIR = "impresiones/";
     private static final String LOGO_RESOURCE = "/img/logo-empresa.png";
-    /** Wordmark del nombre de empresa (caligrafía de la marca) para la cabecera de factura/albarán. */
-    private static final String MARCA_RESOURCE = "/img/marca-empresa.png";
-    /** Fuente caligráfica de la marca (nombre "Tahona de Fernando" en la cabecera). */
-    private static final String BRAND_FONT_RESOURCE = "/fonts/Gabriola.ttf";
     /**
-     * Alias CSS estable con el que se registra la fuente de marca, desacoplado del nombre de familia
-     * interno del .ttf. Las plantillas usan {@code font-family: 'MarcaEmpresa'}, así que se puede
-     * sustituir el fichero por otra fuente (aunque tenga otra familia) sin tocar el HTML.
+     * Fuente caligráfica del nombre de empresa en la cabecera (script Pinyon, OFL). Las plantillas
+     * la usan con {@code font-family: 'Pinyon Script'} (su nombre de familia real). Para cambiarla,
+     * sustituye el .ttf y actualiza el font-family de {@code .marca} en las plantillas PDF.
      */
-    private static final String BRAND_FONT_FAMILY = "MarcaEmpresa";
+    private static final String BRAND_FONT_RESOURCE = "/fonts/PinyonScript-Regular.ttf";
 
     /** Logo/escudo incrustado (data URI base64), cargado una sola vez desde el classpath. */
     private volatile String logoDataUri;
-    /** Wordmark de la marca incrustado (data URI base64), cargado una sola vez desde el classpath. */
-    private volatile String marcaDataUri;
     /**
      * Conjunto de fuentes (estándar + del sistema + la caligráfica de la marca) construido una sola
      * vez. Es de solo lectura tras su construcción, así que se comparte de forma segura entre hilos;
@@ -135,7 +129,6 @@ public class ImpresionService {
             vars.put("campos", campoPersonalizadoService.aplicables(
                 CampoPersonalizado.DOC_FACTURA, factura.getCliente()));
             vars.put("logo", getLogoDataUri());
-            vars.put("marca", getMarcaDataUri());
             vars.put("now", LocalDateTime.now());
             String html = renderTemplate("pdf/factura", vars);
             File pdfFile = buildOutputFile("Factura", factura.getNumero());
@@ -159,7 +152,6 @@ public class ImpresionService {
                 "campos", campoPersonalizadoService.aplicables(
                     CampoPersonalizado.DOC_ALBARAN, albaran.getCliente()),
                 "logo", getLogoDataUri(),
-                "marca", getMarcaDataUri(),
                 "now", LocalDateTime.now()
             ));
             // (el resumen ya incluye base, IVA, descuento global y total)
@@ -326,19 +318,6 @@ public class ImpresionService {
         return logoDataUri;
     }
 
-    /**
-     * Wordmark de la marca (nombre de empresa en su caligrafía) como data URI base64, leído del
-     * classpath una sola vez. Cadena vacía si no está: la cabecera cae al texto en fuente caligráfica.
-     */
-    private String getMarcaDataUri() {
-        if (marcaDataUri == null) {
-            synchronized (this) {
-                if (marcaDataUri == null) marcaDataUri = imagenDataUri(MARCA_RESOURCE);
-            }
-        }
-        return marcaDataUri;
-    }
-
     /** Lee una imagen PNG del classpath como data URI base64; cadena vacía si no existe. */
     private String imagenDataUri(String resource) {
         try (InputStream is = getClass().getResourceAsStream(resource)) {
@@ -423,8 +402,8 @@ public class ImpresionService {
                     FontSet set = seed.getFontSet();
                     try (InputStream is = getClass().getResourceAsStream(BRAND_FONT_RESOURCE)) {
                         if (is != null) {
-                            // encoding null = igual que addFont(byte[]); alias = nombre CSS estable.
-                            set.addFont(is.readAllBytes(), null, BRAND_FONT_FAMILY);
+                            // Registrar por su nombre real de familia (las plantillas usan font-family:'Gabriola').
+                            set.addFont(is.readAllBytes());
                         } else {
                             log.warn("Fuente de marca no encontrada en el classpath: {}", BRAND_FONT_RESOURCE);
                         }
