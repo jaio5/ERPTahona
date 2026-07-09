@@ -51,6 +51,8 @@ public class ImpresionService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String OUTPUT_DIR = "impresiones/";
     private static final String LOGO_RESOURCE = "/img/logo-empresa.png";
+    /** Wordmark del nombre de empresa (caligrafía de la marca) para la cabecera de factura/albarán. */
+    private static final String MARCA_RESOURCE = "/img/marca-empresa.png";
     /** Fuente caligráfica de la marca (nombre "Tahona de Fernando" en la cabecera). */
     private static final String BRAND_FONT_RESOURCE = "/fonts/Gabriola.ttf";
     /**
@@ -62,6 +64,8 @@ public class ImpresionService {
 
     /** Logo/escudo incrustado (data URI base64), cargado una sola vez desde el classpath. */
     private volatile String logoDataUri;
+    /** Wordmark de la marca incrustado (data URI base64), cargado una sola vez desde el classpath. */
+    private volatile String marcaDataUri;
     /**
      * Conjunto de fuentes (estándar + del sistema + la caligráfica de la marca) construido una sola
      * vez. Es de solo lectura tras su construcción, así que se comparte de forma segura entre hilos;
@@ -131,6 +135,7 @@ public class ImpresionService {
             vars.put("campos", campoPersonalizadoService.aplicables(
                 CampoPersonalizado.DOC_FACTURA, factura.getCliente()));
             vars.put("logo", getLogoDataUri());
+            vars.put("marca", getMarcaDataUri());
             vars.put("now", LocalDateTime.now());
             String html = renderTemplate("pdf/factura", vars);
             File pdfFile = buildOutputFile("Factura", factura.getNumero());
@@ -154,6 +159,7 @@ public class ImpresionService {
                 "campos", campoPersonalizadoService.aplicables(
                     CampoPersonalizado.DOC_ALBARAN, albaran.getCliente()),
                 "logo", getLogoDataUri(),
+                "marca", getMarcaDataUri(),
                 "now", LocalDateTime.now()
             ));
             // (el resumen ya incluye base, IVA, descuento global y total)
@@ -314,23 +320,36 @@ public class ImpresionService {
     private String getLogoDataUri() {
         if (logoDataUri == null) {
             synchronized (this) {
-                if (logoDataUri == null) {
-                    String cargado = "";
-                    try (InputStream is = getClass().getResourceAsStream(LOGO_RESOURCE)) {
-                        if (is != null) {
-                            cargado = "data:image/png;base64,"
-                                + Base64.getEncoder().encodeToString(is.readAllBytes());
-                        } else {
-                            log.warn("Logo de empresa no encontrado en el classpath: {}", LOGO_RESOURCE);
-                        }
-                    } catch (Exception e) {
-                        log.warn("No se pudo cargar el logo de empresa: {}", e.getMessage());
-                    }
-                    logoDataUri = cargado;
-                }
+                if (logoDataUri == null) logoDataUri = imagenDataUri(LOGO_RESOURCE);
             }
         }
         return logoDataUri;
+    }
+
+    /**
+     * Wordmark de la marca (nombre de empresa en su caligrafía) como data URI base64, leído del
+     * classpath una sola vez. Cadena vacía si no está: la cabecera cae al texto en fuente caligráfica.
+     */
+    private String getMarcaDataUri() {
+        if (marcaDataUri == null) {
+            synchronized (this) {
+                if (marcaDataUri == null) marcaDataUri = imagenDataUri(MARCA_RESOURCE);
+            }
+        }
+        return marcaDataUri;
+    }
+
+    /** Lee una imagen PNG del classpath como data URI base64; cadena vacía si no existe. */
+    private String imagenDataUri(String resource) {
+        try (InputStream is = getClass().getResourceAsStream(resource)) {
+            if (is != null) {
+                return "data:image/png;base64," + Base64.getEncoder().encodeToString(is.readAllBytes());
+            }
+            log.warn("Imagen no encontrada en el classpath: {}", resource);
+        } catch (Exception e) {
+            log.warn("No se pudo cargar la imagen {}: {}", resource, e.getMessage());
+        }
+        return "";
     }
 
     /** Convierte las líneas de una factura al modelo de entrada de {@link DesgloseFiscal}. */

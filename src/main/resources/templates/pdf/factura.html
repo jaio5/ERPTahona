@@ -10,6 +10,7 @@
   /* Cabecera */
   .marca { font-family: 'MarcaEmpresa', 'Times New Roman', Georgia, serif; font-style: normal;
            font-size: 56px; font-weight: normal; line-height: 1; }
+  .marca-img { width: 360px; max-width: 100%; height: auto; }
   .marca-tel { font-size: 15px; font-weight: bold; margin-top: 2px; }
   .emisor { text-align: right; }
   .emisor .logo { height: 92px; }
@@ -66,7 +67,9 @@
 <table class="two-col">
   <tr>
     <td style="width:54%;">
-      <div class="marca" th:text="${empresa.nombreComercial != null ? empresa.nombreComercial : empresa.nombreEmpresa}">Tahona de Fernando</div>
+      <img th:if="${marca != null and !marca.isEmpty()}" th:src="${marca}" class="marca-img" alt="Nombre de empresa"/>
+      <div class="marca" th:unless="${marca != null and !marca.isEmpty()}"
+           th:text="${empresa.nombreComercial != null ? empresa.nombreComercial : empresa.nombreEmpresa}">Tahona de Fernando</div>
       <div class="marca-tel" th:if="${empresa.telefono != null}">Tel. <span th:text="${empresa.telefono}"></span></div>
     </td>
     <td style="width:46%;" class="emisor">

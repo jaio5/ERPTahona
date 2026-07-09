@@ -7,8 +7,11 @@ import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
 import com.itextpdf.kernel.geom.Rectangle;
+import com.itextpdf.kernel.pdf.PdfDictionary;
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfName;
 import com.itextpdf.kernel.pdf.PdfReader;
+import com.itextpdf.kernel.pdf.PdfStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Regresión del formato de impresión:
- *  - la fuente caligráfica de la marca (Gabriola) queda embebida en el PDF (no cae en Times);
+ *  - la marca (wordmark del nombre de empresa) se imprime como imagen en la cabecera;
  *  - el albarán respeta el tamaño de página configurado (A5 media hoja / A4 folio).
  */
 @SpringBootTest
@@ -96,18 +97,31 @@ class ImpresionServiceFormatoTest {
         }
     }
 
+    /** Nº de imágenes (XObjects /Image) embebidas en la primera página. */
+    private int imagenesEnPrimeraPagina(File pdf) throws Exception {
+        try (PdfDocument doc = new PdfDocument(new PdfReader(pdf.getAbsolutePath()))) {
+            PdfDictionary xobj = doc.getPage(1).getResources().getPdfObject().getAsDictionary(PdfName.XObject);
+            int n = 0;
+            if (xobj != null) {
+                for (PdfName key : xobj.keySet()) {
+                    PdfStream s = xobj.getAsStream(key);
+                    if (s != null && PdfName.Image.equals(s.getAsName(PdfName.Subtype))) n++;
+                }
+            }
+            return n;
+        }
+    }
+
     @Test
-    void laFuenteDeMarcaQuedaEmbebidaEnLaFactura() throws Exception {
+    void laMarcaSeImprimeComoImagenEnLaFactura() throws Exception {
         when(empresaConfigService.getConfiguracionActivaOrThrow()).thenReturn(empresa(false));
         when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(empresa(false)));
 
         File pdf = impresionService.generarFacturaPdf(factura());
 
-        // El nombre BaseFont de la fuente embebida (p. ej. /ABCDEF+Gabriola) aparece en el PDF;
-        // si hubiera caído en la fuente por defecto (Times), "Gabriola" no estaría.
-        String contenido = new String(Files.readAllBytes(pdf.toPath()), StandardCharsets.ISO_8859_1);
-        assertTrue(contenido.contains("Gabriola"),
-                "La fuente caligráfica de la marca debe quedar embebida en el PDF de factura");
+        // Escudo + wordmark de la marca: al menos dos imágenes embebidas (antes solo el escudo).
+        assertTrue(imagenesEnPrimeraPagina(pdf) >= 2,
+                "La cabecera debe llevar el escudo y el wordmark de la marca como imágenes");
     }
 
     @Test
