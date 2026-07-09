@@ -422,16 +422,6 @@ public class VerifactuService implements InitializingBean {
     }
 
     /**
-     * Genera el XML de Verifactu para una factura usando datos de empresa_config.
-     * @deprecated Mantener por compatibilidad: delega en {@link #generarRegistroAltaXml(Factura, List)},
-     * que produce el registro de alta con el formato oficial de AEAT.
-     */
-    @Deprecated
-    public String generarXMLFactura(Factura factura, List<FacturaLinea> lineas) {
-        return generarRegistroAltaXml(factura, lineas);
-    }
-
-    /**
      * Genera el registro de facturación de alta con la estructura oficial de AEAT
      * (RegFactuSistemaFacturacion, esquemas SuministroLR.xsd / SuministroInformacion.xsd, tikeV1.0),
      * incluyendo encadenamiento, bloque SistemaInformatico y huella según la Orden HAC/1177/2024.
