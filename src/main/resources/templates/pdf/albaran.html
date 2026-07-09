@@ -2,8 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8"/>
-<style>
-  @page { size: A4; margin: 12mm 12mm; }
+<style th:inline="css">
+  @page { size: [(${pageSize} ?: 'A4')]; margin: 10mm 12mm; }
   * { box-sizing: border-box; }
   body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #000; margin: 0; }
 
@@ -55,8 +55,8 @@
       </div>
     </td>
     <td style="width:45%;" class="emisor">
-      <div class="nombre"><span th:text="${empresa.nombreEmpresa}">Grupo babo, s.coop.v.l.</span>
-        <span th:if="${empresa.cif != null}"> CIF <span th:text="${empresa.cif}"></span></span></div>
+      <div class="nombre"><span th:text="${empresa.nombreEmpresa}">Grupo babo, s.coop.v.l.</span><br th:if="${empresa.cif != null and pageSize == 'A5'}"/>
+        <span th:if="${empresa.cif != null}" th:text="'CIF ' + ${empresa.cif}">CIF F-00000000</span></div>
       <div th:if="${empresa.direccion != null}" th:text="${empresa.direccion}"></div>
       <div>
         <span th:if="${empresa.codigoPostal != null}" th:text="${empresa.codigoPostal}"></span>

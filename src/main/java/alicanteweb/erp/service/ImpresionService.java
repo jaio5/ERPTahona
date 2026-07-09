@@ -132,9 +132,13 @@ public class ImpresionService {
 
     public File generarAlbaranPdf(AlbaranVenta albaran) {
         try {
+            EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
+            // Tamaño de página configurable: media hoja (A5) para aprovechar el papel, o folio (A4).
+            String pageSize = Boolean.TRUE.equals(empresa.getAlbaranMedioFolio()) ? "A5" : "A4";
             String html = renderTemplate("pdf/albaran", Map.of(
                 "albaran", albaran,
-                "empresa", empresaConfigService.getConfiguracionActivaOrThrow(),
+                "empresa", empresa,
+                "pageSize", pageSize,
                 "resumen", resumenAlbaran(albaran),
                 "campos", campoPersonalizadoService.aplicables(
                     CampoPersonalizado.DOC_ALBARAN, albaran.getCliente()),

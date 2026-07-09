@@ -95,6 +95,11 @@ public class EmpresaConfig {
     @Column(name = "registro_sanitario", length = 100)
     private String registroSanitario;
 
+    /** Imprime los albaranes en media hoja (A5) en lugar de folio completo (A4) para ahorrar papel. */
+    @ColumnDefault("false")
+    @Column(name = "albaran_medio_folio")
+    private Boolean albaranMedioFolio = false;
+
     // Configuración Verifactu
     @ColumnDefault("FALSE")
     @Column(name = "verifactu_habilitado")

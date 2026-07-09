@@ -55,6 +55,7 @@ public class EmpresaWebController {
                           @RequestParam(required = false) String web,
                           @RequestParam(required = false) String iban,
                           @RequestParam(required = false) String sepaCreditorId,
+                          @RequestParam(required = false, defaultValue = "false") boolean albaranMedioFolio,
                           RedirectAttributes ra) {
         try {
             EmpresaConfig e = s.getConfiguracionActiva().orElse(new EmpresaConfig());
@@ -73,6 +74,7 @@ public class EmpresaWebController {
             e.setRegistroSanitario(registroSanitario);
             e.setRegistroMercantil(registroMercantil);
             e.setWeb(web);
+            e.setAlbaranMedioFolio(albaranMedioFolio);
             s.save(e);
             Flash.exito(ra, "Configuración guardada");
         } catch (RuntimeException ex) {
@@ -96,7 +98,8 @@ public class EmpresaWebController {
                              @RequestParam(required = false) String email,
                              @RequestParam(required = false) String registroSanitario,
                              @RequestParam(required = false) String registroMercantil,
-                             @RequestParam(required = false) String web) {
+                             @RequestParam(required = false) String web,
+                             @RequestParam(required = false, defaultValue = "false") boolean albaranMedioFolio) {
         EmpresaConfig e = s.getConfiguracionActiva().orElse(new EmpresaConfig());
         e.setNombreEmpresa(nombreEmpresa);
         e.setCif(cif);
@@ -111,6 +114,7 @@ public class EmpresaWebController {
         e.setRegistroSanitario(registroSanitario);
         e.setRegistroMercantil(registroMercantil);
         e.setWeb(web);
+        e.setAlbaranMedioFolio(albaranMedioFolio);
         m.addAttribute("moduloActivo", "empresa");
         m.addAttribute("titulo", "Configuración de empresa");
         m.addAttribute("empresa", e);
