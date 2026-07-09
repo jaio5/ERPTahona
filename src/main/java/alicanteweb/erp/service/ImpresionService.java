@@ -53,6 +53,12 @@ public class ImpresionService {
     private static final String LOGO_RESOURCE = "/img/logo-empresa.png";
     /** Fuente caligráfica de la marca (nombre "Tahona de Fernando" en la cabecera). */
     private static final String BRAND_FONT_RESOURCE = "/fonts/Gabriola.ttf";
+    /**
+     * Alias CSS estable con el que se registra la fuente de marca, desacoplado del nombre de familia
+     * interno del .ttf. Las plantillas usan {@code font-family: 'MarcaEmpresa'}, así que se puede
+     * sustituir el fichero por otra fuente (aunque tenga otra familia) sin tocar el HTML.
+     */
+    private static final String BRAND_FONT_FAMILY = "MarcaEmpresa";
 
     /** Logo/escudo incrustado (data URI base64), cargado una sola vez desde el classpath. */
     private volatile String logoDataUri;
@@ -138,12 +144,12 @@ public class ImpresionService {
     public File generarAlbaranPdf(AlbaranVenta albaran) {
         try {
             EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
-            // Tamaño de página configurable: media hoja (A5) para aprovechar el papel, o folio (A4).
-            String pageSize = Boolean.TRUE.equals(empresa.getAlbaranMedioFolio()) ? "A5" : "A4";
+            // Media hoja (A5) para aprovechar el papel, o folio completo (A4).
+            boolean medioFolio = Boolean.TRUE.equals(empresa.getAlbaranMedioFolio());
             String html = renderTemplate("pdf/albaran", Map.of(
                 "albaran", albaran,
                 "empresa", empresa,
-                "pageSize", pageSize,
+                "medioFolio", medioFolio,
                 "resumen", resumenAlbaran(albaran),
                 "campos", campoPersonalizadoService.aplicables(
                     CampoPersonalizado.DOC_ALBARAN, albaran.getCliente()),
@@ -395,16 +401,18 @@ public class ImpresionService {
             synchronized (this) {
                 if (brandFontSet == null) {
                     DefaultFontProvider seed = new DefaultFontProvider(true, true, true);
+                    FontSet set = seed.getFontSet();
                     try (InputStream is = getClass().getResourceAsStream(BRAND_FONT_RESOURCE)) {
                         if (is != null) {
-                            seed.addFont(is.readAllBytes());
+                            // encoding null = igual que addFont(byte[]); alias = nombre CSS estable.
+                            set.addFont(is.readAllBytes(), null, BRAND_FONT_FAMILY);
                         } else {
                             log.warn("Fuente de marca no encontrada en el classpath: {}", BRAND_FONT_RESOURCE);
                         }
                     } catch (Exception e) {
                         log.warn("No se pudo cargar la fuente de marca: {}", e.getMessage());
                     }
-                    brandFontSet = seed.getFontSet();
+                    brandFontSet = set;
                 }
             }
         }
