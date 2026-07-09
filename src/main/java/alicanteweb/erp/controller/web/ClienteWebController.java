@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -173,6 +174,49 @@ public class ClienteWebController extends BaseWebController {
             log.error("Error al guardar cliente [id={}]: {}", id, e.getMessage(), e);
             Flash.error(ra, e.getMessage());
             if (id != null) return "redirect:/web/clientes/" + id + "/editar";
+        }
+        return "redirect:/web/clientes";
+    }
+
+    @PostMapping("/{id}/baja")
+    @PreAuthorize("@permisos.puede('clientes', 'editar')")
+    public String darDeBaja(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            service.darDeBaja(id);
+            Flash.exito(ra, "Cliente dado de baja");
+        } catch (RuntimeException e) {
+            log.error("Error al dar de baja el cliente {}: {}", id, e.getMessage(), e);
+            Flash.error(ra, e.getMessage());
+        }
+        return "redirect:/web/clientes/" + id;
+    }
+
+    @PostMapping("/{id}/alta")
+    @PreAuthorize("@permisos.puede('clientes', 'editar')")
+    public String darDeAlta(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            service.activar(id);
+            Flash.exito(ra, "Cliente dado de alta");
+        } catch (RuntimeException e) {
+            log.error("Error al dar de alta el cliente {}: {}", id, e.getMessage(), e);
+            Flash.error(ra, e.getMessage());
+        }
+        return "redirect:/web/clientes/" + id;
+    }
+
+    @PostMapping("/{id}/eliminar")
+    @PreAuthorize("@permisos.puede('clientes', 'eliminar')")
+    public String eliminar(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            service.deleteById(id);
+            Flash.exito(ra, "Cliente eliminado");
+        } catch (DataIntegrityViolationException e) {
+            log.warn("No se puede eliminar el cliente {}: tiene documentos asociados", id);
+            Flash.error(ra, "No se puede eliminar: el cliente tiene facturas, albaranes u otros "
+                + "documentos asociados. Dale de baja en su lugar.");
+        } catch (RuntimeException e) {
+            log.error("Error al eliminar el cliente {}: {}", id, e.getMessage(), e);
+            Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/clientes";
     }

@@ -50,7 +50,7 @@
                     <th>Teléfono</th>
                     <th class="d-none d-md-table-cell">Ciudad</th>
                     <th>Email</th>
-                    <th style="width:100px;"></th>
+                    <th style="width:150px;"></th>
                 </tr>
             </thead>
             <tbody>
@@ -63,20 +63,34 @@
                 </tr>
                 <tr th:each="c : ${clientes}">
                     <td class="text-muted small" th:text="${c.codigo}"></td>
-                    <td><a th:href="@{/web/clientes/{id}(id=${c.id})}" class="fw-medium text-decoration-none" th:text="${c.nombre}"></a></td>
+                    <td>
+                        <a th:href="@{/web/clientes/{id}(id=${c.id})}" class="fw-medium text-decoration-none" th:text="${c.nombre}"></a>
+                        <span th:unless="${c.activo}" class="badge bg-secondary-subtle text-secondary ms-1" style="font-size:.7rem;">De baja</span>
+                    </td>
                     <td class="text-muted small" th:text="${c.cif}"></td>
                     <td class="text-muted small" th:text="${c.telefono}"></td>
                     <td class="text-muted small d-none d-md-table-cell" th:text="${c.poblacion}"></td>
                     <td class="text-muted small" th:text="${c.email}"></td>
-                    <td class="text-end">
-                        <a th:href="@{/web/clientes/{id}/export.json(id=${c.id})}" class="btn btn-ghost btn-sm"
-                           th:attr="aria-label='Exportar RGPD de ' + ${c.nombre}" title="Exportar RGPD">
-                            <i class="bi bi-shield-check"></i>
-                        </a>
+                    <td class="text-end text-nowrap">
                         <a th:href="@{/web/clientes/{id}(id=${c.id})}" class="btn btn-ghost btn-sm"
                            th:attr="aria-label='Ver cliente ' + ${c.nombre}" title="Ver">
                             <i class="bi bi-eye"></i>
                         </a>
+                        <a th:href="@{/web/clientes/{id}/editar(id=${c.id})}" class="btn btn-ghost btn-sm"
+                           th:attr="aria-label='Editar cliente ' + ${c.nombre}" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a th:href="@{/web/clientes/{id}/export.json(id=${c.id})}" class="btn btn-ghost btn-sm"
+                           th:attr="aria-label='Exportar RGPD de ' + ${c.nombre}" title="Exportar RGPD">
+                            <i class="bi bi-shield-check"></i>
+                        </a>
+                        <form th:action="@{/web/clientes/{id}/eliminar(id=${c.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-ghost btn-sm text-danger"
+                                    th:attr="aria-label='Eliminar cliente ' + ${c.nombre}" title="Eliminar"
+                                    data-confirm="¿Eliminar este cliente? Si tiene documentos, dale de baja en su lugar.">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
                     </td>
                 </tr>
             </tbody>

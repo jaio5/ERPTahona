@@ -5,16 +5,13 @@
             <p>
                 <span class="badge-status"
                       th:attr="data-status=${cliente.activo ? 'activo' : 'anulada'}"
-                      th:text="${cliente.activo ? 'Activo' : 'Inactivo'}">Activo</span>
+                      th:text="${cliente.activo ? 'Activo' : 'De baja'}">Activo</span>
                 <span class="text-muted small ms-2" th:text="${cliente.codigo}"></span>
             </p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/clientes/{id}/editar(id=${cliente.id})}" class="btn btn-ghost btn-sm">
                 <i class="bi bi-pencil me-1"></i>Editar
-            </a>
-            <a th:href="@{/web/clientes/{id}/export.json(id=${cliente.id})}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-download me-1"></i>Exportar RGPD
             </a>
             <a th:href="@{/web/clientes}" class="btn btn-ghost btn-sm">
                 <i class="bi bi-arrow-left me-1"></i>Volver
@@ -25,17 +22,7 @@
     <div class="row g-4">
         <div class="col-lg-8">
             <div class="form-card">
-                <!-- Identificación -->
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div class="doc-header-icon">
-                        <i class="bi bi-person"></i>
-                    </div>
-                    <div>
-                        <div class="fw-bold fs-5" th:text="${cliente.nombre}">Cliente</div>
-                        <div class="text-muted small" th:text="${cliente.email ?: ''}"></div>
-                    </div>
-                </div>
-
+                <!-- Datos generales -->
                 <div class="form-section-title">
                     <i class="bi bi-info-circle"></i> Datos generales
                 </div>
@@ -49,39 +36,76 @@
                         <div class="doc-field-value" th:text="${cliente.cif ?: '—'}">—</div>
                     </div>
                     <div class="col-sm-4">
-                        <span class="doc-field-label">Teléfono</span>
-                        <div class="doc-field-value" th:text="${cliente.telefono ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Correo electrónico</span>
-                        <div class="doc-field-value" th:text="${cliente.email ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-6">
                         <span class="doc-field-label">Estado</span>
                         <div class="mt-1">
                             <span class="badge-status"
                                   th:attr="data-status=${cliente.activo ? 'activo' : 'anulada'}"
-                                  th:text="${cliente.activo ? 'Activo' : 'Inactivo'}">—</span>
+                                  th:text="${cliente.activo ? 'Activo' : 'De baja'}">—</span>
                         </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Teléfono</span>
+                        <div class="doc-field-value" th:text="${cliente.telefono ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Correo electrónico</span>
+                        <div class="doc-field-value" th:text="${cliente.email ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Representante</span>
+                        <div class="doc-field-value" th:text="${cliente.representante ?: '—'}">—</div>
                     </div>
                 </div>
 
+                <!-- Dirección -->
                 <div class="form-section-title">
                     <i class="bi bi-geo-alt"></i> Dirección
                 </div>
-                <div class="row g-3">
+                <div class="row g-3 mb-4">
                     <div class="col-12">
                         <span class="doc-field-label">Dirección</span>
                         <div class="doc-field-value" th:text="${cliente.direccion ?: '—'}">—</div>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <span class="doc-field-label">Población</span>
                         <div class="doc-field-value" th:text="${cliente.poblacion ?: '—'}">—</div>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <span class="doc-field-label">Código postal</span>
                         <div class="doc-field-value" th:text="${cliente.codigoPostal ?: '—'}">—</div>
                     </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Provincia</span>
+                        <div class="doc-field-value" th:text="${cliente.provincia ?: '—'}">—</div>
+                    </div>
+                </div>
+
+                <!-- Datos bancarios / SEPA -->
+                <div class="form-section-title">
+                    <i class="bi bi-bank"></i> Datos bancarios (SEPA)
+                </div>
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">IBAN</span>
+                        <div class="doc-field-value" th:text="${cliente.iban ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Ref. mandato SEPA</span>
+                        <div class="doc-field-value" th:text="${cliente.mandatoSepaReferencia ?: '—'}">—</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="doc-field-label">Fecha mandato</span>
+                        <div class="doc-field-value"
+                             th:text="${cliente.mandatoSepaFecha != null ? #temporals.format(cliente.mandatoSepaFecha, 'dd/MM/yyyy') : '—'}">—</div>
+                    </div>
+                </div>
+
+                <!-- Notas (solo si hay) -->
+                <div th:if="${cliente.notas != null and !cliente.notas.isEmpty()}">
+                    <div class="form-section-title mt-4">
+                        <i class="bi bi-sticky"></i> Notas
+                    </div>
+                    <div class="doc-field-value" style="white-space: pre-line;" th:text="${cliente.notas}"></div>
                 </div>
             </div>
         </div>
@@ -93,9 +117,26 @@
                     <a th:href="@{/web/clientes/{id}/editar(id=${cliente.id})}" class="btn btn-outline-primary">
                         <i class="bi bi-pencil me-2"></i>Editar cliente
                     </a>
+                    <form th:if="${cliente.activo}" th:action="@{/web/clientes/{id}/baja(id=${cliente.id})}" method="post" class="d-grid">
+                        <button type="submit" class="btn btn-outline-warning"
+                                data-confirm="¿Dar de baja a este cliente? No se borra, solo queda inactivo.">
+                            <i class="bi bi-pause-circle me-2"></i>Dar de baja
+                        </button>
+                    </form>
+                    <form th:unless="${cliente.activo}" th:action="@{/web/clientes/{id}/alta(id=${cliente.id})}" method="post" class="d-grid">
+                        <button type="submit" class="btn btn-outline-success">
+                            <i class="bi bi-play-circle me-2"></i>Dar de alta
+                        </button>
+                    </form>
                     <a th:href="@{/web/clientes/{id}/export.json(id=${cliente.id})}" class="btn btn-ghost">
                         <i class="bi bi-download me-2"></i>Exportar RGPD
                     </a>
+                    <form th:action="@{/web/clientes/{id}/eliminar(id=${cliente.id})}" method="post" class="d-grid">
+                        <button type="submit" class="btn btn-ghost text-danger"
+                                data-confirm="¿Eliminar definitivamente este cliente? Esta acción no se puede deshacer.">
+                            <i class="bi bi-trash3 me-2"></i>Eliminar
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
