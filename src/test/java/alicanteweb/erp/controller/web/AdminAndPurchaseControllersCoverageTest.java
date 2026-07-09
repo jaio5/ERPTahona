@@ -29,18 +29,31 @@ class AdminAndPurchaseControllersCoverageTest {
 
         assertEquals("layout", controller.form(new ExtendedModelMap()));
         RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
-        assertEquals("redirect:/web/empresa", controller.guardar(
-                "Tahona", "B123", "Tahona Comercial", "Calle", "03001", "Alicante", "Alicante",
-                "1", "600111222", "a@b.es", "RS", "RM", "https://example.test",
-                "ES9121000418450200051332", "ES12000B12345678", true, ra));
-        verify(empresas).save(empresa);
 
-        assertEquals("layout", controller.validarVat(new ExtendedModelMap(),
-                "Tahona", "B123", null, null, null, null, null, null, null, null, null, null, null, false));
+        EmpresaWebController.EmpresaForm form = new EmpresaWebController.EmpresaForm();
+        form.setNombreEmpresa("Tahona");
+        form.setCif("B123");
+        form.setNombreComercial("Tahona Comercial");
+        form.setIban("ES9121000418450200051332");
+        form.setSepaCreditorId("ES12000B12345678");
+        form.setAlbaranMedioFolio(true);
+        assertEquals("redirect:/web/empresa", controller.guardar(form, ra));
+        verify(empresas).save(empresa);
+        // El IBAN se normaliza (sin espacios, mayúsculas) al volcar el formulario en la entidad.
+        assertEquals("ES9121000418450200051332", empresa.getIban());
+        assertTrue(empresa.getAlbaranMedioFolio());
+
+        EmpresaWebController.EmpresaForm formVat = new EmpresaWebController.EmpresaForm();
+        formVat.setNombreEmpresa("Tahona");
+        formVat.setCif("B123");
+        assertEquals("layout", controller.validarVat(formVat, new ExtendedModelMap()));
         verify(vat).validar("B123");
 
         doThrow(new IllegalArgumentException("cif")).when(empresas).save(any());
-        controller.guardar("X", "X", null, null, null, null, null, null, null, null, null, null, null, null, null, false, ra);
+        EmpresaWebController.EmpresaForm formErr = new EmpresaWebController.EmpresaForm();
+        formErr.setNombreEmpresa("X");
+        formErr.setCif("X");
+        controller.guardar(formErr, ra);
         assertEquals("cif", ra.getFlashAttributes().get("error"));
     }
 

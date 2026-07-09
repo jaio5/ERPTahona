@@ -4,6 +4,8 @@ import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.service.EmpresaConfigService;
 import alicanteweb.erp.service.VatValidationService;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,27 +42,56 @@ public class EmpresaWebController {
     }
 
     @PostMapping
-    public String guardar(@RequestParam String nombreEmpresa,
-                          @RequestParam String cif,
-                          @RequestParam(required = false) String nombreComercial,
-                          @RequestParam(required = false) String direccion,
-                          @RequestParam(required = false) String codigoPostal,
-                          @RequestParam(required = false) String ciudad,
-                          @RequestParam(required = false) String provincia,
-                          @RequestParam(required = false) String telefono,
-                          @RequestParam(required = false) String whatsapp,
-                          @RequestParam(required = false) String email,
-                          @RequestParam(required = false) String registroSanitario,
-                          @RequestParam(required = false) String registroMercantil,
-                          @RequestParam(required = false) String web,
-                          @RequestParam(required = false) String iban,
-                          @RequestParam(required = false) String sepaCreditorId,
-                          @RequestParam(required = false, defaultValue = "false") boolean albaranMedioFolio,
-                          RedirectAttributes ra) {
+    public String guardar(@ModelAttribute EmpresaForm form, RedirectAttributes ra) {
         try {
             EmpresaConfig e = s.getConfiguracionActiva().orElse(new EmpresaConfig());
-            e.setIban(iban != null && !iban.isBlank() ? iban.replaceAll("\\s+", "").toUpperCase() : null);
-            e.setSepaCreditorId(sepaCreditorId != null && !sepaCreditorId.isBlank() ? sepaCreditorId.trim() : null);
+            form.applyTo(e);
+            s.save(e);
+            Flash.exito(ra, "Configuración guardada");
+        } catch (RuntimeException ex) {
+            log.error("Error al guardar configuración de empresa: {}", ex.getMessage(), ex);
+            Flash.error(ra, ex.getMessage());
+        }
+        return "redirect:/web/empresa";
+    }
+
+    @PostMapping("/validar-vat")
+    public String validarVat(@ModelAttribute EmpresaForm form, Model m) {
+        EmpresaConfig e = s.getConfiguracionActiva().orElse(new EmpresaConfig());
+        form.applyTo(e);
+        m.addAttribute("moduloActivo", "empresa");
+        m.addAttribute("titulo", "Configuración de empresa");
+        m.addAttribute("empresa", e);
+        m.addAttribute("vatValidation", vatValidationService.validar(form.getCif()));
+        return WebController.layout(m, "empresa/formulario");
+    }
+
+    /**
+     * Datos del formulario de empresa. Sus nombres de campo coinciden con los {@code name} de los
+     * inputs de la plantilla, de modo que Spring los enlaza por @ModelAttribute. Centraliza el
+     * volcado a la entidad ({@link #applyTo}) para no duplicarlo entre guardar y validar-vat.
+     */
+    @Getter
+    @Setter
+    public static class EmpresaForm {
+        private String nombreEmpresa;
+        private String cif;
+        private String nombreComercial;
+        private String direccion;
+        private String codigoPostal;
+        private String ciudad;
+        private String provincia;
+        private String telefono;
+        private String whatsapp;
+        private String email;
+        private String registroSanitario;
+        private String registroMercantil;
+        private String web;
+        private String iban;
+        private String sepaCreditorId;
+        private boolean albaranMedioFolio;
+
+        void applyTo(EmpresaConfig e) {
             e.setNombreEmpresa(nombreEmpresa);
             e.setCif(cif);
             e.setNombreComercial(nombreComercial);
@@ -74,51 +105,9 @@ public class EmpresaWebController {
             e.setRegistroSanitario(registroSanitario);
             e.setRegistroMercantil(registroMercantil);
             e.setWeb(web);
+            e.setIban(iban != null && !iban.isBlank() ? iban.replaceAll("\\s+", "").toUpperCase() : null);
+            e.setSepaCreditorId(sepaCreditorId != null && !sepaCreditorId.isBlank() ? sepaCreditorId.trim() : null);
             e.setAlbaranMedioFolio(albaranMedioFolio);
-            s.save(e);
-            Flash.exito(ra, "Configuración guardada");
-        } catch (RuntimeException ex) {
-            log.error("Error al guardar configuración de empresa: {}", ex.getMessage(), ex);
-            Flash.error(ra, ex.getMessage());
         }
-        return "redirect:/web/empresa";
-    }
-
-    @PostMapping("/validar-vat")
-    public String validarVat(Model m,
-                             @RequestParam String nombreEmpresa,
-                             @RequestParam String cif,
-                             @RequestParam(required = false) String nombreComercial,
-                             @RequestParam(required = false) String direccion,
-                             @RequestParam(required = false) String codigoPostal,
-                             @RequestParam(required = false) String ciudad,
-                             @RequestParam(required = false) String provincia,
-                             @RequestParam(required = false) String telefono,
-                             @RequestParam(required = false) String whatsapp,
-                             @RequestParam(required = false) String email,
-                             @RequestParam(required = false) String registroSanitario,
-                             @RequestParam(required = false) String registroMercantil,
-                             @RequestParam(required = false) String web,
-                             @RequestParam(required = false, defaultValue = "false") boolean albaranMedioFolio) {
-        EmpresaConfig e = s.getConfiguracionActiva().orElse(new EmpresaConfig());
-        e.setNombreEmpresa(nombreEmpresa);
-        e.setCif(cif);
-        e.setNombreComercial(nombreComercial);
-        e.setDireccion(direccion);
-        e.setCodigoPostal(codigoPostal);
-        e.setCiudad(ciudad);
-        e.setProvincia(provincia);
-        e.setTelefono(telefono);
-        e.setWhatsapp(whatsapp);
-        e.setEmail(email);
-        e.setRegistroSanitario(registroSanitario);
-        e.setRegistroMercantil(registroMercantil);
-        e.setWeb(web);
-        e.setAlbaranMedioFolio(albaranMedioFolio);
-        m.addAttribute("moduloActivo", "empresa");
-        m.addAttribute("titulo", "Configuración de empresa");
-        m.addAttribute("empresa", e);
-        m.addAttribute("vatValidation", vatValidationService.validar(cif));
-        return WebController.layout(m, "empresa/formulario");
     }
 }
