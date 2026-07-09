@@ -10,37 +10,68 @@
         </div>
     </div>
 
-    <div class="form-card" style="max-width:720px;">
+    <div class="form-card" style="max-width:760px;">
         <form th:action="@{/web/campos-impresion}" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="id" th:value="${campo?.id}">
             <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label" for="ambito">Ámbito *</label>
-                    <select id="ambito" name="ambito" class="form-select">
-                        <option value="EMPRESA" th:selected="${campo == null or campo.ambito == 'EMPRESA'}">Global (todos)</option>
-                        <option value="CLIENTE" th:selected="${campo != null and campo.ambito == 'CLIENTE'}">Cliente concreto</option>
+                <!-- Qué campo: catálogo del sistema o campo propio -->
+                <div class="col-12">
+                    <label class="form-label" for="claveSistema">Campo</label>
+                    <select id="claveSistema" name="claveSistema" class="form-select">
+                        <option value="" th:selected="${campo == null or campo.claveSistema == null}">
+                            — Campo propio (texto libre) —
+                        </option>
+                        <optgroup label="Datos de la empresa">
+                            <option th:each="cs : ${camposEmpresa}" th:value="${cs.clave}"
+                                    th:text="${cs.etiqueta}"
+                                    th:selected="${campo != null and campo.claveSistema == cs.clave}"></option>
+                        </optgroup>
+                        <optgroup label="Datos del cliente">
+                            <option th:each="cs : ${camposCliente}" th:value="${cs.clave}"
+                                    th:text="${cs.etiqueta}"
+                                    th:selected="${campo != null and campo.claveSistema == cs.clave}"></option>
+                        </optgroup>
                     </select>
+                    <div class="form-text">
+                        Elige un dato que el ERP rellena solo (registro sanitario, IBAN, código de cliente…)
+                        o «Campo propio» para escribir tú la etiqueta y el valor.
+                    </div>
                 </div>
-                <div class="col-md-8">
-                    <label class="form-label" for="clienteId">Cliente (si ámbito = cliente)</label>
-                    <select id="clienteId" name="clienteId" class="form-select" data-searchable>
-                        <option value="">— Ninguno —</option>
-                        <option th:each="cl : ${clientes}" th:value="${cl.id}"
-                                th:text="${cl.nombre + (cl.cif != null ? ' (' + cl.cif + ')' : '')}"
-                                th:selected="${campo != null and campo.clienteId == cl.id}"></option>
-                    </select>
-                </div>
+
                 <div class="col-md-6">
-                    <label class="form-label" for="etiqueta">Etiqueta *</label>
+                    <label class="form-label" for="etiqueta" id="lblEtiqueta">Etiqueta *</label>
                     <input type="text" id="etiqueta" name="etiqueta" class="form-control"
-                           th:value="${campo?.etiqueta}" placeholder="Ref. cliente" required>
+                           th:value="${campo?.etiqueta}" placeholder="Forma de pago">
                     <div class="invalid-feedback">La etiqueta es obligatoria.</div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" id="valorWrap">
                     <label class="form-label" for="valor">Valor</label>
                     <input type="text" id="valor" name="valor" class="form-control"
                            th:value="${campo?.valor}" placeholder="Texto que se imprime">
+                    <div class="form-text" id="valorAuto" style="display:none;">
+                        El valor se rellena automáticamente con el dato del sistema.
+                    </div>
                 </div>
+
+                <!-- Visibilidad respecto a los clientes -->
+                <div class="col-md-6">
+                    <label class="form-label" for="visibilidad">Visibilidad *</label>
+                    <select id="visibilidad" name="visibilidad" class="form-select">
+                        <option value="TODOS"   th:selected="${campo == null or campo.visibilidad == 'TODOS'}">A todos los clientes</option>
+                        <option value="EXCEPTO" th:selected="${campo != null and campo.visibilidad == 'EXCEPTO'}">A todos excepto…</option>
+                        <option value="SOLO"    th:selected="${campo != null and campo.visibilidad == 'SOLO'}">Solo a…</option>
+                    </select>
+                </div>
+                <div class="col-md-6" id="clientesWrap">
+                    <label class="form-label" for="clienteIds">Clientes</label>
+                    <select id="clienteIds" name="clienteIds" class="form-select" multiple size="6">
+                        <option th:each="cl : ${clientes}" th:value="${cl.id}"
+                                th:text="${cl.nombre + (cl.cif != null ? ' (' + cl.cif + ')' : '')}"
+                                th:selected="${campo != null and campo.clientes.contains(cl.id)}"></option>
+                    </select>
+                    <div class="form-text">Ctrl/Cmd + clic para elegir varios.</div>
+                </div>
+
                 <div class="col-md-4">
                     <label class="form-label" for="documento">Documento *</label>
                     <select id="documento" name="documento" class="form-select">
@@ -79,4 +110,37 @@
             </div>
         </form>
     </div>
+
+    <script th:attr="nonce=${cspNonce}">
+        (function () {
+            var clave = document.getElementById('claveSistema');
+            var valorInput = document.getElementById('valor');
+            var valorAuto = document.getElementById('valorAuto');
+            var etiqueta = document.getElementById('etiqueta');
+            var lblEtiqueta = document.getElementById('lblEtiqueta');
+
+            function syncOrigen() {
+                var sistema = clave.value !== '';
+                valorInput.style.display = sistema ? 'none' : '';
+                valorAuto.style.display = sistema ? '' : 'none';
+                etiqueta.required = !sistema;
+                lblEtiqueta.textContent = sistema
+                    ? 'Etiqueta (opcional: sobrescribe la del catálogo)'
+                    : 'Etiqueta *';
+            }
+
+            var vis = document.getElementById('visibilidad');
+            var clientesWrap = document.getElementById('clientesWrap');
+
+            function syncVis() {
+                var necesita = vis.value === 'EXCEPTO' || vis.value === 'SOLO';
+                clientesWrap.style.display = necesita ? '' : 'none';
+            }
+
+            clave.addEventListener('change', syncOrigen);
+            vis.addEventListener('change', syncVis);
+            syncOrigen();
+            syncVis();
+        })();
+    </script>
 </div>

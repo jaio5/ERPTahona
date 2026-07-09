@@ -3,6 +3,7 @@ package alicanteweb.erp.controller.web;
 import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.CampoPersonalizado;
 import alicanteweb.erp.entities.Cliente;
+import alicanteweb.erp.entities.enums.CampoSistema;
 import alicanteweb.erp.service.CampoPersonalizadoService;
 import alicanteweb.erp.service.ClienteService;
 import org.slf4j.Logger;
@@ -13,11 +14,13 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/** CRUD de los campos personalizados del formato de impresión (Ajustes). */
+/** CRUD de los campos del formato de impresión (Administración). */
 @Controller
 @PreAuthorize("@permisos.puede('configuracion', 'ver')")
 @RequestMapping("/web/campos-impresion")
@@ -33,12 +36,20 @@ public class CampoPersonalizadoWebController {
         this.clienteService = clienteService;
     }
 
+    /** clave del catálogo -> etiqueta, para mostrar el nombre de los campos de sistema. */
+    private Map<String, String> catalogo() {
+        Map<String, String> m = new LinkedHashMap<>();
+        for (CampoSistema cs : CampoSistema.values()) m.put(cs.getClave(), cs.getEtiqueta());
+        return m;
+    }
+
     @GetMapping
     public String lista(Model m) {
         m.addAttribute("moduloActivo", "camposImpresion");
         m.addAttribute("titulo", "Campos de impresión");
         m.addAttribute("campos", service.findAll());
-        // id -> nombre para mostrar el cliente de cada campo sin acceso lazy en la plantilla
+        m.addAttribute("catalogo", catalogo());
+        // id -> nombre para mostrar los clientes de cada campo sin acceso lazy en la plantilla
         Map<Long, String> clientesById = clienteService.findAll().stream()
             .collect(Collectors.toMap(Cliente::getId, Cliente::getNombre, (a, b) -> a, LinkedHashMap::new));
         m.addAttribute("clientesById", clientesById);
@@ -68,6 +79,13 @@ public class CampoPersonalizadoWebController {
         m.addAttribute("moduloActivo", "camposImpresion");
         m.addAttribute("titulo", titulo);
         m.addAttribute("campo", campo);
+        m.addAttribute("camposEmpresa", List.of(
+            CampoSistema.EMPRESA_REGISTRO_SANITARIO, CampoSistema.EMPRESA_REGISTRO_MERCANTIL,
+            CampoSistema.EMPRESA_IBAN, CampoSistema.EMPRESA_SEPA_CREDITOR, CampoSistema.EMPRESA_TELEFONO,
+            CampoSistema.EMPRESA_WHATSAPP, CampoSistema.EMPRESA_EMAIL, CampoSistema.EMPRESA_WEB));
+        m.addAttribute("camposCliente", List.of(
+            CampoSistema.CLIENTE_CODIGO, CampoSistema.CLIENTE_REPRESENTANTE,
+            CampoSistema.CLIENTE_IBAN, CampoSistema.CLIENTE_MANDATO_SEPA));
         m.addAttribute("clientes", clienteService.findAll());
         m.addAttribute("breadcrumb", BreadcrumbBuilder.of(
             BreadcrumbBuilder.inicio(),
@@ -78,10 +96,11 @@ public class CampoPersonalizadoWebController {
 
     @PostMapping
     public String guardar(@RequestParam(required = false) Long id,
-                          @RequestParam String ambito,
-                          @RequestParam(required = false) Long clienteId,
-                          @RequestParam String etiqueta,
+                          @RequestParam(required = false) String claveSistema,
+                          @RequestParam(required = false) String etiqueta,
                           @RequestParam(required = false) String valor,
+                          @RequestParam String visibilidad,
+                          @RequestParam(required = false) List<Long> clienteIds,
                           @RequestParam String ubicacion,
                           @RequestParam String documento,
                           @RequestParam(required = false, defaultValue = "0") Integer orden,
@@ -91,10 +110,14 @@ public class CampoPersonalizadoWebController {
             CampoPersonalizado c = id != null
                 ? service.findById(id).orElseThrow(() -> new IllegalArgumentException("Campo no válido: " + id))
                 : new CampoPersonalizado();
-            c.setAmbito(ambito);
-            c.setClienteId(clienteId);
-            c.setEtiqueta(etiqueta);
+            boolean sistema = claveSistema != null && !claveSistema.isBlank();
+            c.setOrigen(sistema ? CampoPersonalizado.ORIGEN_SISTEMA : CampoPersonalizado.ORIGEN_PROPIO);
+            c.setClaveSistema(sistema ? claveSistema : null);
+            c.setEtiqueta(etiqueta != null && !etiqueta.isBlank() ? etiqueta.trim() : null);
             c.setValor(valor);
+            c.setVisibilidad(visibilidad);
+            c.getClientes().clear();
+            if (clienteIds != null) c.getClientes().addAll(new HashSet<>(clienteIds));
             c.setUbicacion(ubicacion);
             c.setDocumento(documento);
             c.setOrden(orden != null ? orden : 0);

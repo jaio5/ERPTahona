@@ -80,7 +80,8 @@ class CampoPersonalizadoRenderTest {
         when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(empresa()));
 
         CampoPersonalizado campo = new CampoPersonalizado();
-        campo.setAmbito(CampoPersonalizado.AMBITO_EMPRESA);
+        campo.setOrigen(CampoPersonalizado.ORIGEN_PROPIO);
+        campo.setVisibilidad(CampoPersonalizado.VIS_TODOS);
         campo.setEtiqueta("Forma de pago");
         campo.setValor("PAGO A 30 DIAS FIN DE MES");
         campo.setUbicacion(CampoPersonalizado.UB_PIE);

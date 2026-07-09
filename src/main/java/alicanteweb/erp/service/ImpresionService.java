@@ -110,8 +110,8 @@ public class ImpresionService {
             vars.put("datosVerificacion", generarDatosVerificacion(factura));
             vars.put("desgloseIva", filasIva(desglose));
             vars.put("descuentoGlobal", desglose.descuentoGlobal());
-            vars.put("campos", campoPersonalizadoService.aplicables(CampoPersonalizado.DOC_FACTURA,
-                factura.getCliente() != null ? factura.getCliente().getId() : null));
+            vars.put("campos", campoPersonalizadoService.aplicables(
+                CampoPersonalizado.DOC_FACTURA, factura.getCliente()));
             vars.put("logo", getLogoDataUri());
             vars.put("now", LocalDateTime.now());
             String html = renderTemplate("pdf/factura", vars);
@@ -129,8 +129,8 @@ public class ImpresionService {
                 "albaran", albaran,
                 "empresa", empresaConfigService.getConfiguracionActivaOrThrow(),
                 "resumen", resumenAlbaran(albaran),
-                "campos", campoPersonalizadoService.aplicables(CampoPersonalizado.DOC_ALBARAN,
-                    albaran.getCliente() != null ? albaran.getCliente().getId() : null),
+                "campos", campoPersonalizadoService.aplicables(
+                    CampoPersonalizado.DOC_ALBARAN, albaran.getCliente()),
                 "logo", getLogoDataUri(),
                 "now", LocalDateTime.now()
             ));

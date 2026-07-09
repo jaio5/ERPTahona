@@ -11,8 +11,9 @@
     </div>
 
     <p class="text-muted small mb-3">
-        Añade información extra (etiqueta y valor) a tus facturas y albaranes sin tocar la plantilla:
-        de forma global o exclusiva para un cliente, en la zona del documento que elijas.
+        Añade información extra a tus facturas y albaranes sin tocar la plantilla: elige un dato que el
+        ERP rellena solo (registro sanitario, IBAN, código de cliente…) o un campo propio, y decide a qué
+        clientes se imprime.
     </p>
 
     <div class="table-card">
@@ -20,10 +21,9 @@
         <table class="table table-hover mb-0">
             <thead>
                 <tr>
-                    <th>Ámbito</th>
-                    <th>Cliente</th>
-                    <th>Etiqueta</th>
+                    <th>Campo</th>
                     <th>Valor</th>
+                    <th>Visibilidad</th>
                     <th>Documento</th>
                     <th>Zona</th>
                     <th class="text-center">Activo</th>
@@ -32,19 +32,27 @@
             </thead>
             <tbody>
                 <tr th:if="${#lists.isEmpty(campos)}">
-                    <td colspan="8" class="empty-state">
+                    <td colspan="7" class="empty-state">
                         <i class="bi bi-input-cursor-text"></i>
-                        <div>No hay campos personalizados</div>
+                        <div>No hay campos de impresión</div>
                     </td>
                 </tr>
                 <tr th:each="c : ${campos}">
-                    <td>
-                        <span class="badge bg-secondary-subtle text-secondary" th:text="${c.ambito}">EMPRESA</span>
+                    <td class="fw-medium"
+                        th:text="${c.esSistema()
+                            ? (c.etiqueta != null ? c.etiqueta : catalogo.getOrDefault(c.claveSistema, c.claveSistema))
+                            : c.etiqueta}">Campo</td>
+                    <td class="text-muted small">
+                        <span th:if="${c.esSistema()}" class="badge bg-info-subtle text-info">Automático</span>
+                        <span th:unless="${c.esSistema()}" th:text="${c.valor}">Valor</span>
                     </td>
-                    <td class="text-muted small"
-                        th:text="${c.clienteId != null ? clientesById.getOrDefault(c.clienteId, '—') : '(todos)'}">—</td>
-                    <td class="fw-medium" th:text="${c.etiqueta}">Etiqueta</td>
-                    <td class="text-muted small" th:text="${c.valor}">Valor</td>
+                    <td class="text-muted small">
+                        <span th:if="${c.visibilidad == 'TODOS'}">Todos</span>
+                        <span th:if="${c.visibilidad == 'EXCEPTO'}"
+                              th:text="'Todos excepto (' + ${c.clientes.size()} + ')'">Todos excepto</span>
+                        <span th:if="${c.visibilidad == 'SOLO'}"
+                              th:text="'Solo (' + ${c.clientes.size()} + ')'">Solo</span>
+                    </td>
                     <td class="text-muted small" th:text="${c.documento}">AMBOS</td>
                     <td class="text-muted small" th:text="${c.ubicacion}">PIE</td>
                     <td class="text-center">
@@ -53,13 +61,14 @@
                     </td>
                     <td class="text-end">
                         <a th:href="@{/web/campos-impresion/{id}/editar(id=${c.id})}" class="btn btn-ghost btn-sm"
-                           th:attr="aria-label='Editar ' + ${c.etiqueta}" title="Editar">
+                           th:attr="aria-label='Editar campo'" title="Editar">
                             <i class="bi bi-pencil"></i>
                         </a>
                         <form th:action="@{/web/campos-impresion/{id}/eliminar(id=${c.id})}" method="post"
-                              class="d-inline" onsubmit="return confirm('¿Eliminar este campo?');">
+                              class="d-inline">
                             <button type="submit" class="btn btn-ghost btn-sm text-danger"
-                                    th:attr="aria-label='Eliminar ' + ${c.etiqueta}" title="Eliminar">
+                                    data-confirm="¿Eliminar este campo?"
+                                    th:attr="aria-label='Eliminar campo'" title="Eliminar">
                                 <i class="bi bi-trash3"></i>
                             </button>
                         </form>

@@ -49,15 +49,16 @@ class CampoPersonalizadoWebControllerTest {
     void guardarYEliminar() {
         RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
 
+        // Campo propio global (sin clave de sistema, visibilidad TODOS)
         assertEquals("redirect:/web/campos-impresion",
-                controller.guardar(null, "EMPRESA", null, "Nota", "Pago a 30 días",
+                controller.guardar(null, null, "Nota", "Pago a 30 días", "TODOS", null,
                         "PIE", "AMBOS", 1, true, ra));
         verify(service).save(any());
 
-        // Error de validación (cliente obligatorio) -> vuelve al alta
-        doThrow(new IllegalArgumentException("cliente")).when(service).save(any());
+        // Error de validación -> vuelve al alta
+        doThrow(new IllegalArgumentException("clientes")).when(service).save(any());
         assertEquals("redirect:/web/campos-impresion/nuevo",
-                controller.guardar(null, "CLIENTE", null, "Ref", null, "CLIENTE", "FACTURA", 0, true, ra));
+                controller.guardar(null, null, "Ref", null, "SOLO", null, "CLIENTE", "FACTURA", 0, true, ra));
 
         assertEquals("redirect:/web/campos-impresion", controller.eliminar(3L, ra));
         verify(service).deleteById(3L);

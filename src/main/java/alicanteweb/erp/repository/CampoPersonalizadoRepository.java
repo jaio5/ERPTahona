@@ -7,20 +7,22 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CampoPersonalizadoRepository extends JpaRepository<CampoPersonalizado, Long> {
 
-    List<CampoPersonalizado> findAllByOrderByAmbitoAscOrdenAsc();
+    /** Un campo con su conjunto de clientes cargado (para editar y para guardar cambios). */
+    @Query("SELECT c FROM CampoPersonalizado c LEFT JOIN FETCH c.clientes WHERE c.id = :id")
+    Optional<CampoPersonalizado> findByIdConClientes(@Param("id") Long id);
 
-    /**
-     * Campos aplicables a un documento concreto: activos, del tipo de documento (o AMBOS) y
-     * globales (ámbito EMPRESA) o del cliente indicado. Ordenados por zona y orden para pintarlos.
-     */
-    @Query("SELECT c FROM CampoPersonalizado c WHERE c.activo = true "
-        + "AND (c.documento = :documento OR c.documento = 'AMBOS') "
-        + "AND (c.ambito = 'EMPRESA' OR (c.ambito = 'CLIENTE' AND c.clienteId = :clienteId)) "
-        + "ORDER BY c.ubicacion, c.orden")
-    List<CampoPersonalizado> findAplicables(@Param("documento") String documento,
-                                            @Param("clienteId") Long clienteId);
+    /** Todos los campos con su conjunto de clientes cargado, para el listado de administración. */
+    @Query("SELECT DISTINCT c FROM CampoPersonalizado c LEFT JOIN FETCH c.clientes "
+        + "ORDER BY c.ubicacion, c.orden, c.id")
+    List<CampoPersonalizado> findAllConClientes();
+
+    /** Campos activos con su conjunto de clientes, para resolver los aplicables a un documento. */
+    @Query("SELECT DISTINCT c FROM CampoPersonalizado c LEFT JOIN FETCH c.clientes "
+        + "WHERE c.activo = true ORDER BY c.ubicacion, c.orden, c.id")
+    List<CampoPersonalizado> findActivosConClientes();
 }
