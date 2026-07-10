@@ -111,6 +111,18 @@ class ImpresionServiceFormatoTest {
     }
 
     @Test
+    void laFuenteCaligraficaSeEmbebeEnElAlbaran() throws Exception {
+        when(empresaConfigService.getConfiguracionActivaOrThrow()).thenReturn(empresa(false));
+        when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(empresa(false)));
+
+        File pdf = impresionService.generarAlbaranPdf(albaran());
+
+        String contenido = new String(Files.readAllBytes(pdf.toPath()), StandardCharsets.ISO_8859_1);
+        assertTrue(contenido.contains("PinyonScript"),
+                "La fuente caligráfica del nombre de empresa debe quedar embebida en el albarán");
+    }
+
+    @Test
     void elAlbaranEnMedioFolioSaleEnA5() throws Exception {
         when(empresaConfigService.getConfiguracionActivaOrThrow()).thenReturn(empresa(true));
         when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(empresa(true)));
