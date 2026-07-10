@@ -11,6 +11,7 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.canvas.parser.EventType;
 import com.itextpdf.kernel.pdf.canvas.parser.PdfCanvasProcessor;
+import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
 import com.itextpdf.kernel.pdf.canvas.parser.data.IEventData;
 import com.itextpdf.kernel.pdf.canvas.parser.data.TextRenderInfo;
 import com.itextpdf.kernel.pdf.canvas.parser.listener.IEventListener;
@@ -80,6 +81,31 @@ class ImpresionServiceFormatoTest {
         return f;
     }
 
+    /**
+     * Los campos de texto en blanco del formulario llegan como cadena vacia, no como null, y la
+     * caja de cliente del PDF debe tratarlos igual: sin lineas vacias ni etiquetas huerfanas.
+     */
+    @Test
+    void losCamposDeTextoEnBlancoSeImprimenIgualQueLosNulos() throws Exception {
+        when(empresaConfigService.getConfiguracionActivaOrThrow()).thenReturn(empresa(false));
+        when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(empresa(false)));
+
+        String conNulos = textoPrimeraPagina(impresionService.generarFacturaPdf(factura()));
+
+        Factura conVacios = factura();
+        Cliente c = conVacios.getCliente();
+        c.setDireccion("");
+        c.setPoblacion("");
+        c.setCodigoPostal("");
+        c.setProvincia("");
+        c.setCif("");
+        c.setRepresentante("");
+        String textoConVacios = textoPrimeraPagina(impresionService.generarFacturaPdf(conVacios));
+
+        assertEquals(conNulos, textoConVacios,
+                "Una cadena vacia debe imprimirse como si el campo no existiera");
+    }
+
     private AlbaranVenta albaran() {
         AlbaranVenta a = new AlbaranVenta();
         a.setNumero("A-FMT");
@@ -94,6 +120,12 @@ class ImpresionServiceFormatoTest {
         l.setIva(new BigDecimal("4"));
         a.getAlbaranVentaLineas().add(l);
         return a;
+    }
+
+    private String textoPrimeraPagina(File pdf) throws Exception {
+        try (PdfDocument doc = new PdfDocument(new PdfReader(pdf.getAbsolutePath()))) {
+            return PdfTextExtractor.getTextFromPage(doc.getPage(1));
+        }
     }
 
     private Rectangle primeraPagina(File pdf) throws Exception {

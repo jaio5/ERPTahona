@@ -34,13 +34,26 @@
   .qr img { width: 84px; height: 84px; }
   .qr .leyenda { font-size: 7px; margin-top: 1px; }
 
-  /* Tabla de líneas */
+  /* Titulo del documento: debe decir explicitamente que es. */
+  .doc-titulo { font-size: 22px; font-weight: bold; letter-spacing: 3px;
+                text-transform: uppercase; margin: 14px 0 2px; }
+
+  /* Tabla de líneas: sin rejilla cerrada; cabecera con fondo y filas con regla fina. */
   table.lineas { width: 100%; border-collapse: collapse; margin-top: 12px; }
-  table.lineas th, table.lineas td { border: 1px solid #000; padding: 3px 6px; font-size: 10px; }
-  table.lineas thead th { font-size: 10px; font-weight: bold; text-align: center; background: #fff; }
+  table.lineas thead th {
+    font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
+    text-align: left; padding: 6px 8px; background: #eeeeee; color: #222;
+    border-top: 1px solid #999; border-bottom: 1px solid #999;
+  }
+  table.lineas thead th.num { text-align: right; }
+  table.lineas thead th.c { text-align: center; }
+  table.lineas tbody td { padding: 5px 8px; font-size: 10px; border-bottom: 1px solid #e0e0e0; }
+  table.lineas tbody tr.alt td { background: #fafafa; }
   table.lineas td.num { text-align: right; }
+  table.lineas td.c { text-align: center; }
   table.lineas td.desc { text-align: left; }
-  table.lineas .filler td { border: 1px solid #000; height: 260px; }
+  /* Cierra el bloque de lineas con una regla mas marcada. */
+  table.lineas tbody tr:last-child td { border-bottom: 1px solid #999; }
 
   /* Pie de totales */
   table.totales { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -84,6 +97,10 @@
   </tr>
 </table>
 
+<!-- Nombre del documento, explicito -->
+<div class="doc-titulo"
+     th:text="${#strings.equalsIgnoreCase(factura.tipoFactura, 'RECTIFICATIVA')} ? 'Factura rectificativa' : 'Factura'">Factura</div>
+
 <!-- Campos personalizados: zona CABECERA -->
 <div th:if="${campos != null}" style="margin-top:6px; font-size:10px;">
   <div th:each="c : ${campos}" th:if="${c.ubicacion == 'CABECERA'}">
@@ -99,7 +116,7 @@
     <span th:if="${factura.facturaRectificadaFecha != null}"
           th:text="'de fecha ' + ${#temporals.format(factura.facturaRectificadaFecha, 'dd/MM/yyyy')}"></span>
   </span>
-  <span th:if="${factura.motivoRectificacion != null}"> · Motivo: <span th:text="${factura.motivoRectificacion}"></span></span>
+  <span th:unless="${#strings.isEmpty(factura.motivoRectificacion)}"> · Motivo: <span th:text="${factura.motivoRectificacion}"></span></span>
 </div>
 
 <!-- ===== Cliente (izq) + QR (der) ===== -->
@@ -108,14 +125,14 @@
     <td style="width:70%; padding-right:12px;">
       <div class="cliente-box" th:if="${factura.cliente != null}">
         <strong th:text="${factura.cliente.nombre}">Cliente</strong><br/>
-        <span th:if="${factura.cliente.direccion != null}" th:text="${factura.cliente.direccion}"></span>
-        <br th:if="${factura.cliente.direccion != null}"/>
-        <span th:if="${factura.cliente.poblacion != null}" th:text="${factura.cliente.poblacion}"></span>
-        <br th:if="${factura.cliente.poblacion != null}"/>
-        <span th:if="${factura.cliente.codigoPostal != null}" th:text="${factura.cliente.codigoPostal}"></span>
-        <span th:if="${factura.cliente.provincia != null}" th:text="${factura.cliente.provincia}"></span>
-        <br th:if="${factura.cliente.codigoPostal != null or factura.cliente.provincia != null}"/>
-        <span th:if="${factura.cliente.cif != null}" th:text="${factura.cliente.cif}"></span>
+        <span th:unless="${#strings.isEmpty(factura.cliente.direccion)}" th:text="${factura.cliente.direccion}"></span>
+        <br th:unless="${#strings.isEmpty(factura.cliente.direccion)}"/>
+        <span th:unless="${#strings.isEmpty(factura.cliente.poblacion)}" th:text="${factura.cliente.poblacion}"></span>
+        <br th:unless="${#strings.isEmpty(factura.cliente.poblacion)}"/>
+        <span th:unless="${#strings.isEmpty(factura.cliente.codigoPostal)}" th:text="${factura.cliente.codigoPostal}"></span>
+        <span th:unless="${#strings.isEmpty(factura.cliente.provincia)}" th:text="${factura.cliente.provincia}"></span>
+        <br th:unless="${#strings.isEmpty(factura.cliente.codigoPostal) and #strings.isEmpty(factura.cliente.provincia)}"/>
+        <span th:unless="${#strings.isEmpty(factura.cliente.cif)}" th:text="${factura.cliente.cif}"></span>
         <!-- Campos personalizados: zona CLIENTE -->
         <span th:if="${campos != null}" th:each="c : ${campos}" th:remove="tag">
           <span th:if="${c.ubicacion == 'CLIENTE'}"><br/><strong th:text="${c.etiqueta} + ':'"></strong> <span th:text="${c.valor}"></span></span>
@@ -144,7 +161,7 @@
     <td class="val" th:text="${factura.fecha != null ? #temporals.format(factura.fecha, 'dd/MM/yyyy') : ''}"></td>
     <td class="val" th:text="${factura.numero}"></td>
     <td class="val" th:text="${factura.cliente != null ? factura.cliente.codigo : ''}"></td>
-    <td class="val" th:text="${factura.cliente != null and factura.cliente.representante != null ? factura.cliente.representante : ''}"></td>
+    <td class="val" th:text="${factura.cliente != null ? factura.cliente.representante : ''}"></td>
   </tr>
 </table>
 
@@ -152,23 +169,21 @@
 <table class="lineas">
   <thead>
     <tr>
-      <th style="width:12%;">Cantidad</th>
-      <th style="width:8%;">IVA</th>
+      <th class="num" style="width:12%;">Cantidad</th>
+      <th class="c" style="width:8%;">IVA</th>
       <th style="width:52%;">Descripción</th>
-      <th style="width:14%;">Precio</th>
-      <th style="width:14%;">Total</th>
+      <th class="num" style="width:14%;">Precio</th>
+      <th class="num" style="width:14%;">Total</th>
     </tr>
   </thead>
   <tbody>
-    <tr th:each="linea : ${factura.facturaLineas}">
+    <!-- El alterne de fondo se marca por indice: iText no aplica :nth-child de forma fiable. -->
+    <tr th:each="linea, iter : ${factura.facturaLineas}" th:classappend="${iter.odd} ? 'alt' : ''">
       <td class="num" th:text="${linea.cantidad != null ? #numbers.formatDecimal(linea.cantidad, 1, 'POINT', 2, 'COMMA') : ''}">0,00</td>
-      <td class="num" th:text="${linea.iva != null ? #numbers.formatInteger(linea.iva, 1) : ''}">10</td>
+      <td class="c" th:text="${linea.iva != null ? #numbers.formatInteger(linea.iva, 1) : ''}">10</td>
       <td class="desc" th:text="${linea.articulo != null ? linea.articulo.nombre : linea.descripcion}">-</td>
-      <td class="num" th:text="${linea.precioUnitario != null ? #numbers.formatDecimal(linea.precioUnitario, 1, 'POINT', 4, 'COMMA') : ''}">0,0000</td>
+      <td class="num" th:text="${linea.precioUnitario != null ? #numbers.formatDecimal(linea.precioUnitario, 1, 'POINT', 2, 'COMMA') : ''}">0,00</td>
       <td class="num" th:text="${linea.total != null ? #numbers.formatDecimal(linea.total, 1, 'POINT', 2, 'COMMA') : ''}">0,00</td>
-    </tr>
-    <tr class="filler" th:if="${factura.facturaLineas == null or factura.facturaLineas.size() lt 12}">
-      <td></td><td></td><td></td><td></td><td></td>
     </tr>
   </tbody>
 </table>

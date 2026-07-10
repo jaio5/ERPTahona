@@ -28,12 +28,22 @@
   .datos .etq { color: #000; }
   .datos .r { text-align: right; }
 
-  table.lineas { width: 100%; border-collapse: collapse; margin-top: 2px; }
-  table.lineas thead th { border-bottom: 1px solid #000; padding: 3px 6px; font-size: 10px;
-                          font-weight: bold; text-align: left; }
+  /* Titulo del documento: debe decir explicitamente que es. */
+  .doc-titulo { font-size: [(${medioFolio ? '16px' : '22px'})]; font-weight: bold; letter-spacing: 3px;
+                text-transform: uppercase; margin: 12px 0 0; }
+
+  /* Tabla de líneas: cabecera con fondo y filas con regla fina (igual que la factura). */
+  table.lineas { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  table.lineas thead th {
+    font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
+    text-align: left; padding: 6px 8px; background: #eeeeee; color: #222;
+    border-top: 1px solid #999; border-bottom: 1px solid #999;
+  }
   table.lineas thead th.r { text-align: right; }
-  table.lineas tbody td { padding: 3px 6px; font-size: 10px; }
+  table.lineas tbody td { padding: 5px 8px; font-size: 10px; border-bottom: 1px solid #e0e0e0; }
+  table.lineas tbody tr.alt td { background: #fafafa; }
   table.lineas tbody td.num { text-align: right; }
+  table.lineas tbody tr:last-child td { border-bottom: 1px solid #999; }
 
   .pie { width: 100%; border-collapse: collapse; margin-top: 30px;
          border-top: 1px solid #000; border-bottom: 1px solid #000; }
@@ -72,6 +82,9 @@
   </tr>
 </table>
 
+<!-- Nombre del documento, explicito -->
+<div class="doc-titulo">Albarán</div>
+
 <!-- Campos personalizados: zona CABECERA -->
 <div th:if="${campos != null}" style="margin-top:6px; font-size:11px;">
   <div th:each="c : ${campos}" th:if="${c.ubicacion == 'CABECERA'}">
@@ -93,7 +106,7 @@
   <tr>
     <td>
       <span class="etq">DIRECCION</span>
-      <span th:text="${albaran.cliente != null and albaran.cliente.direccion != null ? albaran.cliente.direccion : ''}"></span>
+      <span th:text="${albaran.cliente != null ? albaran.cliente.direccion : ''}"></span>
     </td>
     <td class="r">
       <span class="etq">Nº ALBARAN</span> <span th:text="${albaran.numero}"></span>
@@ -101,12 +114,12 @@
   </tr>
   <tr>
     <td>
-      <span th:if="${albaran.cliente != null and albaran.cliente.poblacion != null}" th:text="${albaran.cliente.poblacion}"></span>
+      <span th:if="${albaran.cliente != null and !#strings.isEmpty(albaran.cliente.poblacion)}" th:text="${albaran.cliente.poblacion}"></span>
     </td>
-    <td class="r" th:if="${albaran.numeroLote != null}">
+    <td class="r" th:unless="${#strings.isEmpty(albaran.numeroLote)}">
       <span class="etq">ARTICULOS CON Nº LOTE:</span> <span th:text="${albaran.numeroLote}"></span>
     </td>
-    <td class="r" th:unless="${albaran.numeroLote != null}"></td>
+    <td class="r" th:if="${#strings.isEmpty(albaran.numeroLote)}"></td>
   </tr>
 </table>
 
@@ -128,10 +141,11 @@
     </tr>
   </thead>
   <tbody>
-    <tr th:each="linea : ${albaran.albaranVentaLineas}">
+    <!-- El alterne de fondo se marca por indice: iText no aplica :nth-child de forma fiable. -->
+    <tr th:each="linea, iter : ${albaran.albaranVentaLineas}" th:classappend="${iter.odd} ? 'alt' : ''">
       <td class="num" th:text="${linea.cantidad != null ? #numbers.formatDecimal(linea.cantidad, 1, 'POINT', 2, 'COMMA') : ''}">0,00</td>
       <td th:text="${linea.articulo != null ? linea.articulo.nombre : linea.descripcion}">-</td>
-      <td class="num" th:text="${linea.precio != null ? #numbers.formatDecimal(linea.precio, 1, 'POINT', 4, 'COMMA') : '0,0000'}">0,0000</td>
+      <td class="num" th:text="${linea.precio != null ? #numbers.formatDecimal(linea.precio, 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</td>
       <td class="num" th:text="${linea.cantidad != null and linea.precio != null ? #numbers.formatDecimal(linea.cantidad.multiply(linea.precio), 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</td>
     </tr>
   </tbody>
