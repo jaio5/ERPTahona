@@ -111,9 +111,18 @@ function initFormProtection() {
 }
 
 /* ── Table search with debounce ── */
+
+/**
+ * Tablas de listado, las unicas a las que se les añade buscador y sobre las que filtra.
+ * Se excluyen las de lineas de documento (.lines-table) y las fichas en formato tabla
+ * (.doc-table): son pares etiqueta/valor, no filas homogeneas que tenga sentido filtrar.
+ */
+function searchableTables() {
+    return document.querySelectorAll("main table:not(.lines-table):not(.doc-table)");
+}
+
 function initTableSearch() {
-    document.querySelectorAll("main table").forEach((table, index) => {
-        if (table.classList.contains("lines-table")) return;
+    searchableTables().forEach((table, index) => {
         if (table.dataset.searchReady === "true") return;
         table.dataset.searchReady = "true";
 
@@ -136,7 +145,7 @@ function initTableSearch() {
         search.input.addEventListener("input", () => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
-                document.querySelectorAll("main table").forEach(t => filterTable(t, search.input.value));
+                searchableTables().forEach(t => filterTable(t, search.input.value));
             }, 280);
         });
     });
@@ -160,7 +169,7 @@ function bindExistingSearch(table) {
         input.addEventListener("input", () => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
-                document.querySelectorAll("main table").forEach(t => filterTable(t, input.value));
+                searchableTables().forEach(t => filterTable(t, input.value));
             }, 280);
         });
     }

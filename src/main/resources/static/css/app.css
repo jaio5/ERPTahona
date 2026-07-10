@@ -670,6 +670,45 @@ body {
 }
 .doc-field-value { font-weight: 600; color: var(--color-text); font-size: var(--text-md); }
 
+/* Ficha en formato tabla sin lineas: etiqueta a la izquierda, valor alineado en columna.
+   Se maqueta con grid (las filas son display:contents) para poder encajar dos pares
+   etiqueta/valor por fila en pantallas anchas sin dejar la mitad de la tarjeta vacia. */
+.doc-table {
+    display: grid; grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline; column-gap: var(--space-6);
+}
+.doc-table tbody, .doc-table tr { display: contents; }
+.doc-table th, .doc-table td { border: 0; padding: 6px 0; text-align: left; }
+.doc-table th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+    font-weight: 600; color: var(--color-text-muted); white-space: nowrap;
+}
+.doc-table td {
+    font-weight: 600; color: var(--color-text); font-size: var(--text-md);
+    min-width: 0; overflow-wrap: anywhere;
+}
+
+/* La tarjeta ocupa 2/3 del ancho util, y con el zoom del sistema el viewport en px CSS no
+   coincide con la resolucion; por eso el salto se mide contra el ancho real de la tarjeta
+   (container query) y no contra el de la ventana. Por debajo de 690px los valores largos
+   sin espacios (IBAN, email) se partirian a media palabra. */
+.doc-fields { container-type: inline-size; }
+
+@container (min-width: 690px) {
+    .doc-table {
+        grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr);
+        /* Con 4 columnas hay 3 huecos: a 24px se comen los 72px que necesita el IBAN. */
+        column-gap: var(--space-4);
+    }
+}
+
+@media (max-width: 575px) {
+    /* Sin sitio para dos columnas: la etiqueta pasa encima del valor. */
+    .doc-table { grid-template-columns: minmax(0, 1fr); }
+    .doc-table th { padding-bottom: 0; }
+    .doc-table td { padding-top: 2px; }
+}
+
 .doc-header-icon {
     width: 48px; height: 48px; border-radius: var(--radius-md);
     background: var(--brand-light); color: var(--brand-color);
