@@ -7,13 +7,16 @@
   * { box-sizing: border-box; }
   body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #000; margin: 0; }
 
-  /* En A4 iguala a la factura (38px); en media hoja A5 se reduce para no desbordar el ancho. */
+  /* Cabecera identica a la de la factura (marca caligrafica + escudo y emisor a la derecha).
+     En A4 los tamanos son los mismos; en media hoja A5 se reducen para no desbordar. */
   .marca { font-family: 'Pinyon Script', 'Times New Roman', Georgia, serif; font-style: normal;
            font-size: [(${medioFolio ? '28px' : '38px'})]; font-weight: normal; line-height: 1.1;
            white-space: [(${medioFolio ? 'normal' : 'nowrap'})]; }
-  .marca-contacto { font-size: 11px; line-height: 1.3; }
-  .emisor { text-align: right; font-size: 12px; line-height: 1.35; }
-  .emisor .nombre { font-weight: bold; }
+  .marca-tel { font-size: [(${medioFolio ? '11px' : '15px'})]; font-weight: bold; margin-top: 2px; }
+  .emisor { text-align: right; }
+  .emisor .logo { height: [(${medioFolio ? '58px' : '92px'})]; }
+  .emisor-nombre { font-size: [(${medioFolio ? '14px' : '20px'})]; font-weight: bold; }
+  .emisor-datos { font-size: [(${medioFolio ? '10px' : '13px'})]; font-weight: bold; line-height: 1.25; }
 
   .two-col { width: 100%; border-collapse: collapse; }
   .two-col td { vertical-align: top; }
@@ -46,23 +49,23 @@
 </head>
 <body>
 
-<!-- ===== Cabecera ===== -->
+<!-- ===== Cabecera: marca (izq) + escudo/emisor (der), igual que la factura ===== -->
 <table class="two-col">
   <tr>
-    <td style="width:60%;">
+    <td style="width:64%;">
       <div class="marca" th:text="${empresa.nombreComercial != null ? empresa.nombreComercial : empresa.nombreEmpresa}">La Tahona de Fernando</div>
-      <div class="marca-contacto">
-        <span th:if="${empresa.telefono != null}">Tel. <span th:text="${empresa.telefono}"></span></span>
-        <span th:if="${empresa.whatsapp != null}"><br/>Whatsapp. <span th:text="${empresa.whatsapp}"></span></span>
-      </div>
+      <div class="marca-tel" th:if="${empresa.telefono != null}">Tel. <span th:text="${empresa.telefono}"></span></div>
+      <div class="marca-tel" th:if="${empresa.whatsapp != null}">Whatsapp. <span th:text="${empresa.whatsapp}"></span></div>
     </td>
-    <td style="width:40%;" class="emisor">
-      <div class="nombre"><span th:text="${empresa.nombreEmpresa}">Grupo babo, s.coop.v.l.</span><br th:if="${empresa.cif != null and medioFolio}"/>
-        <span th:if="${empresa.cif != null}" th:text="'CIF ' + ${empresa.cif}">CIF F-00000000</span></div>
-      <div th:if="${empresa.direccion != null}" th:text="${empresa.direccion}"></div>
-      <div>
+    <td style="width:36%;" class="emisor">
+      <img th:if="${logo != null and !logo.isEmpty()}" th:src="${logo}" class="logo" alt="Logo"/>
+      <div class="emisor-nombre" th:text="${empresa.nombreEmpresa}">Grupo BABO, S.C.V.L.</div>
+      <div class="emisor-datos">
+        <span th:if="${empresa.direccion != null}" th:text="${empresa.direccion}"></span><br th:if="${empresa.direccion != null}"/>
         <span th:if="${empresa.codigoPostal != null}" th:text="${empresa.codigoPostal}"></span>
-        <span th:if="${empresa.ciudad != null}" th:text="${empresa.ciudad}"></span>
+        <span th:if="${empresa.ciudad != null}" th:text="${empresa.ciudad}"></span><br th:if="${empresa.codigoPostal != null or empresa.ciudad != null}"/>
+        <span th:if="${empresa.cif != null}">CIF <span th:text="${empresa.cif}"></span></span>
+        <span th:if="${empresa.registroSanitario != null}"><br/>Reg.Sanitario.<span th:text="${empresa.registroSanitario}"></span></span>
       </div>
     </td>
   </tr>
