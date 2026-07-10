@@ -22,45 +22,45 @@
                 <div class="form-section-title">
                     <i class="bi bi-person"></i> Información del usuario
                 </div>
-                <div class="row g-3">
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Usuario</span>
-                        <div class="doc-field-value fw-medium" th:text="${usuario.username}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Nombre</span>
-                        <div class="doc-field-value" th:text="${usuario.nombre ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Email</span>
-                        <div class="doc-field-value" th:text="${usuario.email ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Rol</span>
-                        <div class="doc-field-value" th:text="${usuario.role ?: usuario.rol?.nombre ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Estado</span>
-                        <div class="doc-field-value">
+                <div class="doc-fields">
+                    <table class="doc-table">
+                    <tr>
+                        <th scope="row">Usuario</th>
+                        <td class="fw-medium" th:text="${usuario.username}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Nombre</th>
+                        <td th:text="${usuario.nombre ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Email</th>
+                        <td th:text="${usuario.email ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Rol</th>
+                        <td th:text="${usuario.role ?: usuario.rol?.nombre ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Intentos fallidos</th>
+                        <td th:text="${usuario.intentosFallidos ?: 0}">0</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Creado</th>
+                        <td class="text-muted" th:text="${usuario.fechaCreacion != null ? #temporals.format(usuario.fechaCreacion,'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Último acceso</th>
+                        <td class="text-muted" th:text="${usuario.ultimoLogin != null ? #temporals.format(usuario.ultimoLogin,'dd/MM/yyyy HH:mm') : 'Nunca'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Estado</th>
+                        <td>
                             <span th:if="${usuario.bloqueado}" class="badge-status" data-status="anulada">Bloqueado</span>
                             <span th:if="${!usuario.bloqueado and usuario.enabled}" class="badge-status" data-status="activo">Activo</span>
                             <span th:if="${!usuario.bloqueado and !usuario.enabled}" class="badge-status" data-status="borrador">Inactivo</span>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Intentos fallidos</span>
-                        <div class="doc-field-value" th:text="${usuario.intentosFallidos ?: 0}">0</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Creado</span>
-                        <div class="doc-field-value text-muted"
-                             th:text="${usuario.fechaCreacion != null ? #temporals.format(usuario.fechaCreacion,'dd/MM/yyyy HH:mm') : '—'}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Último acceso</span>
-                        <div class="doc-field-value text-muted"
-                             th:text="${usuario.ultimoLogin != null ? #temporals.format(usuario.ultimoLogin,'dd/MM/yyyy HH:mm') : 'Nunca'}">—</div>
-                    </div>
+                        </td>
+                    </tr>
+                    </table>
                 </div>
             </div>
         </div>

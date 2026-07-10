@@ -10,55 +10,57 @@
         </div>
     </div>
     <div class="form-card" style="max-width:700px;">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <span class="doc-field-label">Número</span>
-                <div class="doc-field-value" th:text="${factura.numero}">—</div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Proveedor</span>
-                <div class="doc-field-value" th:text="${factura.proveedor?.nombre} ?: '—'">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Fecha</span>
-                <div class="doc-field-value" th:text="${factura.fecha}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Vencimiento</span>
-                <div class="doc-field-value" th:text="${factura.fechaVencimiento} ?: '—'">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Estado</span>
-                <div class="doc-field-value">
+        <div class="doc-fields">
+            <table class="doc-table">
+            <tr>
+                <th scope="row">Número</th>
+                <td th:text="${factura.numero}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Proveedor</th>
+                <td th:text="${factura.proveedor?.nombre} ?: '—'">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Fecha</th>
+                <td th:text="${factura.fecha}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Vencimiento</th>
+                <td th:text="${factura.fechaVencimiento} ?: '—'">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Base imponible</th>
+                <td th:text="${factura.baseImponible != null ? #numbers.formatDecimal(factura.baseImponible, 1, 2) + ' €' : '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">IVA (%)</th>
+                <td th:text="${factura.tipoIva != null ? factura.tipoIva + '%' : '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Importe IVA</th>
+                <td th:text="${factura.importeIva != null ? #numbers.formatDecimal(factura.importeIva, 1, 2) + ' €' : '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Total</th>
+                <td class="fw-bold" style="font-size:1.25rem;color:var(--brand-color);"
+                     th:text="${factura.total != null ? #numbers.formatDecimal(factura.total, 1, 2) + ' €' : '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Pagada</th>
+                <td th:text="${factura.pagada ? 'Sí' : 'No'}">—</td>
+            </tr>
+            <tr th:if="${factura.observaciones != null and !factura.observaciones.isBlank()}">
+                <th scope="row">Observaciones</th>
+                <td class="text-muted" th:text="${factura.observaciones}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Estado</th>
+                <td>
                     <span class="badge-status" th:attr="data-status=${factura.estado?.toLowerCase()}"
                           th:text="${factura.estado}">—</span>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Base imponible</span>
-                <div class="doc-field-value" th:text="${factura.baseImponible != null ? #numbers.formatDecimal(factura.baseImponible, 1, 2) + ' €' : '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">IVA (%)</span>
-                <div class="doc-field-value" th:text="${factura.tipoIva != null ? factura.tipoIva + '%' : '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Importe IVA</span>
-                <div class="doc-field-value" th:text="${factura.importeIva != null ? #numbers.formatDecimal(factura.importeIva, 1, 2) + ' €' : '—'}">—</div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Total</span>
-                <div class="doc-field-value fw-bold" style="font-size:1.25rem;color:var(--brand-color);"
-                     th:text="${factura.total != null ? #numbers.formatDecimal(factura.total, 1, 2) + ' €' : '—'}">—</div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Pagada</span>
-                <div class="doc-field-value" th:text="${factura.pagada ? 'Sí' : 'No'}">—</div>
-            </div>
-            <div class="col-12" th:if="${factura.observaciones != null and !factura.observaciones.isBlank()}">
-                <span class="doc-field-label">Observaciones</span>
-                <div class="doc-field-value text-muted" th:text="${factura.observaciones}">—</div>
-            </div>
+                </td>
+            </tr>
+            </table>
         </div>
     </div>
 </div>

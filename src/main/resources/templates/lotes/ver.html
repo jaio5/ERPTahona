@@ -7,45 +7,45 @@
         </div>
     </div>
     <div class="form-card mb-3">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <span class="doc-field-label">Código</span>
-                <div class="doc-field-value" th:text="${lote.codigo}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Artículo</span>
-                <div class="doc-field-value" th:text="${lote.articulo?.nombre ?: '—'}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Estado</span>
-                <div class="doc-field-value">
-                    <span class="badge-status" th:attr="data-status=${lote.estado?.toLowerCase()}" th:text="${lote.estado}">—</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Almacén</span>
-                <div class="doc-field-value" th:text="${lote.almacen?.nombre ?: '—'}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Producción</span>
-                <div class="doc-field-value" th:text="${#temporals.format(lote.fechaProduccion, 'dd/MM/yyyy')}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Caducidad</span>
-                <div class="doc-field-value" th:text="${#temporals.format(lote.fechaCaducidad, 'dd/MM/yyyy')}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Cantidad inicial</span>
-                <div class="doc-field-value" th:text="${lote.cantidadInicial ?: '—'}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Cantidad actual</span>
-                <div class="doc-field-value" th:text="${lote.cantidadActual ?: '—'}">—</div>
-            </div>
-            <div class="col-12" th:if="${lote.observaciones}">
-                <span class="doc-field-label">Observaciones</span>
-                <div class="doc-field-value text-muted" th:text="${lote.observaciones}">—</div>
-            </div>
+        <div class="doc-fields">
+            <table class="doc-table">
+            <tr>
+                <th scope="row">Código</th>
+                <td th:text="${lote.codigo}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Artículo</th>
+                <td th:text="${lote.articulo?.nombre ?: '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Almacén</th>
+                <td th:text="${lote.almacen?.nombre ?: '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Producción</th>
+                <td th:text="${#temporals.format(lote.fechaProduccion, 'dd/MM/yyyy')}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Caducidad</th>
+                <td th:text="${#temporals.format(lote.fechaCaducidad, 'dd/MM/yyyy')}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Cantidad inicial</th>
+                <td th:text="${lote.cantidadInicial ?: '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Cantidad actual</th>
+                <td th:text="${lote.cantidadActual ?: '—'}">—</td>
+            </tr>
+            <tr th:if="${lote.observaciones}">
+                <th scope="row">Observaciones</th>
+                <td class="text-muted" th:text="${lote.observaciones}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Estado</th>
+                <td><span class="badge-status" th:attr="data-status=${lote.estado?.toLowerCase()}" th:text="${lote.estado}">—</span></td>
+            </tr>
+            </table>
         </div>
     </div>
     <div class="table-card mb-3">

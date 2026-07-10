@@ -48,28 +48,29 @@
                         <div class="text-muted small" th:text="${albaran.cliente?.cif ?: albaran.cliente?.telefono ?: ''}"></div>
                     </div>
                 </div>
-                <div class="row g-4">
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Fecha</span>
-                        <div class="doc-field-value"
-                             th:text="${albaran.fecha != null ? #temporals.format(albaran.fecha,'dd/MM/yyyy') : '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Almacén</span>
-                        <div class="doc-field-value" th:text="${albaran.almacen?.nombre ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Estado</span>
-                        <div class="mt-1">
+                <div class="doc-fields">
+                    <table class="doc-table">
+                    <tr>
+                        <th scope="row">Fecha</th>
+                        <td th:text="${albaran.fecha != null ? #temporals.format(albaran.fecha,'dd/MM/yyyy') : '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Almacén</th>
+                        <td th:text="${albaran.almacen?.nombre ?: '—'}">—</td>
+                    </tr>
+                    <tr th:if="${albaran.observaciones != null and !albaran.observaciones.isEmpty()}">
+                        <th scope="row">Observaciones</th>
+                        <td class="text-muted" th:text="${albaran.observaciones}"></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Estado</th>
+                        <td>
                             <span class="badge-status"
                                   th:attr="data-status=${albaran.estado?.toLowerCase()}"
                                   th:text="${albaran.estado ?: '—'}">—</span>
-                        </div>
-                    </div>
-                    <div class="col-12" th:if="${albaran.observaciones != null and !albaran.observaciones.isEmpty()}">
-                        <span class="doc-field-label">Observaciones</span>
-                        <div class="text-muted mt-1" th:text="${albaran.observaciones}"></div>
-                    </div>
+                        </td>
+                    </tr>
+                    </table>
                 </div>
             </div>
 
