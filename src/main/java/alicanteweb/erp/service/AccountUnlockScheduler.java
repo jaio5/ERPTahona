@@ -2,15 +2,14 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.Usuario;
 import alicanteweb.erp.repository.UsuarioRepository;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+/** El soporte de @Scheduled se habilita una sola vez en {@link alicanteweb.erp.config.SchedulingConfig}. */
 @Component
-@EnableScheduling
 public class AccountUnlockScheduler {
 
     // Tiempos incrementales: 5min, 15min, 30min, 1h, 2h, 4h, 8h, 24h
