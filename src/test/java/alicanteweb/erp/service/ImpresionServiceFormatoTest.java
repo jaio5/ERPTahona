@@ -9,6 +9,11 @@ import alicanteweb.erp.entities.FacturaLinea;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
+import com.itextpdf.kernel.pdf.canvas.parser.EventType;
+import com.itextpdf.kernel.pdf.canvas.parser.PdfCanvasProcessor;
+import com.itextpdf.kernel.pdf.canvas.parser.data.IEventData;
+import com.itextpdf.kernel.pdf.canvas.parser.data.TextRenderInfo;
+import com.itextpdf.kernel.pdf.canvas.parser.listener.IEventListener;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -108,6 +114,50 @@ class ImpresionServiceFormatoTest {
         String contenido = new String(Files.readAllBytes(pdf.toPath()), StandardCharsets.ISO_8859_1);
         assertTrue(contenido.contains("PinyonScript"),
                 "La fuente caligráfica del nombre de empresa debe quedar embebida en la factura");
+    }
+
+    /**
+     * Texto impreso con la fuente caligrafica de la marca. Mirar el texto plano de la pagina
+     * no sirve: el nombre fiscal tambien aparece en el bloque del emisor, asi que un hueco en
+     * la cabecera pasaria desapercibido.
+     */
+    private String textoDeLaMarca(File pdf) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        try (PdfDocument doc = new PdfDocument(new PdfReader(pdf.getAbsolutePath()))) {
+            IEventListener listener = new IEventListener() {
+                @Override
+                public void eventOccurred(IEventData data, EventType type) {
+                    if (data instanceof TextRenderInfo info) {
+                        String fuente = info.getFont().getFontProgram().getFontNames().getFontName();
+                        if (fuente != null && fuente.contains("Pinyon")) sb.append(info.getText());
+                    }
+                }
+                @Override
+                public Set<EventType> getSupportedEvents() {
+                    return Set.of(EventType.RENDER_TEXT);
+                }
+            };
+            new PdfCanvasProcessor(listener).processPageContent(doc.getPage(1));
+        }
+        return sb.toString().trim();
+    }
+
+    /**
+     * El formulario de empresa guarda los campos en blanco como cadena vacia, no como null
+     * (no hay StringTrimmerEditor). La cabecera debe caer al nombre fiscal en ese caso, no
+     * imprimir un hueco.
+     */
+    @Test
+    void conNombreComercialEnBlancoLaCabeceraMuestraElNombreFiscal() throws Exception {
+        EmpresaConfig sinComercial = empresa(false);
+        sinComercial.setNombreComercial("");
+        when(empresaConfigService.getConfiguracionActivaOrThrow()).thenReturn(sinComercial);
+        when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(sinComercial));
+
+        assertEquals("Grupo BABO, S.C.V.L.", textoDeLaMarca(impresionService.generarFacturaPdf(factura())),
+                "La factura debe imprimir el nombre fiscal en la cabecera si no hay nombre comercial");
+        assertEquals("Grupo BABO, S.C.V.L.", textoDeLaMarca(impresionService.generarAlbaranPdf(albaran())),
+                "El albaran debe imprimir el nombre fiscal en la cabecera si no hay nombre comercial");
     }
 
     @Test

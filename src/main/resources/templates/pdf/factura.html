@@ -66,18 +66,19 @@
 <table class="two-col">
   <tr>
     <td style="width:64%;">
-      <div class="marca" th:text="${empresa.nombreComercial != null ? empresa.nombreComercial : empresa.nombreEmpresa}">La Tahona de Fernando</div>
-      <div class="marca-tel" th:if="${empresa.telefono != null}">Tel. <span th:text="${empresa.telefono}"></span></div>
+      <!-- El formulario guarda los campos en blanco como cadena vacia, no como null. -->
+      <div class="marca" th:text="${#strings.isEmpty(empresa.nombreComercial) ? empresa.nombreEmpresa : empresa.nombreComercial}">La Tahona de Fernando</div>
+      <div class="marca-tel" th:unless="${#strings.isEmpty(empresa.telefono)}">Tel. <span th:text="${empresa.telefono}"></span></div>
     </td>
     <td style="width:36%;" class="emisor">
       <img th:if="${logo != null and !logo.isEmpty()}" th:src="${logo}" class="logo" alt="Logo"/>
       <div class="emisor-nombre" th:text="${empresa.nombreEmpresa}">Grupo BABO, S.C.V.L.</div>
       <div class="emisor-datos">
-        <span th:if="${empresa.direccion != null}" th:text="${empresa.direccion}"></span><br th:if="${empresa.direccion != null}"/>
-        <span th:if="${empresa.codigoPostal != null}" th:text="${empresa.codigoPostal}"></span>
-        <span th:if="${empresa.ciudad != null}" th:text="${empresa.ciudad}"></span><br/>
-        <span>CIF <span th:text="${empresa.cif}"></span></span>
-        <span th:if="${empresa.registroSanitario != null}"><br/>Reg.Sanitario.<span th:text="${empresa.registroSanitario}"></span></span>
+        <span th:unless="${#strings.isEmpty(empresa.direccion)}" th:text="${empresa.direccion}"></span><br th:unless="${#strings.isEmpty(empresa.direccion)}"/>
+        <span th:unless="${#strings.isEmpty(empresa.codigoPostal)}" th:text="${empresa.codigoPostal}"></span>
+        <span th:unless="${#strings.isEmpty(empresa.ciudad)}" th:text="${empresa.ciudad}"></span><br/>
+        <span th:unless="${#strings.isEmpty(empresa.cif)}">CIF <span th:text="${empresa.cif}"></span></span>
+        <span th:unless="${#strings.isEmpty(empresa.registroSanitario)}"><br/>Reg.Sanitario.<span th:text="${empresa.registroSanitario}"></span></span>
       </div>
     </td>
   </tr>
