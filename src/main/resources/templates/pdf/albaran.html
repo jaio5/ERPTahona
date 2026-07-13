@@ -3,68 +3,92 @@
 <head>
 <meta charset="UTF-8"/>
 <style th:inline="css">
-  @page { size: [(${medioFolio ? 'A5' : 'A4'})]; margin: 10mm 12mm; }
+  /* En media hoja A5 se estrechan margenes y espaciados para que todo encaje sin pasar a 2 paginas. */
+  @page { size: [(${medioFolio ? 'A5' : 'A4'})]; margin: [(${medioFolio ? '8mm 10mm' : '14mm 12mm'})]; }
   * { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #000; margin: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: [(${medioFolio ? '9px' : '10px'})]; color: #1a1a1a; margin: 0; }
 
+  /* Cabecera identica a la de la factura (marca caligrafica + escudo y emisor a la derecha).
+     En A4 los tamanos son los mismos; en media hoja A5 se reducen para no desbordar. */
   .marca { font-family: 'Pinyon Script', 'Times New Roman', Georgia, serif; font-style: normal;
-           font-size: 34px; font-weight: normal; line-height: 1.1; }
-  .marca-contacto { font-size: 11px; line-height: 1.3; }
-  .emisor { text-align: right; font-size: 12px; line-height: 1.35; }
-  .emisor .nombre { font-weight: bold; }
+           font-size: [(${medioFolio ? '28px' : '40px'})]; font-weight: normal; line-height: 1.05;
+           white-space: [(${medioFolio ? 'normal' : 'nowrap'})]; color: #111; }
+  .marca-tel { font-size: [(${medioFolio ? '10px' : '12px'})]; font-weight: bold; margin-top: 3px; color: #333; }
+  .emisor { text-align: right; }
+  .emisor .logo { height: [(${medioFolio ? '54px' : '90px'})]; }
+  .emisor-nombre { font-size: [(${medioFolio ? '13px' : '18px'})]; font-weight: bold; letter-spacing: 0.3px; }
+  .emisor-datos { font-size: [(${medioFolio ? '9px' : '11px'})]; font-weight: normal; line-height: 1.35; color: #333; }
 
   .two-col { width: 100%; border-collapse: collapse; }
   .two-col td { vertical-align: top; }
 
+  /* Regla fina que cierra la cabecera (toque clásico, igual que la factura). */
+  .masthead-rule { border: none; border-top: 2px solid #111; height: 0; margin: [(${medioFolio ? '6px' : '9px'})] 0 0; }
+
   /* Banda de datos cliente / documento */
-  .datos { width: 100%; border-collapse: collapse; margin-top: 14px;
-           border-top: 1px solid #000; border-bottom: 1px solid #000; }
-  .datos td { padding: 4px 2px; vertical-align: top; font-size: 11px; }
-  .datos .etq { color: #000; }
+  .datos { width: 100%; border-collapse: collapse; margin-top: [(${medioFolio ? '9px' : '14px'})];
+           border-top: 1.5px solid #333; border-bottom: 1.5px solid #333; }
+  .datos td { padding: 4px 2px; vertical-align: top; font-size: [(${medioFolio ? '9.5px' : '11px'})]; }
+  .datos .etq { font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #666; }
   .datos .r { text-align: right; }
 
-  table.lineas { width: 100%; border-collapse: collapse; margin-top: 2px; }
-  table.lineas thead th { border-bottom: 1px solid #000; padding: 3px 6px; font-size: 10px;
-                          font-weight: bold; text-align: left; }
-  table.lineas thead th.r { text-align: right; }
-  table.lineas tbody td { padding: 3px 6px; font-size: 10px; }
-  table.lineas tbody td.num { text-align: right; }
+  /* Titulo del documento: debe decir explicitamente que es. */
+  .doc-titulo { font-size: [(${medioFolio ? '15px' : '20px'})]; font-weight: bold; letter-spacing: [(${medioFolio ? '2px' : '4px'})];
+                text-transform: uppercase; margin: [(${medioFolio ? '9px' : '12px'})] 0 0; color: #111; }
 
-  .pie { width: 100%; border-collapse: collapse; margin-top: 30px;
-         border-top: 1px solid #000; border-bottom: 1px solid #000; }
-  .pie td { padding: 5px 6px; vertical-align: top; }
-  .pie .cap { font-size: 10px; font-weight: bold; }
-  .pie .val { font-size: 11px; }
+  /* Tabla de líneas: cabecera con fondo y filas con regla fina (igual que la factura). */
+  table.lineas { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  table.lineas thead th {
+    font-size: 8.5px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6px;
+    text-align: left; padding: [(${medioFolio ? '5px 8px' : '7px 8px'})]; background: #efefef; color: #333;
+    border-top: 1.5px solid #333; border-bottom: 1.5px solid #333;
+  }
+  table.lineas thead th.r { text-align: right; }
+  table.lineas tbody td { padding: [(${medioFolio ? '4px 8px' : '6px 8px'})]; font-size: [(${medioFolio ? '9.5px' : '10px'})]; border-bottom: 1px solid #e6e6e6; }
+  table.lineas tbody tr.alt td { background: #fafafa; }
+  table.lineas tbody td.num { text-align: right; }
+  table.lineas tbody tr:last-child td { border-bottom: 1.5px solid #333; }
+
+  .pie { width: 100%; border-collapse: collapse; margin-top: [(${medioFolio ? '12px' : '28px'})];
+         border-top: 1.5px solid #111; border-bottom: 1.5px solid #111; }
+  .pie td { padding: 6px 6px; vertical-align: top; }
+  .pie .cap { font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6px; color: #666; }
+  .pie .val { font-size: [(${medioFolio ? '11px' : '12px'})]; font-weight: bold; }
   .pie .c { text-align: center; }
   .pie .r { text-align: right; }
 
-  .obs { margin-top: 12px; font-size: 10px; }
-  .obs .titulo { font-weight: bold; }
+  .obs { margin-top: [(${medioFolio ? '8px' : '12px'})]; font-size: [(${medioFolio ? '9px' : '10px'})]; }
+  .obs .titulo { font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6px; color: #666; }
 </style>
 </head>
 <body>
 
-<!-- ===== Cabecera ===== -->
+<!-- ===== Cabecera: marca (izq) + escudo/emisor (der), igual que la factura ===== -->
 <table class="two-col">
   <tr>
-    <td style="width:60%;">
-      <div class="marca" th:text="${empresa.nombreComercial != null ? empresa.nombreComercial : empresa.nombreEmpresa}">La Tahona de Fernando</div>
-      <div class="marca-contacto">
-        <span th:if="${empresa.telefono != null}">Tel. <span th:text="${empresa.telefono}"></span></span>
-        <span th:if="${empresa.whatsapp != null}"><br/>Whatsapp. <span th:text="${empresa.whatsapp}"></span></span>
-      </div>
+    <td style="width:64%;">
+      <!-- El formulario guarda los campos en blanco como cadena vacia, no como null. -->
+      <div class="marca" th:text="${#strings.isEmpty(empresa.nombreComercial) ? empresa.nombreEmpresa : empresa.nombreComercial}">La Tahona de Fernando</div>
+      <div class="marca-tel" th:unless="${#strings.isEmpty(empresa.telefono)}">Tel. <span th:text="${empresa.telefono}"></span></div>
+      <div class="marca-tel" th:unless="${#strings.isEmpty(empresa.whatsapp)}">Whatsapp. <span th:text="${empresa.whatsapp}"></span></div>
     </td>
-    <td style="width:40%;" class="emisor">
-      <div class="nombre"><span th:text="${empresa.nombreEmpresa}">Grupo babo, s.coop.v.l.</span><br th:if="${empresa.cif != null and medioFolio}"/>
-        <span th:if="${empresa.cif != null}" th:text="'CIF ' + ${empresa.cif}">CIF F-00000000</span></div>
-      <div th:if="${empresa.direccion != null}" th:text="${empresa.direccion}"></div>
-      <div>
-        <span th:if="${empresa.codigoPostal != null}" th:text="${empresa.codigoPostal}"></span>
-        <span th:if="${empresa.ciudad != null}" th:text="${empresa.ciudad}"></span>
+    <td style="width:36%;" class="emisor">
+      <img th:if="${logo != null and !logo.isEmpty()}" th:src="${logo}" class="logo" alt="Logo"/>
+      <div class="emisor-nombre" th:text="${empresa.nombreEmpresa}">Grupo BABO, S.C.V.L.</div>
+      <div class="emisor-datos">
+        <span th:unless="${#strings.isEmpty(empresa.direccion)}" th:text="${empresa.direccion}"></span><br th:unless="${#strings.isEmpty(empresa.direccion)}"/>
+        <span th:unless="${#strings.isEmpty(empresa.codigoPostal)}" th:text="${empresa.codigoPostal}"></span>
+        <span th:unless="${#strings.isEmpty(empresa.ciudad)}" th:text="${empresa.ciudad}"></span><br th:unless="${#strings.isEmpty(empresa.codigoPostal) and #strings.isEmpty(empresa.ciudad)}"/>
+        <span th:unless="${#strings.isEmpty(empresa.cif)}">CIF <span th:text="${empresa.cif}"></span></span>
+        <span th:unless="${#strings.isEmpty(empresa.registroSanitario)}"><br/>Reg.Sanitario.<span th:text="${empresa.registroSanitario}"></span></span>
       </div>
     </td>
   </tr>
 </table>
+<hr class="masthead-rule"/>
+
+<!-- Nombre del documento, explicito -->
+<div class="doc-titulo">Albarán</div>
 
 <!-- Campos personalizados: zona CABECERA -->
 <div th:if="${campos != null}" style="margin-top:6px; font-size:11px;">
@@ -87,7 +111,7 @@
   <tr>
     <td>
       <span class="etq">DIRECCION</span>
-      <span th:text="${albaran.cliente != null and albaran.cliente.direccion != null ? albaran.cliente.direccion : ''}"></span>
+      <span th:text="${albaran.cliente != null ? albaran.cliente.direccion : ''}"></span>
     </td>
     <td class="r">
       <span class="etq">Nº ALBARAN</span> <span th:text="${albaran.numero}"></span>
@@ -95,12 +119,12 @@
   </tr>
   <tr>
     <td>
-      <span th:if="${albaran.cliente != null and albaran.cliente.poblacion != null}" th:text="${albaran.cliente.poblacion}"></span>
+      <span th:if="${albaran.cliente != null and !#strings.isEmpty(albaran.cliente.poblacion)}" th:text="${albaran.cliente.poblacion}"></span>
     </td>
-    <td class="r" th:if="${albaran.numeroLote != null}">
+    <td class="r" th:unless="${#strings.isEmpty(albaran.numeroLote)}">
       <span class="etq">ARTICULOS CON Nº LOTE:</span> <span th:text="${albaran.numeroLote}"></span>
     </td>
-    <td class="r" th:unless="${albaran.numeroLote != null}"></td>
+    <td class="r" th:if="${#strings.isEmpty(albaran.numeroLote)}"></td>
   </tr>
 </table>
 
@@ -122,10 +146,11 @@
     </tr>
   </thead>
   <tbody>
-    <tr th:each="linea : ${albaran.albaranVentaLineas}">
+    <!-- El alterne de fondo se marca por indice: iText no aplica :nth-child de forma fiable. -->
+    <tr th:each="linea, iter : ${albaran.albaranVentaLineas}" th:classappend="${iter.odd} ? 'alt' : ''">
       <td class="num" th:text="${linea.cantidad != null ? #numbers.formatDecimal(linea.cantidad, 1, 'POINT', 2, 'COMMA') : ''}">0,00</td>
       <td th:text="${linea.articulo != null ? linea.articulo.nombre : linea.descripcion}">-</td>
-      <td class="num" th:text="${linea.precio != null ? #numbers.formatDecimal(linea.precio, 1, 'POINT', 4, 'COMMA') : '0,0000'}">0,0000</td>
+      <td class="num" th:text="${linea.precio != null ? #numbers.formatDecimal(linea.precio, 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</td>
       <td class="num" th:text="${linea.cantidad != null and linea.precio != null ? #numbers.formatDecimal(linea.cantidad.multiply(linea.precio), 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</td>
     </tr>
   </tbody>
@@ -133,7 +158,8 @@
 
 <!-- Descuento global del documento (solo si aplica) -->
 <div th:if="${resumen.descuentoGlobal != null and resumen.descuentoGlobal.signum() > 0}"
-     style="text-align:right; margin-top:24px; font-size:11px;">
+     th:styleappend="'margin-top:' + (${medioFolio} ? '8px' : '18px')"
+     style="text-align:right; font-size:11px;">
   Descuento
   <span th:if="${albaran.descuentoGlobalValor != null and #strings.equalsIgnoreCase(albaran.descuentoGlobalTipo, 'PORCENTAJE')}"
         th:text="'(' + ${#numbers.formatDecimal(albaran.descuentoGlobalValor, 1, 'POINT', 0, 'COMMA')} + '%)'"></span>:
