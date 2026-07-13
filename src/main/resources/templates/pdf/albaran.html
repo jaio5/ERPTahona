@@ -3,58 +3,62 @@
 <head>
 <meta charset="UTF-8"/>
 <style th:inline="css">
-  @page { size: [(${medioFolio ? 'A5' : 'A4'})]; margin: 10mm 12mm; }
+  /* En media hoja A5 se estrechan margenes y espaciados para que todo encaje sin pasar a 2 paginas. */
+  @page { size: [(${medioFolio ? 'A5' : 'A4'})]; margin: [(${medioFolio ? '8mm 10mm' : '14mm 12mm'})]; }
   * { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #000; margin: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: [(${medioFolio ? '9px' : '10px'})]; color: #1a1a1a; margin: 0; }
 
   /* Cabecera identica a la de la factura (marca caligrafica + escudo y emisor a la derecha).
      En A4 los tamanos son los mismos; en media hoja A5 se reducen para no desbordar. */
   .marca { font-family: 'Pinyon Script', 'Times New Roman', Georgia, serif; font-style: normal;
-           font-size: [(${medioFolio ? '28px' : '38px'})]; font-weight: normal; line-height: 1.1;
-           white-space: [(${medioFolio ? 'normal' : 'nowrap'})]; }
-  .marca-tel { font-size: [(${medioFolio ? '11px' : '15px'})]; font-weight: bold; margin-top: 2px; }
+           font-size: [(${medioFolio ? '28px' : '40px'})]; font-weight: normal; line-height: 1.05;
+           white-space: [(${medioFolio ? 'normal' : 'nowrap'})]; color: #111; }
+  .marca-tel { font-size: [(${medioFolio ? '10px' : '12px'})]; font-weight: bold; margin-top: 3px; color: #333; }
   .emisor { text-align: right; }
-  .emisor .logo { height: [(${medioFolio ? '58px' : '92px'})]; }
-  .emisor-nombre { font-size: [(${medioFolio ? '14px' : '20px'})]; font-weight: bold; }
-  .emisor-datos { font-size: [(${medioFolio ? '10px' : '13px'})]; font-weight: bold; line-height: 1.25; }
+  .emisor .logo { height: [(${medioFolio ? '54px' : '90px'})]; }
+  .emisor-nombre { font-size: [(${medioFolio ? '13px' : '18px'})]; font-weight: bold; letter-spacing: 0.3px; }
+  .emisor-datos { font-size: [(${medioFolio ? '9px' : '11px'})]; font-weight: normal; line-height: 1.35; color: #333; }
 
   .two-col { width: 100%; border-collapse: collapse; }
   .two-col td { vertical-align: top; }
 
+  /* Regla fina que cierra la cabecera (toque clásico, igual que la factura). */
+  .masthead-rule { border: none; border-top: 2px solid #111; height: 0; margin: [(${medioFolio ? '6px' : '9px'})] 0 0; }
+
   /* Banda de datos cliente / documento */
-  .datos { width: 100%; border-collapse: collapse; margin-top: 14px;
-           border-top: 1px solid #000; border-bottom: 1px solid #000; }
-  .datos td { padding: 4px 2px; vertical-align: top; font-size: 11px; }
-  .datos .etq { color: #000; }
+  .datos { width: 100%; border-collapse: collapse; margin-top: [(${medioFolio ? '9px' : '14px'})];
+           border-top: 1.5px solid #333; border-bottom: 1.5px solid #333; }
+  .datos td { padding: 4px 2px; vertical-align: top; font-size: [(${medioFolio ? '9.5px' : '11px'})]; }
+  .datos .etq { font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #666; }
   .datos .r { text-align: right; }
 
   /* Titulo del documento: debe decir explicitamente que es. */
-  .doc-titulo { font-size: [(${medioFolio ? '16px' : '22px'})]; font-weight: bold; letter-spacing: 3px;
-                text-transform: uppercase; margin: 12px 0 0; }
+  .doc-titulo { font-size: [(${medioFolio ? '15px' : '20px'})]; font-weight: bold; letter-spacing: [(${medioFolio ? '2px' : '4px'})];
+                text-transform: uppercase; margin: [(${medioFolio ? '9px' : '12px'})] 0 0; color: #111; }
 
   /* Tabla de líneas: cabecera con fondo y filas con regla fina (igual que la factura). */
   table.lineas { width: 100%; border-collapse: collapse; margin-top: 8px; }
   table.lineas thead th {
-    font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
-    text-align: left; padding: 6px 8px; background: #eeeeee; color: #222;
-    border-top: 1px solid #999; border-bottom: 1px solid #999;
+    font-size: 8.5px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6px;
+    text-align: left; padding: [(${medioFolio ? '5px 8px' : '7px 8px'})]; background: #efefef; color: #333;
+    border-top: 1.5px solid #333; border-bottom: 1.5px solid #333;
   }
   table.lineas thead th.r { text-align: right; }
-  table.lineas tbody td { padding: 5px 8px; font-size: 10px; border-bottom: 1px solid #e0e0e0; }
+  table.lineas tbody td { padding: [(${medioFolio ? '4px 8px' : '6px 8px'})]; font-size: [(${medioFolio ? '9.5px' : '10px'})]; border-bottom: 1px solid #e6e6e6; }
   table.lineas tbody tr.alt td { background: #fafafa; }
   table.lineas tbody td.num { text-align: right; }
-  table.lineas tbody tr:last-child td { border-bottom: 1px solid #999; }
+  table.lineas tbody tr:last-child td { border-bottom: 1.5px solid #333; }
 
-  .pie { width: 100%; border-collapse: collapse; margin-top: 30px;
-         border-top: 1px solid #000; border-bottom: 1px solid #000; }
-  .pie td { padding: 5px 6px; vertical-align: top; }
-  .pie .cap { font-size: 10px; font-weight: bold; }
-  .pie .val { font-size: 11px; }
+  .pie { width: 100%; border-collapse: collapse; margin-top: [(${medioFolio ? '12px' : '28px'})];
+         border-top: 1.5px solid #111; border-bottom: 1.5px solid #111; }
+  .pie td { padding: 6px 6px; vertical-align: top; }
+  .pie .cap { font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6px; color: #666; }
+  .pie .val { font-size: [(${medioFolio ? '11px' : '12px'})]; font-weight: bold; }
   .pie .c { text-align: center; }
   .pie .r { text-align: right; }
 
-  .obs { margin-top: 12px; font-size: 10px; }
-  .obs .titulo { font-weight: bold; }
+  .obs { margin-top: [(${medioFolio ? '8px' : '12px'})]; font-size: [(${medioFolio ? '9px' : '10px'})]; }
+  .obs .titulo { font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6px; color: #666; }
 </style>
 </head>
 <body>
@@ -81,6 +85,7 @@
     </td>
   </tr>
 </table>
+<hr class="masthead-rule"/>
 
 <!-- Nombre del documento, explicito -->
 <div class="doc-titulo">Albarán</div>
@@ -153,7 +158,8 @@
 
 <!-- Descuento global del documento (solo si aplica) -->
 <div th:if="${resumen.descuentoGlobal != null and resumen.descuentoGlobal.signum() > 0}"
-     style="text-align:right; margin-top:24px; font-size:11px;">
+     th:styleappend="'margin-top:' + (${medioFolio} ? '8px' : '18px')"
+     style="text-align:right; font-size:11px;">
   Descuento
   <span th:if="${albaran.descuentoGlobalValor != null and #strings.equalsIgnoreCase(albaran.descuentoGlobalTipo, 'PORCENTAJE')}"
         th:text="'(' + ${#numbers.formatDecimal(albaran.descuentoGlobalValor, 1, 'POINT', 0, 'COMMA')} + '%)'"></span>:
