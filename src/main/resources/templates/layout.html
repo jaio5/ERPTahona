@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" th:content="${_csrf != null ? _csrf.token : ''}">
     <meta name="csrf-header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}">
-    <link th:href="@{/webjars/fontsource__inter/5.2.5/400.css}" rel="stylesheet">
-    <link th:href="@{/webjars/fontsource__inter/5.2.5/500.css}" rel="stylesheet">
-    <link th:href="@{/webjars/fontsource__inter/5.2.5/600.css}" rel="stylesheet">
-    <link th:href="@{/webjars/fontsource__inter/5.2.5/700.css}" rel="stylesheet">
-    <link th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}" rel="stylesheet">
-    <link th:href="@{/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.css}" rel="stylesheet">
-    <link th:href="@{/webjars/tom-select/2.3.1/dist/css/tom-select.bootstrap5.min.css}" rel="stylesheet">
+    <link th:href="@{/webjars/fontsource__inter/5.2.8/400.css}" rel="stylesheet">
+    <link th:href="@{/webjars/fontsource__inter/5.2.8/500.css}" rel="stylesheet">
+    <link th:href="@{/webjars/fontsource__inter/5.2.8/600.css}" rel="stylesheet">
+    <link th:href="@{/webjars/fontsource__inter/5.2.8/700.css}" rel="stylesheet">
+    <link th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/webjars/bootstrap-icons/1.13.1/font/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/webjars/tom-select/2.6.1/dist/css/tom-select.bootstrap5.min.css}" rel="stylesheet">
     <link th:href="@{/css/app.css}" rel="stylesheet">
     <title th:text="${titulo} + ' | ERP Tahona'">ERP Tahona</title>
 </head>
@@ -81,9 +81,9 @@
         </div>
     </div>
 
-    <script th:attr="nonce=${cspNonce}" th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
-    <script th:attr="nonce=${cspNonce}" th:src="@{/webjars/tom-select/2.3.1/dist/js/tom-select.complete.min.js}"></script>
-    <script th:attr="nonce=${cspNonce}" defer th:src="@{/webjars/alpinejs/3.14.9/dist/cdn.min.js}"></script>
+    <script th:attr="nonce=${cspNonce}" th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
+    <script th:attr="nonce=${cspNonce}" th:src="@{/webjars/tom-select/2.6.1/dist/js/tom-select.complete.min.js}"></script>
+    <script th:attr="nonce=${cspNonce}" defer th:src="@{/webjars/alpinejs/3.15.12/dist/cdn.min.js}"></script>
     <script th:attr="nonce=${cspNonce}" th:src="@{/js/app.js}"></script>
 </body>
 </html>

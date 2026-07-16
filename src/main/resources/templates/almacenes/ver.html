@@ -9,42 +9,44 @@
         </div>
     </div>
     <div class="form-card">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <span class="doc-field-label">Código</span>
-                <div class="doc-field-value" th:text="${almacen.codigo}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Nombre</span>
-                <div class="doc-field-value" th:text="${almacen.nombre ?: '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Estado</span>
-                <div class="doc-field-value">
+        <div class="doc-fields">
+            <table class="doc-table">
+            <tr>
+                <th scope="row">Código</th>
+                <td th:text="${almacen.codigo}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Nombre</th>
+                <td th:text="${almacen.nombre ?: '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Capacidad</th>
+                <td th:text="${almacen.capacidad ?: '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Disponible</th>
+                <td th:text="${almacen.disponible ?: '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Localidad</th>
+                <td th:text="${almacen.localidad ?: '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Responsable</th>
+                <td th:text="${almacen.responsable ?: '—'}">—</td>
+            </tr>
+            <tr th:if="${almacen.descripcion}">
+                <th scope="row">Descripción</th>
+                <td class="text-muted" th:text="${almacen.descripcion}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Estado</th>
+                <td>
                     <span class="badge-status" th:attr="data-status=${almacen.activo ? 'activo' : 'anulada'}"
                           th:text="${almacen.activo ? 'Activo' : 'Inactivo'}">—</span>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Capacidad</span>
-                <div class="doc-field-value" th:text="${almacen.capacidad ?: '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Disponible</span>
-                <div class="doc-field-value" th:text="${almacen.disponible ?: '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Localidad</span>
-                <div class="doc-field-value" th:text="${almacen.localidad ?: '—'}">—</div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Responsable</span>
-                <div class="doc-field-value" th:text="${almacen.responsable ?: '—'}">—</div>
-            </div>
-            <div class="col-12" th:if="${almacen.descripcion}">
-                <span class="doc-field-label">Descripción</span>
-                <div class="doc-field-value text-muted" th:text="${almacen.descripcion}">—</div>
-            </div>
+                </td>
+            </tr>
+            </table>
         </div>
     </div>
 </div>

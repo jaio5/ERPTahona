@@ -21,84 +21,83 @@
 
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="form-card">
+            <div class="form-card doc-fields">
                 <!-- Datos generales -->
                 <div class="form-section-title">
                     <i class="bi bi-info-circle"></i> Datos generales
                 </div>
-                <div class="row g-3 mb-4">
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Código</span>
-                        <div class="doc-field-value" th:text="${cliente.codigo ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">CIF / NIF</span>
-                        <div class="doc-field-value" th:text="${cliente.cif ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Estado</span>
-                        <div class="mt-1">
+                <table class="doc-table mb-4">
+                    <tr>
+                        <th scope="row">Código</th>
+                        <td th:text="${cliente.codigo ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">CIF / NIF</th>
+                        <td th:text="${cliente.cif ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Teléfono</th>
+                        <td th:text="${cliente.telefono ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Correo electrónico</th>
+                        <td th:text="${cliente.email ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Representante</th>
+                        <td th:text="${cliente.representante ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Estado</th>
+                        <td>
                             <span class="badge-status"
                                   th:attr="data-status=${cliente.activo ? 'activo' : 'anulada'}"
                                   th:text="${cliente.activo ? 'Activo' : 'De baja'}">—</span>
-                        </div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Teléfono</span>
-                        <div class="doc-field-value" th:text="${cliente.telefono ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Correo electrónico</span>
-                        <div class="doc-field-value" th:text="${cliente.email ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Representante</span>
-                        <div class="doc-field-value" th:text="${cliente.representante ?: '—'}">—</div>
-                    </div>
-                </div>
+                        </td>
+                    </tr>
+                </table>
 
                 <!-- Dirección -->
                 <div class="form-section-title">
                     <i class="bi bi-geo-alt"></i> Dirección
                 </div>
-                <div class="row g-3 mb-4">
-                    <div class="col-12">
-                        <span class="doc-field-label">Dirección</span>
-                        <div class="doc-field-value" th:text="${cliente.direccion ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Población</span>
-                        <div class="doc-field-value" th:text="${cliente.poblacion ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Código postal</span>
-                        <div class="doc-field-value" th:text="${cliente.codigoPostal ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Provincia</span>
-                        <div class="doc-field-value" th:text="${cliente.provincia ?: '—'}">—</div>
-                    </div>
-                </div>
+                <table class="doc-table mb-4">
+                    <tr>
+                        <th scope="row">Dirección</th>
+                        <td th:text="${cliente.direccion ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Población</th>
+                        <td th:text="${cliente.poblacion ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Código postal</th>
+                        <td th:text="${cliente.codigoPostal ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Provincia</th>
+                        <td th:text="${cliente.provincia ?: '—'}">—</td>
+                    </tr>
+                </table>
 
                 <!-- Datos bancarios / SEPA -->
                 <div class="form-section-title">
                     <i class="bi bi-bank"></i> Datos bancarios (SEPA)
                 </div>
-                <div class="row g-3">
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">IBAN</span>
-                        <div class="doc-field-value" th:text="${cliente.iban ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Ref. mandato SEPA</span>
-                        <div class="doc-field-value" th:text="${cliente.mandatoSepaReferencia ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Fecha mandato</span>
-                        <div class="doc-field-value"
-                             th:text="${cliente.mandatoSepaFecha != null ? #temporals.format(cliente.mandatoSepaFecha, 'dd/MM/yyyy') : '—'}">—</div>
-                    </div>
-                </div>
+                <table class="doc-table">
+                    <tr>
+                        <th scope="row">IBAN</th>
+                        <td th:text="${cliente.iban ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Ref. mandato SEPA</th>
+                        <td th:text="${cliente.mandatoSepaReferencia ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Fecha mandato</th>
+                        <td th:text="${cliente.mandatoSepaFecha != null ? #temporals.format(cliente.mandatoSepaFecha, 'dd/MM/yyyy') : '—'}">—</td>
+                    </tr>
+                </table>
 
                 <!-- Notas (solo si hay) -->
                 <div th:if="${cliente.notas != null and !cliente.notas.isEmpty()}">

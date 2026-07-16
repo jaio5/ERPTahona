@@ -74,7 +74,7 @@ h2 { font-size: 15px; font-weight: bold; margin: 0 0 4px 0; color: #1a3a5c; }
   <span th:text="${empresa.codigoPostal}"></span>&nbsp;
   <span th:text="${empresa.ciudad}"></span><br/>
   <span>CIF: <span th:text="${empresa.cif}"></span></span>
-  <span th:if="${empresa.registroSanitario != null}">
+  <span th:unless="${#strings.isEmpty(empresa.registroSanitario)}">
     &nbsp;·&nbsp;RGSEAA: <span th:text="${empresa.registroSanitario}"></span>
   </span>
 </div>

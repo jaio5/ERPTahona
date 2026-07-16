@@ -37,46 +37,46 @@
                 <div class="form-section-title">
                     <i class="bi bi-tag"></i> Precios
                 </div>
-                <div class="row g-3 mb-4">
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">PVP</span>
-                        <div class="doc-field-value"
-                             style="font-size:1.3rem;color:var(--brand-color);"
-                             th:text="${articulo.pvp != null ? #numbers.formatCurrency(articulo.pvp) : '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">IVA</span>
-                        <div class="doc-field-value"
-                             th:text="${articulo.iva != null ? articulo.iva + '%' : '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Coste</span>
-                        <div class="doc-field-value"
-                             th:text="${articulo.coste != null ? #numbers.formatCurrency(articulo.coste) : '—'}">—</div>
-                    </div>
+                <div class="doc-fields">
+                    <table class="doc-table mb-4">
+                    <tr>
+                        <th scope="row">PVP</th>
+                        <td style="font-size:1.3rem;color:var(--brand-color);"
+                             th:text="${articulo.pvp != null ? #numbers.formatCurrency(articulo.pvp) : '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">IVA</th>
+                        <td th:text="${articulo.iva != null ? articulo.iva + '%' : '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Coste</th>
+                        <td th:text="${articulo.coste != null ? #numbers.formatCurrency(articulo.coste) : '—'}">—</td>
+                    </tr>
+                    </table>
                 </div>
 
                 <div class="form-section-title">
                     <i class="bi bi-archive"></i> Stock e identificación
                 </div>
-                <div class="row g-3 mb-4">
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Stock actual</span>
-                        <div class="doc-field-value"
-                             th:text="${articulo.stock != null ? articulo.stock + ' ' + (articulo.unidad ?: 'ud.') : '0'}">0</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Unidad</span>
-                        <div class="doc-field-value" th:text="${articulo.unidad ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Estado</span>
-                        <div class="mt-1">
+                <div class="doc-fields">
+                    <table class="doc-table mb-4">
+                    <tr>
+                        <th scope="row">Stock actual</th>
+                        <td th:text="${articulo.stock != null ? articulo.stock + ' ' + (articulo.unidad ?: 'ud.') : '0'}">0</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Unidad</th>
+                        <td th:text="${articulo.unidad ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Estado</th>
+                        <td>
                             <span class="badge-status"
                                   th:attr="data-status=${articulo.activo ? 'activo' : 'anulada'}"
                                   th:text="${articulo.activo ? 'Activo' : 'Inactivo'}">—</span>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
+                    </table>
                 </div>
 
                 <div class="form-section-title">

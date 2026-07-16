@@ -49,15 +49,15 @@ public class VerifactuService implements InitializingBean {
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
     private static final DateTimeFormatter RECORD_DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
 
-    /** XSD internos que transcriben el esquema oficial de AEAT (SuministroLR / SuministroInformacion, tikeV1.0). */
+    /** XSD internos que transcriben el esquema oficial de AEAT (SuministroLR / SuministroInformacion, tike). */
     private static final String XSD_SUMINISTRO_INFORMACION = "xsd/verifactu-suministro-informacion.xsd";
     private static final String XSD_SUMINISTRO_LR = "xsd/verifactu-suministro-lr.xsd";
 
-    /** Namespaces oficiales del servicio VeriFactu de AEAT (tikeV1.0). */
+    /** Namespaces oficiales del servicio VeriFactu de AEAT (tike). */
     private static final String NS_SUMINISTRO_LR =
-        "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroLR.xsd";
+        "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd";
     private static final String NS_SUMINISTRO_INFORMACION =
-        "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroInformacion.xsd";
+        "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd";
 
     /** Versión del esquema de registro de facturación de AEAT. */
     private static final String ID_VERSION = "1.0";
@@ -423,7 +423,7 @@ public class VerifactuService implements InitializingBean {
 
     /**
      * Genera el registro de facturación de alta con la estructura oficial de AEAT
-     * (RegFactuSistemaFacturacion, esquemas SuministroLR.xsd / SuministroInformacion.xsd, tikeV1.0),
+     * (RegFactuSistemaFacturacion, esquemas SuministroLR.xsd / SuministroInformacion.xsd, tike),
      * incluyendo encadenamiento, bloque SistemaInformatico y huella según la Orden HAC/1177/2024.
      */
     public String generarRegistroAltaXml(Factura factura, List<FacturaLinea> lineas) {
@@ -497,11 +497,11 @@ public class VerifactuService implements InitializingBean {
             xml.append("  <sum:RegistroFactura>\n");
             xml.append("    <sum1:RegistroAnulacion>\n");
             xml.append("      <sum1:IDVersion>").append(ID_VERSION).append("</sum1:IDVersion>\n");
-            xml.append("      <sum1:IDFacturaAnulada>\n");
+            xml.append("      <sum1:IDFactura>\n");
             xml.append("        <sum1:IDEmisorFacturaAnulada>").append(escapeXml(nifEmisor)).append("</sum1:IDEmisorFacturaAnulada>\n");
             xml.append("        <sum1:NumSerieFacturaAnulada>").append(escapeXml(factura.getNumero())).append("</sum1:NumSerieFacturaAnulada>\n");
             xml.append("        <sum1:FechaExpedicionFacturaAnulada>").append(formatearFecha(factura.getFecha())).append("</sum1:FechaExpedicionFacturaAnulada>\n");
-            xml.append("      </sum1:IDFacturaAnulada>\n");
+            xml.append("      </sum1:IDFactura>\n");
             appendEncadenamiento(xml, registroAnterior.orElse(null));
             appendSistemaInformatico(xml, empresa);
             xml.append("      <sum1:FechaHoraHusoGenRegistro>").append(escapeXml(fechaHoraGeneracion)).append("</sum1:FechaHoraHusoGenRegistro>\n");

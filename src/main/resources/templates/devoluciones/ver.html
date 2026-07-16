@@ -10,46 +10,48 @@
         </div>
     </div>
     <div class="form-card" style="max-width:640px;">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <span class="doc-field-label">Número</span>
-                <div class="doc-field-value" th:text="${devolucion.numero} ?: '—'">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Fecha</span>
-                <div class="doc-field-value" th:text="${devolucion.fecha}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Estado</span>
-                <div class="doc-field-value">
+        <div class="doc-fields">
+            <table class="doc-table">
+            <tr>
+                <th scope="row">Número</th>
+                <td th:text="${devolucion.numero} ?: '—'">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Fecha</th>
+                <td th:text="${devolucion.fecha}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Cliente</th>
+                <td th:text="${devolucion.cliente?.nombre} ?: '—'">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Importe total</th>
+                <td th:text="${devolucion.importeTotal != null ? #numbers.formatDecimal(devolucion.importeTotal,1,2) + ' €' : '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Albarán</th>
+                <td th:text="${devolucion.albaran?.numero} ?: '—'">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Factura</th>
+                <td th:text="${devolucion.factura?.numero} ?: '—'">—</td>
+            </tr>
+            <tr th:if="${devolucion.motivo}">
+                <th scope="row">Motivo</th>
+                <td class="text-muted" th:text="${devolucion.motivo}">—</td>
+            </tr>
+            <tr th:if="${devolucion.observaciones}">
+                <th scope="row">Observaciones</th>
+                <td class="text-muted" th:text="${devolucion.observaciones}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Estado</th>
+                <td>
                     <span class="badge-status" th:attr="data-status=${devolucion.estado?.toLowerCase()}"
                           th:text="${devolucion.estado}">—</span>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Cliente</span>
-                <div class="doc-field-value" th:text="${devolucion.cliente?.nombre} ?: '—'">—</div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Importe total</span>
-                <div class="doc-field-value" th:text="${devolucion.importeTotal != null ? #numbers.formatDecimal(devolucion.importeTotal,1,2) + ' €' : '—'}">—</div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Albarán</span>
-                <div class="doc-field-value" th:text="${devolucion.albaran?.numero} ?: '—'">—</div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Factura</span>
-                <div class="doc-field-value" th:text="${devolucion.factura?.numero} ?: '—'">—</div>
-            </div>
-            <div class="col-12" th:if="${devolucion.motivo}">
-                <span class="doc-field-label">Motivo</span>
-                <div class="doc-field-value text-muted" th:text="${devolucion.motivo}">—</div>
-            </div>
-            <div class="col-12" th:if="${devolucion.observaciones}">
-                <span class="doc-field-label">Observaciones</span>
-                <div class="doc-field-value text-muted" th:text="${devolucion.observaciones}">—</div>
-            </div>
+                </td>
+            </tr>
+            </table>
         </div>
     </div>
 </div>

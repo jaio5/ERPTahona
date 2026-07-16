@@ -35,73 +35,77 @@
                 <div class="form-section-title">
                     <i class="bi bi-info-circle"></i> Datos generales
                 </div>
-                <div class="row g-3 mb-4">
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Código</span>
-                        <div class="doc-field-value" th:text="${proveedor.codigo ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">CIF / NIF</span>
-                        <div class="doc-field-value" th:text="${proveedor.cif ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Estado</span>
-                        <div class="mt-1">
+                <div class="doc-fields">
+                    <table class="doc-table mb-4">
+                    <tr>
+                        <th scope="row">Código</th>
+                        <td th:text="${proveedor.codigo ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">CIF / NIF</th>
+                        <td th:text="${proveedor.cif ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Nombre comercial</th>
+                        <td th:text="${proveedor.nombreComercial ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Persona de contacto</th>
+                        <td th:text="${proveedor.personaContacto ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Teléfono</th>
+                        <td th:text="${proveedor.telefono ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Email</th>
+                        <td th:text="${proveedor.email ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Web</th>
+                        <td th:text="${proveedor.web ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Estado</th>
+                        <td>
                             <span class="badge-status"
                                   th:attr="data-status=${proveedor.activo ? 'activo' : 'anulada'}"
                                   th:text="${proveedor.activo ? 'Activo' : 'Inactivo'}">—</span>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Nombre comercial</span>
-                        <div class="doc-field-value" th:text="${proveedor.nombreComercial ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Persona de contacto</span>
-                        <div class="doc-field-value" th:text="${proveedor.personaContacto ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Teléfono</span>
-                        <div class="doc-field-value" th:text="${proveedor.telefono ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Email</span>
-                        <div class="doc-field-value" th:text="${proveedor.email ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Web</span>
-                        <div class="doc-field-value" th:text="${proveedor.web ?: '—'}">—</div>
-                    </div>
+                        </td>
+                    </tr>
+                    </table>
                 </div>
 
                 <div class="form-section-title">
                     <i class="bi bi-geo-alt"></i> Dirección y pagos
                 </div>
-                <div class="row g-3">
-                    <div class="col-12">
-                        <span class="doc-field-label">Dirección</span>
-                        <div class="doc-field-value" th:text="${proveedor.direccion ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">C.P. / Población</span>
-                        <div class="doc-field-value" th:text="${(proveedor.codigoPostal ?: '') + ' ' + (proveedor.poblacion ?: '')}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Forma de pago</span>
-                        <div class="doc-field-value" th:text="${proveedor.formaPago ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Días de pago</span>
-                        <div class="doc-field-value" th:text="${proveedor.diasPago ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-8">
-                        <span class="doc-field-label">IBAN</span>
-                        <div class="doc-field-value" th:text="${proveedor.iban ?: '—'}">—</div>
-                    </div>
-                    <div class="col-12" th:if="${proveedor.notas}">
-                        <span class="doc-field-label">Notas</span>
-                        <div class="text-muted mt-1" th:text="${proveedor.notas}"></div>
-                    </div>
+                <div class="doc-fields">
+                    <table class="doc-table">
+                    <tr>
+                        <th scope="row">Dirección</th>
+                        <td th:text="${proveedor.direccion ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">C.P. / Población</th>
+                        <td th:text="${(proveedor.codigoPostal ?: '') + ' ' + (proveedor.poblacion ?: '')}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Forma de pago</th>
+                        <td th:text="${proveedor.formaPago ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Días de pago</th>
+                        <td th:text="${proveedor.diasPago ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">IBAN</th>
+                        <td th:text="${proveedor.iban ?: '—'}">—</td>
+                    </tr>
+                    <tr th:if="${proveedor.notas}">
+                        <th scope="row">Notas</th>
+                        <td class="text-muted" th:text="${proveedor.notas}"></td>
+                    </tr>
+                    </table>
                 </div>
             </div>
         </div>

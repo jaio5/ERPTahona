@@ -7,38 +7,40 @@
         </div>
     </div>
     <div class="form-card mb-3">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <span class="doc-field-label">Código</span>
-                <div class="doc-field-value" th:text="${ruta.codigo}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Conductor</span>
-                <div class="doc-field-value" th:text="${ruta.conductor ?: '—'}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Vehículo</span>
-                <div class="doc-field-value" th:text="${ruta.vehiculo?.matricula ?: '—'}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Estado</span>
-                <div class="doc-field-value">
+        <div class="doc-fields">
+            <table class="doc-table">
+            <tr>
+                <th scope="row">Código</th>
+                <td th:text="${ruta.codigo}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Conductor</th>
+                <td th:text="${ruta.conductor ?: '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Vehículo</th>
+                <td th:text="${ruta.vehiculo?.matricula ?: '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Distancia</th>
+                <td th:text="${ruta.distanciaTotalKm != null ? ruta.distanciaTotalKm + ' km' : '—'}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Tiempo estimado</th>
+                <td th:text="${ruta.tiempoEstimadoMinutos != null ? ruta.tiempoEstimadoMinutos + ' min' : '—'}">—</td>
+            </tr>
+            <tr th:if="${ruta.descripcion}">
+                <th scope="row">Descripción</th>
+                <td class="text-muted" th:text="${ruta.descripcion}">—</td>
+            </tr>
+            <tr>
+                <th scope="row">Estado</th>
+                <td>
                     <span class="badge-status" th:attr="data-status=${ruta.activo ? 'activo' : 'anulada'}"
                           th:text="${ruta.activo ? 'Activa' : 'Inactiva'}">—</span>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Distancia</span>
-                <div class="doc-field-value" th:text="${ruta.distanciaTotalKm != null ? ruta.distanciaTotalKm + ' km' : '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Tiempo estimado</span>
-                <div class="doc-field-value" th:text="${ruta.tiempoEstimadoMinutos != null ? ruta.tiempoEstimadoMinutos + ' min' : '—'}">—</div>
-            </div>
-            <div class="col-12" th:if="${ruta.descripcion}">
-                <span class="doc-field-label">Descripción</span>
-                <div class="doc-field-value text-muted" th:text="${ruta.descripcion}">—</div>
-            </div>
+                </td>
+            </tr>
+            </table>
         </div>
     </div>
     <div class="table-card">

@@ -33,44 +33,45 @@
                 <div class="form-section-title">
                     <i class="bi bi-info-circle"></i> Datos de la recepción
                 </div>
-                <div class="row g-3">
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Número</span>
-                        <div class="doc-field-value fw-bold" th:text="${recepcion.numero ?: '#' + recepcion.id}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Fecha</span>
-                        <div class="doc-field-value"
-                             th:text="${recepcion.fecha != null ? #temporals.format(recepcion.fecha,'dd/MM/yyyy') : '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Estado</span>
-                        <div class="doc-field-value">
-                            <span th:if="${recepcion.estado == 'CONFIRMADA'}" class="badge-status" data-status="completado">Confirmada</span>
-                            <span th:if="${recepcion.estado != 'CONFIRMADA'}" class="badge-status" data-status="pendiente">Pendiente</span>
-                        </div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Proveedor</span>
-                        <div class="doc-field-value" th:text="${recepcion.proveedor?.nombre ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Almacén</span>
-                        <div class="doc-field-value" th:text="${recepcion.almacen?.nombre ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="doc-field-label">Pedido compra</span>
-                        <div class="doc-field-value">
+                <div class="doc-fields">
+                    <table class="doc-table">
+                    <tr>
+                        <th scope="row">Número</th>
+                        <td class="fw-bold" th:text="${recepcion.numero ?: '#' + recepcion.id}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Fecha</th>
+                        <td th:text="${recepcion.fecha != null ? #temporals.format(recepcion.fecha,'dd/MM/yyyy') : '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Proveedor</th>
+                        <td th:text="${recepcion.proveedor?.nombre ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Almacén</th>
+                        <td th:text="${recepcion.almacen?.nombre ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Pedido compra</th>
+                        <td>
                             <a th:if="${recepcion.pedidoCompra != null}"
                                th:href="@{/web/pedidos-compra/{id}(id=${recepcion.pedidoCompra.id})}"
                                th:text="${recepcion.pedidoCompra.numero ?: '#' + recepcion.pedidoCompra.id}"></a>
                             <span th:if="${recepcion.pedidoCompra == null}">—</span>
-                        </div>
-                    </div>
-                    <div th:if="${recepcion.observaciones}" class="col-12">
-                        <span class="doc-field-label">Observaciones</span>
-                        <div class="doc-field-value text-muted small" th:text="${recepcion.observaciones}">—</div>
-                    </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${recepcion.observaciones}">
+                        <th scope="row">Observaciones</th>
+                        <td class="text-muted small" th:text="${recepcion.observaciones}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Estado</th>
+                        <td>
+                            <span th:if="${recepcion.estado == 'CONFIRMADA'}" class="badge-status" data-status="completado">Confirmada</span>
+                            <span th:if="${recepcion.estado != 'CONFIRMADA'}" class="badge-status" data-status="pendiente">Pendiente</span>
+                        </td>
+                    </tr>
+                    </table>
                 </div>
             </div>
         </div>

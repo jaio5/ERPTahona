@@ -76,7 +76,7 @@ table.paradas tbody td { padding: 5px 8px; border-bottom: 1px solid #eee; }
     <tr th:each="e : ${entregas}">
       <td th:text="${e.orden != null ? e.orden : '-'}">1</td>
       <td th:text="${e.cliente != null ? e.cliente.nombre : '-'}">-</td>
-      <td th:text="${e.cliente != null and e.cliente.direccion != null ? e.cliente.direccion : '-'}">-</td>
+      <td th:text="${e.cliente != null and !#strings.isEmpty(e.cliente.direccion) ? e.cliente.direccion : '-'}">-</td>
       <td>
         <span th:if="${e.incidencia != null and !e.incidencia.isEmpty()}" class="st-incidencia">INCIDENCIA</span>
         <span th:if="${e.incidencia == null or e.incidencia.isEmpty()}"

@@ -23,27 +23,29 @@
                     </div>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Fecha</span>
-                        <div class="doc-field-value" th:text="${hoja.fecha}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Estado</span>
-                        <div class="mt-1">
+                <div class="doc-fields">
+                    <table class="doc-table">
+                    <tr>
+                        <th scope="row">Fecha</th>
+                        <td th:text="${hoja.fecha}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Conductor</th>
+                        <td th:text="${hoja.conductor ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Vehículo</th>
+                        <td th:text="${hoja.vehiculo?.matricula ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Estado</th>
+                        <td>
                             <span class="badge-status"
                                   th:attr="data-status=${hoja.estado?.toLowerCase()}"
                                   th:text="${hoja.estado ?: '—'}">—</span>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Conductor</span>
-                        <div class="doc-field-value" th:text="${hoja.conductor ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-6">
-                        <span class="doc-field-label">Vehículo</span>
-                        <div class="doc-field-value" th:text="${hoja.vehiculo?.matricula ?: '—'}">—</div>
-                    </div>
+                        </td>
+                    </tr>
+                    </table>
                 </div>
             </div>
         </div>

@@ -13,7 +13,6 @@ import org.springframework.boot.web.servlet.context.ServletWebServerApplicationC
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.awt.Desktop;
 import java.net.URI;
@@ -22,7 +21,6 @@ import java.util.Map;
 
 @SpringBootApplication(scanBasePackages = "alicanteweb.erp")
 @EnableConfigurationProperties(VerifactuProperties.class)
-@EnableScheduling
 public class ErpWebApplication {
 
     private static final Logger log = LoggerFactory.getLogger(ErpWebApplication.class);

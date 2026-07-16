@@ -35,53 +35,54 @@
                     </div>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-sm-3">
-                        <span class="doc-field-label">Número</span>
-                        <div class="doc-field-value" th:text="${orden.numero}">—</div>
-                    </div>
-                    <div class="col-sm-3">
-                        <span class="doc-field-label">Estado</span>
-                        <div class="mt-1">
-                            <span class="badge-status"
-                                  th:attr="data-status=${orden.estado?.toLowerCase()}"
-                                  th:text="${orden.estado ?: '—'}">—</span>
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <span class="doc-field-label">Fecha</span>
-                        <div class="doc-field-value"
-                             th:text="${orden.fecha != null ? #temporals.format(orden.fecha,'dd/MM/yyyy') : '—'}">—</div>
-                    </div>
-                    <div class="col-sm-3">
-                        <span class="doc-field-label">Receta</span>
-                        <div class="doc-field-value">
+                <div class="doc-fields">
+                    <table class="doc-table">
+                    <tr>
+                        <th scope="row">Número</th>
+                        <td th:text="${orden.numero}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Fecha</th>
+                        <td th:text="${orden.fecha != null ? #temporals.format(orden.fecha,'dd/MM/yyyy') : '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Receta</th>
+                        <td>
                             <a th:if="${orden.receta != null}"
                                th:href="@{/web/recetas/{id}(id=${orden.receta.id})}"
                                th:text="${orden.receta.nombre}"></a>
                             <span th:if="${orden.receta == null}">—</span>
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <span class="doc-field-label">Planificada</span>
-                        <div class="doc-field-value" th:text="${orden.cantidadPlanificada ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-3">
-                        <span class="doc-field-label">Producida</span>
-                        <div class="doc-field-value" th:text="${orden.cantidadProducida ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-3">
-                        <span class="doc-field-label">Merma</span>
-                        <div class="doc-field-value" th:text="${orden.merma ?: '—'}">—</div>
-                    </div>
-                    <div class="col-sm-3">
-                        <span class="doc-field-label">Artículo</span>
-                        <div class="doc-field-value" th:text="${orden.articulo?.nombre ?: '—'}">—</div>
-                    </div>
-                    <div class="col-12" th:if="${orden.observaciones}">
-                        <span class="doc-field-label">Observaciones</span>
-                        <div class="text-muted mt-1" th:text="${orden.observaciones}"></div>
-                    </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Planificada</th>
+                        <td th:text="${orden.cantidadPlanificada ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Producida</th>
+                        <td th:text="${orden.cantidadProducida ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Merma</th>
+                        <td th:text="${orden.merma ?: '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Artículo</th>
+                        <td th:text="${orden.articulo?.nombre ?: '—'}">—</td>
+                    </tr>
+                    <tr th:if="${orden.observaciones}">
+                        <th scope="row">Observaciones</th>
+                        <td class="text-muted" th:text="${orden.observaciones}"></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Estado</th>
+                        <td>
+                            <span class="badge-status"
+                                  th:attr="data-status=${orden.estado?.toLowerCase()}"
+                                  th:text="${orden.estado ?: '—'}">—</span>
+                        </td>
+                    </tr>
+                    </table>
                 </div>
             </div>
 

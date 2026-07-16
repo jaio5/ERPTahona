@@ -81,7 +81,7 @@ La aplicacion mantiene registros de:
 Los registros de facturacion se generan con el formato oficial de AEAT:
 
 - **XML**: envoltorio `RegFactuSistemaFacturacion` con los esquemas `SuministroLR.xsd` /
-  `SuministroInformacion.xsd` (tikeV1.0): `RegistroAlta` y `RegistroAnulacion` con `IDVersion`,
+  `SuministroInformacion.xsd` (tike): `RegistroAlta` y `RegistroAnulacion` con `IDVersion`,
   `IDFactura`, `TipoFactura` (codigos F1/F2/R4/R5), `Desglose` por tipo impositivo,
   `Encadenamiento` (PrimerRegistro/RegistroAnterior), bloque `SistemaInformatico` completo,
   `FechaHoraHusoGenRegistro`, `TipoHuella` 01 y `Huella`.
@@ -93,6 +93,12 @@ Los registros de facturacion se generan con el formato oficial de AEAT:
   numero de instalacion); si el productor es la propia empresa se usan sus datos fiscales.
 - Los XSD internos (`xsd/verifactu-suministro-*.xsd`) son una transcripcion del esquema oficial
   para validacion estructural local: ante divergencias prevalece el XSD publicado por AEAT.
+- **Namespace**: los registros usan el namespace oficial `.../aeat/tike/cont/ws/...` (sin sufijo de
+  version), que es el que declaran los XSD publicados por AEAT.
+- **Regresion contra el XSD oficial**: `VerifactuOfficialXsdTest` valida los registros generados
+  (alta, anulacion y rectificativa) contra las copias de los XSD **oficiales** de AEAT
+  (`src/test/resources/xsd-oficial-aeat/`), de modo que cualquier divergencia estructural o de
+  namespace que AEAT rechazaria rompe la build.
 
 ## Riesgo pendiente
 
