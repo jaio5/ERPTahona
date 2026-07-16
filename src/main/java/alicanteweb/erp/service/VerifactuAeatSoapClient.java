@@ -121,9 +121,9 @@ public class VerifactuAeatSoapClient {
         SOAPPart soapPart = soapMessage.getSOAPPart();
         SOAPEnvelope envelope = soapPart.getEnvelope();
 
-        // Namespace del servicio VeriFactu de AEAT (tikeV1.0)
+        // Namespace del servicio VeriFactu de AEAT (tike)
         envelope.addNamespaceDeclaration("sum",
-            "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroLR.xsd");
+            "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd");
 
         // Crear cuerpo del mensaje
         SOAPBody soapBody = envelope.getBody();

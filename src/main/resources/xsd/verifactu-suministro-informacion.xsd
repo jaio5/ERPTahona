@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Transcripción interna del esquema oficial de AEAT SuministroInformacion.xsd (VeriFactu, tikeV1.0)
+  Transcripción interna del esquema oficial de AEAT SuministroInformacion.xsd (VeriFactu, tike)
   para validación estructural local de los registros de facturación generados.
   La referencia normativa es el XSD publicado por AEAT; ante cualquier divergencia prevalece el oficial.
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroInformacion.xsd"
-           xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tikeV1.0/cont/ws/SuministroInformacion.xsd"
+           targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"
+           xmlns="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd"
            elementFormDefault="qualified">
 
     <xs:element name="RegistroAlta" type="RegistroAltaType"/>
@@ -49,7 +49,7 @@
     <xs:complexType name="RegistroAnulacionType">
         <xs:sequence>
             <xs:element name="IDVersion" type="xs:string"/>
-            <xs:element name="IDFacturaAnulada" type="IDFacturaAnuladaType"/>
+            <xs:element name="IDFactura" type="IDFacturaAnuladaType"/>
             <xs:element name="Encadenamiento" type="EncadenamientoType"/>
             <xs:element name="SistemaInformatico" type="SistemaInformaticoType"/>
             <xs:element name="FechaHoraHusoGenRegistro" type="xs:string"/>
