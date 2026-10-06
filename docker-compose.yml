@@ -10,8 +10,11 @@ services:
       MYSQL_USER: tahona
       MYSQL_PASSWORD: "${MYSQL_PASSWORD:?Falta MYSQL_PASSWORD - copia .env.example a .env y rellena los secretos}"
     ports:
-      # 3307 por defecto para no chocar con un MySQL local en 3306
-      - "${MYSQL_HOST_PORT:-3307}:3306"
+      # Solo loopback: el MySQL del contenedor NO debe ser accesible desde la red
+      # (menos aún en un servidor con IP pública). El acceso normal es la red
+      # interna del compose; 127.0.0.1:3307 permite acceso local puntual (backups,
+      # inspección) sin exponerlo al exterior. 3307 evita chocar con un MySQL local.
+      - "127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:

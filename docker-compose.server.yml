@@ -1,0 +1,46 @@
+# =============================================================================
+#  Override para este SERVIDOR compartido (multi-tenant con Nginx Proxy Manager).
+#
+#  En este host, el contenedor "npm" (Nginx Proxy Manager) ya ocupa los puertos
+#  80/443 y termina el TLS de todas las apps. Por eso aquí NO se usa el proxy
+#  Caddy propio del ERP (chocaría con NPM). En su lugar:
+#    - Se deshabilita el servicio "proxy" (Caddy) con un perfil que no se activa.
+#    - El contenedor "app" se conecta a la red externa "proxy" para que NPM lo
+#      alcance por su nombre de contenedor:  erp-app:8080
+#    - El MySQL solo se publica en loopback (127.0.0.1), nunca hacia fuera.
+#
+#  Levantar / operar con AMBOS ficheros:
+#    docker compose -f docker-compose.yml -f docker-compose.server.yml up -d --build
+#    docker compose -f docker-compose.yml -f docker-compose.server.yml ps
+#    docker compose -f docker-compose.yml -f docker-compose.server.yml logs -f app
+#
+#  Después, en el panel de Nginx Proxy Manager, crear un Proxy Host:
+#    Domain:            tu-dominio.es
+#    Scheme:            http
+#    Forward Hostname:  erp-app
+#    Forward Port:      8080
+#    Websockets:        on   |   Block Common Exploits: on
+#    SSL:               solicitar certificado Let's Encrypt + Force SSL + HSTS
+# =============================================================================
+
+services:
+  # El MySQL ya se publica solo en loopback (127.0.0.1) en docker-compose.yml,
+  # así que aquí no se toca "db": las listas "ports" se concatenan al fusionar
+  # los compose y duplicarían el binding.
+
+  app:
+    # Se une a la red externa "proxy" (donde vive NPM) además de la red interna
+    # por defecto del compose (para hablar con "db").
+    networks:
+      default: {}
+      proxy: {}
+
+  proxy:
+    # El Caddy del ERP no se usa en este servidor: NPM sirve el TLS en 80/443.
+    # Un perfil que nunca se activa impide que este servicio arranque.
+    profiles:
+      - caddy-standalone
+
+networks:
+  proxy:
+    external: true
