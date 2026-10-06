@@ -79,3 +79,6 @@ application-local.properties
 .env
 .env.production.local
 .env.*.local
+
+# Datos persistentes montados en el contenedor (bind mounts)
+/datos/

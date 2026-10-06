@@ -1,0 +1,99 @@
+# Compose para desplegar el ERP desde Coolify.
+#
+# Es la fusion de docker-compose.yml + docker-compose.server.yml, porque
+# Coolify despliega UN solo fichero compose y no admite varios con -f.
+#
+# Tres diferencias deliberadas respecto al par original:
+#
+#  1. SIN container_name. Coolify gestiona los nombres, y fijarlos chocaria
+#     con los contenedores del despliegue anterior. El acceso desde Nginx
+#     Proxy Manager se mantiene con un ALIAS de red (erp-app), que es lo que
+#     NPM resuelve y es independiente del nombre del contenedor.
+#
+#  2. Bind mounts con RUTA ABSOLUTA en vez de volumenes con nombre. Coolify
+#     prefija los volumenes con el UUID del recurso, asi que un volumen con
+#     nombre saldria vacio y la base no viajaria. Ademas, las rutas del host
+#     quedan fuera del alcance de su limpieza automatica de volumenes.
+#     Rutas relativas tampoco valen: apuntarian al clon del repo que gestiona
+#     Coolify, que se rehace en cada despliegue.
+#
+#  3. Sin el servicio Caddy. En este host el TLS lo termina NPM en 80/443.
+#
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: tahona
+      MYSQL_USER: tahona
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:?Falta MYSQL_PASSWORD}"
+    ports:
+      - "127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306"
+    volumes:
+      - /opt/clients/ERPTahona/datos/mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h localhost -u root"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      interna: {}
+
+  app:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/tahona?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: tahona
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SERVER_PORT: 8080
+      ADMIN_DEFAULT_PASSWORD: "${ADMIN_DEFAULT_PASSWORD:?Falta ADMIN_DEFAULT_PASSWORD}"
+      CIFRADO_AES_KEY: "${CIFRADO_AES_KEY:?Falta CIFRADO_AES_KEY}"
+      SECURITY_PBKDF2_SECRET: "${SECURITY_PBKDF2_SECRET:?Falta SECURITY_PBKDF2_SECRET}"
+      VERIFACTU_CERT_PATH: ${VERIFACTU_CERT_PATH:-}
+      VERIFACTU_CERT_PASSWORD: ${VERIFACTU_CERT_PASSWORD:-}
+      VERIFACTU_KEY_ALIAS: ${VERIFACTU_KEY_ALIAS:-mi_certificado}
+      VERIFACTU_KEY_PASSWORD: ${VERIFACTU_KEY_PASSWORD:-}
+      VERIFACTU_AEAT_ENABLED: ${VERIFACTU_AEAT_ENABLED:-false}
+      VERIFACTU_AEAT_ENDPOINT: ${VERIFACTU_AEAT_ENDPOINT:-https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/VerifactuSOAP}
+      VERIFACTU_SISTEMA_NOMBRE_PRODUCTOR: ${VERIFACTU_SISTEMA_NOMBRE_PRODUCTOR:-}
+      VERIFACTU_SISTEMA_NIF_PRODUCTOR: ${VERIFACTU_SISTEMA_NIF_PRODUCTOR:-}
+      VERIFACTU_SISTEMA_ID: ${VERIFACTU_SISTEMA_ID:-01}
+      VERIFACTU_SISTEMA_NUMERO_INSTALACION: ${VERIFACTU_SISTEMA_NUMERO_INSTALACION:-1}
+      VERIFACTU_QR_BASE_URL: ${VERIFACTU_QR_BASE_URL:-https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR}
+      ERP_LOG_FILE: logs/erp-tahona.log
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    volumes:
+      - /opt/clients/ERPTahona/datos/backups:/app/backups
+      - /opt/clients/ERPTahona/datos/impresiones:/app/impresiones
+      - /opt/clients/ERPTahona/datos/logs:/app/logs
+      - /opt/clients/ERPTahona/certs:/app/certs:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      interna: {}
+      proxy:
+        # NPM resuelve "erp-app" para llegar aqui. El alias lo mantiene vivo
+        # aunque Coolify llame al contenedor de otra forma.
+        aliases:
+          - erp-app
+
+networks:
+  interna: {}
+  proxy:
+    external: true
