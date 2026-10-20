@@ -6,6 +6,7 @@ import alicanteweb.erp.entities.Cliente;
 import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
+import alicanteweb.erp.entities.SifModalidad;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
@@ -31,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -222,5 +224,36 @@ class ImpresionServiceFormatoTest {
         Rectangle size = primeraPagina(impresionService.generarAlbaranPdf(albaran()));
         assertEquals(A4_W, size.getWidth(), TOL, "ancho A4");
         assertEquals(A4_H, size.getHeight(), TOL, "alto A4");
+    }
+
+    // PNG 1x1 transparente: basta para que la plantilla pinte el bloque del QR
+    private static final String QR_MINIMO =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
+    private String textoFacturaEmitida(SifModalidad modalidad) throws Exception {
+        EmpresaConfig e = empresa(false);
+        e.setSifModalidad(modalidad);
+        when(empresaConfigService.getConfiguracionActivaOrThrow()).thenReturn(e);
+        when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(e));
+        Factura f = factura();
+        f.setVerifactuEnviada(true);
+        f.setVerifactuQr(QR_MINIMO);
+        f.setVerifactuHash("ABCDEF0123456789ABCDEF0123456789");
+        return textoPrimeraPagina(impresionService.generarFacturaPdf(f));
+    }
+
+    @Test
+    void enModoNoVerifactuLaFacturaNoLlevaLeyendaVerifactu() throws Exception {
+        String texto = textoFacturaEmitida(SifModalidad.NO_VERIFACTU);
+        assertFalse(texto.contains("VERI*FACTU"), texto);
+        assertTrue(texto.contains("QR tributario del sistema"), texto);
+        assertTrue(texto.contains("SISTEMA:NO_VERIFACTU"), texto);
+    }
+
+    @Test
+    void enModoVerifactuLaFacturaEmitidaLlevaLaLeyenda() throws Exception {
+        String texto = textoFacturaEmitida(SifModalidad.VERIFACTU);
+        assertTrue(texto.contains("VERI*FACTU"), texto);
+        assertTrue(texto.contains("SISTEMA:VERIFACTU"), texto);
     }
 }

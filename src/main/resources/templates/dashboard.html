@@ -11,6 +11,11 @@
 
     <!-- Alertas dinámicas (Alpine.js) -->
     <div x-show="hasAlertas()" class="mb-4">
+        <div class="d-flex justify-content-end mb-1">
+            <button type="button" class="btn btn-ghost btn-sm" @click="cerrarTodas()">
+                <i class="bi bi-x-circle me-1"></i>Descartar todas
+            </button>
+        </div>
         <template x-for="a in alertas" :key="a.id">
             <div class="alert alert-dismissible fade show py-2 mb-1 d-flex align-items-center gap-2"
                  :class="alertClass(a)">
@@ -216,10 +221,11 @@
                 function getDescartadas() {
                     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) { return []; }
                 }
-                function saveDescartada(id) {
+                function saveDescartadas(nuevos) {
                     try {
                         const ids = getDescartadas();
-                        if (!ids.includes(id)) { ids.push(id); localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); }
+                        nuevos.forEach(id => { if (!ids.includes(id)) ids.push(id); });
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
                     } catch(e) {}
                 }
                 return {
@@ -248,8 +254,12 @@
                     return 'bi-info-circle-fill';
                 },
                 cerrarAlerta(a) {
-                    saveDescartada(a.id);
+                    saveDescartadas([a.id]);
                     this.alertas = this.alertas.filter(x => x.id !== a.id);
+                },
+                cerrarTodas() {
+                    saveDescartadas(this.alertas.map(a => a.id));
+                    this.alertas = [];
                 }
                 };
             });

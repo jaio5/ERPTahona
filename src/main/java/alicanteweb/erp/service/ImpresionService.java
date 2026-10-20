@@ -11,6 +11,7 @@ import alicanteweb.erp.entities.HojaRuta;
 import alicanteweb.erp.entities.HojaRutaEntrega;
 import alicanteweb.erp.entities.Lote;
 import alicanteweb.erp.entities.Receta;
+import alicanteweb.erp.entities.SifModalidad;
 import alicanteweb.erp.util.DesgloseFiscal;
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
@@ -122,7 +123,9 @@ public class ImpresionService {
                 factura.getDescuentoGlobalTipo(), factura.getDescuentoGlobalValor());
             Map<String, Object> vars = new HashMap<>();
             vars.put("factura", factura);
-            vars.put("empresa", empresaConfigService.getConfiguracionActivaOrThrow());
+            EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
+            vars.put("empresa", empresa);
+            vars.put("leyendaVerifactu", llevaLeyendaVerifactu(factura, empresa));
             vars.put("datosVerificacion", generarDatosVerificacion(factura));
             vars.put("desgloseIva", filasIva(desglose));
             vars.put("descuentoGlobal", desglose.descuentoGlobal());
@@ -247,6 +250,16 @@ public class ImpresionService {
         return templateEngine.process(templateName, ctx);
     }
 
+    /**
+     * La leyenda "VERI*FACTU" solo corresponde a un sistema en modalidad VERI*FACTU.
+     * En NO_VERIFACTU el QR se imprime, pero sin esa leyenda.
+     */
+    static boolean llevaLeyendaVerifactu(Factura factura, EmpresaConfig empresa) {
+        return Boolean.TRUE.equals(factura.getVerifactuEnviada())
+            && empresa != null
+            && empresa.getSifModalidad() != SifModalidad.NO_VERIFACTU;
+    }
+
     private String generarDatosVerificacion(Factura factura) {
         StringBuilder datos = new StringBuilder();
         EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
@@ -259,7 +272,8 @@ public class ImpresionService {
         } else if (factura.getVerifactuHash() != null) {
             datos.append("HUELLA:").append(factura.getVerifactuHash()).append("|");
         }
-        datos.append("SISTEMA:VERIFACTU");
+        datos.append("SISTEMA:").append(empresa.getSifModalidad() == SifModalidad.NO_VERIFACTU
+            ? SifModalidad.NO_VERIFACTU.name() : SifModalidad.VERIFACTU.name());
         return datos.toString();
     }
 

@@ -319,7 +319,8 @@ public class AlbaranService {
             if (i < albaranes.size() - 1) observaciones.append(", ");
         }
         factura.setObservaciones(observaciones.toString());
-        factura.setNumeroAlbaran(albaranes.stream().map(AlbaranVenta::getNumero).reduce((a, b) -> a + ", " + b).orElse(null));
+        factura.setNumeroAlbaran(resumirNumerosAlbaran(
+                albaranes.stream().map(AlbaranVenta::getNumero).toList(), Factura.NUMERO_ALBARAN_MAX));
 
         BigDecimal baseImponible = BigDecimal.ZERO;
         BigDecimal totalIva = BigDecimal.ZERO;
@@ -457,6 +458,36 @@ public class AlbaranService {
 
     private BigDecimal calcularSubtotalLinea(BigDecimal cantidad, BigDecimal precio, BigDecimal descuento) {
         return FinancialMath.subtotalConDescuento(cantidad, precio, descuento);
+    }
+
+    /**
+     * Lista de números de albarán separada por comas que cabe en {@code max} caracteres.
+     * Si no caben todos, deja los primeros y termina en "(+N más)"; el vínculo completo
+     * está en albaranes_venta_facturas.
+     */
+    static String resumirNumerosAlbaran(List<String> numeros, int max) {
+        if (numeros == null || numeros.isEmpty()) {
+            return null;
+        }
+        String todos = String.join(", ", numeros);
+        if (todos.length() <= max) {
+            return todos;
+        }
+        StringBuilder resumen = new StringBuilder();
+        int incluidos = 0;
+        for (String numero : numeros) {
+            String sufijoSiSeIncluye = " (+" + (numeros.size() - incluidos - 1) + " más)";
+            int largo = resumen.length() + (incluidos > 0 ? 2 : 0) + numero.length() + sufijoSiSeIncluye.length();
+            if (largo > max) {
+                break;
+            }
+            if (incluidos > 0) {
+                resumen.append(", ");
+            }
+            resumen.append(numero);
+            incluidos++;
+        }
+        return resumen.append(" (+").append(numeros.size() - incluidos).append(" más)").toString();
     }
 }
 

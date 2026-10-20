@@ -157,8 +157,8 @@
     <td style="width:30%;" class="qr">
       <div th:if="${factura.verifactuQr != null}">
         <img th:src="'data:image/png;base64,' + ${factura.verifactuQr}" alt="QR tributario"/>
-        <div class="leyenda" th:if="${factura.verifactuEnviada}">VERI*FACTU · verificable en la AEAT</div>
-        <div class="leyenda" th:unless="${factura.verifactuEnviada}">QR tributario del sistema</div>
+        <div class="leyenda" th:if="${leyendaVerifactu}">VERI*FACTU · verificable en la AEAT</div>
+        <div class="leyenda" th:unless="${leyendaVerifactu}">QR tributario del sistema</div>
       </div>
     </td>
   </tr>

@@ -4,6 +4,7 @@ import alicanteweb.erp.entities.AlbaranVenta;
 import alicanteweb.erp.entities.AlbaranVentaLinea;
 import alicanteweb.erp.entities.Articulo;
 import alicanteweb.erp.entities.Cliente;
+import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.repository.AlbaranVentaFacturaRepository;
 import alicanteweb.erp.repository.AlbaranVentaRepository;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -151,5 +154,49 @@ class AlbaranServiceTest {
         assertThrows(IllegalStateException.class, () -> service.marcarEntregado(3L));
         assertEquals("PENDIENTE", albaran.getEstado());
         verify(albaranRepository, never()).save(albaran);
+    }
+
+    @Test
+    void facturarCuatroAlbaranesGuardaTodosLosNumerosSinDesbordar() {
+        Cliente cliente = new Cliente();
+        cliente.setId(7L);
+        List<AlbaranVenta> albaranes = new ArrayList<>();
+        for (long i = 1; i <= 4; i++) {
+            AlbaranVenta a = new AlbaranVenta();
+            a.setId(i);
+            a.setNumero("ALB-2026-00000" + i);
+            a.setCliente(cliente);
+            albaranes.add(a);
+        }
+        List<Long> ids = List.of(1L, 2L, 3L, 4L);
+        when(albaranRepository.findAllById(ids)).thenReturn(albaranes);
+        when(facturaService.save(any(Factura.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Factura factura = service.convertirVariosAFactura(ids, null);
+
+        assertEquals("ALB-2026-000001, ALB-2026-000002, ALB-2026-000003, ALB-2026-000004",
+                factura.getNumeroAlbaran());
+        assertTrue(factura.getNumeroAlbaran().length() <= Factura.NUMERO_ALBARAN_MAX);
+    }
+
+    @Test
+    void resumirNumerosAlbaranRecortaConContadorCuandoNoCabenTodos() {
+        List<String> numeros = new ArrayList<>();
+        for (int i = 1; i <= 100; i++) {
+            numeros.add(String.format("ALB-2026-%06d", i));
+        }
+
+        String resumen = AlbaranService.resumirNumerosAlbaran(numeros, Factura.NUMERO_ALBARAN_MAX);
+
+        assertTrue(resumen.length() <= Factura.NUMERO_ALBARAN_MAX, resumen);
+        assertTrue(resumen.startsWith("ALB-2026-000001, ALB-2026-000002"));
+        int incluidos = resumen.split(", ").length;
+        assertTrue(resumen.endsWith(" (+" + (100 - incluidos) + " más)"), resumen);
+    }
+
+    @Test
+    void resumirNumerosAlbaranDevuelveListaCompletaSiCabe() {
+        assertEquals("A1, A2", AlbaranService.resumirNumerosAlbaran(List.of("A1", "A2"), 50));
+        assertNull(AlbaranService.resumirNumerosAlbaran(List.of(), 50));
     }
 }

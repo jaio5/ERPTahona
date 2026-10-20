@@ -173,6 +173,8 @@ public class DocumentoRestController {
         boolean emitir = Boolean.TRUE.equals(body.get("emitir"));
         if (emitir) {
             try {
+                // Mismo circuito que la interfaz: BORRADOR -> REVISION -> EMITIDA
+                facturaService.pasarARevision(f.getId());
                 facturaService.aprobarYEmitir(f.getId());
             } catch (RuntimeException e) {
                 throw new IllegalStateException(

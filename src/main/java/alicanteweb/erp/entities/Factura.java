@@ -127,11 +127,13 @@ public class Factura {
     private String referenciaPedido;
 
     /**
-     * Número de albarán (si existe)
+     * Número de albarán (si existe). Si la factura agrupa varios, la lista separada por comas.
      */
-    @Size(max = 50)
-    @Column(name = "numero_albaran", length = 50)
+    @Size(max = NUMERO_ALBARAN_MAX)
+    @Column(name = "numero_albaran", length = NUMERO_ALBARAN_MAX)
     private String numeroAlbaran;
+
+    public static final int NUMERO_ALBARAN_MAX = 500;
 
     /**
      * Inversión del sujeto pasivo (Art. 84 Ley IVA)

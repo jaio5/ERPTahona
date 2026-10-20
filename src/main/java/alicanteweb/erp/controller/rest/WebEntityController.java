@@ -4,6 +4,7 @@ import alicanteweb.erp.entities.*;
 import alicanteweb.erp.service.UsuarioService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.persistence.Version;
@@ -324,6 +325,8 @@ public class WebEntityController {
                         && !isSensitive(f.getName())
                         && !f.isAnnotationPresent(ManyToOne.class)
                         && !f.isAnnotationPresent(Transient.class)
+                        // Hibernate 6 no admite lower() sobre CLOB: incluir un @Lob rompe toda la consulta
+                        && !f.isAnnotationPresent(Lob.class)
                         && !java.lang.reflect.Modifier.isStatic(f.getModifiers()))
                 .map(f -> {
                     try {
