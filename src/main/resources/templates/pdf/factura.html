@@ -93,7 +93,9 @@
   <tr>
     <td style="width:64%;">
       <!-- El formulario guarda los campos en blanco como cadena vacia, no como null. -->
-      <div class="marca" th:text="${#strings.isEmpty(empresa.nombreComercial) ? empresa.nombreEmpresa : empresa.nombreComercial}">La Tahona de Fernando</div>
+      <!-- La caligrafía (Pinyon Script, la de la tarjeta del cliente) es solo para el nombre comercial;
+           la razón social ya va en letra normal bajo el escudo y nunca se escribe en caligrafía -->
+      <div class="marca" th:unless="${#strings.isEmpty(empresa.nombreComercial)}" th:text="${empresa.nombreComercial}">La Tahona de Fernando</div>
       <div class="marca-tel" th:unless="${#strings.isEmpty(empresa.telefono)}">Tel. <span th:text="${empresa.telefono}"></span></div>
     </td>
     <td style="width:36%;" class="emisor">

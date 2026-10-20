@@ -182,22 +182,37 @@ class ImpresionServiceFormatoTest {
         return sb.toString().trim();
     }
 
+        @Test
+    void laCaligrafiaMuestraSoloElNombreComercialEnFacturaYAlbaran() throws Exception {
+        when(empresaConfigService.getConfiguracionActivaOrThrow()).thenReturn(empresa(false));
+        when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(empresa(false)));
+
+        File factura = impresionService.generarFacturaPdf(factura());
+        File albaran = impresionService.generarAlbaranPdf(albaran());
+        assertEquals("La Tahona de Fernando", textoDeLaMarca(factura));
+        assertEquals("La Tahona de Fernando", textoDeLaMarca(albaran));
+        // La razón social sigue impresa, en letra normal, bajo el escudo
+        assertTrue(textoPrimeraPagina(factura).contains("Grupo BABO, S.C.V.L."));
+        assertTrue(textoPrimeraPagina(albaran).contains("Grupo BABO, S.C.V.L."));
+    }
+
     /**
-     * El formulario de empresa guarda los campos en blanco como cadena vacia, no como null
-     * (no hay StringTrimmerEditor). La cabecera debe caer al nombre fiscal en ese caso, no
-     * imprimir un hueco.
+     * Sin nombre comercial no se escribe nada en caligrafía: la razón social no es la marca
+     * y ya aparece bajo el escudo.
      */
     @Test
-    void conNombreComercialEnBlancoLaCabeceraMuestraElNombreFiscal() throws Exception {
+    void conNombreComercialEnBlancoNoSeEscribeLaRazonSocialEnCaligrafia() throws Exception {
         EmpresaConfig sinComercial = empresa(false);
         sinComercial.setNombreComercial("");
         when(empresaConfigService.getConfiguracionActivaOrThrow()).thenReturn(sinComercial);
         when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(sinComercial));
 
-        assertEquals("Grupo BABO, S.C.V.L.", textoDeLaMarca(impresionService.generarFacturaPdf(factura())),
-                "La factura debe imprimir el nombre fiscal en la cabecera si no hay nombre comercial");
-        assertEquals("Grupo BABO, S.C.V.L.", textoDeLaMarca(impresionService.generarAlbaranPdf(albaran())),
-                "El albaran debe imprimir el nombre fiscal en la cabecera si no hay nombre comercial");
+        File factura = impresionService.generarFacturaPdf(factura());
+        File albaran = impresionService.generarAlbaranPdf(albaran());
+        assertEquals("", textoDeLaMarca(factura));
+        assertEquals("", textoDeLaMarca(albaran));
+        assertTrue(textoPrimeraPagina(factura).contains("Grupo BABO, S.C.V.L."));
+        assertTrue(textoPrimeraPagina(albaran).contains("Grupo BABO, S.C.V.L."));
     }
 
     @Test
