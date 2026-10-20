@@ -13,8 +13,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import alicanteweb.erp.util.FinancialMath;
+import alicanteweb.erp.util.NumeracionDocumento;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -298,8 +302,10 @@ public class PedidoService {
     }
 
     /**
-     * Duplica un pedido
+     * Duplica un pedido: mismo cliente y mismas líneas, con número nuevo, fecha de hoy,
+     * estado PENDIENTE y total recalculado. No mueve stock ni copia vínculos a albaranes.
      */
+    @Transactional
     public Pedido duplicar(Long pedidoId) {
         log.info("📋 Duplicando pedido {}", pedidoId);
 
@@ -326,9 +332,10 @@ public class PedidoService {
 
             duplicado.getLineas().add(lineaDuplicada);
         }
+        duplicado.setTotal(calcularTotal(duplicado.getLineas()));
 
         Pedido guardado = pedidoRepository.save(duplicado);
-        log.info("[OK] Pedido duplicado: {}", guardado.getNumero());
+        log.info("[OK] Pedido duplicado: {} -> {}", original.getNumero(), guardado.getNumero());
 
         return guardado;
     }
@@ -338,12 +345,38 @@ public class PedidoService {
     // ==========================================
 
     /**
-     * Genera un número de pedido automático
+     * Genera el siguiente número de pedido del ejercicio (PED-AAAA-00001...).
+     * Parte del máximo existente con el prefijo del año, no de un count(), para
+     * no repetir números tras un borrado. La UNIQUE de BD es la red de seguridad.
      */
     private String generarNumeroPedido() {
-        int year = LocalDate.now().getYear();
-        long count = pedidoRepository.count() + 1;
-        return String.format("PED-%d-%05d", year, count);
+        String prefijo = NumeracionDocumento.prefijo("PED", LocalDate.now().getYear());
+        return NumeracionDocumento.siguiente(prefijo,
+                pedidoRepository.maxNumeroConPrefijo(prefijo),
+                () -> pedidoRepository.numerosConPrefijo(prefijo));
+    }
+
+    /** Importe neto de una línea (cantidad x precio con el descuento aplicado, sin IVA). */
+    public static BigDecimal importeLinea(PedidoLinea linea) {
+        return FinancialMath.subtotalConDescuento(linea.getCantidad(), linea.getPrecio(), linea.getDescuento());
+    }
+
+    /** IVA de una línea sobre su importe neto. */
+    public static BigDecimal ivaLinea(PedidoLinea linea) {
+        return FinancialMath.porcentaje(importeLinea(linea), linea.getIva());
+    }
+
+    /**
+     * Total del pedido a partir de sus líneas: suma de (neto con descuento + IVA),
+     * la misma fórmula que se usa al guardar el pedido desde el formulario.
+     */
+    public static BigDecimal calcularTotal(Collection<PedidoLinea> lineas) {
+        BigDecimal total = BigDecimal.ZERO;
+        if (lineas == null) return total;
+        for (PedidoLinea linea : lineas) {
+            total = total.add(importeLinea(linea)).add(ivaLinea(linea));
+        }
+        return total;
     }
 
     /**

@@ -38,6 +38,9 @@ public class AlbaranWebController extends BaseWebController {
     /** Campos por los que se permite ordenar el listado (evita inyección en el Sort). */
     private static final java.util.Set<String> SORTS_PERMITIDOS = java.util.Set.of("fecha", "numero", "total");
 
+    /** Estados en los que el albarán ya no se edita (mismo criterio que DocumentoService.guardarAlbaran). */
+    private static final java.util.Set<String> ESTADOS_NO_EDITABLES = java.util.Set.of("ENTREGADO", "FACTURADO", "ANULADO");
+
     private final AlbaranService albaranService;
     private final ClienteService clienteService;
     private final ArticuloService articuloService;
@@ -139,6 +142,10 @@ public class AlbaranWebController extends BaseWebController {
     @PreAuthorize("@permisos.puede('ventas', 'editar')")
     public String editar(@PathVariable Long id, Model model, RedirectAttributes ra) {
         return albaranService.obtenerPorIdParaPdf(id).map(a -> {
+            if (a.getEstado() != null && ESTADOS_NO_EDITABLES.contains(a.getEstado().toUpperCase())) {
+                Flash.error(ra, "No se puede modificar un albarán en estado " + a.getEstado());
+                return "redirect:/web/albaranes/" + id;
+            }
             model.addAttribute("moduloActivo", "albaranes");
             model.addAttribute("titulo", "Editar albarán " + a.getNumero());
             model.addAttribute("albaran", a);
@@ -185,6 +192,11 @@ public class AlbaranWebController extends BaseWebController {
             AlbaranVenta albaran = documentoService.guardarAlbaran(id, datos);
             Flash.exito(ra, "Albarán guardado correctamente");
             return "redirect:/web/albaranes/" + albaran.getId();
+        } catch (IllegalStateException e) {
+            // Albarán entregado, facturado o anulado: no se edita; se vuelve al detalle con el motivo
+            log.warn("Edición rechazada del albarán {}: {}", id, e.getMessage());
+            Flash.error(ra, e.getMessage());
+            return id != null ? "redirect:/web/albaranes/" + id : "redirect:/web/albaranes";
         } catch (RuntimeException e) {
             log.error("Error al guardar albarán: {}", e.getMessage(), e);
             Flash.error(ra, e.getMessage());

@@ -67,47 +67,118 @@ function initSidebarToggle() {
     const overlay = document.getElementById("sidebarOverlay");
     if (!sidebar || !toggle) return;
 
+    const setOpen = open => {
+        sidebar.classList.toggle("is-open", open);
+        toggle.setAttribute("aria-expanded", String(open));
+    };
+    toggle.setAttribute("aria-expanded", String(sidebar.classList.contains("is-open")));
+
     toggle.addEventListener("click", () => {
-        sidebar.classList.toggle("is-open");
+        setOpen(!sidebar.classList.contains("is-open"));
     });
     if (overlay) {
-        overlay.addEventListener("click", () => {
-            sidebar.classList.remove("is-open");
-        });
+        overlay.addEventListener("click", () => setOpen(false));
     }
+    // Escape cierra el menú móvil y devuelve el foco al botón que lo abrió
+    document.addEventListener("keydown", event => {
+        if (event.key !== "Escape" || !sidebar.classList.contains("is-open")) return;
+        setOpen(false);
+        toggle.focus();
+    });
 }
 
-/* ── Toast auto-dismiss ── */
+/* ── Toasts: los de éxito se ocultan solos; los marcados data-bs-autohide="false" (errores) no ── */
 function initToasts() {
     document.querySelectorAll("#toast-container .toast").forEach(el => {
-        const toast = new bootstrap.Toast(el, { delay: 4500, autohide: true });
+        const toast = new bootstrap.Toast(el, { delay: 4500, autohide: el.dataset.bsAutohide !== "false" });
         toast.show();
     });
 }
 
-/* ── Form protection (loading state + anti-double-click) ── */
+/* ── Form protection (loading state + anti-double-click) ──
+ * Solo formularios POST: los filtros GET (filter-bar) no se bloquean.
+ * El listener se registra antes que initBootstrapValidation, así que la validación
+ * se comprueba aquí: un formulario inválido no llega a enviarse y el botón no debe
+ * quedarse bloqueado. El bloqueo se aplica en el siguiente tick para respetar a
+ * cualquier otro listener (Alpine, confirmaciones) que cancele el envío después.
+ * El atributo data-no-double-click marca botones críticos; hoy todos los POST
+ * llevan esta protección, así que es solo informativo.
+ */
+const textosOriginalesBoton = new WeakMap();
+
 function initFormProtection() {
     document.querySelectorAll("form").forEach(form => {
-        form.addEventListener("submit", function() {
-            const btn = form.querySelector('[type="submit"]');
-                if (btn && !btn.dataset.noDoubleClick) {
-                // Prevent double-click
-                if (btn.dataset.submitting === "true") {
+        if ((form.getAttribute("method") || "get").toLowerCase() !== "post") return;
+        form.addEventListener("submit", event => {
+            if (event.defaultPrevented
+                || (form.classList.contains("needs-validation") && !form.checkValidity())) {
+                return;
+            }
+            // Segundo envío (p. ej. Intro en un campo) mientras el primero sigue en curso
+            if (form.dataset.submitting === "true") {
+                event.preventDefault();
+                return;
+            }
+            // Los formularios que abren otra pestaña (PDF, impresión) no dejan la página esperando
+            if ((form.getAttribute("target") || "").toLowerCase() === "_blank") return;
+
+            const btn = event.submitter || form.querySelector('[type="submit"], button:not([type])');
+            form.dataset.submitting = "true";
+            setTimeout(() => {
+                if (event.defaultPrevented) {
+                    delete form.dataset.submitting;
                     return;
                 }
-                btn.dataset.submitting = "true";
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Guardando...';
-                btn.disabled = true;
-                // Re-enable after 10s as safety net
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                    delete btn.dataset.submitting;
-                }, 10000);
-            }
+                bloquearBotonEnvio(form, btn);
+            }, 0);
         });
     });
+
+    // Al volver con "Atrás" el navegador puede restaurar la página desde la caché (bfcache)
+    // con los botones aún bloqueados: se rehabilitan con su texto original.
+    window.addEventListener("pageshow", event => {
+        if (!event.persisted) return;
+        document.querySelectorAll('[data-submitting="true"]').forEach(el => {
+            if (el.tagName === "FORM") delete el.dataset.submitting;
+            else restaurarBotonEnvio(el);
+        });
+    });
+}
+
+function bloquearBotonEnvio(form, btn) {
+    // Red de seguridad: si la respuesta no llega (descarga, error de red) se rehabilita a los 10 s
+    setTimeout(() => {
+        delete form.dataset.submitting;
+        if (btn) restaurarBotonEnvio(btn);
+    }, 10000);
+    if (!btn || btn.dataset.submitting === "true") return;
+
+    btn.dataset.submitting = "true";
+    const texto = btn.dataset.loadingText || "Procesando…";
+    if (btn.tagName === "INPUT") {
+        textosOriginalesBoton.set(btn, btn.value);
+        btn.value = texto;
+    } else {
+        textosOriginalesBoton.set(btn, btn.innerHTML);
+        // Botones solo con icono (p. ej. cerrar sesión): spinner sin texto visible para no ensanchar la barra
+        const soloIcono = btn.textContent.trim() === "";
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm' + (soloIcono ? '' : ' me-1')
+            + '" aria-hidden="true"></span><span' + (soloIcono ? ' class="visually-hidden"' : '') + '></span>';
+        btn.lastElementChild.textContent = texto;
+    }
+    btn.disabled = true;
+}
+
+function restaurarBotonEnvio(btn) {
+    if (btn.dataset.submitting !== "true") return;
+    const original = textosOriginalesBoton.get(btn);
+    if (original !== undefined) {
+        if (btn.tagName === "INPUT") btn.value = original;
+        else btn.innerHTML = original;
+        textosOriginalesBoton.delete(btn);
+    }
+    btn.disabled = false;
+    delete btn.dataset.submitting;
 }
 
 /* ── Table search with debounce ── */

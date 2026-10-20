@@ -1,21 +1,90 @@
 package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.*;
+import alicanteweb.erp.repository.PedidoRepository;
 import alicanteweb.erp.repository.RecetaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
 public class PlanificadorService {
 
-    private final RecetaRepository recetaRepository;
+    private static final Set<String> ESTADOS_PEDIDO_EXCLUIDOS = Set.of("CANCELADO", "ANULADO");
+    private static final String SIN_CLIENTE = "Sin cliente";
 
-    public PlanificadorService(RecetaRepository recetaRepository) {
+    private final RecetaRepository recetaRepository;
+    private final PedidoRepository pedidoRepository;
+
+    public PlanificadorService(RecetaRepository recetaRepository, PedidoRepository pedidoRepository) {
         this.recetaRepository = recetaRepository;
+        this.pedidoRepository = pedidoRepository;
+    }
+
+    /**
+     * Hoja de obrador: total pedido por artículo para una fecha (sin pedidos
+     * cancelados/anulados), con desglose por cliente, stock actual y lo que
+     * queda por elaborar (nunca negativo). Ordenado por nombre de artículo.
+     */
+    @Transactional(readOnly = true)
+    public List<TotalArticulo> totalesPorArticulo(LocalDate fecha) {
+        Map<Long, Acumulado> porArticulo = new LinkedHashMap<>();
+        for (Pedido pedido : pedidoRepository.findByFecha(fecha)) {
+            if (pedido.getEstado() != null
+                    && ESTADOS_PEDIDO_EXCLUIDOS.contains(pedido.getEstado().trim().toUpperCase(Locale.ROOT))) {
+                continue;
+            }
+            if (pedido.getLineas() == null) continue;
+            String cliente = pedido.getCliente() != null && pedido.getCliente().getNombre() != null
+                    ? pedido.getCliente().getNombre() : SIN_CLIENTE;
+            for (PedidoLinea linea : pedido.getLineas()) {
+                Articulo articulo = linea.getArticulo();
+                if (articulo == null || articulo.getId() == null || linea.getCantidad() == null) continue;
+                Acumulado acc = porArticulo.computeIfAbsent(articulo.getId(), id -> new Acumulado(articulo));
+                acc.total = acc.total.add(linea.getCantidad());
+                acc.porCliente.merge(cliente, linea.getCantidad(), BigDecimal::add);
+            }
+        }
+
+        List<TotalArticulo> resultado = new ArrayList<>();
+        for (Map.Entry<Long, Acumulado> e : porArticulo.entrySet()) {
+            Acumulado acc = e.getValue();
+            BigDecimal stock = acc.articulo.getStock() != null ? acc.articulo.getStock() : BigDecimal.ZERO;
+            BigDecimal aElaborar = acc.total.subtract(stock).max(BigDecimal.ZERO);
+            resultado.add(new TotalArticulo(e.getKey(), acc.articulo.getNombre(), acc.total,
+                    ordenarDesglose(acc.porCliente), stock, aElaborar));
+        }
+        resultado.sort(Comparator.comparing(TotalArticulo::nombre,
+                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+        return resultado;
+    }
+
+    /** Fila de la hoja de obrador. El desglose va de mayor a menor cantidad. */
+    public record TotalArticulo(Long articuloId, String nombre, BigDecimal total,
+                                Map<String, BigDecimal> desglose, BigDecimal stock, BigDecimal aElaborar) {
+    }
+
+    private static final class Acumulado {
+        private final Articulo articulo;
+        private BigDecimal total = BigDecimal.ZERO;
+        private final Map<String, BigDecimal> porCliente = new LinkedHashMap<>();
+
+        private Acumulado(Articulo articulo) {
+            this.articulo = articulo;
+        }
+    }
+
+    private static Map<String, BigDecimal> ordenarDesglose(Map<String, BigDecimal> porCliente) {
+        Map<String, BigDecimal> ordenado = new LinkedHashMap<>();
+        porCliente.entrySet().stream()
+                .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .forEach(e -> ordenado.put(e.getKey(), e.getValue()));
+        return ordenado;
     }
 
     @Transactional(readOnly = true)

@@ -136,22 +136,35 @@
 </div>
 
 <!-- ===== Líneas ===== -->
-<table class="lineas">
+<!-- El importe de cada línea es neto de su descuento (PORCENTAJE por defecto o IMPORTE fijo), con la
+     misma regla que DesgloseFiscal.baseLinea: así la suma de las líneas cuadra con la base del pie
+     (salvo el descuento global, que se muestra aparte). La columna Dto. solo aparece si alguna línea
+     lleva descuento. setScale(2, 4) = 2 decimales con redondeo HALF_UP, como FinancialMath. -->
+<table class="lineas"
+       th:with="hayDto=${!albaran.albaranVentaLineas.?[descuento != null and descuento.signum() > 0].isEmpty()}">
   <thead>
     <tr>
       <th class="r" style="width:14%;">CANTIDAD</th>
-      <th style="width:54%;">DESCRIPCION / ARTICULOS</th>
+      <th th:style="${hayDto} ? 'width:42%;' : 'width:54%;'">DESCRIPCION / ARTICULOS</th>
       <th class="r" style="width:16%;">PRECIO</th>
+      <th class="r" style="width:12%;" th:if="${hayDto}">DTO.</th>
       <th class="r" style="width:16%;">IMPORTE</th>
     </tr>
   </thead>
   <tbody>
     <!-- El alterne de fondo se marca por indice: iText no aplica :nth-child de forma fiable. -->
-    <tr th:each="linea, iter : ${albaran.albaranVentaLineas}" th:classappend="${iter.odd} ? 'alt' : ''">
+    <tr th:each="linea, iter : ${albaran.albaranVentaLineas}" th:classappend="${iter.odd} ? 'alt' : ''"
+        th:with="bruto=${linea.cantidad != null and linea.precio != null ? linea.cantidad.multiply(linea.precio) : null},
+                 esImporte=${#strings.equalsIgnoreCase(linea.descuentoTipo, 'IMPORTE')},
+                 conDto=${bruto != null and bruto.signum() > 0 and linea.descuento != null and linea.descuento.signum() > 0},
+                 importeDto=${conDto ? (esImporte ? linea.descuento.min(bruto).setScale(2, 4) : bruto.multiply(linea.descuento).movePointLeft(2).setScale(2, 4)) : null},
+                 neto=${bruto == null ? null : (importeDto != null ? bruto.subtract(importeDto) : bruto).setScale(2, 4)}">
       <td class="num" th:text="${linea.cantidad != null ? #numbers.formatDecimal(linea.cantidad, 1, 'POINT', 2, 'COMMA') : ''}">0,00</td>
       <td th:text="${linea.articulo != null ? linea.articulo.nombre : linea.descripcion}">-</td>
       <td class="num" th:text="${linea.precio != null ? #numbers.formatDecimal(linea.precio, 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</td>
-      <td class="num" th:text="${linea.cantidad != null and linea.precio != null ? #numbers.formatDecimal(linea.cantidad.multiply(linea.precio), 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</td>
+      <td class="num" th:if="${hayDto}"
+          th:text="${linea.descuento != null and linea.descuento.signum() > 0 ? #numbers.formatDecimal(linea.descuento, 1, 'POINT', 2, 'COMMA') + (esImporte ? ' €' : ' %') : ''}"></td>
+      <td class="num" th:text="${neto != null and neto.signum() > 0 ? #numbers.formatDecimal(neto, 1, 'POINT', 2, 'COMMA') : '0,00'}">0,00</td>
     </tr>
   </tbody>
 </table>

@@ -84,5 +84,9 @@ public interface AlbaranVentaRepository extends JpaRepository<AlbaranVenta, Long
     Page<AlbaranVenta> buscarPaginado(@Param("q") String q, @Param("estado") String estado,
                                       @Param("fechaDesde") LocalDate fechaDesde, @Param("fechaHasta") LocalDate fechaHasta,
                                       Pageable pageable);
-}
 
+    /** Albaranes de un día que aún no se han entregado, facturado ni anulado (panel "Hoy"). */
+    @Query("SELECT COUNT(a) FROM AlbaranVenta a WHERE a.fecha = :dia " +
+           "AND (a.estado IS NULL OR a.estado NOT IN ('ENTREGADO', 'FACTURADO', 'ANULADO'))")
+    long countSinEntregarByFecha(@Param("dia") LocalDate dia);
+}

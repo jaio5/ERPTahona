@@ -25,7 +25,9 @@
                     th:attr="data-albaran-numero=${albaran.numero}, data-albaran-id=${albaran.id}, data-cliente=${albaran.cliente?.nombre}">
                 <i class="bi bi-receipt me-1"></i>Convertir en factura
             </button>
-            <a th:href="@{/web/albaranes/{id}/editar(id=${albaran.id})}" class="btn btn-outline-primary btn-sm">
+            <!-- Solo se editan albaranes pendientes: entregado, facturado o anulado ya no se tocan -->
+            <a th:href="@{/web/albaranes/{id}/editar(id=${albaran.id})}" class="btn btn-outline-primary btn-sm"
+               th:if="${albaran.estado != 'ENTREGADO' and albaran.estado != 'FACTURADO' and albaran.estado != 'ANULADO'}">
                 <i class="bi bi-pencil me-1"></i>Editar
             </a>
             <a th:href="@{/web/albaranes}" class="btn btn-ghost btn-sm">

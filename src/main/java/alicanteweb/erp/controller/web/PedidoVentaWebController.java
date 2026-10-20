@@ -2,6 +2,7 @@ package alicanteweb.erp.controller.web;
 
 import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.Pedido;
+import alicanteweb.erp.entities.PedidoLinea;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.ClienteService;
 import alicanteweb.erp.service.DocumentoService;
@@ -16,11 +17,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import alicanteweb.erp.util.FinancialMath;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -104,6 +105,22 @@ public class PedidoVentaWebController {
             model.addAttribute("titulo", "Pedido " + p.getNumero());
             model.addAttribute("pedido", p);
             model.addAttribute("totalCalculado", calcularTotal(p));
+            // Importe neto (con descuento) e IVA por línea: misma fórmula que el total del pedido
+            Map<Long, BigDecimal> importesLinea = new HashMap<>();
+            BigDecimal baseLineas = BigDecimal.ZERO;
+            BigDecimal ivaLineas = BigDecimal.ZERO;
+            boolean hayDescuento = false;
+            for (PedidoLinea l : p.getPedidoLineas()) {
+                BigDecimal importe = PedidoService.importeLinea(l);
+                importesLinea.put(l.getId(), importe);
+                baseLineas = baseLineas.add(importe);
+                ivaLineas = ivaLineas.add(PedidoService.ivaLinea(l));
+                if (l.getDescuento() != null && l.getDescuento().compareTo(BigDecimal.ZERO) > 0) hayDescuento = true;
+            }
+            model.addAttribute("importesLinea", importesLinea);
+            model.addAttribute("baseLineas", baseLineas);
+            model.addAttribute("ivaLineas", ivaLineas);
+            model.addAttribute("hayDescuento", hayDescuento);
             return WebController.layout(model, "pedidos-venta/ver");
         }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/pedidos-venta"; });
     }
@@ -113,10 +130,7 @@ public class PedidoVentaWebController {
         if (p.getTotal() != null && p.getTotal().compareTo(BigDecimal.ZERO) != 0) {
             return p.getTotal();
         }
-        return p.getPedidoLineas().stream()
-                .filter(l -> l.getPrecio() != null && l.getCantidad() != null)
-                .map(l -> FinancialMath.subtotalConDescuento(l.getCantidad(), l.getPrecio(), l.getDescuento()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return PedidoService.calcularTotal(p.getPedidoLineas());
     }
 
     @PostMapping
@@ -157,5 +171,24 @@ public class PedidoVentaWebController {
             Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/pedidos-venta/" + id;
+    }
+
+    @PostMapping("/{id}/duplicar")
+    @PreAuthorize("@permisos.puede('ventas', 'crear')")
+    public String duplicar(@PathVariable Long id, RedirectAttributes ra) {
+        Optional<Pedido> original = pedidoService.obtenerPorId(id);
+        if (original.isEmpty()) {
+            Flash.error(ra, "Registro no encontrado");
+            return "redirect:/web/pedidos-venta";
+        }
+        try {
+            Pedido copia = pedidoService.duplicar(id);
+            Flash.exito(ra, "Duplicado de " + original.get().getNumero() + ": " + copia.getNumero());
+            return "redirect:/web/pedidos-venta/" + copia.getId() + "/editar";
+        } catch (RuntimeException e) {
+            log.error("Error al duplicar pedido {}: {}", id, e.getMessage(), e);
+            Flash.error(ra, e.getMessage());
+            return "redirect:/web/pedidos-venta/" + id;
+        }
     }
 }

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -149,7 +148,7 @@ class AdminAndPurchaseControllersCoverageTest {
 
         RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
         controller.guardar(null, 2L, "FC-2", "2026-06-19", "2026-07-19", "TRANSFERENCIA",
-                new BigDecimal("100"), new BigDecimal("21"), new BigDecimal("21"), "Obs", ra);
+                "100", "21", "21", "Obs", ra);
         verify(facturas).guardar(any(FacturaCompra.class));
         doThrow(new IllegalArgumentException("factura")).when(facturas).guardar(any());
         controller.guardar(null, 2L, "FC-3", null, null, null, null, null, null, null, ra);

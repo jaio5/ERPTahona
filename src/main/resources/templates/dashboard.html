@@ -1,4 +1,4 @@
-<div th:fragment="content" x-data="dashboardApp" x-cloak>
+<div th:fragment="content" x-data="dashboardApp">
     <div class="topbar d-flex justify-content-between align-items-center">
         <div>
             <h4 class="mb-0">Panel de trabajo</h4>
@@ -9,25 +9,87 @@
         </a>
     </div>
 
-    <!-- Alertas dinámicas (Alpine.js) -->
-    <div x-show="hasAlertas()" class="mb-4">
-        <div class="d-flex justify-content-end mb-1">
+    <!-- Hoy: operativa del día. Cada tarjeta lleva a su listado filtrado -->
+    <div class="row g-3 mb-4" th:with="puedeVentas=${@permisos.puede('ventas','ver')},
+                                      diaIso=${#temporals.format(resumenDia.dia, 'yyyy-MM-dd')}">
+        <div class="col-sm-6 col-lg-3" th:if="${puedeVentas}">
+            <!-- El TPV no tiene listado de tickets: tarjeta sin enlace -->
+            <div class="stat-card h-100" role="group"
+                 th:with="importe=${#numbers.formatDecimal(resumenDia.importeMostrador,1,'POINT',2,'COMMA') + ' €'}"
+                 th:attr="aria-label='Mostrador: ' + ${resumenDia.ticketsMostrador} + ' tickets · ' + ${importe}">
+                <div class="stat-label"><i class="bi bi-shop me-1"></i>Hoy · Mostrador</div>
+                <div class="stat-value" th:text="${importe}">0,00 €</div>
+                <div class="stat-sub" th:text="'Mostrador: ' + ${resumenDia.ticketsMostrador} + ' tickets · ' + ${importe}">Mostrador: 0 tickets · 0,00 €</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3" th:if="${puedeVentas}">
+            <a class="stat-card d-block h-100 text-decoration-none"
+               th:href="@{/web/facturas(fechaDesde=${diaIso},fechaHasta=${diaIso})}"
+               th:with="importe=${#numbers.formatDecimal(resumenDia.importeFacturado,1,'POINT',2,'COMMA') + ' €'}">
+                <div class="stat-label"><i class="bi bi-receipt-cutoff me-1"></i>Hoy · Facturado</div>
+                <div class="stat-value" th:text="${importe}">0,00 €</div>
+                <div class="stat-sub" th:text="'Facturado: ' + ${importe}">Facturado: 0,00 €</div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <!-- El recuento se ve siempre; el enlace al listado solo con permiso de ventas -->
+            <a class="stat-card d-block h-100 text-decoration-none"
+               th:href="${puedeVentas} ? @{/web/albaranes(fechaDesde=${diaIso},fechaHasta=${diaIso})} : null">
+                <div class="stat-label"><i class="bi bi-truck me-1"></i>Hoy · Albaranes</div>
+                <div class="stat-value" th:text="${resumenDia.albaranesSinEntregar}">0</div>
+                <div class="stat-sub">Sin entregar</div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-lg-3" th:if="${puedeVentas}">
+            <a class="stat-card d-block h-100 text-decoration-none"
+               th:href="@{/web/facturas(estado='VENCIDAS')}"
+               th:with="importe=${#numbers.formatDecimal(resumenDia.importeVencido,1,'POINT',2,'COMMA') + ' €'}">
+                <div class="stat-label"><i class="bi bi-hourglass-bottom me-1"></i>Facturas vencidas</div>
+                <div class="stat-value" th:text="${resumenDia.facturasVencidas}">0</div>
+                <div class="stat-sub" th:classappend="${resumenDia.facturasVencidas > 0} ? 'text-danger'">
+                    <i class="bi bi-exclamation-triangle-fill me-1" th:if="${resumenDia.facturasVencidas > 0}"></i>
+                    <span th:text="${importe} + ' pendiente'">0,00 € pendiente</span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Avisos agrupados por tipo (Alpine.js): solo este bloque espera a Alpine.
+         Una línea por tipo para que el resumen del día siga a la vista; el detalle se despliega -->
+    <section x-show="hasAlertas()" x-cloak class="mb-4" aria-labelledby="avisosTitulo">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 id="avisosTitulo" class="h6 mb-0">Avisos</h2>
             <button type="button" class="btn btn-ghost btn-sm" @click="cerrarTodas()">
                 <i class="bi bi-x-circle me-1"></i>Descartar todas
             </button>
         </div>
-        <template x-for="a in alertas" :key="a.id">
-            <div class="alert alert-dismissible fade show py-2 mb-1 d-flex align-items-center gap-2"
-                 :class="alertClass(a)">
-                <i class="bi" :class="alertIcon(a)"></i>
-                <div>
-                    <strong x-text="a.titulo"></strong>
-                    <small class="d-block text-muted" x-text="a.descripcion"></small>
+        <template x-for="g in grupos()" :key="g.tipo">
+            <div class="alert py-2 mb-2" :class="alertClass(g)">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi" :class="alertIcon(g)" aria-hidden="true"></i>
+                    <strong class="flex-grow-1" x-text="g.resumen"></strong>
+                    <button type="button" class="btn btn-link btn-sm p-0 text-reset" x-show="g.items.length > 1"
+                            @click="alternar(g.tipo)" :aria-expanded="abierto(g.tipo).toString()"
+                            x-text="abierto(g.tipo) ? 'Ocultar' : 'Ver detalle'"></button>
+                    <button type="button" class="btn-close ms-2" aria-label="Descartar estos avisos"
+                            @click="cerrarGrupo(g)"></button>
                 </div>
-                <button type="button" class="btn-close ms-auto" @click="cerrarAlerta(a)"></button>
+                <!-- Sin d-block: su !important anularía el display:none de x-show -->
+                <div class="small text-muted mt-1" x-show="g.items.length === 1" x-text="g.items[0].descripcion"></div>
+                <ul class="avisos-detalle list-unstyled mb-0 mt-2" x-show="abierto(g.tipo)">
+                    <template x-for="a in g.items" :key="a.id">
+                        <li class="d-flex align-items-center gap-2">
+                            <span x-text="a.titulo"></span>
+                            <small class="text-muted" x-text="a.descripcion"></small>
+                            <button type="button" class="btn-close ms-auto" aria-label="Descartar aviso"
+                                    @click="cerrarAlerta(a)"></button>
+                        </li>
+                    </template>
+                </ul>
             </div>
         </template>
-    </div>
+    </section>
+
 
     <!-- KPIs principales -->
     <div class="row g-3 mb-4">
@@ -60,7 +122,7 @@
         </div>
         <div class="col-sm-6 col-lg-3">
             <div class="kpi-card">
-                <div class="kpi-icon bg-primary-light" style="background: #fce7f3; color: #be185d;">
+                <div class="kpi-icon bg-info-subtle text-info-emphasis">
                     <i class="bi bi-journal-code"></i>
                 </div>
                 <div class="kpi-body">
@@ -198,13 +260,18 @@
         <div class="col-md-8">
             <div class="form-card">
                 <h6 class="mb-3"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Ventas últimos 6 meses</h6>
-                <canvas id="chartVentas" style="max-height:210px;"></canvas>
+                <canvas id="chartVentas" style="max-height:210px;" role="img" aria-label="Ventas de los últimos 6 meses en euros"></canvas>
+                <div id="ventasVacio" class="empty-state" style="padding:2rem 0;display:none;">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <div>Sin ventas en los últimos 6 meses</div>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-card">
-                <h6 class="mb-3"><i class="bi bi-pie-chart me-2 text-warning"></i>Estado producción</h6>
-                <canvas id="chartProduccion" style="max-height:210px;display:none;"></canvas>
+                <h6 class="mb-3"><i class="bi bi-bar-chart-steps me-2 text-warning"></i>Estado producción</h6>
+                <!-- Barras horizontales ordenadas (HTML), con el recuento escrito al lado -->
+                <div id="produccionBarras" style="display:none;"></div>
                 <div id="produccionVacio" class="empty-state" style="padding:2rem 0;">
                     <i class="bi bi-gear"></i>
                     <div>Sin órdenes activas</div>
@@ -240,7 +307,34 @@
                         })
                         .catch(() => { this.alertas = []; });
                 },
+                abiertos: [],
                 hasAlertas() { return this.alertas.length > 0; },
+                grupos() {
+                    const ORDEN = { danger: 0, warning: 1, info: 2 };
+                    const RESUMEN = {
+                        STOCK_BAJO: n => n + ' artículos con stock bajo',
+                        LOTE_CADUCA: n => n + ' lotes próximos a caducar',
+                        FACTURA_VENCIDA: n => n + ' facturas vencidas sin cobrar'
+                    };
+                    const porTipo = {};
+                    this.alertas.forEach(a => { (porTipo[a.tipo] = porTipo[a.tipo] || []).push(a); });
+                    return Object.keys(porTipo).map(tipo => {
+                        const items = porTipo[tipo];
+                        const resumen = items.length === 1 ? items[0].titulo
+                            : (RESUMEN[tipo] ? RESUMEN[tipo](items.length) : items.length + ' avisos');
+                        return { tipo: tipo, severidad: items[0].severidad, items: items, resumen: resumen };
+                    }).sort((x, y) => (ORDEN[x.severidad] ?? 3) - (ORDEN[y.severidad] ?? 3));
+                },
+                abierto(tipo) { return this.abiertos.includes(tipo); },
+                alternar(tipo) {
+                    this.abiertos = this.abierto(tipo)
+                        ? this.abiertos.filter(t => t !== tipo) : this.abiertos.concat(tipo);
+                },
+                cerrarGrupo(g) {
+                    const ids = g.items.map(a => a.id);
+                    saveDescartadas(ids);
+                    this.alertas = this.alertas.filter(x => !ids.includes(x.id));
+                },
                 alertClass(a) {
                     const sev = a.severidad;
                     if (sev === 'danger') return 'alert-danger';
@@ -270,66 +364,114 @@
     <script th:attr="nonce=${cspNonce}">
     /* global Chart */
     (function () {
-        const COLORES = ['#1e40af','#059669','#d97706','#dc2626','#7c3aed','#0891b2','#be185d','#047857'];
+        function token(nombre, defecto) {
+            const v = getComputedStyle(document.documentElement).getPropertyValue(nombre);
+            return v && v.trim() ? v.trim() : defecto;
+        }
+
+        const EUR = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 
         function renderVentas(data) {
             const ctx = document.getElementById('chartVentas');
-            if (!ctx || !data.length) return;
+            const vacio = document.getElementById('ventasVacio');
+            if (!ctx) return;
+            const conVentas = Array.isArray(data) && data.some(function(d){ return Number(d.total) > 0; });
+            if (!conVentas) {
+                ctx.style.display = 'none';
+                if (vacio) vacio.style.display = '';
+                return;
+            }
+            const rejilla = token('--color-border', '#e2e8f0');
+            const ejes = token('--color-text-muted', '#64748b');
+            const barra = token('--brand-color', '#2563eb');
             new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: data.map(function(d){return d.mes;}),
                     datasets: [{
-                        label: 'Total €',
-                        data: data.map(function(d){return d.total;}),
-                        backgroundColor: 'rgba(30,64,175,0.72)',
-                        borderColor: '#1e40af',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { font: { size: 10 } } },
-                        x: { ticks: { font: { size: 10 } } }
-                    }
-                }
-            });
-        }
-
-        function renderProduccion(data) {
-            const ctx = document.getElementById('chartProduccion');
-            const vacio = document.getElementById('produccionVacio');
-            if (!ctx) return;
-            if (!data || !data.length) {
-                ctx.style.display = 'none';
-                if (vacio) vacio.style.display = '';
-                return;
-            }
-            ctx.style.display = '';
-            if (vacio) vacio.style.display = 'none';
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: data.map(function(d){return d.estado;}),
-                    datasets: [{
-                        data: data.map(function(d){return d.cantidad;}),
-                        backgroundColor: COLORES.slice(0, data.length),
-                        borderWidth: 1
+                        label: 'Ventas',
+                        data: data.map(function(d){return Number(d.total) || 0;}),
+                        backgroundColor: barra,
+                        borderRadius: 4,
+                        maxBarThickness: 28
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { boxWidth: 10, font: { size: 10 }, padding: 8 }
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(c){ return ' ' + EUR.format(c.parsed.y); }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: rejilla },
+                            border: { display: false },
+                            ticks: { color: ejes, font: { size: 10 }, callback: function(v){ return EUR.format(v); } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            border: { color: rejilla },
+                            ticks: { color: ejes, font: { size: 10 } }
                         }
                     }
                 }
             });
+        }
+
+        function etiquetaEstado(estado) {
+            const t = String(estado || '').replace(/_/g, ' ').toLowerCase();
+            return t.charAt(0).toUpperCase() + t.slice(1);
+        }
+
+        function renderProduccion(data) {
+            const cont = document.getElementById('produccionBarras');
+            const vacio = document.getElementById('produccionVacio');
+            if (!cont) return;
+            const filas = (Array.isArray(data) ? data : []).filter(function(d){ return Number(d.cantidad) > 0; });
+            if (!filas.length) {
+                cont.style.display = 'none';
+                if (vacio) vacio.style.display = '';
+                return;
+            }
+            filas.sort(function(a, b){ return Number(b.cantidad) - Number(a.cantidad); });
+            const max = Number(filas[0].cantidad) || 1;
+            cont.textContent = '';
+            filas.forEach(function(d) {
+                const fila = document.createElement('div');
+                fila.className = 'd-flex align-items-center gap-2 mb-2';
+                fila.title = etiquetaEstado(d.estado) + ': ' + d.cantidad;
+
+                const nombre = document.createElement('div');
+                nombre.className = 'small text-muted text-truncate';
+                nombre.style.width = '40%';
+                nombre.textContent = etiquetaEstado(d.estado);
+
+                const pista = document.createElement('div');
+                pista.className = 'flex-grow-1';
+                const barra = document.createElement('div');
+                barra.style.height = '10px';
+                barra.style.borderRadius = '0 4px 4px 0';
+                barra.style.background = token('--brand-color', '#2563eb');
+                barra.style.width = Math.max(4, Math.round(Number(d.cantidad) / max * 100)) + '%';
+                pista.appendChild(barra);
+
+                const valor = document.createElement('div');
+                valor.className = 'small fw-semibold text-end';
+                valor.style.minWidth = '2.5rem';
+                valor.textContent = d.cantidad;
+
+                fila.appendChild(nombre);
+                fila.appendChild(pista);
+                fila.appendChild(valor);
+                cont.appendChild(fila);
+            });
+            cont.style.display = '';
+            if (vacio) vacio.style.display = 'none';
         }
 
         function initCharts() {

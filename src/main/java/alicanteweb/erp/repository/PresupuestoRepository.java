@@ -24,6 +24,14 @@ public interface PresupuestoRepository extends JpaRepository<Presupuesto, Long> 
      */
     Optional<Presupuesto> findByNumero(String numero);
 
+    /** Máximo (alfabético) de los números que empiezan por el prefijo, p. ej. 'PRE-2026-'. */
+    @Query("select max(p.numero) from Presupuesto p where p.numero like concat(:prefijo, '%')")
+    String maxNumeroConPrefijo(@Param("prefijo") String prefijo);
+
+    /** Todos los números con el prefijo (solo para el caso de sufijos no numéricos). */
+    @Query("select p.numero from Presupuesto p where p.numero like concat(:prefijo, '%')")
+    List<String> numerosConPrefijo(@Param("prefijo") String prefijo);
+
     /**
      * Busca presupuestos por cliente
      */

@@ -107,6 +107,7 @@
                             <i class="bi bi-eye"></i>
                         </a>
                         <a th:href="@{/web/albaranes/{id}/editar(id=${a.id})}" class="btn btn-ghost btn-sm"
+                           th:if="${a.estado != 'ENTREGADO' and a.estado != 'FACTURADO' and a.estado != 'ANULADO'}"
                            th:attr="aria-label='Editar albarán ' + ${a.numero}" title="Editar">
                             <i class="bi bi-pencil"></i>
                         </a>

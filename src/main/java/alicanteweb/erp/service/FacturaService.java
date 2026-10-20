@@ -55,7 +55,15 @@ public class FacturaService {
         return repository.count();
     }
 
+    /** Filtro pseudo-estado del listado: impagadas con el vencimiento pasado (enlace "Facturas vencidas" del panel). */
+    public static final String FILTRO_VENCIDAS = "VENCIDAS";
+
     public Page<Factura> buscarPaginado(String q, String estado, LocalDate fechaDesde, LocalDate fechaHasta, Pageable pageable) {
+        if (FILTRO_VENCIDAS.equalsIgnoreCase(estado)) {
+            return repository.buscarVencidasPaginado(
+                (q != null && !q.isBlank()) ? q : null,
+                LocalDate.now(), fechaDesde, fechaHasta, pageable);
+        }
         return repository.buscarPaginado(
             (q != null && !q.isBlank()) ? q : null,
             (estado != null && !estado.isBlank()) ? estado : null,

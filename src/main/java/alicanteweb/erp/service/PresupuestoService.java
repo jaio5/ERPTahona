@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import alicanteweb.erp.util.FinancialMath;
+import alicanteweb.erp.util.NumeracionDocumento;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -164,12 +165,16 @@ public class PresupuestoService {
     }
 
     /**
-     * Genera un número de presupuesto automático
+     * Genera el siguiente número de presupuesto del ejercicio (PRE-AAAA-00001...).
+     * Parte del máximo existente con el prefijo del año, no de un count(), para
+     * no repetir números tras un borrado. La UNIQUE de BD es la red de seguridad.
+     * Público: también lo usa DocumentoService al crear presupuestos desde el formulario.
      */
-    private String generarNumeroPresupuesto() {
-        int year = LocalDate.now().getYear();
-        long count = presupuestoRepository.count() + 1;
-        return String.format("PRE-%d-%05d", year, count);
+    public String generarNumeroPresupuesto() {
+        String prefijo = NumeracionDocumento.prefijo("PRE", LocalDate.now().getYear());
+        return NumeracionDocumento.siguiente(prefijo,
+                presupuestoRepository.maxNumeroConPrefijo(prefijo),
+                () -> presupuestoRepository.numerosConPrefijo(prefijo));
     }
 
     /**
@@ -286,8 +291,10 @@ public class PresupuestoService {
     }
 
     /**
-     * Duplica un presupuesto
+     * Duplica un presupuesto: mismo cliente y mismas líneas, con número nuevo, fecha de hoy,
+     * estado BORRADOR y total recalculado. No copia el vínculo a la factura generada.
      */
+    @Transactional
     public Presupuesto duplicar(Long presupuestoId) {
         log.info("📋 Duplicando presupuesto {}", presupuestoId);
 
@@ -301,9 +308,10 @@ public class PresupuestoService {
         duplicado.setCliente(original.getCliente());
         duplicado.setEstado("BORRADOR");
         duplicado.setObservaciones("Duplicado de " + original.getNumero());
-        duplicado.setTotal(original.getTotal());
 
-        // Copiar líneas
+        // Copiar líneas recalculando importes y total (neto con descuento + IVA,
+        // la misma fórmula que al guardar el presupuesto desde el formulario)
+        BigDecimal total = BigDecimal.ZERO;
         for (PresupuestoLinea lineaOriginal : original.getLineas()) {
             PresupuestoLinea lineaDuplicada = new PresupuestoLinea();
             lineaDuplicada.setPresupuesto(duplicado);
@@ -313,11 +321,15 @@ public class PresupuestoService {
             lineaDuplicada.setPrecioUnitario(lineaOriginal.getPrecioUnitario());
             lineaDuplicada.setDescuento(lineaOriginal.getDescuento());
             lineaDuplicada.setTipoIva(lineaOriginal.getTipoIva());
-            lineaDuplicada.setImporte(lineaOriginal.getImporte());
+            BigDecimal base = FinancialMath.subtotalConDescuento(
+                    lineaOriginal.getCantidad(), lineaOriginal.getPrecioUnitario(), lineaOriginal.getDescuento());
+            lineaDuplicada.setImporte(base);
             lineaDuplicada.setOrden(lineaOriginal.getOrden());
+            total = total.add(base).add(FinancialMath.porcentaje(base, lineaOriginal.getTipoIva()));
 
             duplicado.getLineas().add(lineaDuplicada);
         }
+        duplicado.setTotal(total);
 
         Presupuesto guardado = presupuestoRepository.save(duplicado);
         log.info("[OK] Presupuesto duplicado: {}", guardado.getNumero());

@@ -21,6 +21,7 @@ public class WebController {
     private final LoteService loteService;
     private final HojaRutaService hojaRutaService;
     private final RecetaService recetaService;
+    private final DashboardService dashboardService;
 
     public WebController(FacturaService facturaService,
                          ClienteService clienteService,
@@ -28,7 +29,8 @@ public class WebController {
                          OrdenProduccionService ordenProduccionService,
                          LoteService loteService,
                          HojaRutaService hojaRutaService,
-                         RecetaService recetaService) {
+                         RecetaService recetaService,
+                         DashboardService dashboardService) {
         this.facturaService = facturaService;
         this.clienteService = clienteService;
         this.articuloService = articuloService;
@@ -36,6 +38,7 @@ public class WebController {
         this.loteService = loteService;
         this.hojaRutaService = hojaRutaService;
         this.recetaService = recetaService;
+        this.dashboardService = dashboardService;
     }
 
     @GetMapping
@@ -79,6 +82,8 @@ public class WebController {
 
         long rutasActivas = hojaRutaService.countByEstado("EN_CURSO");
         model.addAttribute("rutasActivas", rutasActivas);
+
+        model.addAttribute("resumenDia", dashboardService.resumenDia(LocalDate.now()));
 
         return layout(model, "dashboard");
     }

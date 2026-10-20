@@ -22,12 +22,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -50,6 +55,7 @@ class ImpresionServiceFormatoTest {
     private static final float A4_W = 595f, A4_H = 842f, A5_W = 420f, A5_H = 595f, TOL = 2f;
 
     @Autowired ImpresionService impresionService;
+    @Autowired SpringTemplateEngine templateEngine;
     @MockBean EmpresaConfigService empresaConfigService;
 
     private EmpresaConfig empresa(boolean medioFolio) {
@@ -255,5 +261,76 @@ class ImpresionServiceFormatoTest {
         String texto = textoFacturaEmitida(SifModalidad.VERIFACTU);
         assertTrue(texto.contains("VERI*FACTU"), texto);
         assertTrue(texto.contains("SISTEMA:VERIFACTU"), texto);
+    }
+
+    // ===== Importe de línea del albarán neto de descuento =====
+
+    /** Cliente con 10 % de tarifa: 10 barras a 1,00 € -> la línea vale 9,00 y cuadra con la base. */
+    private AlbaranVenta albaranConDescuento() {
+        AlbaranVenta a = albaran();
+        AlbaranVentaLinea l = a.getAlbaranVentaLineas().iterator().next();
+        l.setDescripcion("BARRA");
+        l.setDescuento(new BigDecimal("10"));
+        l.setDescuentoTipo("PORCENTAJE");
+        return a;
+    }
+
+    private String htmlAlbaran(AlbaranVenta a) {
+        // Mismas variables que ImpresionService.generarAlbaranPdf; el resumen con DesgloseFiscal
+        List<alicanteweb.erp.util.DesgloseFiscal.Linea> lineas = a.getAlbaranVentaLineas().stream()
+                .map(l -> new alicanteweb.erp.util.DesgloseFiscal.Linea(l.getCantidad(), l.getPrecio(), l.getIva(),
+                        l.getDescuentoTipo(), l.getDescuento()))
+                .toList();
+        var r = alicanteweb.erp.util.DesgloseFiscal.calcular(lineas, a.getDescuentoGlobalTipo(), a.getDescuentoGlobalValor());
+        Context ctx = new Context(new java.util.Locale("es", "ES"));
+        ctx.setVariables(Map.of(
+                "albaran", a,
+                "empresa", empresa(false),
+                "medioFolio", false,
+                "resumen", Map.of("base", r.base(), "iva", r.iva(), "descuentoGlobal", r.descuentoGlobal(), "total", r.total()),
+                "campos", List.of(),
+                "logo", "",
+                "now", LocalDateTime.now()));
+        return templateEngine.process("pdf/albaran", ctx);
+    }
+
+    private static int ocurrencias(String texto, String buscado) {
+        int n = 0;
+        for (int i = texto.indexOf(buscado); i >= 0; i = texto.indexOf(buscado, i + 1)) n++;
+        return n;
+    }
+
+    @Test
+    void elImporteDeLineaDelAlbaranEsNetoDeDescuentoYCuadraConLaBase() throws Exception {
+        String html = htmlAlbaran(albaranConDescuento());
+        // Línea: 9,00 (no 10,00) y columna Dto. con el 10 %; base imponible 9,00
+        assertTrue(html.contains("DTO."), "Debe aparecer la columna de descuento");
+        assertTrue(html.contains("10,00 %"), html);
+        assertTrue(ocurrencias(html, ">9,00<") >= 2, "Línea y base deben decir 9,00: " + html);
+
+        when(empresaConfigService.getConfiguracionActivaOrThrow()).thenReturn(empresa(false));
+        when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(empresa(false)));
+        String texto = textoPrimeraPagina(impresionService.generarAlbaranPdf(albaranConDescuento()));
+        assertTrue(ocurrencias(texto, "9,00") >= 2, "En el PDF la línea y la base deben decir 9,00: " + texto);
+        assertTrue(texto.contains("9,36"), "Total con IVA 4 %: " + texto);
+    }
+
+    @Test
+    void elDescuentoEnImporteFijoSeRestaDeLaLinea() {
+        AlbaranVenta a = albaran();
+        AlbaranVentaLinea l = a.getAlbaranVentaLineas().iterator().next();
+        l.setDescuento(new BigDecimal("1.50"));
+        l.setDescuentoTipo("IMPORTE");
+
+        String html = htmlAlbaran(a);
+        assertTrue(html.contains("1,50 €"), html);
+        assertTrue(ocurrencias(html, ">8,50<") >= 2, "Línea y base deben decir 8,50: " + html);
+    }
+
+    @Test
+    void sinDescuentosNoHayColumnaDtoYElImporteEsCantidadPorPrecio() {
+        String html = htmlAlbaran(albaran());
+        assertFalse(html.contains("DTO."), "Sin descuentos no se muestra la columna");
+        assertTrue(ocurrencias(html, ">10,00<") >= 3, "Cantidad, importe y base dicen 10,00: " + html);
     }
 }

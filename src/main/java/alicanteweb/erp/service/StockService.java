@@ -5,6 +5,8 @@ import alicanteweb.erp.repository.ArticuloAlmacenRepository;
 import alicanteweb.erp.repository.ArticuloRepository;
 import alicanteweb.erp.repository.AlmacenRepository;
 import alicanteweb.erp.repository.MovimientoStockRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,8 @@ import java.util.List;
 
 @Service
 public class StockService {
+
+    private static final Logger log = LoggerFactory.getLogger(StockService.class);
 
     private final MovimientoStockRepository movimientoStockRepository;
     private final ArticuloRepository articuloRepository;
@@ -55,16 +59,29 @@ public class StockService {
                 .toList();
     }
 
+    /**
+     * Ajusta el desglose de stock por almacén (ArticuloAlmacen).
+     *
+     * <p>Decisión: el stock que manda es el global del artículo, y ese sí se controla en
+     * {@link #registrarSalida}. El desglose por almacén puede ir por detrás del global cuando el
+     * stock se cargó desde la ficha del artículo o con un ajuste sin almacén (no crean fila ni la
+     * actualizan). Por eso una salida que dejaría el almacén en negativo (o sin fila) no bloquea la
+     * operación: el almacén se deja a 0 y se avisa en el log para poder cuadrarlo después.
+     */
     private void actualizarStockAlmacen(Articulo art, Long almacenId, BigDecimal delta) {
         if (almacenId == null) return;
-        ArticuloAlmacen aa = articuloAlmacenRepository
-                .findByArticuloIdAndAlmacenId(art.getId(), almacenId)
+        java.util.Optional<ArticuloAlmacen> existente =
+                articuloAlmacenRepository.findByArticuloIdAndAlmacenId(art.getId(), almacenId);
+        ArticuloAlmacen aa = existente
                 .orElseGet(() -> new ArticuloAlmacen(art, almacenRepository.getReferenceById(almacenId)));
-        BigDecimal nuevo = (aa.getStock() != null ? aa.getStock() : BigDecimal.ZERO).add(delta);
+        BigDecimal actual = aa.getStock() != null ? aa.getStock() : BigDecimal.ZERO;
+        BigDecimal nuevo = actual.add(delta);
         if (nuevo.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalStateException(
-                "Stock insuficiente en almacén para artículo " + art.getCodigo() +
-                ". Stock en almacén: " + aa.getStock() + ", requerido: " + delta.negate());
+            log.warn("Stock del almacén {} insuficiente para el artículo {} ({}): había {}{}, salida de {}. "
+                            + "Se deja a 0; el stock global sí se ha descontado.",
+                    almacenId, art.getId(), art.getCodigo(), actual,
+                    existente.isPresent() ? "" : " (sin fila de almacén)", delta.negate());
+            nuevo = BigDecimal.ZERO;
         }
         aa.setStock(nuevo);
         articuloAlmacenRepository.save(aa);

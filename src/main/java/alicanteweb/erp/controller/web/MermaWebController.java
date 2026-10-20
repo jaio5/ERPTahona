@@ -65,15 +65,34 @@ public class MermaWebController {
         }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/mermas"; });
     }
 
+    /**
+     * Alta/edición desde el formulario. La cantidad llega como texto para admitir la coma decimal
+     * ('2,5'); un valor no numérico vuelve al formulario con un mensaje en vez de un 400.
+     */
     @PostMapping
-    public String guardar(@RequestParam(required = false) Long id,
-                          @RequestParam Long articuloId,
-                          @RequestParam BigDecimal cantidad,
-                          @RequestParam(required = false) String motivo,
-                          @RequestParam(required = false) String tipo,
-                          @RequestParam(required = false) String responsable,
-                          @RequestParam(required = false) String observaciones,
-                          @RequestParam(required = false) String fecha,
+    public String guardarFormulario(@RequestParam(required = false) Long id,
+                                    @RequestParam Long articuloId,
+                                    @RequestParam String cantidad,
+                                    @RequestParam(required = false) String motivo,
+                                    @RequestParam(required = false) String tipo,
+                                    @RequestParam(required = false) String responsable,
+                                    @RequestParam(required = false) String observaciones,
+                                    @RequestParam(required = false) String fecha,
+                                    RedirectAttributes ra) {
+        BigDecimal cantidadDecimal;
+        try {
+            cantidadDecimal = DocumentoParserUtil.parseDecimalCampo(cantidad, "Cantidad no válida");
+            if (cantidadDecimal == null) throw new IllegalArgumentException("La cantidad es obligatoria");
+        } catch (IllegalArgumentException e) {
+            Flash.error(ra, e.getMessage());
+            return "redirect:/web/mermas/nueva";
+        }
+        return guardar(id, articuloId, cantidadDecimal, motivo, tipo, responsable, observaciones, fecha, ra);
+    }
+
+    /** Guardado con la cantidad ya parseada (lo usa {@link #guardarFormulario}). */
+    public String guardar(Long id, Long articuloId, BigDecimal cantidad, String motivo, String tipo,
+                          String responsable, String observaciones, String fecha,
                           RedirectAttributes ra) {
         try {
             Merma merma = id != null ? mermaService.findById(id).orElseThrow(() -> new IllegalArgumentException("ID de merma no válido: " + id)) : new Merma();

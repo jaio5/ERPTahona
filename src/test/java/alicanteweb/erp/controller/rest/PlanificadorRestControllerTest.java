@@ -61,4 +61,44 @@ class PlanificadorRestControllerTest {
         assertThat(necesidades).singleElement()
                 .satisfies(item -> assertThat(item.get("necesario")).isEqualTo(new BigDecimal("2.0000")));
     }
+
+    @Test
+    void exponeLaHojaDeObradorComoAProducirSinRomperLosCamposExistentes() {
+        PedidoService pedidos = mock(PedidoService.class);
+        AlbaranService albaranes = mock(AlbaranService.class);
+        OrdenProduccionService ordenes = mock(OrdenProduccionService.class);
+        PlanificadorService planificador = mock(PlanificadorService.class);
+        ArticuloService articulos = mock(ArticuloService.class);
+        PlanificadorRestController controller = new PlanificadorRestController(
+                pedidos, albaranes, ordenes, planificador, articulos);
+
+        LocalDate fecha = LocalDate.of(2026, 10, 20);
+        when(pedidos.findByFechaBetween(fecha, fecha)).thenReturn(List.of());
+        when(albaranes.findByFecha(fecha)).thenReturn(List.of());
+        when(ordenes.findByFechaBetween(fecha, fecha)).thenReturn(List.of());
+        when(planificador.calcularNecesidadesMateriaPrima(any(), any())).thenReturn(Map.of());
+        when(articulos.findAllById(any())).thenReturn(List.of());
+        Map<String, BigDecimal> desglose = new java.util.LinkedHashMap<>();
+        desglose.put("Bar Pepe", new BigDecimal("30"));
+        desglose.put("Rest. Sol", new BigDecimal("20"));
+        when(planificador.totalesPorArticulo(fecha)).thenReturn(List.of(
+                new PlanificadorService.TotalArticulo(1L, "Barra", new BigDecimal("50"), desglose,
+                        new BigDecimal("5"), new BigDecimal("45")),
+                new PlanificadorService.TotalArticulo(2L, "Croissant", new BigDecimal("10"), Map.of(),
+                        BigDecimal.ZERO, new BigDecimal("10"))));
+
+        Map<String, Object> body = controller.plan(fecha).getBody();
+
+        assertThat(body).containsKeys("fecha", "pedidos", "albaranes", "ordenes", "necesidades", "aProducir");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> aProducir = (List<Map<String, Object>>) body.get("aProducir");
+        assertThat(aProducir).hasSize(2);
+        Map<String, Object> barra = aProducir.get(0);
+        assertThat(barra).containsEntry("articuloId", 1L).containsEntry("nombre", "Barra");
+        assertThat((BigDecimal) barra.get("total")).isEqualByComparingTo("50");
+        assertThat((BigDecimal) barra.get("stock")).isEqualByComparingTo("5");
+        assertThat((BigDecimal) barra.get("aElaborar")).isEqualByComparingTo("45");
+        assertThat(barra.get("desglose")).isEqualTo(desglose);
+        assertThat(aProducir.get(1)).containsEntry("nombre", "Croissant");
+    }
 }

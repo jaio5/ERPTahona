@@ -101,10 +101,18 @@ public class LoteWebController {
                           @RequestParam(required = false) Long articuloId,
                           @RequestParam String fechaProd,
                           @RequestParam String fechaCad,
-                          @RequestParam(required = false) BigDecimal cantidad,
+                          @RequestParam(required = false) String cantidad,
                           @RequestParam(required = false) String origen,
                           @RequestParam(required = false) String registroSanitario,
                           RedirectAttributes ra) {
+        // La cantidad llega como texto para admitir la coma decimal ('2,5')
+        BigDecimal cantidadInicial;
+        try {
+            cantidadInicial = DocumentoParserUtil.parseDecimalCampo(cantidad, "Cantidad no válida");
+        } catch (IllegalArgumentException e) {
+            Flash.error(ra, e.getMessage());
+            return id != null ? "redirect:/web/lotes/" + id + "/editar" : "redirect:/web/lotes/nuevo";
+        }
         try {
             Lote l = id != null ? service.findById(id).orElseThrow(() -> new IllegalArgumentException("ID de lote no válido: " + id)) : new Lote();
             l.setCodigo(codigo);
@@ -115,7 +123,7 @@ public class LoteWebController {
             } catch (DateTimeParseException e) {
                 throw new IllegalArgumentException("Formato de fecha incorrecto. Use AAAA-MM-DD");
             }
-            l.setCantidadInicial(cantidad);
+            l.setCantidadInicial(cantidadInicial);
             l.setOrigen(origen);
             l.setNumeroRegistroSanitario(registroSanitario);
             service.save(l);

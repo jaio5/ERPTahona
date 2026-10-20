@@ -29,12 +29,14 @@ class PresupuestoServiceTest {
         service = new PresupuestoService(repository, facturaService);
     }
 
+    private static final String PREFIJO = "PRE-" + LocalDate.now().getYear() + "-";
+
     @Test
     void guardarInicializaNumeroYFecha() {
-        when(repository.count()).thenReturn(2L);
+        when(repository.maxNumeroConPrefijo(PREFIJO)).thenReturn(PREFIJO + "00002");
         when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
         Presupuesto p = service.guardar(new Presupuesto());
-        assertTrue(p.getNumero().startsWith("PRE-" + LocalDate.now().getYear()));
+        assertEquals(PREFIJO + "00003", p.getNumero());
         assertEquals(LocalDate.now(), p.getFecha());
     }
 
@@ -122,14 +124,80 @@ class PresupuestoServiceTest {
         Presupuesto original = presupuesto();
         original.getLineas().add(linea("1", "10", "0", "21"));
         when(repository.findById(1L)).thenReturn(Optional.of(original));
-        when(repository.count()).thenReturn(5L);
+        when(repository.maxNumeroConPrefijo(PREFIJO)).thenReturn(PREFIJO + "00005");
         when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         Presupuesto copia = service.duplicar(1L);
         assertEquals("BORRADOR", copia.getEstado());
+        assertEquals(PREFIJO + "00006", copia.getNumero());
         assertEquals(LocalDate.now().plusDays(30), copia.getFechaValidez());
         assertEquals(1, copia.getLineas().size());
         assertSame(copia, copia.getLineas().get(0).getPresupuesto());
+    }
+
+    @Test
+    void duplicarPresupuestoAprobadoQuedaEnBorradorConTotalRecalculadoYSinFactura() {
+        Presupuesto original = presupuesto();
+        original.setEstado("ACEPTADO");
+        original.setFecha(LocalDate.now().minusDays(20));
+        original.setTotal(new BigDecimal("999.99")); // total almacenado desfasado
+        original.setFactura(new Factura());
+        // 2 x 10 = 20 - 10 % = 18,00 + IVA 21 % (3,78) = 21,78
+        original.getLineas().add(linea("2", "10", "10", "21"));
+        // 3 x 1,50 = 4,50 + IVA 10 % (0,45) = 4,95
+        original.getLineas().add(linea("3", "1.50", "0", "10"));
+        when(repository.findById(1L)).thenReturn(Optional.of(original));
+        when(repository.maxNumeroConPrefijo(PREFIJO)).thenReturn(null);
+        when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        Presupuesto copia = service.duplicar(1L);
+
+        assertEquals("BORRADOR", copia.getEstado());
+        assertEquals(PREFIJO + "00001", copia.getNumero());
+        assertEquals(LocalDate.now(), copia.getFecha());
+        assertSame(original.getCliente(), copia.getCliente());
+        assertNull(copia.getFactura());
+        assertEquals(0, new BigDecimal("26.73").compareTo(copia.getTotal()));
+        assertEquals(new BigDecimal("18.00"), copia.getLineas().get(0).getImporte());
+        assertEquals(new BigDecimal("4.50"), copia.getLineas().get(1).getImporte());
+        assertEquals("ACEPTADO", original.getEstado());
+        verifyNoInteractions(facturaService);
+    }
+
+    // ---------- Numeración PRE-AAAA-NNNNN ----------
+
+    @Test
+    void generarNumeroPresupuestoEsPublicoYSinParametros() throws Exception {
+        var metodo = PresupuestoService.class.getMethod("generarNumeroPresupuesto");
+        assertTrue(java.lang.reflect.Modifier.isPublic(metodo.getModifiers()));
+        assertEquals(String.class, metodo.getReturnType());
+    }
+
+    @Test
+    void numeracionTrasBorradoIntermedioUsaElMaximoYNoElRecuento() {
+        // Existen 00001, 00002, 00004 y 00005 (el 00003 se borró)
+        lenient().when(repository.count()).thenReturn(4L);
+        when(repository.maxNumeroConPrefijo(PREFIJO)).thenReturn(PREFIJO + "00005");
+
+        assertEquals(PREFIJO + "00006", service.generarNumeroPresupuesto());
+    }
+
+    @Test
+    void numeracionReiniciaAlCambiarDeEjercicio() {
+        // Solo hay presupuestos del año anterior
+        when(repository.maxNumeroConPrefijo(PREFIJO)).thenReturn(null);
+
+        assertEquals(PREFIJO + "00001", service.generarNumeroPresupuesto());
+        verify(repository, never()).numerosConPrefijo(any());
+    }
+
+    @Test
+    void numeracionIgnoraSufijosNoNumericos() {
+        when(repository.maxNumeroConPrefijo(PREFIJO)).thenReturn(PREFIJO + "BIS");
+        when(repository.numerosConPrefijo(PREFIJO)).thenReturn(
+                List.of(PREFIJO + "00011", PREFIJO + "BIS", PREFIJO + "00003"));
+
+        assertEquals(PREFIJO + "00012", service.generarNumeroPresupuesto());
     }
 
     @Test

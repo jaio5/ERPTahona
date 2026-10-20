@@ -62,6 +62,26 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
                                  @Param("fechaDesde") LocalDate fechaDesde, @Param("fechaHasta") LocalDate fechaHasta,
                                  Pageable pageable);
 
+    /**
+     * Listado filtrado por "vencidas": mismo criterio que findVencidas (EMITIDA o VENCIDA, impagada y con
+     * el vencimiento ya pasado), para que el enlace del panel muestre las mismas facturas que cuenta.
+     */
+    @Query(value = "SELECT f FROM Factura f LEFT JOIN FETCH f.cliente c WHERE " +
+           "(:q IS NULL OR LOWER(f.numero) LIKE LOWER(CONCAT('%',:q,'%')) OR LOWER(c.nombre) LIKE LOWER(CONCAT('%',:q,'%'))) " +
+           "AND f.fechaVencimiento IS NOT NULL AND f.fechaVencimiento < :hoy " +
+           "AND f.estado IN ('EMITIDA', 'VENCIDA') AND f.pagada = false " +
+           "AND (:fechaDesde IS NULL OR f.fecha >= :fechaDesde) " +
+           "AND (:fechaHasta IS NULL OR f.fecha <= :fechaHasta)",
+           countQuery = "SELECT COUNT(f) FROM Factura f LEFT JOIN f.cliente c WHERE " +
+           "(:q IS NULL OR LOWER(f.numero) LIKE LOWER(CONCAT('%',:q,'%')) OR LOWER(c.nombre) LIKE LOWER(CONCAT('%',:q,'%'))) " +
+           "AND f.fechaVencimiento IS NOT NULL AND f.fechaVencimiento < :hoy " +
+           "AND f.estado IN ('EMITIDA', 'VENCIDA') AND f.pagada = false " +
+           "AND (:fechaDesde IS NULL OR f.fecha >= :fechaDesde) " +
+           "AND (:fechaHasta IS NULL OR f.fecha <= :fechaHasta)")
+    Page<Factura> buscarVencidasPaginado(@Param("q") String q, @Param("hoy") LocalDate hoy,
+                                         @Param("fechaDesde") LocalDate fechaDesde, @Param("fechaHasta") LocalDate fechaHasta,
+                                         Pageable pageable);
+
     @Query("SELECT DISTINCT f FROM Factura f LEFT JOIN FETCH f.cliente LEFT JOIN FETCH f.facturaLineas l LEFT JOIN FETCH l.articulo WHERE f.id = :id")
     Optional<Factura> findByIdWithPdfData(Long id);
 
@@ -82,4 +102,21 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
     @Query("SELECT f FROM Factura f LEFT JOIN FETCH f.cliente " +
            "WHERE f.estado IN ('PENDIENTE', 'EMITIDA') AND f.fecha < :fechaLimite")
     List<Factura> findPendientesCobro(@Param("fechaLimite") LocalDate fechaLimite);
+
+    /** Resumen del día (panel): [recuento, importe] de las facturas válidas de una serie. */
+    @Query("SELECT COUNT(f), COALESCE(SUM(f.total), 0) FROM Factura f " +
+           "WHERE f.fecha = :dia AND f.serie = :serie AND f.estado NOT IN ('BORRADOR', 'ANULADA')")
+    List<Object[]> resumenDiaDeSerie(@Param("dia") LocalDate dia, @Param("serie") String serie);
+
+    /** Resumen del día (panel): [recuento, importe] de las facturas válidas de cualquier serie salvo la indicada. */
+    @Query("SELECT COUNT(f), COALESCE(SUM(f.total), 0) FROM Factura f " +
+           "WHERE f.fecha = :dia AND (f.serie IS NULL OR f.serie <> :serie) " +
+           "AND f.estado NOT IN ('BORRADOR', 'ANULADA')")
+    List<Object[]> resumenDiaExcluyendoSerie(@Param("dia") LocalDate dia, @Param("serie") String serie);
+
+    /** Mismo criterio que findVencidas, agregado: [recuento, importe pendiente]. */
+    @Query("SELECT COUNT(f), COALESCE(SUM(f.total - COALESCE(f.pagado, 0)), 0) FROM Factura f " +
+           "WHERE f.fechaVencimiento IS NOT NULL AND f.fechaVencimiento < :hoy " +
+           "AND f.estado IN ('EMITIDA', 'VENCIDA') AND f.pagada = false")
+    List<Object[]> resumenVencidas(@Param("hoy") LocalDate hoy);
 }

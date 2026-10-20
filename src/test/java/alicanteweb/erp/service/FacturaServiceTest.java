@@ -101,4 +101,16 @@ class FacturaServiceTest {
         assertEquals("F-GEN-2026-0004", guardada.getNumero());
         verify(repository).save(factura);
     }
+
+    @Test
+    void buscarPaginado_filtroVencidasUsaElMismoCriterioQueElPanel() {
+        org.springframework.data.domain.PageRequest pageable = org.springframework.data.domain.PageRequest.of(0, 25);
+        when(repository.buscarVencidasPaginado(null, LocalDate.now(), null, null, pageable))
+            .thenReturn(org.springframework.data.domain.Page.empty());
+
+        service.buscarPaginado(" ", "vencidas", null, null, pageable);
+
+        verify(repository).buscarVencidasPaginado(null, LocalDate.now(), null, null, pageable);
+        verify(repository, never()).buscarPaginado(any(), any(), any(), any(), any());
+    }
 }

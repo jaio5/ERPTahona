@@ -123,6 +123,7 @@ public class DevolucionService {
     public Devolucion aceptarDevolucion(Long devolucionId) {
         Devolucion devolucion = devolucionRepository.findById(devolucionId)
                 .orElseThrow(() -> new IllegalArgumentException("Devolución no encontrada: " + devolucionId));
+        exigirPendiente(devolucion); // idempotencia: aceptar dos veces repondría el stock dos veces
         devolucion.setEstado("ACEPTADA");
 
         // Reponer stock por cada línea devuelta
@@ -151,8 +152,20 @@ public class DevolucionService {
     public Devolucion rechazarDevolucion(Long devolucionId, String motivo) {
         Devolucion devolucion = devolucionRepository.findById(devolucionId)
                 .orElseThrow(() -> new IllegalArgumentException("Devolución no encontrada: " + devolucionId));
+        exigirPendiente(devolucion);
         devolucion.setEstado("RECHAZADA");
         devolucion.setObservaciones((devolucion.getObservaciones() != null ? devolucion.getObservaciones() + " | " : "") + motivo);
         return devolucionRepository.save(devolucion);
+    }
+
+    /**
+     * Aceptar o rechazar solo procede desde PENDIENTE (estado inicial de la entidad; un estado
+     * vacío de registros antiguos se trata igual).
+     */
+    private static void exigirPendiente(Devolucion devolucion) {
+        String estado = devolucion.getEstado();
+        if (estado != null && !estado.isBlank() && !"PENDIENTE".equalsIgnoreCase(estado)) {
+            throw new IllegalStateException("La devolución ya está en estado " + estado);
+        }
     }
 }

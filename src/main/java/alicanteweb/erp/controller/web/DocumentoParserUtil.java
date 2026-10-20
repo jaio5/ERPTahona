@@ -54,9 +54,40 @@ public final class DocumentoParserUtil {
         return Long.valueOf(value.trim());
     }
 
+    /**
+     * Parsea un decimal escrito a la española o con punto: '12,50', '1.234,50', '12.5'.
+     * Vacío o null devuelve 0; un texto que no es un número lanza NumberFormatException.
+     */
     public static BigDecimal parseDecimal(String value) {
         if (value == null || value.isBlank()) return BigDecimal.ZERO;
-        return new BigDecimal(value.trim().replace(',', '.'));
+        return new BigDecimal(normalizarDecimal(value));
+    }
+
+    /**
+     * Para campos numéricos sueltos de un formulario: null si vienen vacíos y, si no son un número,
+     * IllegalArgumentException con un mensaje legible ("{mensajeError}: valor") en lugar de un 400.
+     */
+    public static BigDecimal parseDecimalCampo(String value, String mensajeError) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return parseDecimal(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(mensajeError + ": " + value.trim());
+        }
+    }
+
+    /**
+     * Si aparecen coma y punto, el último que aparece es el separador decimal y el otro el de
+     * miles ('1.234,50' o '1,234.50'); si solo hay coma, es el decimal.
+     */
+    private static String normalizarDecimal(String value) {
+        String s = value.trim().replace(" ", "").replace("\u00A0", "");
+        int coma = s.lastIndexOf(',');
+        int punto = s.lastIndexOf('.');
+        if (coma >= 0 && punto >= 0) {
+            return coma > punto ? s.replace(".", "").replace(',', '.') : s.replace(",", "");
+        }
+        return coma >= 0 ? s.replace(',', '.') : s;
     }
 
     public static String fmtDecimal(BigDecimal value) {

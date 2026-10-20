@@ -3,13 +3,16 @@
         <div class="page-header-title">
             <h4>Planificador diario</h4>
         </div>
-        <div class="page-header-actions">
+        <div class="page-header-actions d-print-none">
             <input type="date" class="form-control form-control-sm" x-model="fecha" @change="cargar()" style="width:auto;">
             <button class="btn btn-primary btn-sm" @click="irHoy()">Hoy</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnImprimirObrador">
+                <i class="bi bi-printer me-1"></i>Imprimir
+            </button>
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 d-print-none">
         <div class="col-md-4">
             <div class="stat-card">
                 <h6 class="mb-2">Pedidos (<span x-text="pedidos.length"></span>)</h6>
@@ -48,6 +51,39 @@
         </div>
     </div>
 
+    <!-- Hoja de obrador: cantidades a elaborar por artículo -->
+    <div class="table-card mt-4 hoja-obrador">
+        <div class="form-section-title mb-3">
+            <i class="bi bi-clipboard-check"></i> Hoja de obrador
+            <span class="text-muted small ms-1" x-text="fechaLegible()"></span>
+        </div>
+        <div class="table-responsive" x-show="aProducir.length > 0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Artículo</th>
+                        <th scope="col" class="text-end">Pedido total</th>
+                        <th scope="col" class="text-end">Stock</th>
+                        <th scope="col" class="text-end">A elaborar</th>
+                        <th scope="col">Desglose por cliente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="a in aProducir" :key="a.articuloId">
+                        <tr>
+                            <td class="fw-semibold" x-text="a.nombre"></td>
+                            <td class="text-end" x-text="cant(a.total)"></td>
+                            <td class="text-end text-muted" x-text="cant(a.stock)"></td>
+                            <td class="text-end fw-bold" x-text="cant(a.aElaborar)"></td>
+                            <td class="small" x-text="desglose(a.desglose)"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+        <div x-show="aProducir.length === 0" class="text-muted small">No hay pedidos para esta fecha</div>
+    </div>
+
     <div class="table-card mt-4">
         <div class="form-section-title mb-3"><i class="bi bi-box-seam"></i> Necesidades de materia prima</div>
         <div class="table-responsive">
@@ -68,7 +104,26 @@
         <div x-show="necesidades.length === 0" class="text-muted small">Sin necesidades calculadas</div>
     </div>
 
+    <!-- Impresión en A4: solo el contenido del planificador, sin menú, topbar ni controles -->
+    <style>
+        @media print {
+            @page { size: A4; margin: 12mm; }
+            .sidebar, .sidebar-overlay, .topbar-global, .sidebar-toggle-btn { display: none !important; }
+            .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+            .table-card { box-shadow: none !important; border: 0 !important; padding: 0 !important; }
+            .table-responsive { overflow: visible !important; }
+            .hoja-obrador table { font-size: 11pt; }
+            .hoja-obrador tr { break-inside: avoid; }
+        }
+    </style>
+
     <script th:attr="nonce=${cspNonce}">
+        // Fuera de Alpine para que imprimir funcione aunque Alpine no cargue
+        (function () {
+            const btn = document.getElementById('btnImprimirObrador');
+            if (btn) btn.addEventListener('click', function () { window.print(); });
+        })();
+
         document.addEventListener('alpine:init', function () {
             Alpine.data('planificadorApp', function () {
                 return {
@@ -77,7 +132,21 @@
                 albaranes: [],
                 ordenes: [],
                 necesidades: [],
+                aProducir: [],
                 init() { this.cargar(); },
+                cant(x) {
+                    const n = Number(x);
+                    return isNaN(n) ? '' : n.toLocaleString('es-ES', { maximumFractionDigits: 3 });
+                },
+                desglose(d) {
+                    if (!d) return '';
+                    return Object.keys(d).map(c => c + ' ' + this.cant(d[c])).join(', ');
+                },
+                fechaLegible() {
+                    if (!this.fecha) return '';
+                    const p = this.fecha.split('-');
+                    return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : this.fecha;
+                },
                 irHoy() {
                     this.fecha = new Date().toISOString().split('T')[0];
                     this.cargar();
@@ -90,6 +159,7 @@
                             this.albaranes = data.albaranes || [];
                             this.ordenes = data.ordenes || [];
                             this.necesidades = data.necesidades || [];
+                            this.aProducir = data.aProducir || [];
                         });
                 }
                 };

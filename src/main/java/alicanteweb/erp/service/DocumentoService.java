@@ -13,10 +13,16 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class DocumentoService {
+
+    static final String MSG_SIN_LINEAS = "El documento debe tener al menos una línea";
+
+    /** Estados en los que un albarán ya no admite cambios (ha salido del almacén o está facturado/anulado). */
+    private static final Set<String> ESTADOS_ALBARAN_NO_EDITABLES = Set.of("ENTREGADO", "FACTURADO", "ANULADO");
 
     private final PedidoService pedidoService;
     private final AlbaranService albaranService;
@@ -29,6 +35,7 @@ public class DocumentoService {
     private final PedidoRepository pedidoRepository;
     private final PresupuestoRepository presupuestoRepository;
     private final TarifaClienteService tarifaClienteService;
+    private final PresupuestoService presupuestoService;
 
     public DocumentoService(PedidoService pedidoService,
                             AlbaranService albaranService,
@@ -40,7 +47,8 @@ public class DocumentoService {
                             FacturaRepository facturaRepository,
                             PedidoRepository pedidoRepository,
                             PresupuestoRepository presupuestoRepository,
-                            TarifaClienteService tarifaClienteService) {
+                            TarifaClienteService tarifaClienteService,
+                            PresupuestoService presupuestoService) {
         this.pedidoService = pedidoService;
         this.albaranService = albaranService;
         this.facturaService = facturaService;
@@ -52,6 +60,7 @@ public class DocumentoService {
         this.pedidoRepository = pedidoRepository;
         this.presupuestoRepository = presupuestoRepository;
         this.tarifaClienteService = tarifaClienteService;
+        this.presupuestoService = presupuestoService;
     }
 
     // =========================== PEDIDO ===========================
@@ -59,6 +68,7 @@ public class DocumentoService {
     @Transactional
     public Pedido guardarPedido(Long id, Map<String, Object> datos) {
         Pedido pedido = id != null ? pedidoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado")) : new Pedido();
+        validarLineasEnviadas(datos);
         Long clienteId = parseLong(datos.get("clienteId"));
         if (clienteId == null) throw new IllegalArgumentException("Cliente obligatorio");
         pedido.setCliente(clienteService.findById(clienteId).orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado")));
@@ -73,7 +83,7 @@ public class DocumentoService {
 
     private void guardarLineasPedido(Pedido pedido, Map<String, Object> datos, boolean esNuevo) {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
-        if (lineas == null || lineas.isEmpty()) return;
+        if (lineas == null) return; // no se enviaron líneas: se conservan las existentes
 
         Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
         Long clienteId = pedido.getCliente() != null ? pedido.getCliente().getId() : null;
@@ -109,6 +119,7 @@ public class DocumentoService {
         Presupuesto pre = id != null
                 ? presupuestoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Presupuesto no encontrado"))
                 : new Presupuesto();
+        validarLineasEnviadas(datos);
         Long clienteId = parseLong(datos.get("clienteId"));
         if (clienteId == null) throw new IllegalArgumentException("Cliente obligatorio");
         pre.setCliente(clienteService.findById(clienteId).orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado")));
@@ -117,9 +128,8 @@ public class DocumentoService {
         pre.setObservaciones(parseString(datos.get("observaciones")));
         if (pre.getEstado() == null || pre.getEstado().isBlank()) pre.setEstado("BORRADOR");
         if (pre.getNumero() == null || pre.getNumero().isBlank()) {
-            int year = java.time.LocalDate.now().getYear();
-            long count = presupuestoRepository.count() + 1;
-            pre.setNumero(String.format("PRE-%d-%05d", year, count));
+            // Numeración única compartida con PresupuestoService (count()+1 repetía números tras borrar).
+            pre.setNumero(presupuestoService.generarNumeroPresupuesto());
         }
         guardarLineasPresupuesto(pre, datos);
         return presupuestoRepository.save(pre);
@@ -127,7 +137,7 @@ public class DocumentoService {
 
     private void guardarLineasPresupuesto(Presupuesto pre, Map<String, Object> datos) {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
-        if (lineas == null || lineas.isEmpty()) return;
+        if (lineas == null) return; // no se enviaron líneas: se conservan las existentes
 
         Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
         Long clienteId = pre.getCliente() != null ? pre.getCliente().getId() : null;
@@ -162,6 +172,10 @@ public class DocumentoService {
     @Transactional
     public AlbaranVenta guardarAlbaran(Long id, Map<String, Object> datos) {
         AlbaranVenta alb = id != null ? albaranRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Albarán no encontrado")) : new AlbaranVenta();
+        if (id != null && alb.getEstado() != null && ESTADOS_ALBARAN_NO_EDITABLES.contains(alb.getEstado().toUpperCase())) {
+            throw new IllegalStateException("No se puede modificar un albarán en estado " + alb.getEstado());
+        }
+        validarLineasEnviadas(datos);
         Long clienteId = parseLong(datos.get("clienteId"));
         Long almacenId = parseLong(datos.get("almacenId"));
         if (clienteId == null) throw new IllegalArgumentException("Cliente obligatorio");
@@ -184,7 +198,7 @@ public class DocumentoService {
 
     private void guardarLineasAlbaran(AlbaranVenta alb, Map<String, Object> datos, boolean esNuevo) {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
-        if (lineas == null || lineas.isEmpty()) return;
+        if (lineas == null) return; // no se enviaron líneas: se conservan las existentes
 
         Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
         Long clienteId = alb.getCliente() != null ? alb.getCliente().getId() : null;
@@ -226,6 +240,10 @@ public class DocumentoService {
     @Transactional
     public Factura guardarFactura(Long id, Map<String, Object> datos) {
         Factura fac = id != null ? facturaRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Factura no encontrada")) : new Factura();
+        // Solo los borradores (o las nuevas): la inalterabilidad de las emitidas la impone FacturaService.save.
+        if (fac.getEstado() == null || fac.getEstado().isBlank() || "BORRADOR".equalsIgnoreCase(fac.getEstado())) {
+            validarLineasEnviadas(datos);
+        }
         Long clienteId = parseLong(datos.get("clienteId"));
         if (clienteId == null) throw new IllegalArgumentException("Cliente obligatorio");
         fac.setCliente(clienteService.findById(clienteId).orElseThrow(() -> new IllegalArgumentException("Cliente no encontrado")));
@@ -246,6 +264,8 @@ public class DocumentoService {
 
     private void guardarLineasFactura(Factura fac, Map<String, Object> datos, boolean esNuevo) {
         List<Map<String, Object>> lineas = castList(datos.get("lineas"));
+        // null: no se enviaron líneas. Vacía en un borrador ya se rechazó en guardarFactura; en otros
+        // estados se mantiene el comportamiento previo (no tocar las líneas).
         if (lineas == null || lineas.isEmpty()) return;
 
         Map<Long, Articulo> articuloById = cargarArticulosDeLíneas(lineas);
@@ -284,6 +304,18 @@ public class DocumentoService {
     }
 
     // =========================== HELPERS LÍNEAS ===========================
+
+    /**
+     * Distingue "no se enviaron líneas" (null: se conservan las que hubiera) de "se quitaron todas"
+     * (lista vacía): un documento sin líneas no se admite, ni al crear ni al editar. Se valida antes
+     * de modificar nada para que las líneas existentes queden intactas.
+     */
+    private static void validarLineasEnviadas(Map<String, Object> datos) {
+        List<Map<String, Object>> lineas = castList(datos.get("lineas"));
+        if (lineas != null && lineas.isEmpty()) {
+            throw new IllegalArgumentException(MSG_SIN_LINEAS);
+        }
+    }
 
     private Map<Long, Articulo> cargarArticulosDeLíneas(List<Map<String, Object>> lineas) {
         List<Long> artIds = lineas.stream()

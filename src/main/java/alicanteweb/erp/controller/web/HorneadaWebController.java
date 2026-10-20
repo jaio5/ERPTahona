@@ -61,17 +61,43 @@ public class HorneadaWebController {
         }).orElseGet(() -> { Flash.error(ra, "Registro no encontrado"); return "redirect:/web/horneadas"; });
     }
 
+    /**
+     * Alta desde el formulario. Cantidad y costes llegan como texto para admitir la coma decimal
+     * ('2,5'); un valor no numérico vuelve al formulario con un mensaje en vez de un 400.
+     */
     @PostMapping
-    public String guardar(@RequestParam(required = false) Long id,
-                          @RequestParam(required = false) String tipo,
-                          @RequestParam(required = false) Integer tempIni,
-                          @RequestParam(required = false) Integer tempFin,
-                          @RequestParam(required = false) BigDecimal cantidad,
-                          @RequestParam(required = false) String resultado,
-                          @RequestParam(required = false) String observaciones,
-                          @RequestParam(required = false) BigDecimal costeManoObra,
-                          @RequestParam(required = false) BigDecimal costeEnergia,
-                          @RequestParam(required = false) BigDecimal costeMateriales,
+    public String guardarFormulario(@RequestParam(required = false) Long id,
+                                    @RequestParam(required = false) String tipo,
+                                    @RequestParam(required = false) Integer tempIni,
+                                    @RequestParam(required = false) Integer tempFin,
+                                    @RequestParam(required = false) String cantidad,
+                                    @RequestParam(required = false) String resultado,
+                                    @RequestParam(required = false) String observaciones,
+                                    @RequestParam(required = false) String costeManoObra,
+                                    @RequestParam(required = false) String costeEnergia,
+                                    @RequestParam(required = false) String costeMateriales,
+                                    RedirectAttributes ra) {
+        BigDecimal cantidadDecimal;
+        BigDecimal manoObra;
+        BigDecimal energia;
+        BigDecimal materiales;
+        try {
+            cantidadDecimal = DocumentoParserUtil.parseDecimalCampo(cantidad, "Cantidad no válida");
+            manoObra = DocumentoParserUtil.parseDecimalCampo(costeManoObra, "Importe no válido");
+            energia = DocumentoParserUtil.parseDecimalCampo(costeEnergia, "Importe no válido");
+            materiales = DocumentoParserUtil.parseDecimalCampo(costeMateriales, "Importe no válido");
+        } catch (IllegalArgumentException e) {
+            Flash.error(ra, e.getMessage());
+            return "redirect:/web/horneadas/nuevo";
+        }
+        return guardar(id, tipo, tempIni, tempFin, cantidadDecimal, resultado, observaciones,
+                manoObra, energia, materiales, ra);
+    }
+
+    /** Guardado con los importes ya parseados (lo usa {@link #guardarFormulario}). */
+    public String guardar(Long id, String tipo, Integer tempIni, Integer tempFin, BigDecimal cantidad,
+                          String resultado, String observaciones, BigDecimal costeManoObra,
+                          BigDecimal costeEnergia, BigDecimal costeMateriales,
                           RedirectAttributes ra) {
         try {
             Horneada horneada = id != null ? horneadaService.findById(id).orElseThrow(() -> new IllegalArgumentException("ID de horneada no válido: " + id)) : new Horneada();

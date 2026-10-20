@@ -1,10 +1,13 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.repository.AlbaranVentaRepository;
 import alicanteweb.erp.repository.FacturaRepository;
 import alicanteweb.erp.repository.OrdenProduccionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -17,10 +20,55 @@ public class DashboardService {
 
     private final FacturaRepository facturaRepository;
     private final OrdenProduccionRepository ordenRepository;
+    private final AlbaranVentaRepository albaranRepository;
 
-    public DashboardService(FacturaRepository facturaRepository, OrdenProduccionRepository ordenRepository) {
+    public DashboardService(FacturaRepository facturaRepository, OrdenProduccionRepository ordenRepository,
+                            AlbaranVentaRepository albaranRepository) {
         this.facturaRepository = facturaRepository;
         this.ordenRepository = ordenRepository;
+        this.albaranRepository = albaranRepository;
+    }
+
+    /**
+     * Resumen operativo de un día para el panel "Hoy". Las facturas en BORRADOR o
+     * ANULADA no cuentan; el mostrador es la serie del TPV y lo "facturado" el resto.
+     */
+    @Transactional(readOnly = true)
+    public ResumenDia resumenDia(LocalDate dia) {
+        Object[] mostrador = filaUnica(facturaRepository.resumenDiaDeSerie(dia, TpvService.SERIE_TPV));
+        Object[] ordinarias = filaUnica(facturaRepository.resumenDiaExcluyendoSerie(dia, TpvService.SERIE_TPV));
+        Object[] vencidas = filaUnica(facturaRepository.resumenVencidas(dia));
+        long albaranesSinEntregar = albaranRepository.countSinEntregarByFecha(dia);
+        return new ResumenDia(dia,
+                aLong(mostrador[0]), aImporte(mostrador[1]),
+                aLong(ordinarias[0]), aImporte(ordinarias[1]),
+                albaranesSinEntregar,
+                aLong(vencidas[0]), aImporte(vencidas[1]));
+    }
+
+    /** Cifras del día que pinta el panel. Importes con 2 decimales, nunca null. */
+    public record ResumenDia(LocalDate dia,
+                             long ticketsMostrador, BigDecimal importeMostrador,
+                             long facturasEmitidas, BigDecimal importeFacturado,
+                             long albaranesSinEntregar,
+                             long facturasVencidas, BigDecimal importeVencido) {
+    }
+
+    private static Object[] filaUnica(List<Object[]> filas) {
+        if (filas == null || filas.isEmpty() || filas.get(0) == null) return new Object[]{0L, BigDecimal.ZERO};
+        return filas.get(0);
+    }
+
+    private static long aLong(Object valor) {
+        return valor instanceof Number n ? n.longValue() : 0L;
+    }
+
+    private static BigDecimal aImporte(Object valor) {
+        BigDecimal importe;
+        if (valor instanceof BigDecimal bd) importe = bd;
+        else if (valor instanceof Number n) importe = new BigDecimal(n.toString());
+        else importe = BigDecimal.ZERO;
+        return importe.setScale(2, RoundingMode.HALF_UP);
     }
 
     public List<Map<String, Object>> ventasMensuales() {

@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -16,6 +18,14 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     Optional<Pedido> findByNumero(String numero);
 
     boolean existsByNumero(String numero);
+
+    /** Máximo (alfabético) de los números que empiezan por el prefijo, p. ej. 'PED-2026-'. */
+    @Query("select max(p.numero) from Pedido p where p.numero like concat(:prefijo, '%')")
+    String maxNumeroConPrefijo(@Param("prefijo") String prefijo);
+
+    /** Todos los números con el prefijo (solo para el caso de sufijos no numéricos). */
+    @Query("select p.numero from Pedido p where p.numero like concat(:prefijo, '%')")
+    List<String> numerosConPrefijo(@Param("prefijo") String prefijo);
 
     @EntityGraph(attributePaths = {"cliente"})
     List<Pedido> findByEstado(String estado);

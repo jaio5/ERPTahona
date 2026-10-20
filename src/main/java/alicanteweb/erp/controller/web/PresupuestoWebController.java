@@ -1,6 +1,7 @@
 package alicanteweb.erp.controller.web;
 
 import alicanteweb.erp.util.Flash;
+import alicanteweb.erp.entities.Presupuesto;
 import alicanteweb.erp.service.ArticuloService;
 import alicanteweb.erp.service.ClienteService;
 import alicanteweb.erp.service.DocumentoService;
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -154,5 +156,24 @@ public class PresupuestoWebController {
             Flash.error(ra, e.getMessage());
         }
         return "redirect:/web/presupuestos/" + id;
+    }
+
+    @PostMapping("/{id}/duplicar")
+    @PreAuthorize("@permisos.puede('ventas', 'crear')")
+    public String duplicar(@PathVariable Long id, RedirectAttributes ra) {
+        Optional<Presupuesto> original = presupuestoService.obtenerPorId(id);
+        if (original.isEmpty()) {
+            Flash.error(ra, "Registro no encontrado");
+            return "redirect:/web/presupuestos";
+        }
+        try {
+            Presupuesto copia = presupuestoService.duplicar(id);
+            Flash.exito(ra, "Duplicado de " + original.get().getNumero() + ": " + copia.getNumero());
+            return "redirect:/web/presupuestos/" + copia.getId() + "/editar";
+        } catch (RuntimeException e) {
+            log.error("Error al duplicar presupuesto {}: {}", id, e.getMessage(), e);
+            Flash.error(ra, e.getMessage());
+            return "redirect:/web/presupuestos/" + id;
+        }
     }
 }

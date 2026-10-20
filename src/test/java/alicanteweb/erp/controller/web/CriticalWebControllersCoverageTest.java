@@ -169,6 +169,33 @@ class CriticalWebControllersCoverageTest {
     }
 
     @Test
+    void albaranCerradoNoSeEditaYVuelveAlDetalleConError() {
+        AlbaranService albaranes = mock(AlbaranService.class);
+        DocumentoService documentos = mock(DocumentoService.class);
+        AlbaranVenta albaran = new AlbaranVenta();
+        albaran.setId(1L);
+        albaran.setNumero("A-1");
+        albaran.setEstado("FACTURADO");
+        when(albaranes.obtenerPorIdParaPdf(1L)).thenReturn(Optional.of(albaran));
+        when(documentos.guardarAlbaran(eq(1L), any()))
+                .thenThrow(new IllegalStateException("No se puede modificar un albarán en estado FACTURADO"));
+        AlbaranWebController controller = new AlbaranWebController(
+                albaranes, mock(ClienteService.class), mock(ArticuloService.class), mock(AlmacenService.class),
+                mock(ImpresionService.class), mock(AuditoriaService.class), mock(UsuarioService.class), documentos,
+                mock(TipoImpositivoService.class));
+
+        RedirectAttributesModelMap raGet = new RedirectAttributesModelMap();
+        assertEquals("redirect:/web/albaranes/1", controller.editar(1L, new ExtendedModelMap(), raGet));
+        assertEquals("No se puede modificar un albarán en estado FACTURADO", raGet.getFlashAttributes().get("error"));
+
+        RedirectAttributesModelMap raPost = new RedirectAttributesModelMap();
+        assertEquals("redirect:/web/albaranes/1",
+                controller.guardar(1L, 2L, null, "2026-06-19", null, null, null, null, lineRequest(), raPost));
+        assertEquals("No se puede modificar un albarán en estado FACTURADO", raPost.getFlashAttributes().get("error"));
+        assertNull(raPost.getFlashAttributes().get("exito"));
+    }
+
+    @Test
     void presupuestoCubreFiltrosEdicionAltaYAprobacion() {
         PresupuestoService presupuestos = mock(PresupuestoService.class);
         ClienteService clientes = mock(ClienteService.class);

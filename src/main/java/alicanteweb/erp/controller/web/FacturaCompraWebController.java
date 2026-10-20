@@ -83,11 +83,24 @@ public class FacturaCompraWebController {
                           @RequestParam(required = false) String fecha,
                           @RequestParam(required = false) String fechaVencimiento,
                           @RequestParam(required = false) String formaPago,
-                          @RequestParam(required = false) BigDecimal baseImponible,
-                          @RequestParam(required = false) BigDecimal tipoIva,
-                          @RequestParam(required = false) BigDecimal importeIva,
+                          @RequestParam(required = false) String baseImponible,
+                          @RequestParam(required = false) String tipoIva,
+                          @RequestParam(required = false) String importeIva,
                           @RequestParam(required = false) String observaciones,
                           RedirectAttributes ra) {
+        // Los importes llegan como texto para admitir la coma decimal ('100,50'); un valor
+        // no numérico vuelve al formulario con un mensaje en vez de un 400.
+        BigDecimal base;
+        BigDecimal tipo;
+        BigDecimal iva;
+        try {
+            base = DocumentoParserUtil.parseDecimalCampo(baseImponible, "Importe no válido");
+            tipo = DocumentoParserUtil.parseDecimalCampo(tipoIva, "Importe no válido");
+            iva = DocumentoParserUtil.parseDecimalCampo(importeIva, "Importe no válido");
+        } catch (IllegalArgumentException e) {
+            Flash.error(ra, e.getMessage());
+            return "redirect:/web/facturas-compra/nuevo";
+        }
         try {
             FacturaCompra factura = id != null
                 ? facturaCompraService.obtenerPorId(id).orElseThrow(() -> new IllegalArgumentException("ID de factura de compra no válido: " + id))
@@ -97,9 +110,9 @@ public class FacturaCompraWebController {
             factura.setFecha(fecha != null && !fecha.isBlank() ? LocalDate.parse(fecha) : LocalDate.now());
             if (fechaVencimiento != null && !fechaVencimiento.isBlank()) factura.setFechaVencimiento(LocalDate.parse(fechaVencimiento));
             factura.setFormaPago(formaPago);
-            factura.setBaseImponible(baseImponible != null ? baseImponible : BigDecimal.ZERO);
-            factura.setTipoIva(tipoIva);
-            factura.setImporteIva(importeIva != null ? importeIva : BigDecimal.ZERO);
+            factura.setBaseImponible(base != null ? base : BigDecimal.ZERO);
+            factura.setTipoIva(tipo);
+            factura.setImporteIva(iva != null ? iva : BigDecimal.ZERO);
             factura.calcularTotal();
             if (factura.getEstado() == null) factura.setEstado("PENDIENTE");
             factura.setObservaciones(observaciones);

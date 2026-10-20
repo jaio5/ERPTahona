@@ -49,6 +49,7 @@ public class PlanificadorRestController {
         result.put("albaranes", mapearAlbaranes(albaranes));
         result.put("ordenes", mapearOrdenes(ordenes));
         result.put("necesidades", construirNecesidadesList(pedidos, ordenes));
+        result.put("aProducir", mapearAProducir(planificadorService.totalesPorArticulo(fecha)));
 
         return ResponseEntity.ok(result);
     }
@@ -60,6 +61,21 @@ public class PlanificadorRestController {
             m.put("numero", p.getNumero());
             m.put("cliente", p.getCliente() != null ? p.getCliente().getNombre() : null);
             m.put("estado", p.getEstado());
+            return m;
+        }).toList();
+    }
+
+    /** Hoja de obrador: total pedido por artículo, stock y lo que queda por elaborar. */
+    private List<Map<String, Object>> mapearAProducir(List<PlanificadorService.TotalArticulo> totales) {
+        if (totales == null) return List.of();
+        return totales.stream().map(t -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("articuloId", t.articuloId());
+            m.put("nombre", t.nombre());
+            m.put("total", t.total());
+            m.put("stock", t.stock());
+            m.put("aElaborar", t.aElaborar());
+            m.put("desglose", t.desglose());
             return m;
         }).toList();
     }
