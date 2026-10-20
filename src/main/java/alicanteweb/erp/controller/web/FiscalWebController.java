@@ -3,6 +3,7 @@ package alicanteweb.erp.controller.web;
 import alicanteweb.erp.util.Flash;
 import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.SifModalidad;
+import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.service.DeclaracionResponsableService;
 import alicanteweb.erp.service.EmpresaConfigService;
 import alicanteweb.erp.service.FiscalComplianceService;
@@ -93,6 +94,7 @@ public class FiscalWebController {
         model.addAttribute("q", q);
         model.addAttribute("pendientes", evidenceService.countByEstado("PENDIENTE"));
         model.addAttribute("erroresCount", evidenceService.countByEstado("ERROR"));
+        model.addAttribute("noRemitidos", evidenceService.countByEstado(VerifactuEvidence.ESTADO_NO_REMITIDO));
         model.addAttribute("breadcrumb", BreadcrumbBuilder.of(
                 BreadcrumbBuilder.inicio(),
                 BreadcrumbBuilder.active("VERI*FACTU")));

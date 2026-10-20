@@ -610,7 +610,7 @@ public class VerifactuService implements InitializingBean {
         if (firma != null) {
             evidencia.setSignature(firma);
         }
-        evidencia.setEstado("PENDIENTE");
+        evidencia.setEstado(VerifactuEvidence.ESTADO_PENDIENTE);
 
         java.util.Map<String, Object> metadata = new java.util.HashMap<>();
         metadata.put("empresa", empresa.getNombreEmpresa());
@@ -621,66 +621,89 @@ public class VerifactuService implements InitializingBean {
         evidenceRepository.save(evidencia);
         log.info("Evidencia guardada para factura {} con ID {}", factura.getNumero(), evidencia.getId());
 
-        // 10. Envío real a la AEAT (si está habilitado) — la factura solo pasa a EMITIDA si esto va bien
+        // 10. Remisión a la AEAT. La factura queda expedida (EMITIDA) en todo caso salvo error de
+        // comunicación, pero verifactuEnviada y el estado de la evidencia solo reflejan una remisión
+        // cuando la AEAT ha respondido que registra el registro (Correcto / AceptadoConErrores).
+        // Nunca se marca como enviado algo que no se ha enviado (estado fiscal honesto).
         if (aeatEnabled && this.enabled) {
+            String respuestaAEAT;
             try {
                 log.info("Enviando factura {} a AEAT endpoint: {}", factura.getNumero(), aeatEndpoint);
-                String respuestaAEAT = enviarXMLaAEAT(xml, firma);
-
-                evidencia.setEstado("ENVIADO");
-                evidencia.setFechaEnvio(java.time.Instant.now());
-                evidencia.setCodigoRespuestaAEAT(respuestaAEAT != null ? "OK" : "ERROR");
-                metadata.put("respuesta_aeat", respuestaAEAT);
-                metadata.put("fecha_envio_real", java.time.Instant.now().toString());
-                evidencia.setMetadata(metadata);
-                evidenceRepository.save(evidencia);
-
-                // Solo aquí, con AEAT confirmada, marcamos la factura como emitida
-                factura.setVerifactuEnviada(true);
-                factura.setFechaEmisionVerifactu(LocalDateTime.now());
-                factura.setEstado("EMITIDA");
-
-                registrarEventoVerifactu("ENVIO_AEAT_OK", factura, java.util.Map.of(
-                    "evidenciaId", evidencia.getId(),
-                    "codigoRespuesta", evidencia.getCodigoRespuestaAEAT(),
-                    "endpoint", aeatEndpoint
-                ));
-                log.info("Factura {} enviada y registrada correctamente en AEAT", factura.getNumero());
+                respuestaAEAT = enviarXMLaAEAT(xml, firma);
             } catch (Exception e) {
                 log.error("Error enviando factura {} a AEAT: {}", factura.getNumero(), e.getMessage());
-                evidencia.setEstado("ERROR");
-                evidencia.setErrorMessage("Error al enviar a AEAT: " + e.getMessage());
+                evidencia.setEstado(VerifactuEvidence.ESTADO_ERROR);
+                evidencia.setErrorMessage(limitarMensajeError("Error al enviar a AEAT: " + e.getMessage()));
                 evidencia.setCodigoRespuestaAEAT("ERROR");
                 evidenceRepository.save(evidencia);
                 registrarEventoVerifactu("ENVIO_AEAT_ERROR", factura, java.util.Map.of(
                     "evidenciaId", evidencia.getId(),
-                    "mensajeError", e.getMessage(),
+                    "mensajeError", String.valueOf(e.getMessage()),
                     "endpoint", aeatEndpoint
                 ));
                 // La factura NO cambia de estado: el controlador verá la excepción y no guardará EMITIDA
                 throw new ErpException("Error al enviar factura a AEAT: " + e.getMessage(), e);
             }
+
+            metadata.put("respuesta_aeat", respuestaAEAT);
+            evidencia.setMetadata(metadata);
+            String estadoRemision = estadoRemisionDesdeRespuesta(respuestaAEAT);
+            evidencia.setEstado(estadoRemision);
+            factura.setFechaEmisionVerifactu(LocalDateTime.now());
+            factura.setEstado("EMITIDA");
+
+            if (VerifactuEvidence.esRemisionConfirmada(estadoRemision)) {
+                evidencia.setFechaEnvio(java.time.Instant.now());
+                evidencia.setCodigoRespuestaAEAT(VerifactuEvidence.ESTADO_ACEPTADO.equals(estadoRemision)
+                        ? "Correcto" : "AceptadoConErrores");
+                if (VerifactuEvidence.ESTADO_ACEPTADO_CON_ERRORES.equals(estadoRemision)) {
+                    evidencia.setErrorMessage(limitarMensajeError(respuestaAEAT));
+                }
+                metadata.put("fecha_envio_real", java.time.Instant.now().toString());
+                evidenceRepository.save(evidencia);
+
+                // Solo aquí, con el registro confirmado por la AEAT, la factura consta como remitida
+                factura.setVerifactuEnviada(true);
+                registrarEventoVerifactu("ENVIO_AEAT_OK", factura, java.util.Map.of(
+                    "evidenciaId", evidencia.getId(),
+                    "codigoRespuesta", evidencia.getCodigoRespuestaAEAT(),
+                    "endpoint", aeatEndpoint
+                ));
+                log.info("Factura {} remitida y registrada por la AEAT ({})", factura.getNumero(), estadoRemision);
+            } else {
+                evidencia.setCodigoRespuestaAEAT("NO_CONFIRMADO");
+                evidencia.setErrorMessage(limitarMensajeError("La respuesta de la AEAT no confirma el registro: " + respuestaAEAT));
+                evidenceRepository.save(evidencia);
+                factura.setVerifactuEnviada(false);
+                registrarEventoVerifactu("ENVIO_AEAT_SIN_CONFIRMAR", factura, java.util.Map.of(
+                    "evidenciaId", evidencia.getId(),
+                    "respuesta", String.valueOf(respuestaAEAT),
+                    "endpoint", aeatEndpoint
+                ));
+                log.warn("Factura {} expedida pero la AEAT no ha confirmado el registro (respuesta: {})",
+                        factura.getNumero(), respuestaAEAT);
+            }
         } else {
-            // Sin envío AEAT (modo local/pruebas): se marca como emitida igualmente
-            evidencia.setEstado("ENVIADO");
-            evidencia.setFechaEnvio(java.time.Instant.now());
+            // Remisión desactivada (modo local/pruebas): la factura se expide, pero NO se ha
+            // remitido nada a la AEAT y así consta (sin verifactuEnviada ni estado ENVIADO).
+            evidencia.setEstado(VerifactuEvidence.ESTADO_NO_REMITIDO);
             evidenceRepository.save(evidencia);
 
-            factura.setVerifactuEnviada(true);
+            factura.setVerifactuEnviada(false);
             factura.setFechaEmisionVerifactu(LocalDateTime.now());
             factura.setEstado("EMITIDA");
 
             if (!aeatEnabled) {
-                log.info("Envio a AEAT deshabilitado (verifactu.aeat.enabled=false). Evidencia guardada localmente.");
+                log.info("Envio a AEAT deshabilitado (verifactu.aeat.enabled=false). Registro NO remitido.");
             }
             if (!this.enabled) {
-                log.info("Certificado no disponible. Evidencia guardada localmente sin firma digital.");
+                log.info("Certificado no disponible. Registro guardado localmente sin firma digital y NO remitido.");
             }
             registrarEventoVerifactu("ENVIO_AEAT_OMITIDO", factura, java.util.Map.of(
                 "aeatEnabled", aeatEnabled,
                 "certificadoDisponible", this.enabled
             ));
-            log.info("Factura {} registrada localmente (modo de pruebas)", factura.getNumero());
+            log.info("Factura {} expedida; registro NO remitido a la AEAT (remisión desactivada)", factura.getNumero());
         }
 
         registrarEventoVerifactu("REGISTRO_VERIFACTU_LOCAL", factura, java.util.Map.of(
@@ -688,6 +711,40 @@ public class VerifactuService implements InitializingBean {
             "serie", evidencia.getSerie(),
             "hash", hash
         ));
+    }
+
+    /** Longitud de verifactu_evidence.error_message (VARCHAR(255) en MySQL, V36). */
+    static final int MAX_ERROR_MESSAGE = 255;
+
+    /**
+     * Recorta el mensaje a la longitud de la columna. Sin esto, una respuesta AceptadoConErrores con
+     * avisos largos haría fallar el guardado (Data too long en MySQL estricto) después de que la AEAT
+     * ya hubiera aceptado el registro; la respuesta completa queda en metadata.respuesta_aeat.
+     */
+    static String limitarMensajeError(String mensaje) {
+        if (mensaje == null || mensaje.length() <= MAX_ERROR_MESSAGE) {
+            return mensaje;
+        }
+        return mensaje.substring(0, MAX_ERROR_MESSAGE - 3) + "...";
+    }
+
+    /**
+     * Traduce la respuesta del cliente SOAP a un estado de remisión. Solo "ACEPTADA" (Correcto) y
+     * "ACEPTADA_CON_ERRORES" confirman el registro; cualquier otra respuesta (simulada, inesperada,
+     * vacía) se trata como no confirmada y nunca como enviada.
+     */
+    static String estadoRemisionDesdeRespuesta(String respuestaAEAT) {
+        if (respuestaAEAT == null) {
+            return VerifactuEvidence.ESTADO_RESPUESTA_NO_CONFIRMADA;
+        }
+        String r = respuestaAEAT.trim();
+        if ("ACEPTADA".equals(r)) {
+            return VerifactuEvidence.ESTADO_ACEPTADO;
+        }
+        if (r.startsWith("ACEPTADA_CON_ERRORES")) {
+            return VerifactuEvidence.ESTADO_ACEPTADO_CON_ERRORES;
+        }
+        return VerifactuEvidence.ESTADO_RESPUESTA_NO_CONFIRMADA;
     }
 
     /**
@@ -731,67 +788,10 @@ public class VerifactuService implements InitializingBean {
     }
 
 
-    public void registrarAnulacionLocal(Factura factura, String motivo) {
-        if (factura == null || factura.getId() == null) {
-            return;
-        }
-
-        Optional<EmpresaConfig> empresaOpt = empresaConfigService.getConfiguracionActiva();
-        if (empresaOpt.isEmpty()) {
-            log.warn("No hay configuración de empresa — omitiendo registro de anulación VeriFactu para {}", factura.getNumero());
-            return;
-        }
-        EmpresaConfig empresa = empresaOpt.get();
-
-        String xml = null;
-        String hashDocumento;
-        boolean verifactuConfigurado = empresa.getVerifactuNifEmisor() != null && !empresa.getVerifactuNifEmisor().isBlank();
-        if (verifactuConfigurado) {
-            try {
-                xml = generarRegistroAnulacionXml(factura, motivo);
-            } catch (Exception e) {
-                log.warn("No se pudo generar XML VeriFactu para anulación de {} — se registra evidencia sin XML: {}", factura.getNumero(), e.getMessage());
-            }
-        }
-        if (xml != null) {
-            String huellaXml = extraerValorXml(xml, "Huella");
-            hashDocumento = huellaXml != null && !huellaXml.isBlank() ? huellaXml : generarHash(xml);
-        } else {
-            hashDocumento = generarHash(factura.getNumero() + "|ANULACION|FALLBACK");
-        }
-
-        VerifactuEvidence evidencia = new VerifactuEvidence();
-        evidencia.setSerie(resolverSerie(factura));
-        evidencia.setNumero(factura.getNumero());
-        evidencia.setFacturaId(factura.getId().toString());
-        evidencia.setCreatedAt(java.time.Instant.now());
-        evidencia.setFechaEmision(factura.getFecha() != null
-            ? factura.getFecha().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()
-            : java.time.Instant.now());
-        evidencia.setHash(hashDocumento);
-        evidencia.setHashAnterior(obtenerHashAnterior(evidencia.getSerie()));
-        evidencia.setTipoRegistro("ANULACION");
-        evidencia.setXmlGenerado(xml);
-        evidencia.setFechaGeneracionRegistro(java.time.Instant.now());
-        evidencia.setHuellaRegistro(hashDocumento);
-        evidencia.setNifEmisor(empresa.getVerifactuNifEmisor());
-        evidencia.setFechaExpedicionFactura(factura.getFecha());
-        evidencia.setEstado("ANULADO");
-
-        java.util.Map<String, Object> metadata = evidencia.getMetadata() != null
-            ? new java.util.HashMap<>(evidencia.getMetadata())
-            : new java.util.HashMap<>();
-        metadata.put("motivoAnulacion", motivo);
-        metadata.put("tipoRegistro", "ANULACION");
-        evidencia.setMetadata(metadata);
-
-        VerifactuEvidence saved = evidenceRepository.save(evidencia);
-        registrarEventoVerifactu("REGISTRO_ANULACION_LOCAL", factura, java.util.Map.of(
-            "evidenciaId", saved.getId(),
-            "motivo", motivo != null ? motivo : "",
-            "tipoRegistro", "ANULACION"
-        ));
-    }
+    // registrarAnulacionLocal retirado (contención VERI*FACTU F0): solo se invocaba al crear
+    // rectificativas, que no deben anular la original, guardaba la anulación en local sin
+    // remitirla y, si fallaba el XML, metía en la cadena una huella no oficial. El registro de
+    // anulación se rehará junto con la remisión real (generarRegistroAnulacionXml sigue disponible).
 
     /** Abre el envoltorio oficial RegFactuSistemaFacturacion con la cabecera del obligado a emitir. */
     private void appendAperturaEnvoltorio(StringBuilder xml, EmpresaConfig empresa) {

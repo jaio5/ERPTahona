@@ -108,11 +108,12 @@ public class FacturaService {
 
     @Transactional
     public Factura save(Factura factura) {
-        // Inalterabilidad (RRSIF): una factura emitida o ya registrada en VeriFactu
-        // no se modifica; los cambios exigen factura rectificativa
+        // Inalterabilidad (RRSIF): una factura expedida (EMITIDA, PAGADA, VENCIDA, RECTIFICADA,
+        // ANULADA) no se modifica; los cambios exigen factura rectificativa. La señal es el
+        // estado, no verifactuEnviada (que solo indica remisión real a la AEAT).
         if (factura.getId() != null) {
             repository.findById(factura.getId()).ifPresent(existente -> {
-                if ("EMITIDA".equalsIgnoreCase(existente.getEstado())
+                if (Factura.esEstadoInalterable(existente.getEstado())
                         || Boolean.TRUE.equals(existente.getVerifactuEnviada())) {
                     throw new IllegalStateException(
                         "Las facturas emitidas no se modifican. Cree una factura rectificativa.");
@@ -126,7 +127,7 @@ public class FacturaService {
     @Transactional
     public void deleteById(Long id) {
         repository.findById(id).ifPresent(existente -> {
-            if ("EMITIDA".equalsIgnoreCase(existente.getEstado())
+            if (Factura.esEstadoInalterable(existente.getEstado())
                     || Boolean.TRUE.equals(existente.getVerifactuEnviada())) {
                 throw new IllegalStateException(
                     "Las facturas emitidas o registradas en VeriFactu no se pueden eliminar.");
@@ -203,7 +204,7 @@ public class FacturaService {
             return factura;
         }
 
-        if (Boolean.TRUE.equals(factura.getVerifactuEnviada()) || "EMITIDA".equalsIgnoreCase(factura.getEstado())) {
+        if (Factura.esEstadoInalterable(factura.getEstado()) || Boolean.TRUE.equals(factura.getVerifactuEnviada())) {
             throw new IllegalStateException("Las facturas emitidas no se anulan directamente. Cree una factura rectificativa.");
         }
 
@@ -221,36 +222,19 @@ public class FacturaService {
     }
 
     @Transactional
-    public Factura anularPorRectificativa(Long facturaId, String numeroRectificativa, String motivo) {
-        Factura factura = repository.findById(facturaId)
-                .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
-
-        factura.setEstado("ANULADA");
-        factura.setObservacionesRevision(concatObservacion(
-                factura.getObservacionesRevision(),
-                "Anulada por rectificativa " + numeroRectificativa + (motivo != null && !motivo.isBlank() ? " - " + motivo : "")
-        ));
-        Factura guardada = repository.save(factura);
-        verifactuService.registrarAnulacionLocal(guardada, motivo);
-
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("facturaId", guardada.getId());
-        metadata.put("numero", guardada.getNumero());
-        metadata.put("serie", guardada.getSerie());
-        metadata.put("rectificativa", numeroRectificativa);
-        metadata.put("motivo", motivo);
-        metadata.put("fecha", LocalDateTime.now().toString());
-        facturacionEventoService.registrarEvento(FacturacionEventoService.AMBITO_FACTURAS, "ANULACION_POR_RECTIFICATIVA", guardada.getNumero(), metadata);
-        return guardada;
-    }
-
-    @Transactional
     public Factura crearRectificativa(Long facturaIdOriginal, String motivo, String tipoRectificacion, LocalDate fechaRectificativa) {
         Factura original = repository.findByIdWithPdfData(facturaIdOriginal)
                 .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
 
         if (!"EMITIDA".equalsIgnoreCase(original.getEstado())) {
             throw new IllegalStateException("Solo se pueden rectificar facturas emitidas. Estado actual: " + original.getEstado());
+        }
+        // La original ya no pasa a ANULADA al rectificarla, así que nada impedía crear varias
+        // rectificativas completas (doble clic) y restar la operación dos veces. Mientras haya una
+        // rectificativa sin emitir de esta factura, se termina o se anula esa antes de crear otra.
+        if (repository.existsByFacturaRectificadaNumeroAndEstadoIn(original.getNumero(), List.of("BORRADOR", "REVISION"))) {
+            throw new IllegalStateException("La factura " + original.getNumero()
+                    + " ya tiene una rectificativa pendiente de emitir. Emítala o anúlela antes de crear otra.");
         }
 
         Factura rectificativa = inicializarCabeceraRectificativa(original, motivo, tipoRectificacion, fechaRectificativa);
@@ -259,7 +243,10 @@ public class FacturaService {
         prepararFacturaParaGuardar(rectificativa);
         Factura saved = repository.save(rectificativa);
 
-        anularOriginalPorRectificativa(original, saved.getNumero(), motivo);
+        // La rectificativa NO anula la original (ni genera registro de anulación): la original
+        // sigue EMITIDA, en el libro de IVA y en el 347, y la rectificativa (líneas en negativo)
+        // la corrige. Solo se anota la referencia cruzada.
+        anotarRectificacionEnOriginal(original, saved.getNumero(), motivo);
         registrarEventoRectificativa(original, saved, motivo);
 
         return saved;
@@ -297,15 +284,13 @@ public class FacturaService {
         }
     }
 
-    private void anularOriginalPorRectificativa(Factura original, String numeroRectificativa, String motivo) {
-        original.setEstado("ANULADA");
+    private void anotarRectificacionEnOriginal(Factura original, String numeroRectificativa, String motivo) {
         original.setObservacionesRevision(concatObservacion(
                 original.getObservacionesRevision(),
-                "Anulada por rectificativa " + numeroRectificativa
+                "Rectificada por " + numeroRectificativa
                         + (motivo != null && !motivo.isBlank() ? " - " + motivo : "")
         ));
         repository.save(original);
-        verifactuService.registrarAnulacionLocal(original, motivo);
     }
 
     private void registrarEventoRectificativa(Factura original, Factura saved, String motivo) {

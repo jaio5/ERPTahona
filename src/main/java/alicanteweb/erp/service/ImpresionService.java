@@ -12,6 +12,8 @@ import alicanteweb.erp.entities.HojaRutaEntrega;
 import alicanteweb.erp.entities.Lote;
 import alicanteweb.erp.entities.Receta;
 import alicanteweb.erp.entities.SifModalidad;
+import alicanteweb.erp.entities.VerifactuEvidence;
+import alicanteweb.erp.repository.VerifactuEvidenceRepository;
 import alicanteweb.erp.util.DesgloseFiscal;
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
@@ -73,13 +75,16 @@ public class ImpresionService {
     private final HojaRutaService hojaRutaService;
     private final CampoPersonalizadoService campoPersonalizadoService;
     private final SpringTemplateEngine templateEngine;
+    private final VerifactuEvidenceRepository verifactuEvidenceRepository;
 
     public ImpresionService(EmpresaConfigService empresaConfigService,
                             FacturacionEventoService facturacionEventoService,
                             HojaRutaService hojaRutaService,
                             CampoPersonalizadoService campoPersonalizadoService,
-                            SpringTemplateEngine templateEngine) {
+                            SpringTemplateEngine templateEngine,
+                            VerifactuEvidenceRepository verifactuEvidenceRepository) {
         this.empresaConfigService = empresaConfigService;
+        this.verifactuEvidenceRepository = verifactuEvidenceRepository;
         this.facturacionEventoService = facturacionEventoService;
         this.hojaRutaService = hojaRutaService;
         this.campoPersonalizadoService = campoPersonalizadoService;
@@ -125,7 +130,7 @@ public class ImpresionService {
             vars.put("factura", factura);
             EmpresaConfig empresa = empresaConfigService.getConfiguracionActivaOrThrow();
             vars.put("empresa", empresa);
-            vars.put("leyendaVerifactu", llevaLeyendaVerifactu(factura, empresa));
+            vars.put("leyendaVerifactu", llevaLeyendaVerifactu(factura, empresa, estadoRemisionAlta(factura)));
             vars.put("datosVerificacion", generarDatosVerificacion(factura));
             vars.put("desgloseIva", filasIva(desglose));
             vars.put("descuentoGlobal", desglose.descuentoGlobal());
@@ -251,13 +256,35 @@ public class ImpresionService {
     }
 
     /**
-     * La leyenda "VERI*FACTU" solo corresponde a un sistema en modalidad VERI*FACTU.
-     * En NO_VERIFACTU el QR se imprime, pero sin esa leyenda.
+     * La leyenda "VERI*FACTU · verificable en la AEAT" solo se imprime si la factura se ha remitido
+     * de verdad (la AEAT ha confirmado el registro: Correcto o AceptadoConErrores) y la modalidad es
+     * VERI*FACTU. En cualquier otro caso (remisión desactivada, respuesta no confirmada, estados
+     * históricos ENVIADO/VERIFICADO puestos sin llamar a la AEAT, NO_VERIFACTU) el QR, si existe,
+     * se imprime como "QR tributario del sistema", sin afirmar que es verificable en la AEAT.
+     *
+     * @param estadoRemision estado del último registro de alta de la factura (puede ser null)
      */
-    static boolean llevaLeyendaVerifactu(Factura factura, EmpresaConfig empresa) {
-        return Boolean.TRUE.equals(factura.getVerifactuEnviada())
+    static boolean llevaLeyendaVerifactu(Factura factura, EmpresaConfig empresa, String estadoRemision) {
+        return factura != null
+            && Boolean.TRUE.equals(factura.getVerifactuEnviada())
+            && VerifactuEvidence.esRemisionConfirmada(estadoRemision)
             && empresa != null
-            && empresa.getSifModalidad() != SifModalidad.NO_VERIFACTU;
+            && empresa.getSifModalidad() == SifModalidad.VERIFACTU;
+    }
+
+    /** Estado de remisión del último registro de alta de la factura, o null si no tiene. */
+    String estadoRemisionAlta(Factura factura) {
+        if (factura == null || factura.getId() == null) {
+            return null;
+        }
+        String estado = null;
+        for (VerifactuEvidence e : verifactuEvidenceRepository
+                .findAllByFacturaIdOrderByFechaGeneracionRegistroAscIdAsc(factura.getId().toString())) {
+            if (e.getTipoRegistro() == null || "ALTA".equalsIgnoreCase(e.getTipoRegistro())) {
+                estado = e.getEstado();
+            }
+        }
+        return estado;
     }
 
     private String generarDatosVerificacion(Factura factura) {

@@ -2,27 +2,22 @@ package alicanteweb.erp.service;
 
 import alicanteweb.erp.entities.VerifactuEvidence;
 import alicanteweb.erp.repository.VerifactuEvidenceRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Consulta de las evidencias (registros de facturación) VERI*FACTU. Es de solo lectura: los
+ * registros son inalterables (RRSIF), así que no se exponen guardado ni borrado, y las acciones
+ * que cambiaban el estado de remisión sin llamar a la AEAT están desactivadas.
+ */
 @Service
 @Transactional(readOnly = true)
 public class VerifactuEvidenceService {
-    private static final Logger log = LoggerFactory.getLogger(VerifactuEvidenceService.class);
-    private static final String ESTADO_PENDIENTE = "PENDIENTE";
-    private static final String ESTADO_ENVIADO = "ENVIADO";
-    private static final String ESTADO_VERIFICADO = "VERIFICADO";
 
     private final VerifactuEvidenceRepository repository;
     private final VerifactuService verifactuService;
@@ -49,72 +44,30 @@ public class VerifactuEvidenceService {
         return repository.findPage(normalize(estado), normalize(q), pageable);
     }
 
-    @Transactional
-    public VerifactuEvidence save(VerifactuEvidence evidence) { return repository.save(evidence); }
-    @Transactional
-    public void deleteById(Long id) { repository.deleteById(id); }
+    /**
+     * Mensaje para las acciones de reenvío y verificación, desactivadas: hasta que exista una
+     * remisión real (con respuesta de la AEAT o del proveedor) no se puede cambiar el estado de
+     * remisión de un registro sin llamar a la AEAT, porque se mostraría un estado fiscal falso.
+     */
+    public static final String MENSAJE_ACCION_DESACTIVADA =
+            "Acción desactivada: el ERP todavía no remite registros a la AEAT, así que no puede reenviar "
+            + "ni verificar su estado. El estado mostrado es el real del registro.";
 
-    @Transactional
-    public VerifactuEvidence registrarEvidenciaAEAT(String datosFactura, String serie, String numero) throws Exception {
-        log.info("Registrando evidencia VeriFactu para factura {}/{}", serie, numero);
-        VerifactuEvidence evidencia = new VerifactuEvidence();
-        evidencia.setFacturaId(datosFactura);
-        evidencia.setSerie(serie);
-        evidencia.setNumero(numero);
-        evidencia.setCreatedAt(Instant.now());
-        evidencia.setFechaEmision(Instant.now());
-        evidencia.setFechaGeneracionRegistro(Instant.now());
-        evidencia.setTipoRegistro("ALTA");
-        String hashAnterior = verifactuService.obtenerHashAnterior(serie);
-        evidencia.setHashAnterior(hashAnterior);
-        evidencia.setHash(verifactuService.generarHashEncadenado(datosFactura, hashAnterior));
-        evidencia.setHuellaRegistro(evidencia.getHash());
-        if (verifactuService.isEnabled()) {
-            evidencia.setSignature(verifactuService.firmarDatos(datosFactura.getBytes(StandardCharsets.UTF_8)));
-            evidencia.setCertFingerprint(verifactuService.getCertificateFingerprint());
-        }
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("origen", "VerifactuEvidenceService");
-        metadata.put("aeatDisponible", verifactuService.isAeatAvailable());
-        metadata.put("fechaRegistro", Instant.now().toString());
-        evidencia.setMetadata(metadata);
-        evidencia.setEstado(verifactuService.isAeatAvailable() ? ESTADO_ENVIADO : ESTADO_PENDIENTE);
-        if (verifactuService.isAeatAvailable()) evidencia.setFechaEnvio(Instant.now());
-        return repository.save(evidencia);
-    }
-
-    @Transactional
+    /**
+     * Desactivado (contención VERI*FACTU F0): antes ponía ENVIADO sin llamar a la AEAT.
+     * Los registros de facturación son inalterables y no se reenvían desde aquí.
+     */
     public VerifactuEvidence reenviarEvidencia(Long id) {
-        VerifactuEvidence evidencia = getRequired(id);
-        Map<String, Object> metadata = mutableMetadata(evidencia);
-        metadata.put("fechaReenvio", Instant.now().toString());
-        metadata.put("reenvioSolicitado", true);
-        evidencia.setMetadata(metadata);
-        if (verifactuService.isAeatAvailable()) {
-            evidencia.setEstado(ESTADO_ENVIADO);
-            evidencia.setFechaEnvio(Instant.now());
-            evidencia.setErrorMessage(null);
-        } else {
-            evidencia.setEstado(ESTADO_PENDIENTE);
-            evidencia.setErrorMessage("AEAT no disponible para reenvio");
-        }
-        return repository.save(evidencia);
+        getRequired(id);
+        throw new IllegalStateException(MENSAJE_ACCION_DESACTIVADA);
     }
 
-    @Transactional
+    /**
+     * Desactivado (contención VERI*FACTU F0): antes ponía VERIFICADO sin consultar a la AEAT.
+     */
     public VerifactuEvidence verificarEstadoAEAT(Long id) {
-        VerifactuEvidence evidencia = getRequired(id);
-        Map<String, Object> metadata = mutableMetadata(evidencia);
-        metadata.put("fechaVerificacion", Instant.now().toString());
-        metadata.put("aeatDisponible", verifactuService.isAeatAvailable());
-        evidencia.setMetadata(metadata);
-        if (verifactuService.isAeatAvailable() && ESTADO_ENVIADO.equalsIgnoreCase(evidencia.getEstado())) {
-            evidencia.setEstado(ESTADO_VERIFICADO);
-            evidencia.setErrorMessage(null);
-        } else if (!verifactuService.isAeatAvailable()) {
-            evidencia.setErrorMessage("AEAT no disponible para verificacion");
-        }
-        return repository.save(evidencia);
+        getRequired(id);
+        throw new IllegalStateException(MENSAJE_ACCION_DESACTIVADA);
     }
 
     public boolean validarCadenaIntegridad(String serie) {
@@ -124,9 +77,6 @@ public class VerifactuEvidenceService {
     private VerifactuEvidence getRequired(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Evidencia no encontrada con ID: " + id));
-    }
-    private Map<String, Object> mutableMetadata(VerifactuEvidence evidence) {
-        return evidence.getMetadata() != null ? new HashMap<>(evidence.getMetadata()) : new HashMap<>();
     }
     private String normalize(String value) {
         return value == null || value.isBlank() ? null : value.trim();

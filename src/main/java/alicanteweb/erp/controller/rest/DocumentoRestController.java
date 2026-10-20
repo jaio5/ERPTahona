@@ -129,14 +129,9 @@ public class DocumentoRestController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/facturas/{id}/anular-rectificativa")
-    @PreAuthorize("@permisos.puede('ventas', 'editar')")
-    public ResponseEntity<Void> anularRectificativa(@PathVariable Long id,
-                                                     @RequestParam String motivo,
-                                                     @RequestParam String numeroRectificativa) {
-        facturaService.anularPorRectificativa(id, numeroRectificativa, motivo);
-        return ResponseEntity.ok().build();
-    }
+    // POST /facturas/{id}/anular-rectificativa retirado (contención VERI*FACTU F0): anulaba
+    // cualquier factura, también emitidas, y generaba un registro de anulación. Una rectificativa
+    // no anula la original: se crea con crearRectificativa y la original sigue EMITIDA.
 
     // =================== ACCIONES ALBARÁN ===================
 

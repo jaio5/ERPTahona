@@ -8,17 +8,25 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.HashMap;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+/**
+ * Contención VERI*FACTU F0: la pantalla de evidencias no puede fabricar estados fiscales.
+ * "Reenviar" y "Verificar" ponían ENVIADO/VERIFICADO sin llamar a la AEAT y el servicio
+ * exponía el borrado de registros, que son inalterables.
+ */
 @ExtendWith(MockitoExtension.class)
 class VerifactuEvidenceServiceTest {
 
@@ -31,58 +39,64 @@ class VerifactuEvidenceServiceTest {
     @InjectMocks
     VerifactuEvidenceService service;
 
-    @Test
-    void reenviarEvidencia_marcaPendienteSiAeatNoEstaDisponible() {
-        VerifactuEvidence evidencia = new VerifactuEvidence();
-        evidencia.setId(10L);
-        evidencia.setMetadata(new HashMap<>());
-
-        when(repository.findById(10L)).thenReturn(Optional.of(evidencia));
-        when(verifactuService.isAeatAvailable()).thenReturn(false);
-        when(repository.save(any(VerifactuEvidence.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        VerifactuEvidence actualizada = service.reenviarEvidencia(10L);
-
-        assertEquals("PENDIENTE", actualizada.getEstado());
-        assertEquals("AEAT no disponible para reenvio", actualizada.getErrorMessage());
-        assertTrue(Boolean.TRUE.equals(actualizada.getMetadata().get("reenvioSolicitado")));
+    private VerifactuEvidence evidencia(long id, String estado) {
+        VerifactuEvidence e = new VerifactuEvidence();
+        e.setId(id);
+        e.setEstado(estado);
+        return e;
     }
 
     @Test
-    void verificarEstadoAeat_marcaVerificadoCuandoYaEstabaEnviado() {
-        VerifactuEvidence evidencia = new VerifactuEvidence();
-        evidencia.setId(11L);
-        evidencia.setEstado("ENVIADO");
-        evidencia.setMetadata(new HashMap<>());
+    void reenviarEvidencia_estaDesactivadoYNoCambiaElEstado() {
+        VerifactuEvidence e = evidencia(10L, VerifactuEvidence.ESTADO_NO_REMITIDO);
+        when(repository.findById(10L)).thenReturn(Optional.of(e));
 
-        when(repository.findById(11L)).thenReturn(Optional.of(evidencia));
-        when(verifactuService.isAeatAvailable()).thenReturn(true);
-        when(repository.save(any(VerifactuEvidence.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> service.reenviarEvidencia(10L));
 
-        VerifactuEvidence actualizada = service.verificarEstadoAEAT(11L);
-
-        assertEquals("VERIFICADO", actualizada.getEstado());
-        assertNull(actualizada.getErrorMessage());
-        assertNotNull(actualizada.getMetadata().get("fechaVerificacion"));
+        assertEquals(VerifactuEvidenceService.MENSAJE_ACCION_DESACTIVADA, ex.getMessage());
+        assertEquals(VerifactuEvidence.ESTADO_NO_REMITIDO, e.getEstado());
+        verify(repository, never()).save(any(VerifactuEvidence.class));
+        verifyNoInteractions(verifactuService);
     }
 
     @Test
-    void registrarEvidenciaAeat_firmaYMarcaEnviadoCuandoHayConexion() throws Exception {
-        when(verifactuService.obtenerHashAnterior("SER")).thenReturn("prev-hash");
-        when(verifactuService.generarHashEncadenado("factura-1", "prev-hash")).thenReturn("hash-actual");
-        when(verifactuService.isEnabled()).thenReturn(true);
-        when(verifactuService.firmarDatos(any(byte[].class))).thenReturn(new byte[]{1, 2, 3});
-        when(verifactuService.getCertificateFingerprint()).thenReturn("fingerprint");
-        when(verifactuService.isAeatAvailable()).thenReturn(true);
-        when(repository.save(any(VerifactuEvidence.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    void verificarEstadoAeat_estaDesactivadoYNoMarcaVerificado() {
+        VerifactuEvidence e = evidencia(11L, "ENVIADO");
+        when(repository.findById(11L)).thenReturn(Optional.of(e));
 
-        VerifactuEvidence evidencia = service.registrarEvidenciaAEAT("factura-1", "SER", "F-SER-2026-0001");
+        assertThrows(IllegalStateException.class, () -> service.verificarEstadoAEAT(11L));
 
-        assertEquals("hash-actual", evidencia.getHash());
-        assertEquals("hash-actual", evidencia.getHuellaRegistro());
-        assertEquals("fingerprint", evidencia.getCertFingerprint());
-        assertEquals("ENVIADO", evidencia.getEstado());
-        assertNotNull(evidencia.getFechaEnvio());
-        verify(repository).save(any(VerifactuEvidence.class));
+        assertEquals("ENVIADO", e.getEstado());
+        verify(repository, never()).save(any(VerifactuEvidence.class));
+        verifyNoInteractions(verifactuService);
+    }
+
+    @Test
+    void accionesSobreEvidenciaInexistente_informanDeQueNoExiste() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> service.reenviarEvidencia(99L));
+        assertEquals("Evidencia no encontrada con ID: 99", ex.getMessage());
+    }
+
+    @Test
+    void elServicioNoExponeBorradoNiGuardadoDeEvidencias() {
+        boolean exponeEscritura = Arrays.stream(VerifactuEvidenceService.class.getDeclaredMethods())
+                .filter(m -> Modifier.isPublic(m.getModifiers()))
+                .map(Method::getName)
+                .anyMatch(n -> n.startsWith("delete") || n.equals("save") || n.equals("registrarEvidenciaAEAT"));
+        assertFalse(exponeEscritura, "VerifactuEvidenceService debe ser de solo lectura");
+    }
+
+    @Test
+    void soloAceptadoYAceptadoConErroresConfirmanLaRemision() {
+        assertEquals(true, VerifactuEvidence.esRemisionConfirmada(VerifactuEvidence.ESTADO_ACEPTADO));
+        assertEquals(true, VerifactuEvidence.esRemisionConfirmada(VerifactuEvidence.ESTADO_ACEPTADO_CON_ERRORES));
+        assertFalse(VerifactuEvidence.esRemisionConfirmada("ENVIADO"));
+        assertFalse(VerifactuEvidence.esRemisionConfirmada("VERIFICADO"));
+        assertFalse(VerifactuEvidence.esRemisionConfirmada(VerifactuEvidence.ESTADO_NO_REMITIDO));
+        assertFalse(VerifactuEvidence.esRemisionConfirmada(VerifactuEvidence.ESTADO_PENDIENTE));
+        assertFalse(VerifactuEvidence.esRemisionConfirmada(VerifactuEvidence.ESTADO_RESPUESTA_NO_CONFIRMADA));
+        assertFalse(VerifactuEvidence.esRemisionConfirmada(null));
     }
 }

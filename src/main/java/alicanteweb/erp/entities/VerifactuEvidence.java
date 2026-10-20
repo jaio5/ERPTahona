@@ -16,6 +16,31 @@ import java.util.Map;
 @Entity
 @Table(name = "verifactu_evidence")
 public class VerifactuEvidence {
+
+    // ========== ESTADOS DE REMISIÓN ==========
+    // Solo ACEPTADO y ACEPTADO_CON_ERRORES reflejan una respuesta real de la AEAT que
+    // registra el registro de facturación. El resto son estados honestos de "no remitido".
+    // ENVIADO y VERIFICADO son históricos: los ponían el modo local y las acciones
+    // "Reenviar"/"Verificar" sin llamar a la AEAT, así que NO prueban una remisión.
+
+    /** Registro generado, aún sin resultado de remisión. */
+    public static final String ESTADO_PENDIENTE = "PENDIENTE";
+    /** Registro generado en local con la remisión a la AEAT desactivada: no se ha enviado. */
+    public static final String ESTADO_NO_REMITIDO = "NO_REMITIDO";
+    /** Se llamó a la AEAT pero la respuesta no confirma el registro (no se pudo interpretar). */
+    public static final String ESTADO_RESPUESTA_NO_CONFIRMADA = "RESPUESTA_NO_CONFIRMADA";
+    /** La AEAT respondió Correcto. */
+    public static final String ESTADO_ACEPTADO = "ACEPTADO";
+    /** La AEAT respondió AceptadoConErrores: el registro consta en la AEAT, con avisos. */
+    public static final String ESTADO_ACEPTADO_CON_ERRORES = "ACEPTADO_CON_ERRORES";
+    /** Error de comunicación o rechazo. */
+    public static final String ESTADO_ERROR = "ERROR";
+
+    /** Indica si el estado prueba que la AEAT registró de verdad el registro de facturación. */
+    public static boolean esRemisionConfirmada(String estado) {
+        return ESTADO_ACEPTADO.equals(estado) || ESTADO_ACEPTADO_CON_ERRORES.equals(estado);
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -63,7 +88,7 @@ public class VerifactuEvidence {
 
     @Size(max = 50)
     @Column(name = "estado", length = 50)
-    private String estado; // PENDIENTE, ENVIADO, ERROR, VERIFICADO
+    private String estado; // ver constantes ESTADO_* (ENVIADO/VERIFICADO: solo datos históricos)
 
     @Column(name = "error_message")
     private String errorMessage;

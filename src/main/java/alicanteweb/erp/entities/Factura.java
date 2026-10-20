@@ -344,6 +344,15 @@ public class Factura {
     private static final java.util.Set<String> ESTADOS_INALTERABLES =
             java.util.Set.of("EMITIDA", "PAGADA", "VENCIDA", "ANULADA", "RECTIFICADA");
 
+    /**
+     * Indica si el estado corresponde a una factura ya expedida (en el registro de facturación).
+     * Es la señal de inalterabilidad: no depende de verifactuEnviada, que solo indica si el
+     * registro se ha remitido de verdad a la AEAT (una factura puede estar expedida sin remitir).
+     */
+    public static boolean esEstadoInalterable(String estado) {
+        return estado != null && ESTADOS_INALTERABLES.contains(estado.trim().toUpperCase(java.util.Locale.ROOT));
+    }
+
     /** Estado tal y como está persistido en BD (no el valor en memoria aún sin flush). */
     @Transient
     @Getter(lombok.AccessLevel.PACKAGE)
@@ -400,7 +409,9 @@ public class Factura {
 
     @PreRemove
     private void protegerBorrado() {
-        boolean protegida = (estado != null && ESTADOS_INALTERABLES.contains(estado))
+        // El estado (expedida) es la señal; verifactuEnviada se mantiene como defensa adicional
+        boolean protegida = esEstadoInalterable(estado)
+                || esEstadoInalterable(estadoPersistido)
                 || Boolean.TRUE.equals(verifactuEnviada);
         if (protegida) {
             throw new IllegalStateException("La factura " + numero

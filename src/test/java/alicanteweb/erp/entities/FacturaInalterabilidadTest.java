@@ -126,4 +126,40 @@ class FacturaInalterabilidadTest {
         assertDoesNotThrow(
                 () -> ReflectionTestUtils.invokeMethod(lineaNueva, "protegerLineaDeFacturaEmitida"));
     }
+
+    // ===== Contención VERI*FACTU F0: la señal es el estado expedido, no verifactuEnviada =====
+
+    @Test
+    void facturaExpedidaSinRemitirSigueSiendoInalterable() {
+        Factura factura = facturaEmitida();
+        factura.setVerifactuEnviada(false);
+        assertThrows(IllegalStateException.class, () -> simularDelete(factura));
+        factura.setTotal(new BigDecimal("1.00"));
+        assertThrows(IllegalStateException.class, () -> simularFlushUpdate(factura));
+
+        for (String estado : new String[]{"PAGADA", "VENCIDA", "RECTIFICADA", "ANULADA"}) {
+            Factura f = facturaEmitida();
+            f.setEstado(estado);
+            f.setVerifactuEnviada(false);
+            simularCargaDesdeBd(f);
+            assertThrows(IllegalStateException.class, () -> simularDelete(f), estado);
+        }
+    }
+
+    @Test
+    void anotarLaRectificacionEnLaOriginalNoAlteraSuContenidoFiscal() {
+        Factura original = facturaEmitida();
+        original.setObservacionesRevision("Rectificada por R-TPV-2026-0001 - error de precio");
+        assertDoesNotThrow(() -> simularFlushUpdate(original));
+    }
+
+    @Test
+    void esEstadoInalterableReconoceLosEstadosExpedidos() {
+        for (String estado : new String[]{"EMITIDA", "PAGADA", "VENCIDA", "ANULADA", "RECTIFICADA", "emitida", " EMITIDA "}) {
+            org.junit.jupiter.api.Assertions.assertTrue(Factura.esEstadoInalterable(estado), estado);
+        }
+        for (String estado : new String[]{"BORRADOR", "REVISION", "", null}) {
+            org.junit.jupiter.api.Assertions.assertFalse(Factura.esEstadoInalterable(estado), String.valueOf(estado));
+        }
+    }
 }

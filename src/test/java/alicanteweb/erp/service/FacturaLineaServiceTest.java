@@ -51,4 +51,19 @@ class FacturaLineaServiceTest {
         assertThrows(IllegalStateException.class, () -> service.deleteById(7L));
         verify(repository, never()).deleteById(7L);
     }
+
+    /** F0: la protección depende del estado expedido, no de que se haya remitido a la AEAT. */
+    @Test
+    void save_rechazaLineaDeFacturaExpedidaNoRemitida() {
+        for (String estado : new String[]{"EMITIDA", "PAGADA", "VENCIDA", "RECTIFICADA"}) {
+            Factura factura = new Factura();
+            factura.setEstado(estado);
+            factura.setVerifactuEnviada(false);
+            FacturaLinea linea = new FacturaLinea();
+            linea.setFactura(factura);
+
+            assertThrows(IllegalStateException.class, () -> service.save(linea), estado);
+            verify(repository, never()).save(linea);
+        }
+    }
 }

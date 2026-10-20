@@ -7,6 +7,8 @@ import alicanteweb.erp.entities.EmpresaConfig;
 import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.entities.SifModalidad;
+import alicanteweb.erp.entities.VerifactuEvidence;
+import alicanteweb.erp.repository.VerifactuEvidenceRepository;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
@@ -57,6 +59,7 @@ class ImpresionServiceFormatoTest {
     @Autowired ImpresionService impresionService;
     @Autowired SpringTemplateEngine templateEngine;
     @MockBean EmpresaConfigService empresaConfigService;
+    @Autowired VerifactuEvidenceRepository evidenceRepository;
 
     private EmpresaConfig empresa(boolean medioFolio) {
         EmpresaConfig e = new EmpresaConfig();
@@ -251,13 +254,38 @@ class ImpresionServiceFormatoTest {
     private static final String QR_MINIMO =
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 
-    private String textoFacturaEmitida(SifModalidad modalidad) throws Exception {
+    /** Id ficticio de factura (no persistida) para enlazar su registro de alta en verifactu_evidence. */
+    private static final long FACTURA_ID = 987_654L;
+
+    private void registroAlta(String estado) {
+        VerifactuEvidence ev = new VerifactuEvidence();
+        ev.setFacturaId(String.valueOf(FACTURA_ID));
+        ev.setSerie("F-FMT");
+        ev.setNumero("F-FMT");
+        ev.setHash("ABCDEF0123456789ABCDEF0123456789");
+        ev.setTipoRegistro("ALTA");
+        ev.setEstado(estado);
+        ev.setCreatedAt(java.time.Instant.now());
+        ev.setFechaGeneracionRegistro(java.time.Instant.now());
+        evidenceRepository.save(ev);
+    }
+
+    /**
+     * Factura expedida con QR y huella. {@code estadoRemision} es el estado de su registro de alta
+     * (null: sin registro) y {@code enviada} el indicador verifactuEnviada de la factura.
+     */
+    private String textoFacturaEmitida(SifModalidad modalidad, String estadoRemision, boolean enviada) throws Exception {
         EmpresaConfig e = empresa(false);
         e.setSifModalidad(modalidad);
         when(empresaConfigService.getConfiguracionActivaOrThrow()).thenReturn(e);
         when(empresaConfigService.getConfiguracionActiva()).thenReturn(Optional.of(e));
+        if (estadoRemision != null) {
+            registroAlta(estadoRemision);
+        }
         Factura f = factura();
-        f.setVerifactuEnviada(true);
+        f.setId(FACTURA_ID);
+        f.setEstado("EMITIDA");
+        f.setVerifactuEnviada(enviada);
         f.setVerifactuQr(QR_MINIMO);
         f.setVerifactuHash("ABCDEF0123456789ABCDEF0123456789");
         return textoPrimeraPagina(impresionService.generarFacturaPdf(f));
@@ -265,17 +293,63 @@ class ImpresionServiceFormatoTest {
 
     @Test
     void enModoNoVerifactuLaFacturaNoLlevaLeyendaVerifactu() throws Exception {
-        String texto = textoFacturaEmitida(SifModalidad.NO_VERIFACTU);
+        String texto = textoFacturaEmitida(SifModalidad.NO_VERIFACTU, VerifactuEvidence.ESTADO_ACEPTADO, true);
         assertFalse(texto.contains("VERI*FACTU"), texto);
         assertTrue(texto.contains("QR tributario del sistema"), texto);
         assertTrue(texto.contains("SISTEMA:NO_VERIFACTU"), texto);
     }
 
     @Test
-    void enModoVerifactuLaFacturaEmitidaLlevaLaLeyenda() throws Exception {
-        String texto = textoFacturaEmitida(SifModalidad.VERIFACTU);
+    void enModoVerifactuLaFacturaRemitidaYAceptadaLlevaLaLeyenda() throws Exception {
+        String texto = textoFacturaEmitida(SifModalidad.VERIFACTU, VerifactuEvidence.ESTADO_ACEPTADO, true);
         assertTrue(texto.contains("VERI*FACTU"), texto);
+        assertTrue(texto.contains("verificable en la AEAT"), texto);
         assertTrue(texto.contains("SISTEMA:VERIFACTU"), texto);
+    }
+
+    /** F0: con la remisión desactivada la factura se expide, pero no se presenta como verificable. */
+    @Test
+    void enModoVerifactuSinRemisionNoLlevaLaLeyendaAunqueTengaQr() throws Exception {
+        String texto = textoFacturaEmitida(SifModalidad.VERIFACTU, VerifactuEvidence.ESTADO_NO_REMITIDO, false);
+        assertFalse(texto.contains("verificable en la AEAT"), texto);
+        assertTrue(texto.contains("QR tributario del sistema"), texto);
+    }
+
+    /**
+     * Datos históricos: facturas con verifactuEnviada=true y evidencia ENVIADO puestos sin llamar a la
+     * AEAT. No prueban una remisión real, así que no se imprime la leyenda.
+     */
+    @Test
+    void elEstadoHistoricoEnviadoSinConfirmacionNoLlevaLaLeyenda() throws Exception {
+        String texto = textoFacturaEmitida(SifModalidad.VERIFACTU, "ENVIADO", true);
+        assertFalse(texto.contains("verificable en la AEAT"), texto);
+        assertTrue(texto.contains("QR tributario del sistema"), texto);
+    }
+
+    @Test
+    void sinRegistroDeAltaNoLlevaLaLeyenda() throws Exception {
+        String texto = textoFacturaEmitida(SifModalidad.VERIFACTU, null, true);
+        assertFalse(texto.contains("verificable en la AEAT"), texto);
+    }
+
+    @Test
+    void reglaDeLaLeyenda() {
+        EmpresaConfig verifactu = empresa(false);
+        verifactu.setSifModalidad(SifModalidad.VERIFACTU);
+        Factura enviada = factura();
+        enviada.setVerifactuEnviada(true);
+        Factura noEnviada = factura();
+        noEnviada.setVerifactuEnviada(false);
+
+        assertTrue(ImpresionService.llevaLeyendaVerifactu(enviada, verifactu, VerifactuEvidence.ESTADO_ACEPTADO));
+        assertTrue(ImpresionService.llevaLeyendaVerifactu(enviada, verifactu, VerifactuEvidence.ESTADO_ACEPTADO_CON_ERRORES));
+        assertFalse(ImpresionService.llevaLeyendaVerifactu(noEnviada, verifactu, VerifactuEvidence.ESTADO_ACEPTADO));
+        assertFalse(ImpresionService.llevaLeyendaVerifactu(enviada, verifactu, VerifactuEvidence.ESTADO_RESPUESTA_NO_CONFIRMADA));
+        assertFalse(ImpresionService.llevaLeyendaVerifactu(enviada, verifactu, VerifactuEvidence.ESTADO_PENDIENTE));
+        assertFalse(ImpresionService.llevaLeyendaVerifactu(enviada, verifactu, "VERIFICADO"));
+        assertFalse(ImpresionService.llevaLeyendaVerifactu(enviada, null, VerifactuEvidence.ESTADO_ACEPTADO));
+        EmpresaConfig sinModalidad = empresa(false);
+        assertFalse(ImpresionService.llevaLeyendaVerifactu(enviada, sinModalidad, VerifactuEvidence.ESTADO_ACEPTADO));
     }
 
     // ===== Importe de línea del albarán neto de descuento =====

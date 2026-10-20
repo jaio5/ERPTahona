@@ -8,6 +8,8 @@
                    th:text="${pendientes} + ' pendientes'">0 pendientes</a>
                 <a th:href="@{/web/verifactu(estado='ERROR')}" class="badge-estado badge-estado-peligro text-decoration-none"
                    th:text="${erroresCount} + ' errores'">0 errores</a>
+                <a th:href="@{/web/verifactu(estado='NO_REMITIDO')}" class="badge-estado badge-estado-aviso text-decoration-none"
+                   th:text="${noRemitidos} + ' no remitidos a la AEAT'">0 no remitidos a la AEAT</a>
             </p>
         </div>
     </div>
@@ -24,8 +26,12 @@
                 <select name="estado" class="form-select form-select-sm" aria-label="Estado" data-autosubmit>
                     <option value="">Todos los estados</option>
                     <option value="PENDIENTE" th:selected="${estado == 'PENDIENTE'}">Pendiente</option>
-                    <option value="ENVIADO" th:selected="${estado == 'ENVIADO'}">Enviado</option>
-                    <option value="VERIFICADO" th:selected="${estado == 'VERIFICADO'}">Verificado</option>
+                    <option value="NO_REMITIDO" th:selected="${estado == 'NO_REMITIDO'}">No remitido a la AEAT</option>
+                    <option value="RESPUESTA_NO_CONFIRMADA" th:selected="${estado == 'RESPUESTA_NO_CONFIRMADA'}">Respuesta AEAT no confirmada</option>
+                    <option value="ACEPTADO" th:selected="${estado == 'ACEPTADO'}">Aceptado por la AEAT</option>
+                    <option value="ACEPTADO_CON_ERRORES" th:selected="${estado == 'ACEPTADO_CON_ERRORES'}">Aceptado con errores</option>
+                    <option value="ENVIADO" th:selected="${estado == 'ENVIADO'}">Enviado (histórico, sin confirmar)</option>
+                    <option value="VERIFICADO" th:selected="${estado == 'VERIFICADO'}">Verificado (histórico, sin confirmar)</option>
                     <option value="ERROR" th:selected="${estado == 'ERROR'}">Error</option>
                 </select>
             </div>

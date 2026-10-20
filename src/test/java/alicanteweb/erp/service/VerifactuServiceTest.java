@@ -257,4 +257,191 @@ class VerifactuServiceTest {
         assertEquals("S", service.tipoRectificativaOficial("SUSTITUCION"));
         assertEquals("I", service.tipoRectificativaOficial("DIFERENCIAS"));
     }
+
+    // ===== Contención F0: ningún estado fiscal falso al emitir =====
+
+    /** Prepara una factura en REVISION lista para emitir y los colaboradores mínimos del flujo. */
+    private Factura facturaParaEmitir(VerifactuService svc) {
+        Factura factura = facturaBase();
+        factura.setId(42L);
+        factura.setEstado("REVISION");
+        lenient().when(empresaConfigService.existeConfiguracionActiva()).thenReturn(true);
+        lenient().when(empresaConfigService.isFuncionamientoVerifactuVigente(empresa)).thenReturn(true);
+        lenient().when(facturaLineaService.findByFacturaId(42L)).thenReturn(lineaSimple());
+        lenient().when(qrCodeService.generarQRVeriFactu(anyString(), anyString(), anyString(), anyString())).thenReturn("QR");
+        lenient().when(evidenceRepository.save(org.mockito.ArgumentMatchers.any(VerifactuEvidence.class)))
+                .thenAnswer(inv -> {
+                    VerifactuEvidence ev = inv.getArgument(0);
+                    if (ev.getId() == null) ev.setId(7L);
+                    return ev;
+                });
+        return factura;
+    }
+
+    private VerifactuEvidence ultimaEvidenciaGuardada() {
+        org.mockito.ArgumentCaptor<VerifactuEvidence> captor = org.mockito.ArgumentCaptor.forClass(VerifactuEvidence.class);
+        org.mockito.Mockito.verify(evidenceRepository, org.mockito.Mockito.atLeastOnce()).save(captor.capture());
+        return captor.getValue();
+    }
+
+    /** Servicio con remisión "habilitada": certificado de prueba y cliente SOAP simulado. */
+    private VerifactuService servicioConRemision(VerifactuAeatSoapClient cliente) throws Exception {
+        @SuppressWarnings("unchecked")
+        ObjectProvider<VerifactuAeatSoapClient> provider = mock(ObjectProvider.class);
+        lenient().when(provider.getIfAvailable()).thenReturn(cliente);
+        VerifactuService svc = new VerifactuService(evidenceRepository, empresaConfigService,
+                facturaLineaService, qrCodeService, provider, facturacionEventoService);
+        ReflectionTestUtils.setField(svc, "sistemaNombreProductor", "");
+        ReflectionTestUtils.setField(svc, "sistemaNifProductor", "");
+        ReflectionTestUtils.setField(svc, "sistemaId", "01");
+        ReflectionTestUtils.setField(svc, "sistemaNumeroInstalacion", "1");
+        ReflectionTestUtils.setField(svc, "sistemaSoloVerifactu", "S");
+        ReflectionTestUtils.setField(svc, "aeatEnabled", true);
+        ReflectionTestUtils.setField(svc, "aeatEndpoint", "https://prewww1.aeat.es/test");
+        java.security.KeyPairGenerator kpg = java.security.KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(2048);
+        ReflectionTestUtils.setField(svc, "privateKey", kpg.generateKeyPair().getPrivate());
+        ReflectionTestUtils.setField(svc, "enabled", true);
+        return svc;
+    }
+
+    @Test
+    void conRemisionDesactivadaLaFacturaSeExpidePeroNoConstaComoEnviada() {
+        ReflectionTestUtils.setField(service, "aeatEnabled", false);
+        Factura factura = facturaParaEmitir(service);
+
+        service.enviarFacturaVerifactu(factura);
+
+        assertEquals("EMITIDA", factura.getEstado(), "La factura queda expedida");
+        assertFalse(Boolean.TRUE.equals(factura.getVerifactuEnviada()), "No se ha remitido nada a la AEAT");
+        assertNotNull(factura.getVerifactuHash());
+        VerifactuEvidence ev = ultimaEvidenciaGuardada();
+        assertEquals(VerifactuEvidence.ESTADO_NO_REMITIDO, ev.getEstado());
+        assertNotEquals("ENVIADO", ev.getEstado());
+        assertNull(ev.getFechaEnvio(), "Sin remisión no hay fecha de envío");
+        org.mockito.Mockito.verify(facturacionEventoService).registrarEvento(
+                org.mockito.ArgumentMatchers.eq(FacturacionEventoService.AMBITO_FACTURAS),
+                org.mockito.ArgumentMatchers.eq("ENVIO_AEAT_OMITIDO"),
+                org.mockito.ArgumentMatchers.eq("F-GEN-2026-0001"),
+                org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void conRespuestaCorrectaDeLaAeatLaFacturaConstaComoRemitida() throws Exception {
+        VerifactuAeatSoapClient cliente = mock(VerifactuAeatSoapClient.class);
+        org.mockito.Mockito.when(cliente.enviarFacturaAeat(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn("ACEPTADA");
+        VerifactuService svc = servicioConRemision(cliente);
+        Factura factura = facturaParaEmitir(svc);
+
+        svc.enviarFacturaVerifactu(factura);
+
+        assertEquals("EMITIDA", factura.getEstado());
+        assertTrue(Boolean.TRUE.equals(factura.getVerifactuEnviada()));
+        VerifactuEvidence ev = ultimaEvidenciaGuardada();
+        assertEquals(VerifactuEvidence.ESTADO_ACEPTADO, ev.getEstado());
+        assertEquals("Correcto", ev.getCodigoRespuestaAEAT());
+        assertNotNull(ev.getFechaEnvio());
+    }
+
+    @Test
+    void conAceptadoConErroresConstaRemitidaConSusAvisos() throws Exception {
+        VerifactuAeatSoapClient cliente = mock(VerifactuAeatSoapClient.class);
+        org.mockito.Mockito.when(cliente.enviarFacturaAeat(anyString(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn("ACEPTADA_CON_ERRORES: 1100 aviso");
+        VerifactuService svc = servicioConRemision(cliente);
+        Factura factura = facturaParaEmitir(svc);
+
+        svc.enviarFacturaVerifactu(factura);
+
+        assertTrue(Boolean.TRUE.equals(factura.getVerifactuEnviada()));
+        VerifactuEvidence ev = ultimaEvidenciaGuardada();
+        assertEquals(VerifactuEvidence.ESTADO_ACEPTADO_CON_ERRORES, ev.getEstado());
+        assertEquals("AceptadoConErrores", ev.getCodigoRespuestaAEAT());
+        assertTrue(ev.getErrorMessage().contains("1100"));
+    }
+
+    /**
+     * Antes una respuesta que no se sabía interpretar (RESPUESTA_INESPERADA) se daba por buena
+     * (código OK, ENVIADO, verifactuEnviada=true). Ahora la factura se expide, pero el registro
+     * queda como no confirmado y la factura no consta como remitida.
+     */
+    @Test
+    void conRespuestaInesperadaNoSeDaPorRemitida() throws Exception {
+        VerifactuAeatSoapClient cliente = mock(VerifactuAeatSoapClient.class);
+        org.mockito.Mockito.when(cliente.enviarFacturaAeat(anyString(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn("RESPUESTA_INESPERADA");
+        VerifactuService svc = servicioConRemision(cliente);
+        Factura factura = facturaParaEmitir(svc);
+
+        svc.enviarFacturaVerifactu(factura);
+
+        assertEquals("EMITIDA", factura.getEstado());
+        assertFalse(Boolean.TRUE.equals(factura.getVerifactuEnviada()));
+        VerifactuEvidence ev = ultimaEvidenciaGuardada();
+        assertEquals(VerifactuEvidence.ESTADO_RESPUESTA_NO_CONFIRMADA, ev.getEstado());
+        assertNotEquals("OK", ev.getCodigoRespuestaAEAT());
+        assertNull(ev.getFechaEnvio());
+        org.mockito.Mockito.verify(facturacionEventoService).registrarEvento(
+                org.mockito.ArgumentMatchers.eq(FacturacionEventoService.AMBITO_FACTURAS),
+                org.mockito.ArgumentMatchers.eq("ENVIO_AEAT_SIN_CONFIRMAR"),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void conErrorDeComunicacionLaFacturaNoSeExpideYLaEvidenciaQuedaEnError() throws Exception {
+        VerifactuAeatSoapClient cliente = mock(VerifactuAeatSoapClient.class);
+        org.mockito.Mockito.when(cliente.enviarFacturaAeat(anyString(), org.mockito.ArgumentMatchers.any()))
+                .thenThrow(new java.io.IOException("timeout"));
+        VerifactuService svc = servicioConRemision(cliente);
+        Factura factura = facturaParaEmitir(svc);
+
+        assertThrows(alicanteweb.erp.exception.ErpException.class, () -> svc.enviarFacturaVerifactu(factura));
+
+        assertEquals("REVISION", factura.getEstado());
+        assertFalse(Boolean.TRUE.equals(factura.getVerifactuEnviada()));
+        assertEquals(VerifactuEvidence.ESTADO_ERROR, ultimaEvidenciaGuardada().getEstado());
+    }
+
+    @Test
+    void estadoRemisionSoloConfirmaRespuestasDeAceptacion() {
+        assertEquals(VerifactuEvidence.ESTADO_ACEPTADO, VerifactuService.estadoRemisionDesdeRespuesta("ACEPTADA"));
+        assertEquals(VerifactuEvidence.ESTADO_ACEPTADO_CON_ERRORES,
+                VerifactuService.estadoRemisionDesdeRespuesta("ACEPTADA_CON_ERRORES: x"));
+        assertEquals(VerifactuEvidence.ESTADO_RESPUESTA_NO_CONFIRMADA, VerifactuService.estadoRemisionDesdeRespuesta("SIMULADO_OK"));
+        assertEquals(VerifactuEvidence.ESTADO_RESPUESTA_NO_CONFIRMADA, VerifactuService.estadoRemisionDesdeRespuesta("RESPUESTA_INESPERADA"));
+        assertEquals(VerifactuEvidence.ESTADO_RESPUESTA_NO_CONFIRMADA, VerifactuService.estadoRemisionDesdeRespuesta(""));
+        assertEquals(VerifactuEvidence.ESTADO_RESPUESTA_NO_CONFIRMADA, VerifactuService.estadoRemisionDesdeRespuesta(null));
+    }
+
+    /**
+     * error_message es VARCHAR(255): unos avisos largos de AceptadoConErrores no deben romper el
+     * guardado de la evidencia después de que la AEAT haya aceptado el registro.
+     */
+    @Test
+    void conAceptadoConErroresLargosElMensajeCabeEnLaColumna() throws Exception {
+        String avisos = "ACEPTADA_CON_ERRORES: " + "1100 aviso muy largo; ".repeat(40);
+        VerifactuAeatSoapClient cliente = mock(VerifactuAeatSoapClient.class);
+        org.mockito.Mockito.when(cliente.enviarFacturaAeat(anyString(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(avisos);
+        VerifactuService svc = servicioConRemision(cliente);
+        Factura factura = facturaParaEmitir(svc);
+
+        svc.enviarFacturaVerifactu(factura);
+
+        VerifactuEvidence ev = ultimaEvidenciaGuardada();
+        assertEquals(VerifactuEvidence.ESTADO_ACEPTADO_CON_ERRORES, ev.getEstado());
+        assertTrue(ev.getErrorMessage().length() <= VerifactuService.MAX_ERROR_MESSAGE);
+        assertEquals(avisos, ev.getMetadata().get("respuesta_aeat"), "La respuesta completa se conserva en metadata");
+    }
+
+    @Test
+    void limitarMensajeErrorRespetaLaLongitudDeLaColumna() {
+        assertNull(VerifactuService.limitarMensajeError(null));
+        assertEquals("corto", VerifactuService.limitarMensajeError("corto"));
+        String largo = "x".repeat(300);
+        String recortado = VerifactuService.limitarMensajeError(largo);
+        assertEquals(VerifactuService.MAX_ERROR_MESSAGE, recortado.length());
+        assertTrue(recortado.endsWith("..."));
+    }
 }

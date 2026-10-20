@@ -4,7 +4,7 @@
             <h1 th:text="${titulo}">Evidencia VERI*FACTU</h1>
             <p>
                 <span class="badge-status" th:attr="data-status=${evidencia.estado?.toLowerCase()}" th:text="${evidencia.estado ?: '—'}"></span>
-                <span th:if="${evidencia.fechaEnvio != null}" th:text="'Enviada el ' + ${#temporals.format(evidencia.fechaEnvio, 'dd/MM/yyyy HH:mm')}"></span>
+                <span th:if="${evidencia.fechaEnvio != null}" th:text="'Remitida el ' + ${#temporals.format(evidencia.fechaEnvio, 'dd/MM/yyyy HH:mm')}"></span>
             </p>
         </div>
         <div class="page-header-actions">
@@ -63,15 +63,19 @@
         </div>
         <div class="col-lg-4">
             <div class="form-card">
-                <h2 class="card-heading mb-3">Acciones</h2>
-                <div class="action-stack">
-                    <form th:action="@{/web/verifactu/{id}/verificar(id=${evidencia.id})}" method="post">
-                        <button class="btn btn-primary" data-no-double-click><i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i>Verificar estado</button>
-                    </form>
-                    <form th:action="@{/web/verifactu/{id}/reenviar(id=${evidencia.id})}" method="post">
-                        <button class="btn btn-outline-secondary" data-no-double-click><i class="bi bi-send me-2" aria-hidden="true"></i>Reenviar</button>
-                    </form>
-                </div>
+                <h2 class="card-heading mb-3">Estado de remisión</h2>
+                <!-- Reenviar/Verificar desactivados (contención VERI*FACTU F0): cambiaban el estado
+                     sin llamar a la AEAT. El estado mostrado es el real del registro. -->
+                <p class="text-muted small mb-2" th:if="${evidencia.estado == 'NO_REMITIDO'}">
+                    Este registro se generó con la remisión a la AEAT desactivada: no se ha enviado a la AEAT.
+                </p>
+                <p class="text-muted small mb-2" th:if="${evidencia.estado == 'ENVIADO' or evidencia.estado == 'VERIFICADO'}">
+                    Estado histórico: se asignó sin confirmación de la AEAT y no prueba que el registro se remitiera.
+                </p>
+                <p class="text-muted small mb-0">
+                    El reenvío y la verificación del estado en la AEAT no están disponibles hasta que el ERP remita
+                    registros de verdad.
+                </p>
             </div>
         </div>
     </div>

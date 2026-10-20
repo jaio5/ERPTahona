@@ -1,5 +1,6 @@
 package alicanteweb.erp.service;
 
+import alicanteweb.erp.entities.Factura;
 import alicanteweb.erp.entities.FacturaLinea;
 import alicanteweb.erp.repository.FacturaLineaRepository;
 import org.springframework.stereotype.Service;
@@ -52,7 +53,9 @@ public class FacturaLineaService {
         if (linea == null || linea.getFactura() == null) {
             return;
         }
-        if ("EMITIDA".equalsIgnoreCase(linea.getFactura().getEstado()) || Boolean.TRUE.equals(linea.getFactura().getVerifactuEnviada())) {
+        // La señal de inalterabilidad es el estado expedido (EMITIDA, PAGADA, VENCIDA...), no
+        // verifactuEnviada, que solo indica una remisión real a la AEAT
+        if (Factura.esEstadoInalterable(linea.getFactura().getEstado()) || Boolean.TRUE.equals(linea.getFactura().getVerifactuEnviada())) {
             throw new IllegalStateException("No se pueden modificar lineas de una factura emitida.");
         }
     }

@@ -22,6 +22,8 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
     Optional<Factura> findBySerieAndNumero(String serie, String numero);
     boolean existsByNumero(String numero);
     boolean existsBySerieAndNumero(String serie, String numero);
+    /** Rectificativas de una factura (por número de la original) en alguno de los estados dados. */
+    boolean existsByFacturaRectificadaNumeroAndEstadoIn(String facturaRectificadaNumero, java.util.Collection<String> estados);
     Optional<Factura> findTopByCliente_IdOrderByFechaDesc(Long clienteId);
     List<Factura> findByCliente_Id(Long clienteId);
     List<Factura> findByEstado(String estado);
