@@ -1,65 +1,169 @@
-<div th:fragment="content">
+<div th:fragment="content"
+     th:with="caducado=${lote.fechaCaducidad != null and lote.fechaCaducidad.isBefore(#temporals.createToday())}">
     <div class="page-header">
-        <div class="page-header-title"><h4 th:text="${titulo}">Detalle de lote</h4></div>
+        <div class="page-header-title">
+            <h1 th:text="${titulo}">Detalle de lote</h1>
+            <p>
+                <span class="badge-status" th:attr="data-status=${lote.estado?.toLowerCase()}"
+                      th:text="${lote.estado != null ? #strings.capitalize(#strings.toLowerCase(lote.estado)) : '—'}">Activo</span>
+                <span th:text="${lote.articulo?.nombre ?: 'Sin artículo'}">Barra de pan</span>
+            </p>
+        </div>
         <div class="page-header-actions">
-            <a th:href="@{/web/lotes/{id}/editar(id=${lote.id})}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Editar</a>
-            <a th:href="@{/web/lotes}" class="btn btn-ghost btn-sm">Volver</a>
+            <a th:href="@{/web/lotes}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <a th:href="@{/web/lotes/{id}/editar(id=${lote.id})}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar lote
+            </a>
         </div>
     </div>
-    <div class="form-card mb-3">
+
+    <div class="alert alert-danger d-flex align-items-start gap-2" role="alert" th:if="${caducado}">
+        <i class="bi bi-exclamation-circle-fill mt-1" aria-hidden="true"></i>
+        <div><strong>Lote caducado</strong> desde el <span th:text="${#temporals.format(lote.fechaCaducidad, 'dd/MM/yyyy')}">01/10/2026</span>.</div>
+    </div>
+
+    <div class="doc-card mb-4">
+        <div class="doc-card-header">
+            <div class="doc-header-icon" aria-hidden="true" th:classappend="${caducado} ? 'danger'"><i class="bi bi-upc-scan"></i></div>
+            <div>
+                <div class="doc-card-title" th:text="${lote.codigo}">L-0001</div>
+                <div class="doc-card-meta" th:text="${lote.articulo?.nombre ?: 'Sin artículo'}">Barra de pan</div>
+            </div>
+        </div>
+
+        <div class="doc-summary mb-4">
+            <div>
+                <span class="doc-field-label">Producción</span>
+                <div class="doc-field-value"
+                     th:text="${lote.fechaProduccion != null ? #temporals.format(lote.fechaProduccion, 'dd/MM/yyyy') : '—'}">01/10/2026</div>
+            </div>
+            <div>
+                <span class="doc-field-label">Caducidad</span>
+                <div class="doc-field-value" th:classappend="${caducado} ? 'text-danger'"
+                     th:text="${lote.fechaCaducidad != null ? #temporals.format(lote.fechaCaducidad, 'dd/MM/yyyy') : '—'}">05/10/2026</div>
+            </div>
+            <div>
+                <span class="doc-field-label">Cantidad inicial</span>
+                <div class="doc-field-value"
+                     th:text="${lote.cantidadInicial != null ? #numbers.formatDecimal(lote.cantidadInicial, 1, 'POINT', 2, 'COMMA') : '—'}">0,00</div>
+            </div>
+            <div>
+                <span class="doc-field-label">Cantidad actual</span>
+                <div class="doc-field-value"
+                     th:text="${lote.cantidadActual != null ? #numbers.formatDecimal(lote.cantidadActual, 1, 'POINT', 2, 'COMMA') : '—'}">0,00</div>
+            </div>
+        </div>
+
         <div class="doc-fields">
             <table class="doc-table">
-            <tr>
-                <th scope="row">Código</th>
-                <td th:text="${lote.codigo}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Artículo</th>
-                <td th:text="${lote.articulo?.nombre ?: '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Almacén</th>
-                <td th:text="${lote.almacen?.nombre ?: '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Producción</th>
-                <td th:text="${#temporals.format(lote.fechaProduccion, 'dd/MM/yyyy')}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Caducidad</th>
-                <td th:text="${#temporals.format(lote.fechaCaducidad, 'dd/MM/yyyy')}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Cantidad inicial</th>
-                <td th:text="${lote.cantidadInicial ?: '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Cantidad actual</th>
-                <td th:text="${lote.cantidadActual ?: '—'}">—</td>
-            </tr>
-            <tr th:if="${lote.observaciones}">
-                <th scope="row">Observaciones</th>
-                <td class="text-muted" th:text="${lote.observaciones}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Estado</th>
-                <td><span class="badge-status" th:attr="data-status=${lote.estado?.toLowerCase()}" th:text="${lote.estado}">—</span></td>
-            </tr>
+                <tr>
+                    <th scope="row">Código</th>
+                    <td th:text="${lote.codigo}">—</td>
+                </tr>
+                <tr>
+                    <th scope="row">Artículo</th>
+                    <td>
+                        <a th:if="${lote.articulo != null}" th:href="@{/web/articulos/{id}(id=${lote.articulo.id})}"
+                           th:text="${lote.articulo.nombre}">Artículo</a>
+                        <span th:if="${lote.articulo == null}">—</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Almacén</th>
+                    <td th:text="${lote.almacen?.nombre ?: '—'}">—</td>
+                </tr>
+                <tr>
+                    <th scope="row">Origen</th>
+                    <td th:text="${lote.origen ?: '—'}">—</td>
+                </tr>
+                <tr>
+                    <th scope="row">Registro sanitario</th>
+                    <td th:text="${lote.numeroRegistroSanitario ?: '—'}">—</td>
+                </tr>
+                <tr th:if="${lote.observaciones}">
+                    <th scope="row">Observaciones</th>
+                    <td class="text-muted" th:text="${lote.observaciones}">—</td>
+                </tr>
             </table>
         </div>
     </div>
-    <div class="table-card mb-3">
-        <div class="p-3 border-bottom"><h6 class="mb-0">Materias primas utilizadas</h6></div>
-        <div class="table-responsive"><table class="table mb-0"><thead><tr><th>Lote insumo</th><th>Artículo</th><th class="text-end">Cantidad</th></tr></thead>
-            <tbody><tr th:if="${#lists.isEmpty(insumos)}"><td colspan="3" class="empty-state"><i class="bi bi-box"></i><div>Sin insumos vinculados</div></td></tr>
-            <tr th:each="i : ${insumos}"><td th:text="${i.loteInsumo?.codigo ?: '—'}"></td><td th:text="${i.loteInsumo?.articulo?.nombre ?: '—'}"></td><td class="text-end" th:text="${i.cantidadUsada ?: '—'}"></td></tr></tbody>
-        </table></div>
-    </div>
-    <div class="table-card">
-        <div class="p-3 border-bottom"><h6 class="mb-0">Productos que utilizaron este lote</h6></div>
-        <div class="table-responsive"><table class="table mb-0"><thead><tr><th>Lote producto</th><th>Artículo</th><th class="text-end">Cantidad</th></tr></thead>
-            <tbody><tr th:if="${#lists.isEmpty(usos)}"><td colspan="3" class="empty-state"><i class="bi bi-box"></i><div>Sin usos posteriores registrados</div></td></tr>
-            <tr th:each="i : ${usos}"><td><a th:href="@{/web/lotes/{id}(id=${i.loteProducto?.id})}" th:text="${i.loteProducto?.codigo ?: '—'}"></a></td><td th:text="${i.loteProducto?.articulo?.nombre ?: '—'}"></td><td class="text-end" th:text="${i.cantidadUsada ?: '—'}"></td></tr></tbody>
-        </table></div>
+
+    <div class="row g-4">
+        <div class="col-xl-6">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h2 class="table-card-title">Materias primas utilizadas</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Lote insumo</th>
+                                <th>Artículo</th>
+                                <th class="cifra">Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(insumos)}">
+                                <td colspan="3" class="empty-state empty-state-compact">
+                                    <i class="bi bi-basket" aria-hidden="true"></i>
+                                    <div class="empty-state-title">Sin insumos vinculados</div>
+                                    <small class="empty-state-hint">Aquí aparecen los lotes de harina, levadura, etc. usados para producir este lote.</small>
+                                </td>
+                            </tr>
+                            <tr th:each="i : ${insumos}">
+                                <td>
+                                    <a th:if="${i.loteInsumo != null}" th:href="@{/web/lotes/{id}(id=${i.loteInsumo.id})}"
+                                       th:text="${i.loteInsumo.codigo}">L-0001</a>
+                                    <span th:if="${i.loteInsumo == null}">—</span>
+                                </td>
+                                <td th:text="${i.loteInsumo?.articulo?.nombre ?: '—'}">Harina</td>
+                                <td class="cifra"
+                                    th:text="${i.cantidadUsada != null ? #numbers.formatDecimal(i.cantidadUsada, 1, 'POINT', 2, 'COMMA') : '—'}">0,00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h2 class="table-card-title">Productos que utilizaron este lote</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Lote producto</th>
+                                <th>Artículo</th>
+                                <th class="cifra">Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(usos)}">
+                                <td colspan="3" class="empty-state empty-state-compact">
+                                    <i class="bi bi-box" aria-hidden="true"></i>
+                                    <div class="empty-state-title">Sin usos posteriores registrados</div>
+                                    <small class="empty-state-hint">Aquí aparecen los lotes de producto elaborados con este lote.</small>
+                                </td>
+                            </tr>
+                            <tr th:each="i : ${usos}">
+                                <td>
+                                    <a th:if="${i.loteProducto != null}" th:href="@{/web/lotes/{id}(id=${i.loteProducto.id})}"
+                                       th:text="${i.loteProducto.codigo ?: '—'}">L-0002</a>
+                                    <span th:if="${i.loteProducto == null}">—</span>
+                                </td>
+                                <td th:text="${i.loteProducto?.articulo?.nombre ?: '—'}">Barra de pan</td>
+                                <td class="cifra"
+                                    th:text="${i.cantidadUsada != null ? #numbers.formatDecimal(i.cantidadUsada, 1, 'POINT', 2, 'COMMA') : '—'}">0,00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

@@ -1,33 +1,85 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Controles APPCC</h4>
+            <h1 th:text="${titulo}">Controles APPCC</h1>
+            <p>Registro de puntos críticos de control sanitario</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/appcc/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nuevo control
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo control
             </a>
         </div>
     </div>
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
-        <thead><tr><th>Fecha</th><th>Punto crítico</th><th>Temperatura</th><th>Límite</th><th>Resultado</th><th>Responsable</th><th style="width:80px;"></th></tr></thead>
-        <tbody>
-            <tr th:if="${#lists.isEmpty(controles)}"><td colspan="7" class="empty-state"><i class="bi bi-clipboard-check"></i><div>No hay controles APPCC registrados</div></td></tr>
-            <tr th:each="c : ${controles}">
-                <td th:text="${c.fecha}"></td><td th:text="${c.puntoCritico} ?: '-'"></td>
-                <td th:text="${c.temperatura != null ? c.temperatura + ' °C' : '-'}"></td>
-                <td th:text="${c.limiteCritico != null ? c.limiteCritico + ' °C' : '-'}"></td>
-                <td><span class="badge-status" th:attr="data-status=${c.resultado == 'OK' ? 'activo' : 'anulada'}" th:text="${c.resultado} ?: '-'"></span></td>
-                <td th:text="${c.responsable} ?: '-'"></td>
-                <td class="text-end">
-                    <a th:href="@{/web/appcc/{id}(id=${c.id})}" class="btn btn-ghost btn-sm" title="Ver">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                </td>
-            </tr>
-        </tbody>
-    </table></div></div>
+
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/appcc}">
+        <div class="filter-bar-search">
+            <label for="appcc-search" class="visually-hidden">Buscar controles</label>
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input id="appcc-search" type="search" name="q" class="form-control form-control-sm"
+                   placeholder="Punto crítico o responsable…" th:value="${q}" autocomplete="off">
+        </div>
+        <div class="filter-bar-actions">
+            <button class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar
+            </button>
+            <a th:href="@{/web/appcc}" class="btn btn-ghost btn-sm">Limpiar</a>
+            <span class="filter-bar-count" th:if="${controles != null}"><span th:text="${#lists.size(controles)}">0</span> controles</span>
+        </div>
+    </form>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Punto crítico</th>
+                        <th class="cifra">Temperatura</th>
+                        <th class="cifra d-none d-md-table-cell">Límite</th>
+                        <th>Resultado</th>
+                        <th class="d-none d-lg-table-cell">Responsable</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(controles)}">
+                        <td colspan="7" class="empty-state">
+                            <i class="bi bi-clipboard-check" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay controles APPCC registrados</div>
+                            <small class="empty-state-hint" th:if="${q != null and !q.isEmpty()}">Prueba con otros términos de búsqueda</small>
+                            <small class="empty-state-hint" th:unless="${q != null and !q.isEmpty()}">Registra las temperaturas de cámaras y hornos para la inspección sanitaria.</small>
+                            <a th:unless="${q != null and !q.isEmpty()}" th:href="@{/web/appcc/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo control
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:each="c : ${controles}">
+                        <td class="text-muted" th:text="${c.fecha != null ? #temporals.format(c.fecha, 'dd/MM/yyyy') : '—'}"></td>
+                        <td>
+                            <a th:href="@{/web/appcc/{id}(id=${c.id})}" th:text="${c.puntoCritico ?: '—'}">Punto</a>
+                        </td>
+                        <td class="cifra" th:text="${c.temperatura != null ? #numbers.formatDecimal(c.temperatura, 1, 'POINT', 1, 'COMMA') + ' °C' : '—'}"></td>
+                        <td class="cifra text-muted d-none d-md-table-cell" th:text="${c.limiteCritico != null ? #numbers.formatDecimal(c.limiteCritico, 1, 'POINT', 1, 'COMMA') + ' °C' : '—'}"></td>
+                        <td>
+                            <!-- OK/NOK se mapean a su familia (ok / peligro) -->
+                            <span th:if="${c.resultado != null and !c.resultado.isEmpty()}" class="badge-status"
+                                  th:attr="data-status=${c.resultado.toLowerCase()}" th:text="${c.resultado}">OK</span>
+                            <span th:unless="${c.resultado != null and !c.resultado.isEmpty()}" class="text-muted">Sin registrar</span>
+                        </td>
+                        <td class="d-none d-lg-table-cell" th:text="${c.responsable ?: '—'}"></td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/appcc/{id}(id=${c.id})}" class="btn btn-ghost btn-sm btn-icon" title="Ver"
+                                   th:attr="aria-label='Ver control ' + ${c.puntoCritico ?: c.id}">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/appcc')}"></div>
 </div>

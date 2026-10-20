@@ -1,19 +1,30 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">TPV</h4>
+            <h1 th:text="${titulo}">TPV</h1>
+            <p>Venta en mostrador: pulsa un artículo para añadirlo al ticket</p>
         </div>
     </div>
 
     <div class="row g-3">
         <!-- Parrilla de artículos -->
         <div class="col-lg-8">
-            <input type="search" id="tpvBuscar" class="form-control mb-2" placeholder="Buscar artículo..."
-                   aria-label="Buscar artículo" autocomplete="off">
+            <div class="filter-bar mb-3">
+                <div class="filter-bar-search">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input type="search" id="tpvBuscar" class="form-control" placeholder="Buscar artículo…"
+                           aria-label="Buscar artículo" autocomplete="off">
+                </div>
+            </div>
             <div class="row g-2" id="tpvParrilla">
                 <div th:if="${#lists.isEmpty(articulos)}" class="col-12">
-                    <div class="empty-state p-4"><i class="bi bi-box"></i>
-                        <div>No hay artículos activos con PVP. Configura precios de venta en el catálogo.</div>
+                    <div class="form-card empty-state">
+                        <i class="bi bi-box" aria-hidden="true"></i>
+                        <div class="empty-state-title">No hay artículos activos con PVP.</div>
+                        <small class="empty-state-hint">Configura precios de venta en el catálogo.</small>
+                        <a th:href="@{/web/articulos}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-tags me-1" aria-hidden="true"></i>Ir al catálogo
+                        </a>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-xl-3 tpv-item" th:each="a : ${articulos}"
@@ -26,32 +37,51 @@
                     </button>
                 </div>
             </div>
+            <!-- Sin coincidencias en la búsqueda (lo muestra el script) -->
+            <div id="tpvSinResultados" class="form-card empty-state empty-state-compact" hidden>
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <div class="empty-state-title">Ningún artículo coincide con la búsqueda</div>
+                <small class="empty-state-hint">Prueba con otra parte del nombre.</small>
+            </div>
         </div>
 
-        <!-- Carrito -->
+        <!-- Ticket -->
         <div class="col-lg-4">
-            <div class="table-card p-3 position-sticky" style="top: 1rem">
-                <h6 class="fw-bold"><i class="bi bi-basket me-1"></i>Ticket actual</h6>
-                <div id="tpvCarrito" class="mb-2" style="max-height: 45vh; overflow-y: auto">
+            <section class="form-card tpv-ticket" aria-labelledby="tpvTicketTitulo">
+                <h2 class="card-heading mb-3" id="tpvTicketTitulo">
+                    <i class="bi bi-basket" aria-hidden="true"></i>Ticket actual
+                </h2>
+                <!-- Carrito con scroll propio (.tpv-carrito) -->
+                <div id="tpvCarrito" class="mb-2 tpv-carrito">
                     <div class="text-muted small" id="tpvVacio">Pulsa artículos para añadirlos</div>
                 </div>
-                <hr>
-                <div class="d-flex justify-content-between fs-4 fw-bold">
-                    <span>Total</span><span id="tpvTotal" aria-live="polite" aria-atomic="true">0,00 €</span>
+                <div class="doc-total justify-content-between border-top pt-3 mt-3">
+                    <span class="doc-total-label">Total</span>
+                    <span class="doc-total-amount" id="tpvTotal" aria-live="polite" aria-atomic="true">0,00 €</span>
                 </div>
                 <div class="text-muted small text-end">IVA incluido</div>
                 <div class="d-grid gap-2 mt-3">
-                    <button type="button" class="btn btn-success btn-lg" id="tpvCobrarEfectivo" disabled>
-                        <i class="bi bi-cash-coin me-1"></i>Cobrar en efectivo
+                    <button type="button" class="btn btn-primary btn-lg" id="tpvCobrarEfectivo" disabled>
+                        <i class="bi bi-cash-coin me-1" aria-hidden="true"></i>Cobrar en efectivo
                     </button>
-                    <button type="button" class="btn btn-primary" id="tpvCobrarTarjeta" disabled>
-                        <i class="bi bi-credit-card me-1"></i>Cobrar con tarjeta
+                    <div class="row g-2">
+                        <div class="col-6 d-grid">
+                            <button type="button" class="btn btn-outline-primary" id="tpvCobrarTarjeta" disabled>
+                                <i class="bi bi-credit-card me-1" aria-hidden="true"></i>Tarjeta
+                            </button>
+                        </div>
+                        <div class="col-6 d-grid">
+                            <button type="button" class="btn btn-outline-primary" id="tpvCobrarBizum" disabled>
+                                <i class="bi bi-phone me-1" aria-hidden="true"></i>Bizum
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-ghost text-danger" id="tpvVaciar">
+                        <i class="bi bi-trash3 me-1" aria-hidden="true"></i>Vaciar ticket
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" id="tpvCobrarBizum" disabled>Bizum</button>
-                    <button type="button" class="btn btn-ghost text-danger" id="tpvVaciar">Vaciar ticket</button>
                 </div>
                 <div id="tpvResultado" class="mt-3" aria-live="polite"></div>
-            </div>
+            </section>
         </div>
     </div>
 
@@ -83,18 +113,18 @@
                 cont.innerHTML = '';
                 var totalCents = 0;
                 if (carrito.size === 0) {
-                    cont.innerHTML = '<div class="text-muted small">Pulsa artículos para añadirlos</div>';
+                    cont.innerHTML = '<div class="empty-state empty-state-compact"><i class="bi bi-basket" aria-hidden="true"></i><div class="empty-state-title">Ticket vacío</div><small class="empty-state-hint">Pulsa artículos para añadirlos</small></div>';
                 }
                 carrito.forEach(function(item, id) {
                     var cents = lineaCents(item);
                     totalCents += cents;
                     var row = document.createElement('div');
-                    row.className = 'd-flex align-items-center gap-2 py-1 border-bottom';
+                    row.className = 'd-flex align-items-center gap-2 py-2 border-bottom';
 
                     // Nodos construidos con textContent (nunca innerHTML): el nombre del
                     // artículo lo escriben usuarios del ERP y no debe interpretarse como HTML.
                     var nombre = document.createElement('div');
-                    nombre.className = 'flex-grow-1 text-truncate';
+                    nombre.className = 'flex-grow-1 text-truncate fw-medium';
                     nombre.textContent = item.nombre;
 
                     var grupo = document.createElement('div');
@@ -119,7 +149,7 @@
                     grupo.appendChild(mas);
 
                     var importe = document.createElement('div');
-                    importe.className = 'tpv-importe';
+                    importe.className = 'tpv-importe fw-semibold';
                     importe.textContent = fmt(cents / 100);
 
                     row.appendChild(nombre);
@@ -172,9 +202,14 @@
 
             document.getElementById('tpvBuscar').addEventListener('input', function() {
                 var q = this.value.toLowerCase();
+                var visibles = 0;
                 document.querySelectorAll('#tpvParrilla .tpv-item').forEach(function(el) {
-                    el.style.display = el.getAttribute('data-nombre').indexOf(q) >= 0 ? '' : 'none';
+                    // hidden en lugar de style.display (guía, regla 2)
+                    el.hidden = el.getAttribute('data-nombre').indexOf(q) < 0;
+                    if (!el.hidden) visibles++;
                 });
+                var hayArticulos = document.querySelector('#tpvParrilla .tpv-item') !== null;
+                document.getElementById('tpvSinResultados').hidden = !hayArticulos || visibles > 0;
             });
 
             function cobrar(formaPago, botonId) {
@@ -209,7 +244,7 @@
                         alerta.className = 'alert alert-success mb-0';
                         var titulo = document.createElement('div');
                         titulo.className = 'fw-bold';
-                        titulo.appendChild(icono('bi bi-check-circle me-1'));
+                        titulo.appendChild(icono('bi bi-check-circle-fill me-1'));
                         titulo.appendChild(document.createTextNode('Ticket ' + data.numero));
                         var enlace = document.createElement('a');
                         enlace.className = 'btn btn-sm btn-outline-secondary mt-2';
@@ -246,13 +281,18 @@
             function icono(clases) {
                 var i = document.createElement('i');
                 i.className = clases;
+                i.setAttribute('aria-hidden', 'true');
                 return i;
             }
 
             function alertaError(mensaje) {
                 var div = document.createElement('div');
-                div.className = 'alert alert-danger mb-0';
-                div.textContent = mensaje;
+                div.className = 'alert alert-danger mb-0 d-flex align-items-start gap-2';
+                div.setAttribute('role', 'alert');
+                div.appendChild(icono('bi bi-exclamation-circle-fill mt-1'));
+                var texto = document.createElement('div');
+                texto.textContent = mensaje;
+                div.appendChild(texto);
                 return div;
             }
 

@@ -1,17 +1,36 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Reparto</h4>
+            <h1 th:text="${titulo}">Reparto</h1>
+            <p>Hojas de ruta del mes en curso</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/reportes}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <a th:href="@{/web/hojas-ruta}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-truck me-1" aria-hidden="true"></i>Ver hojas de ruta
             </a>
         </div>
     </div>
     <div class="row g-3 mb-4">
-        <div class="col-md-4"><div class="stat-card"><div class="stat-label">Hojas totales</div><div class="stat-value" th:text="${totalHojas}">0</div></div></div>
-        <div class="col-md-4"><div class="stat-card"><div class="stat-label">Finalizadas</div><div class="stat-value" style="color:#059669;" th:text="${finalizadas}">0</div></div></div>
-        <div class="col-md-4"><div class="stat-card"><div class="stat-label">En curso</div><div class="stat-value" style="color:#2563eb;" th:text="${enCurso}">0</div></div></div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-map" aria-hidden="true"></i>Hojas totales</div>
+                <div class="stat-value" th:text="${totalHojas}">0</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-check2-circle" aria-hidden="true"></i>Finalizadas</div>
+                <div class="stat-value" th:text="${finalizadas}">0</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-play-circle" aria-hidden="true"></i>En curso</div>
+                <div class="stat-value" th:text="${enCurso}">0</div>
+            </div>
+        </div>
     </div>
 </div>

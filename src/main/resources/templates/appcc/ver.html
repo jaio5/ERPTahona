@@ -1,58 +1,87 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Control APPCC</h4>
+            <h1 th:text="${titulo}">Control APPCC</h1>
+            <p>
+                <span th:if="${control.resultado != null and !control.resultado.isEmpty()}" class="badge-status"
+                      th:attr="data-status=${control.resultado.toLowerCase()}" th:text="${control.resultado}">OK</span>
+                <span th:text="${control.fecha != null ? #temporals.format(control.fecha, 'dd/MM/yyyy') : ''}">01/10/2026</span>
+            </p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/appcc}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
-    <div class="form-card" style="max-width:640px;">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <span class="doc-field-label">Fecha</span>
-                <div class="doc-field-value" th:text="${control.fecha}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Hora</span>
-                <div class="doc-field-value" th:text="${control.hora}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Resultado</span>
-                <div class="doc-field-value">
-                    <span class="badge-status" th:attr="data-status=${control.resultado == 'OK' ? 'activo' : 'anulada'}"
-                          th:text="${control.resultado} ?: '—'"></span>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="doc-card">
+                <div class="doc-card-header">
+                    <!-- Icono según resultado: verde OK, rojo NOK -->
+                    <div class="doc-header-icon" aria-hidden="true"
+                         th:classappend="${control.resultado == 'OK' ? 'success' : (control.resultado == 'NOK' ? 'danger' : '')}">
+                        <i class="bi bi-thermometer-half"></i>
+                    </div>
+                    <div>
+                        <div class="doc-card-title" th:text="${control.puntoCritico ?: 'Control APPCC'}">Punto crítico</div>
+                        <div class="doc-card-meta"
+                             th:text="${control.hora != null ? #temporals.format(control.hora, 'dd/MM/yyyy HH:mm') : '—'}">—</div>
+                    </div>
+                </div>
+
+                <div class="doc-summary">
+                    <div>
+                        <span class="doc-field-label">Temperatura</span>
+                        <div class="doc-field-value" th:text="${control.temperatura != null ? #numbers.formatDecimal(control.temperatura, 1, 'POINT', 1, 'COMMA') + ' ' + (control.unidadTemperatura ?: '°C') : '—'}">—</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Límite crítico</span>
+                        <div class="doc-field-value" th:text="${control.limiteCritico != null ? #numbers.formatDecimal(control.limiteCritico, 1, 'POINT', 1, 'COMMA') + ' ' + (control.unidadTemperatura ?: '°C') : '—'}">—</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Resultado</span>
+                        <div class="doc-field-value">
+                            <span th:if="${control.resultado != null and !control.resultado.isEmpty()}" class="badge-status"
+                                  th:attr="data-status=${control.resultado.toLowerCase()}" th:text="${control.resultado}">OK</span>
+                            <span th:unless="${control.resultado != null and !control.resultado.isEmpty()}" class="text-muted">Sin registrar</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="doc-fields mt-3">
+                    <table class="doc-table">
+                        <tr><th>Responsable</th><td th:text="${control.responsable ?: '—'}">—</td></tr>
+                        <!-- El lote llega sin cargar (open-in-view desactivado): solo se lee su id, que no abre sesión -->
+                        <tr><th>Lote</th>
+                            <td>
+                                <a th:if="${control.lote != null}" th:href="@{/web/lotes/{id}(id=${control.lote.id})}">Ver lote</a>
+                                <span th:unless="${control.lote != null}">—</span>
+                            </td></tr>
+                    </table>
+                </div>
+
+                <div class="mt-3" th:if="${control.descripcion}">
+                    <span class="doc-field-label">Descripción</span>
+                    <div class="text-body mt-1 text-break" th:text="${control.descripcion}">—</div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Punto crítico</span>
-                <div class="doc-field-value" th:text="${control.puntoCritico} ?: '—'">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Temperatura</span>
-                <div class="doc-field-value" th:text="${control.temperatura != null ? control.temperatura + ' ' + control.unidadTemperatura : '—'}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Límite crítico</span>
-                <div class="doc-field-value" th:text="${control.limiteCritico != null ? control.limiteCritico + ' ' + control.unidadTemperatura : '—'}">—</div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Responsable</span>
-                <div class="doc-field-value" th:text="${control.responsable} ?: '—'">—</div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Lote</span>
-                <div class="doc-field-value" th:text="${control.lote?.codigo} ?: '—'">—</div>
-            </div>
-            <div class="col-12" th:if="${control.descripcion}">
-                <span class="doc-field-label">Descripción</span>
-                <div class="doc-field-value text-muted" th:text="${control.descripcion}">—</div>
-            </div>
-            <div class="col-12" th:if="${control.accionCorrectiva}">
-                <span class="doc-field-label">Acción correctiva</span>
-                <div class="doc-field-value text-muted" th:text="${control.accionCorrectiva}">—</div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="form-card">
+                <h2 class="card-heading mb-3"><i class="bi bi-wrench-adjustable" aria-hidden="true"></i>Acción correctiva</h2>
+                <p class="mb-0 text-break" th:if="${control.accionCorrectiva != null and !control.accionCorrectiva.isEmpty()}" th:text="${control.accionCorrectiva}"></p>
+                <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="status"
+                     th:if="${control.accionCorrectiva == null or control.accionCorrectiva.isEmpty()} and ${control.resultado == 'NOK'}">
+                    <i class="bi bi-exclamation-triangle-fill mt-1" aria-hidden="true"></i>
+                    <div>Control fuera de límite sin acción correctiva registrada.</div>
+                </div>
+                <p class="text-muted mb-0"
+                   th:if="${control.accionCorrectiva == null or control.accionCorrectiva.isEmpty()} and ${control.resultado != 'NOK'}">
+                    No se registró ninguna acción.
+                </p>
             </div>
         </div>
     </div>

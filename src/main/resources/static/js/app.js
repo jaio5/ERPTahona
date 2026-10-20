@@ -7,6 +7,8 @@ function formatMoneyEs(value) {
 installCsrfFetchProtection();
 
 document.addEventListener("DOMContentLoaded", () => {
+    initThemeToggle();
+    initHistoryBack();
     initSidebarToggle();
     initToasts();
     initFormProtection();
@@ -58,6 +60,51 @@ function installCsrfFetchProtection() {
     };
     protectedFetch.csrfProtected = true;
     window.fetch = protectedFetch;
+}
+
+/* ── Conmutador de tema claro/oscuro (botón #temaToggle de la barra superior) ──
+ * El tema inicial lo fija /js/tema.js en <head>; aquí solo se alterna y se guarda.
+ * Emite "erp:tema" para que las vistas con gráficos repinten sus colores.
+ */
+function initThemeToggle() {
+    const boton = document.getElementById("temaToggle");
+    if (!boton) return;
+
+    const raiz = document.documentElement;
+    const actual = () => (raiz.getAttribute("data-bs-theme") === "dark" ? "dark" : "light");
+    const rotular = () => {
+        const oscuro = actual() === "dark";
+        const texto = oscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
+        boton.setAttribute("aria-label", texto);
+        boton.setAttribute("title", texto);
+    };
+    rotular();
+
+    boton.addEventListener("click", () => {
+        const nuevo = actual() === "dark" ? "light" : "dark";
+        raiz.setAttribute("data-bs-theme", nuevo);
+        if (window.erpTema) {
+            window.erpTema.guardar(nuevo);
+        } else {
+            try { localStorage.setItem("erp_tema", nuevo); } catch (e) { /* sin almacenamiento */ }
+        }
+        rotular();
+        document.dispatchEvent(new CustomEvent("erp:tema", { detail: { tema: nuevo } }));
+    });
+    // Cambio del sistema sin preferencia guardada (lo aplica tema.js): actualizar el rótulo
+    document.addEventListener("erp:tema", rotular);
+}
+
+/* ── Botones "Volver atrás" (sustituye a href="javascript:…", bloqueado por la CSP) ── */
+function initHistoryBack() {
+    document.querySelectorAll("[data-history-back]").forEach(element => {
+        element.addEventListener("click", event => {
+            if (window.history.length > 1) {
+                event.preventDefault();
+                window.history.back();
+            }
+        });
+    });
 }
 
 /* ── Sidebar toggle (mobile) ── */
@@ -267,6 +314,7 @@ function buildSearch(index) {
     input.name = `tableSearch${index}`;
     input.className = "form-control form-control-sm";
     input.placeholder = "Buscar...";
+    input.setAttribute("aria-label", "Buscar en la tabla");
     input.autocomplete = "off";
     searchWrap.appendChild(icon);
     searchWrap.appendChild(input);

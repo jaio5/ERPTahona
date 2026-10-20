@@ -1,87 +1,139 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Presupuesto</h4>
+            <h1 th:text="${titulo}">Presupuesto</h1>
+            <p>
+                <span class="badge-status" th:attr="data-status=${presupuesto.estado?.toLowerCase()}"
+                      th:text="${presupuesto.estado}">BORRADOR</span>
+                <span th:text="${presupuesto.fecha != null ? #temporals.format(presupuesto.fecha, 'dd/MM/yyyy') : ''}">01/10/2026</span>
+            </p>
         </div>
         <div class="page-header-actions">
-            <a th:if="${presupuesto.estado == 'BORRADOR'}"
-               th:href="@{/web/presupuestos/{id}/editar(id=${presupuesto.id})}"
-               class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-pencil me-1"></i>Editar
-            </a>
-            <form th:if="${presupuesto.estado == 'ENVIADO' or presupuesto.estado == 'BORRADOR'}"
-                  th:action="@{/web/presupuestos/{id}/aprobar(id=${presupuesto.id})}" method="post" class="d-inline">
-                <button class="btn btn-success btn-sm" data-no-double-click>
-                    <i class="bi bi-check-lg me-1"></i>Aprobar
-                </button>
-            </form>
-            <form th:if="${@permisos.puede('ventas','crear')}"
-                  th:action="@{/web/presupuestos/{id}/duplicar(id=${presupuesto.id})}" method="post" class="d-inline">
-                <button class="btn btn-outline-secondary btn-sm" data-no-double-click>
-                    <i class="bi bi-copy me-1"></i>Duplicar
-                </button>
-            </form>
             <a th:href="@{/web/presupuestos}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
-    <div class="form-card" style="max-width:640px;">
-        <div class="doc-fields">
-            <table class="doc-table">
-            <tr>
-                <th scope="row">Número</th>
-                <td th:text="${presupuesto.numero} ?: '—'">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Fecha</th>
-                <td th:text="${presupuesto.fecha != null ? #temporals.format(presupuesto.fecha, 'dd/MM/yyyy') : '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Cliente</th>
-                <td th:text="${presupuesto.cliente?.nombre} ?: '—'">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Total</th>
-                <td class="fw-bold" style="font-size:1.25rem;color:var(--brand-color);"
-                     th:text="${presupuesto.total != null ? #numbers.formatDecimal(presupuesto.total,1,2) + ' €' : '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Válido hasta</th>
-                <td th:text="${presupuesto.fechaValidez != null ? #temporals.format(presupuesto.fechaValidez, 'dd/MM/yyyy') : '—'}">—</td>
-            </tr>
-            <tr th:if="${presupuesto.factura != null}">
-                <th scope="row">Factura generada</th>
-                <td><a th:href="@{/web/facturas/{id}(id=${presupuesto.factura.id})}" th:text="${presupuesto.factura.numero}">—</a></td>
-            </tr>
-            <tr th:if="${presupuesto.observaciones}">
-                <th scope="row">Observaciones</th>
-                <td class="text-muted" th:text="${presupuesto.observaciones}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Estado</th>
-                <td>
-                    <span class="badge-status" th:attr="data-status=${presupuesto.estado?.toLowerCase()}"
-                          th:text="${presupuesto.estado}">—</span>
-                </td>
-            </tr>
-            </table>
-        </div>
-        <div th:if="${!#lists.isEmpty(presupuesto.lineas)}" class="mt-3">
-            <div class="form-section-title mb-2">
-                <i class="bi bi-list-ul"></i> Líneas
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="doc-card mb-4">
+                <div class="doc-card-header">
+                    <div class="doc-header-icon" aria-hidden="true"><i class="bi bi-file-earmark-text"></i></div>
+                    <div>
+                        <div class="doc-card-title" th:text="${presupuesto.cliente?.nombre} ?: '—'">Cliente</div>
+                        <div class="doc-card-meta" th:text="${presupuesto.numero} ?: ''">P-2026-0001</div>
+                    </div>
+                </div>
+
+                <div class="doc-summary">
+                    <div>
+                        <span class="doc-field-label">Fecha</span>
+                        <div class="doc-field-value"
+                             th:text="${presupuesto.fecha != null ? #temporals.format(presupuesto.fecha, 'dd/MM/yyyy') : '—'}">—</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Válido hasta</span>
+                        <div class="doc-field-value"
+                             th:text="${presupuesto.fechaValidez != null ? #temporals.format(presupuesto.fechaValidez, 'dd/MM/yyyy') : '—'}">—</div>
+                    </div>
+                    <div th:if="${presupuesto.factura != null}">
+                        <span class="doc-field-label">Factura generada</span>
+                        <div class="doc-field-value">
+                            <a th:href="@{/web/facturas/{id}(id=${presupuesto.factura.id})}" th:text="${presupuesto.factura.numero}">F-1</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="doc-notes" th:if="${presupuesto.observaciones}">
+                    <span class="doc-field-label">Observaciones</span>
+                    <p th:text="${presupuesto.observaciones}">Observaciones</p>
+                </div>
+
+                <div class="doc-total mt-3">
+                    <span class="doc-total-label">Total</span>
+                    <span class="doc-total-amount"
+                          th:text="${presupuesto.total != null ? #numbers.formatCurrency(presupuesto.total) : '—'}">0,00 €</span>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-sm mb-0">
-                    <thead><tr><th>Artículo</th><th>Cantidad</th><th>Precio</th></tr></thead>
-                    <tbody>
-                        <tr th:each="l : ${presupuesto.lineas}">
-                            <td th:text="${l.articulo?.nombre} ?: '—'"></td>
-                            <td th:text="${l.cantidad}"></td>
-                            <td th:text="${l.precioUnitario != null ? #numbers.formatDecimal(l.precioUnitario,1,2) + ' €' : '—'}"></td>
-                        </tr>
-                    </tbody>
-                </table>
+
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h2 class="table-card-title">Líneas del presupuesto</h2>
+                </div>
+                <div class="table-responsive" th:if="${!#lists.isEmpty(presupuesto.lineas)}">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Artículo</th>
+                                <th class="cifra">Cantidad</th>
+                                <th class="cifra">Precio unit.</th>
+                                <th class="cifra d-none d-lg-table-cell">Dto.</th>
+                                <th class="cifra d-none d-md-table-cell">IVA</th>
+                                <th class="cifra">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="l : ${presupuesto.lineas}">
+                                <td class="td-wrap" th:text="${l.articulo?.nombre ?: (l.descripcion ?: '—')}">—</td>
+                                <td class="cifra" th:text="${l.cantidad != null ? #numbers.formatDecimal(l.cantidad,1,'POINT',2,'COMMA') : '—'}">0</td>
+                                <td class="cifra" th:text="${l.precioUnitario != null ? #numbers.formatCurrency(l.precioUnitario) : '—'}">—</td>
+                                <td class="cifra text-muted d-none d-lg-table-cell"
+                                    th:text="${l.descuento != null and l.descuento.signum() > 0 ? #numbers.formatDecimal(l.descuento,1,'POINT',2,'COMMA') + ' %' : '—'}">—</td>
+                                <td class="cifra text-muted d-none d-md-table-cell"
+                                    th:text="${l.tipoIva != null ? #numbers.formatDecimal(l.tipoIva,1,'POINT',2,'COMMA') + ' %' : '—'}">—</td>
+                                <td class="cifra fw-semibold" th:text="${l.importe != null ? #numbers.formatCurrency(l.importe) : '—'}">—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div th:if="${#lists.isEmpty(presupuesto.lineas)}" class="empty-state empty-state-compact">
+                    <i class="bi bi-list-ul" aria-hidden="true"></i>
+                    <div class="empty-state-title">Sin líneas</div>
+                    <small class="empty-state-hint" th:if="${presupuesto.estado == 'BORRADOR'}">Edita el presupuesto para añadir productos</small>
+                    <a th:if="${presupuesto.estado == 'BORRADOR'}"
+                       th:href="@{/web/presupuestos/{id}/editar(id=${presupuesto.id})}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar presupuesto
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="form-card total-card-big mb-3">
+                <div class="label">Total presupuesto</div>
+                <div class="amount"
+                     th:text="${presupuesto.total != null ? #numbers.formatCurrency(presupuesto.total) : '—'}">0,00 €</div>
+                <span class="badge-status" th:attr="data-status=${presupuesto.estado?.toLowerCase()}"
+                      th:text="${presupuesto.estado}">BORRADOR</span>
+            </div>
+
+            <div class="form-card">
+                <h2 class="card-heading mb-3">Acciones</h2>
+                <div class="action-stack">
+                    <!-- BORRADOR o ENVIADO: siguiente paso, aprobar -->
+                    <form th:if="${presupuesto.estado == 'ENVIADO' or presupuesto.estado == 'BORRADOR'}"
+                          th:action="@{/web/presupuestos/{id}/aprobar(id=${presupuesto.id})}" method="post">
+                        <button class="btn btn-primary" data-no-double-click>
+                            <i class="bi bi-check-lg me-2" aria-hidden="true"></i>Aprobar
+                        </button>
+                    </form>
+                    <a th:if="${presupuesto.estado == 'BORRADOR'}"
+                       th:href="@{/web/presupuestos/{id}/editar(id=${presupuesto.id})}"
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-pencil me-2" aria-hidden="true"></i>Editar
+                    </a>
+                    <form th:if="${@permisos.puede('ventas','crear')}"
+                          th:action="@{/web/presupuestos/{id}/duplicar(id=${presupuesto.id})}" method="post">
+                        <button class="btn btn-outline-secondary" data-no-double-click>
+                            <i class="bi bi-copy me-2" aria-hidden="true"></i>Duplicar
+                        </button>
+                    </form>
+                    <div class="text-muted small"
+                         th:unless="${presupuesto.estado == 'ENVIADO' or presupuesto.estado == 'BORRADOR' or @permisos.puede('ventas','crear')}">
+                        No hay acciones disponibles en este estado.
+                    </div>
+                </div>
             </div>
         </div>
     </div>

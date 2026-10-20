@@ -1,11 +1,12 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Pedido de venta</h4>
+            <h1 th:text="${titulo}">Pedido de venta</h1>
+            <p>Encargo del cliente; se sirve después con un albarán</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/pedidos-venta}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
@@ -14,96 +15,93 @@
         <form th:action="@{/web/pedidos-venta}" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="id" th:value="${pedido?.id}">
 
-            <div class="form-section-title">
-                <i class="bi bi-cart3"></i> Datos del pedido
-            </div>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label" for="fecha">Fecha</label>
-                    <input type="date" id="fecha" name="fecha" class="form-control"
-                           th:value="${pedido?.fecha != null ? pedido.fecha : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
-                </div>
-                <div class="col-12">
-                    <label class="form-label" for="clienteId">Cliente <span class="text-danger">*</span></label>
-                    <select id="clienteId" name="clienteId" class="form-select" required data-searchable>
-                        <option value="">Seleccionar cliente...</option>
-                        <option th:each="c : ${clientes}" th:value="${c.id}"
-                                th:text="${c.nombre}"
-                                th:selected="${pedido?.cliente?.id == c.id}"></option>
-                    </select>
-                    <div class="invalid-feedback">Selecciona un cliente.</div>
-                </div>
-                <div class="col-12">
-                    <label class="form-label" for="observaciones">Observaciones</label>
-                    <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
-                              th:text="${pedido?.observaciones}"
-                              placeholder="Instrucciones especiales, dirección de entrega..."></textarea>
-                </div>
-            </div>
-
-            <div class="form-section-divider">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="form-section-title mb-0">
-                        <i class="bi bi-list-ul"></i> Líneas del pedido
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-cart3" aria-hidden="true"></i>Datos del pedido</h2>
+                <div class="row g-3">
+                    <div class="col-md-4 col-lg-3">
+                        <label class="form-label" for="fecha">Fecha</label>
+                        <input type="date" id="fecha" name="fecha" class="form-control"
+                               th:value="${pedido?.fecha != null ? pedido.fecha : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
                     </div>
-                    <button type="button" class="btn btn-ghost btn-sm" id="addLineBtn">
-                        <i class="bi bi-plus me-1"></i>Añadir producto
-                    </button>
+                    <div class="col-md-8 col-lg-9">
+                        <label class="form-label" for="clienteId">Cliente *</label>
+                        <select id="clienteId" name="clienteId" class="form-select" required data-searchable>
+                            <option value="">Seleccionar cliente…</option>
+                            <option th:each="c : ${clientes}" th:value="${c.id}"
+                                    th:text="${c.nombre}"
+                                    th:selected="${pedido?.cliente?.id == c.id}"></option>
+                        </select>
+                        <div class="invalid-feedback">Selecciona un cliente.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="observaciones">Observaciones</label>
+                        <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
+                                  th:text="${pedido?.observaciones}"
+                                  placeholder="Instrucciones especiales, dirección de entrega…"></textarea>
+                    </div>
                 </div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-list-ul" aria-hidden="true"></i>Líneas del pedido</h2>
 
                 <div class="table-responsive">
                     <table class="lines-table">
                         <thead>
                             <tr>
                                 <th>Producto</th>
-                                <th class="col-qty">Cantidad</th>
-                                <th class="col-price">Precio unit.</th>
-                                <th class="col-iva">IVA %</th>
-                                <th class="col-dto">Dto %</th>
-                                <th class="col-sub text-end">Subtotal</th>
-                                <th class="col-del"></th>
+                                <th class="col-qty cifra">Cantidad</th>
+                                <th class="col-price cifra">Precio unit.</th>
+                                <th class="col-iva cifra">IVA %</th>
+                                <th class="col-dto cifra">Dto. %</th>
+                                <th class="col-sub cifra">Subtotal</th>
+                                <th class="col-del"><span class="visually-hidden">Quitar</span></th>
                             </tr>
                         </thead>
                         <tbody id="pedidoLineasBody"></tbody>
                     </table>
                 </div>
+                <div class="form-section-tools">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="addLineBtn">
+                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Añadir producto
+                    </button>
+                </div>
 
-                <div class="total-box mt-3">
+                <div class="total-box">
                     <span class="total-box-label">
-                        <i class="bi bi-calculator me-2"></i>Resumen
+                        <i class="bi bi-calculator me-2" aria-hidden="true"></i>Resumen
                     </span>
-                    <div class="total-breakdown">
+                    <div class="total-breakdown" aria-live="polite">
                         <div class="total-breakdown-item">
                             <span class="tbl">Base</span>
-                            <span class="tbv" id="baseDisplay">0,00 €</span>
+                            <span class="tbv cifra" id="baseDisplay">0,00 €</span>
                         </div>
                         <div class="total-breakdown-item">
                             <span class="tbl">IVA</span>
-                            <span class="tbv" id="ivaDisplay">0,00 €</span>
+                            <span class="tbv cifra" id="ivaDisplay">0,00 €</span>
                         </div>
                         <div class="total-breakdown-item highlight">
                             <span class="tbl">Total</span>
-                            <span class="tbv" id="totalDisplay">0,00 €</span>
+                            <span class="tbv cifra" id="totalDisplay">0,00 €</span>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary" data-no-double-click>
-                    <i class="bi bi-floppy me-1"></i>Guardar pedido
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar pedido
                 </button>
                 <a th:href="@{/web/pedidos-venta}" class="btn btn-ghost">Cancelar</a>
             </div>
         </form>
     </div>
 
-    <div id="pedido-form-data"
-         th:attr="data-lineas=${lineasJson}"
-         style="display:none">
+    <!-- Datos para el JS de líneas (no se muestran) -->
+    <div id="pedido-form-data" hidden
+         th:attr="data-lineas=${lineasJson}">
         <span th:each="a : ${articulos}"
-              th:attr="data-id=${a.id},data-texto=${(a.codigo ?: '') + ' — ' + (a.nombre ?: '')},data-pvp=${a.pvp != null ? a.pvp : 0},data-iva=${a.iva != null ? a.iva : 0}"
-              style="display:none"></span>
+              th:attr="data-id=${a.id},data-texto=${(a.codigo ?: '') + ' — ' + (a.nombre ?: '')},data-pvp=${a.pvp != null ? a.pvp : 0},data-iva=${a.iva != null ? a.iva : 0}"></span>
     </div>
     <script th:attr="nonce=${cspNonce}">
         /* global TomSelect */
@@ -171,7 +169,7 @@
 
             function buildSelect(selectedId) {
                 const sel = document.createElement('select');
-                sel.name = 'lineaArticuloId';
+                sel.name = 'lineaArticuloId'; sel.setAttribute('aria-label', 'Producto');
                 sel.className = 'form-select form-select-sm line-producto';
                 const empty = document.createElement('option');
                 empty.value = ''; empty.textContent = 'Seleccionar producto...';
@@ -185,11 +183,16 @@
                 return sel;
             }
 
+            // Nombre accesible de cada campo de línea (la tabla no tiene <label>)
+
+            const ARIA_LINEA = { lineaCantidad: 'Cantidad', lineaPrecio: 'Precio unitario', lineaIva: 'IVA %', lineaDescuento: 'Descuento %' };
+
+
             function makeInput(name, cssClass, placeholder, value) {
                 const inp = document.createElement('input');
                 inp.type = 'text'; inp.inputMode = 'decimal';
-                inp.name = name;
-                inp.className = 'form-control form-control-sm ' + cssClass + ' line-input';
+                inp.name = name; inp.setAttribute('aria-label', ARIA_LINEA[name] || name);
+                inp.className = 'form-control form-control-sm text-end ' + cssClass + ' line-input';
                 inp.placeholder = placeholder;
                 if (value !== undefined && value !== null) inp.value = value;
                 return inp;
@@ -213,9 +216,10 @@
                 const tdDel  = document.createElement('td');
                 const btnDel = document.createElement('button');
                 btnDel.type = 'button';
-                btnDel.className = 'btn btn-ghost btn-sm text-danger line-remove btn-remove-line p-1';
-                btnDel.title = 'Eliminar línea';
-                btnDel.innerHTML = '<i class="bi bi-trash3"></i>';
+                btnDel.className = 'btn btn-ghost btn-sm btn-icon text-danger line-remove btn-remove-line';
+                btnDel.title = 'Quitar línea';
+                btnDel.setAttribute('aria-label', 'Quitar línea');
+                btnDel.innerHTML = '<i class="bi bi-trash3" aria-hidden="true"></i>';
                 tdDel.appendChild(btnDel);
 
                 [tdSel, tdCant, tdPrecio, tdIva, tdDto, tdSub, tdDel].forEach(function(td) { tr.appendChild(td); });

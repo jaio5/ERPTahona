@@ -1,41 +1,65 @@
 <div th:fragment="content" x-data="balanceApp" x-cloak>
     <div class="page-header">
         <div class="page-header-title">
-            <h4>Balance y cierre contable</h4>
+            <h1>Balance y cierre contable</h1>
+            <p>Sumas del mes y cierre del ejercicio anual</p>
         </div>
         <div class="page-header-actions">
-            <button class="btn btn-ghost btn-sm" @click="setTab('balance')" :class="tabClass('balance')">Balance</button>
-            <button class="btn btn-ghost btn-sm" @click="setTab('cierre')" :class="tabClass('cierre')">Cierre ejercicio</button>
+            <a th:href="@{/web/contabilidad/balance-pgc}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-file-earmark-spreadsheet me-1" aria-hidden="true"></i>Balance PGC
+            </a>
         </div>
     </div>
 
+    <!-- Pestañas: el estado activo lo pinta tabClass() ('active' sobre nav-link) -->
+    <nav class="nav nav-pills gap-1 mb-3" aria-label="Secciones del balance">
+        <button type="button" class="nav-link" @click="setTab('balance')" :class="tabClass('balance')" :aria-pressed="isTab('balance')">
+            <i class="bi bi-bar-chart me-1" aria-hidden="true"></i>Balance
+        </button>
+        <button type="button" class="nav-link" @click="setTab('cierre')" :class="tabClass('cierre')" :aria-pressed="isTab('cierre')">
+            <i class="bi bi-lock me-1" aria-hidden="true"></i>Cierre ejercicio
+        </button>
+    </nav>
+
     <!-- Balance -->
     <div x-show="isTab('balance')">
-        <div class="stat-card mb-3">
-            <div class="d-flex gap-2 align-items-center">
-                <label>Mes: <input type="month" x-model="mes" class="form-control form-control-sm d-inline" style="width:auto"></label>
-                <button class="btn btn-sm btn-primary" @click="cargarBalance()">Ver balance</button>
+        <div class="filter-bar mb-3">
+            <div class="filter-bar-filters">
+                <label class="form-label mb-0" for="balance-mes">Mes</label>
+                <input type="month" id="balance-mes" x-model="mes" class="form-control form-control-sm">
+                <button type="button" class="btn btn-sm btn-primary" @click="cargarBalance()">
+                    <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Ver balance
+                </button>
             </div>
+        </div>
+        <div x-show="!balance" class="form-card empty-state empty-state-compact">
+            <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+            <div class="empty-state-title">Calculando balance…</div>
         </div>
         <div x-show="balance">
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
-                    <div class="stat-card">
-                        <div class="stat-label">Total Debe</div>
+                    <div class="stat-card h-100">
+                        <div class="stat-label"><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>Total Debe</div>
                         <div class="stat-value" x-text="money(balanceValue('totalDebe'))"></div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-card">
-                        <div class="stat-label">Total Haber</div>
+                    <div class="stat-card h-100">
+                        <div class="stat-label"><i class="bi bi-box-arrow-up" aria-hidden="true"></i>Total Haber</div>
                         <div class="stat-value" x-text="money(balanceValue('totalHaber'))"></div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="stat-card">
-                        <div class="stat-label">Diferencia</div>
+                    <div class="stat-card h-100">
+                        <div class="stat-label"><i class="bi bi-arrow-left-right" aria-hidden="true"></i>Diferencia</div>
                         <div class="stat-value" :class="isBalanced() ? 'text-success' : 'text-danger'" x-text="money(balanceValue('diferencia'))"></div>
-                        <div class="stat-sub" x-text="balanceCountText()"></div>
+                        <div class="stat-sub d-flex flex-wrap align-items-center gap-2">
+                            <!-- El estado no se comunica solo con color: badge con texto -->
+                            <span class="badge-estado" :class="isBalanced() ? 'badge-estado-ok' : 'badge-estado-peligro'"
+                                  x-text="isBalanced() ? 'Cuadra' : 'Descuadre'"></span>
+                            <span x-text="balanceCountText()"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -43,18 +67,37 @@
     </div>
 
     <!-- Cierre ejercicio -->
-    <div x-show="isTab('cierre')" class="stat-card" style="max-width:500px">
-        <h6 class="mb-3">Cierre de ejercicio anual</h6>
-        <div class="form-field">
-            <label>Año a cerrar</label>
-            <input type="number" class="form-control" x-model="anioCierre" min="2020" :max="maxAnio">
-        </div>
-        <button class="btn btn-warning mt-3" @click="ejecutarCierre()">Ejecutar cierre</button>
-        <div x-show="cierreResult" class="mt-3 alert alert-info">
-            <p x-text="resultValue('mensaje')"></p>
-            <p><strong>Debe:</strong> <span x-text="money(resultValue('totalDebe'))"></span></p>
-            <p><strong>Haber:</strong> <span x-text="money(resultValue('totalHaber'))"></span></p>
-            <p><strong>Asiento cierre ID:</strong> <span x-text="resultValue('asientoCierreId')"></span></p>
+    <div x-show="isTab('cierre')">
+        <div class="row">
+            <div class="col-lg-7 col-xl-6">
+                <div class="form-card">
+                    <section class="form-section">
+                        <h2 class="form-section-title"><i class="bi bi-lock" aria-hidden="true"></i>Cierre de ejercicio anual</h2>
+                        <p class="form-section-hint">Genera el asiento de cierre del año indicado. Revisa antes el balance.</p>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label class="form-label" for="cierre-anio">Año a cerrar</label>
+                                <input type="number" id="cierre-anio" class="form-control text-end" x-model="anioCierre" min="2020" :max="maxAnio" inputmode="numeric">
+                            </div>
+                        </div>
+                    </section>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-warning" @click="ejecutarCierre()">
+                            <i class="bi bi-lock-fill me-1" aria-hidden="true"></i>Ejecutar cierre
+                        </button>
+                    </div>
+                    <div x-show="cierreResult" class="mt-3 alert alert-info" role="status">
+                        <p class="fw-semibold mb-2" x-text="resultValue('mensaje')"></p>
+                        <div class="doc-fields">
+                            <table class="doc-table">
+                                <tr><th>Debe</th><td x-text="money(resultValue('totalDebe'))"></td></tr>
+                                <tr><th>Haber</th><td x-text="money(resultValue('totalHaber'))"></td></tr>
+                                <tr><th>Asiento de cierre</th><td x-text="resultValue('asientoCierreId')"></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -85,7 +128,7 @@
                 },
                 isTab(name) { return this.tab === name; },
                 setTab(name) { this.tab = name; },
-                tabClass(name) { return this.tab === name ? 'btn-primary' : ''; },
+                tabClass(name) { return this.tab === name ? 'active' : ''; },
                 init() {
                     const now = new Date();
                     this.mes = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2, '0');

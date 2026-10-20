@@ -1,118 +1,100 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="'Pedido ' + ${pedido.numero}">Pedido de venta</h4>
+            <h1 th:text="'Pedido ' + ${pedido.numero}">Pedido de venta</h1>
             <p>
                 <span class="badge-status"
                       th:attr="data-status=${pedido.estado?.toLowerCase()}"
                       th:text="${pedido.estado ?: 'Sin estado'}">-</span>
-                <span class="text-muted small ms-2"
-                      th:text="${pedido.fecha != null ? #temporals.format(pedido.fecha,'dd/MM/yyyy') : ''}"></span>
+                <span th:text="${pedido.fecha != null ? #temporals.format(pedido.fecha,'dd/MM/yyyy') : ''}">01/10/2026</span>
             </p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/pedidos-venta}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="form-card mb-4">
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div class="doc-header-icon">
-                        <i class="bi bi-cart"></i>
-                    </div>
+            <div class="doc-card mb-4">
+                <div class="doc-card-header">
+                    <div class="doc-header-icon" aria-hidden="true"><i class="bi bi-cart"></i></div>
                     <div>
-                        <div class="fw-bold fs-5" th:text="${pedido.cliente?.nombre ?: '—'}">Cliente</div>
-                        <div class="text-muted small" th:text="${pedido.cliente?.cif ?: ''}"></div>
+                        <div class="doc-card-title" th:text="${pedido.cliente?.nombre ?: '—'}">Cliente</div>
+                        <div class="doc-card-meta" th:text="${pedido.cliente?.cif ?: ''}">B12345678</div>
                     </div>
                 </div>
 
-                <div class="doc-fields">
-                    <table class="doc-table">
-                    <tr>
-                        <th scope="row">Número</th>
-                        <td th:text="${pedido.numero ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Fecha</th>
-                        <td th:text="${pedido.fecha != null ? #temporals.format(pedido.fecha,'dd/MM/yyyy') : '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Cliente</th>
-                        <td th:text="${pedido.cliente?.nombre ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Total</th>
-                        <td style="font-size:1.3rem;color:var(--brand-color);"
-                             th:text="${#numbers.formatCurrency(totalCalculado)}">—</td>
-                    </tr>
-                    <tr th:if="${pedido.observaciones != null and !pedido.observaciones.isEmpty()}">
-                        <th scope="row">Observaciones</th>
-                        <td class="text-muted" th:text="${pedido.observaciones}"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Estado</th>
-                        <td>
-                            <span class="badge-status"
-                                  th:attr="data-status=${pedido.estado?.toLowerCase()}"
-                                  th:text="${pedido.estado ?: '—'}">—</span>
-                        </td>
-                    </tr>
-                    </table>
+                <div class="doc-summary">
+                    <div>
+                        <span class="doc-field-label">Base imponible</span>
+                        <div class="doc-field-value" th:text="${#numbers.formatCurrency(baseLineas)}">0,00 €</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">IVA</span>
+                        <div class="doc-field-value" th:text="${#numbers.formatCurrency(ivaLineas)}">0,00 €</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Fecha</span>
+                        <div class="doc-field-value"
+                             th:text="${pedido.fecha != null ? #temporals.format(pedido.fecha,'dd/MM/yyyy') : '—'}">—</div>
+                    </div>
+                </div>
+
+                <div class="doc-notes" th:if="${pedido.observaciones != null and !pedido.observaciones.isEmpty()}">
+                    <span class="doc-field-label">Observaciones</span>
+                    <p th:text="${pedido.observaciones}">Observaciones</p>
+                </div>
+
+                <div class="doc-total mt-3">
+                    <span class="doc-total-label">Total</span>
+                    <span class="doc-total-amount" th:text="${#numbers.formatCurrency(totalCalculado)}">0,00 €</span>
                 </div>
             </div>
 
-            <div class="table-card" th:if="${pedido.pedidoLineas != null and !pedido.pedidoLineas.isEmpty()}">
-                <div class="d-flex align-items-center justify-content-between px-4 py-3 border-separator">
-                    <span class="fw-semibold">Líneas del pedido</span>
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h2 class="table-card-title">Líneas del pedido</h2>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive" th:if="${pedido.pedidoLineas != null and !pedido.pedidoLineas.isEmpty()}">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Artículo</th>
-                                <th class="text-center" style="width:90px;">Cantidad</th>
-                                <th class="text-end" style="width:120px;">Precio unit.</th>
-                                <th th:if="${hayDescuento}" class="text-end" style="width:80px;">Dto.</th>
-                                <th class="text-end" style="width:80px;">IVA</th>
-                                <th class="text-end" style="width:120px;">Importe</th>
+                                <th class="cifra">Cantidad</th>
+                                <th class="cifra">Precio unit.</th>
+                                <th th:if="${hayDescuento}" class="cifra d-none d-lg-table-cell">Dto.</th>
+                                <th class="cifra d-none d-md-table-cell">IVA</th>
+                                <th class="cifra">Importe</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="l : ${pedido.pedidoLineas}">
-                                <td th:text="${l.articulo?.nombre ?: (l.descripcion ?: '—')}">—</td>
-                                <td class="text-center" th:text="${l.cantidad}">0</td>
-                                <td class="text-end"
+                                <td class="td-wrap" th:text="${l.articulo?.nombre ?: (l.descripcion ?: '—')}">—</td>
+                                <td class="cifra" th:text="${l.cantidad != null ? #numbers.formatDecimal(l.cantidad,1,'POINT',2,'COMMA') : '—'}">0</td>
+                                <td class="cifra"
                                     th:text="${l.precio != null ? #numbers.formatCurrency(l.precio) : '—'}">—</td>
-                                <td th:if="${hayDescuento}" class="text-end"
+                                <td th:if="${hayDescuento}" class="cifra d-none d-lg-table-cell"
                                     th:text="${l.descuento != null and l.descuento.signum() > 0 ? #numbers.formatDecimal(l.descuento,1,'POINT',2,'COMMA') + ' %' : '—'}">—</td>
-                                <td class="text-end"
+                                <td class="cifra text-muted d-none d-md-table-cell"
                                     th:text="${l.iva != null ? #numbers.formatDecimal(l.iva,1,'POINT',2,'COMMA') + ' %' : '—'}">—</td>
                                 <!-- Importe neto: cantidad x precio con el descuento de la línea (sin IVA) -->
-                                <td class="text-end fw-semibold"
+                                <td class="cifra fw-semibold"
                                     th:text="${l.precio != null and l.cantidad != null ? #numbers.formatCurrency(importesLinea[l.id]) : '—'}">—</td>
                             </tr>
                         </tbody>
-                        <tfoot th:with="colsEtiqueta=${hayDescuento ? 5 : 4}">
-                            <tr>
-                                <td th:attr="colspan=${colsEtiqueta}" class="text-end text-muted">Base imponible</td>
-                                <td class="text-end" th:text="${#numbers.formatCurrency(baseLineas)}">—</td>
-                            </tr>
-                            <tr>
-                                <td th:attr="colspan=${colsEtiqueta}" class="text-end text-muted">IVA</td>
-                                <td class="text-end" th:text="${#numbers.formatCurrency(ivaLineas)}">—</td>
-                            </tr>
-                            <tr>
-                                <td th:attr="colspan=${colsEtiqueta}" class="text-end fw-semibold text-muted">Total pedido</td>
-                                <td class="text-end fw-bold"
-                                    style="font-size:1.05rem;color:var(--brand-color);"
-                                    th:text="${#numbers.formatCurrency(totalCalculado)}">—</td>
-                            </tr>
-                        </tfoot>
                     </table>
+                </div>
+                <div th:if="${pedido.pedidoLineas == null or pedido.pedidoLineas.isEmpty()}" class="empty-state empty-state-compact">
+                    <i class="bi bi-cart" aria-hidden="true"></i>
+                    <div class="empty-state-title">Sin líneas de pedido</div>
+                    <small class="empty-state-hint" th:if="${pedido.estado == 'PENDIENTE'}">Edita el pedido para añadir productos</small>
+                    <a th:if="${pedido.estado == 'PENDIENTE'}"
+                       th:href="@{/web/pedidos-venta/{id}/editar(id=${pedido.id})}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar pedido
+                    </a>
                 </div>
             </div>
         </div>
@@ -122,36 +104,37 @@
                 <div class="label">Total pedido</div>
                 <div class="amount"
                      th:text="${#numbers.formatCurrency(totalCalculado)}">0,00 €</div>
-                <div>
-                    <span class="badge-status"
-                          th:attr="data-status=${pedido.estado?.toLowerCase()}"
-                          th:text="${pedido.estado ?: '—'}">—</span>
-                </div>
+                <span class="badge-status"
+                      th:attr="data-status=${pedido.estado?.toLowerCase()}"
+                      th:text="${pedido.estado ?: '—'}">—</span>
             </div>
 
             <div class="form-card">
-                <div class="doc-field-label mb-3">Acciones</div>
-                <div class="d-grid gap-2">
+                <h2 class="card-heading mb-3">Acciones</h2>
+                <div class="action-stack">
+                    <!-- PENDIENTE: siguiente paso, confirmar -->
                     <form th:if="${pedido.estado == 'PENDIENTE'}"
                           th:action="@{/web/pedidos-venta/{id}/confirmar(id=${pedido.id})}" method="post">
-                        <button class="btn btn-success w-100" data-no-double-click>
-                            <i class="bi bi-check-lg me-2"></i>Confirmar pedido
+                        <button class="btn btn-primary" data-no-double-click>
+                            <i class="bi bi-check-lg me-2" aria-hidden="true"></i>Confirmar pedido
                         </button>
                     </form>
                     <a th:if="${pedido.estado == 'PENDIENTE'}"
                        th:href="@{/web/pedidos-venta/{id}/editar(id=${pedido.id})}"
-                        class="btn btn-ghost">
-                        <i class="bi bi-pencil me-2"></i>Editar pedido
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-pencil me-2" aria-hidden="true"></i>Editar pedido
                     </a>
+                    <!-- CONFIRMADO: siguiente paso, servir con un albarán -->
                     <a th:if="${pedido.estado == 'CONFIRMADO'}"
                        th:href="@{/web/albaranes/nuevo}"
                        class="btn btn-primary">
-                        <i class="bi bi-truck me-2"></i>Crear albarán
+                        <i class="bi bi-truck me-2" aria-hidden="true"></i>Crear albarán
                     </a>
+                    <div class="action-stack-sep" th:if="${@permisos.puede('ventas','crear')}"></div>
                     <form th:if="${@permisos.puede('ventas','crear')}"
                           th:action="@{/web/pedidos-venta/{id}/duplicar(id=${pedido.id})}" method="post">
-                        <button class="btn btn-ghost w-100" data-no-double-click>
-                            <i class="bi bi-copy me-2"></i>Duplicar
+                        <button class="btn btn-outline-secondary" data-no-double-click>
+                            <i class="bi bi-copy me-2" aria-hidden="true"></i>Duplicar
                         </button>
                     </form>
                 </div>

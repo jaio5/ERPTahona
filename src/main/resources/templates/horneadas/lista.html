@@ -1,14 +1,31 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Horneadas</h4>
+            <h1 th:text="${titulo}">Horneadas</h1>
+            <p>Registro de hornadas: temperaturas, producción y coste real</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/horneadas/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Registrar horneada
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Registrar horneada
             </a>
         </div>
     </div>
+
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/horneadas}">
+        <div class="filter-bar-search">
+            <label for="horneadas-search" class="visually-hidden">Buscar horneadas</label>
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input id="horneadas-search" type="search" name="q" class="form-control form-control-sm"
+                   placeholder="Tipo o resultado (OK, NOK)…" th:value="${q}" autocomplete="off">
+        </div>
+        <div class="filter-bar-actions">
+            <button class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar
+            </button>
+            <a th:href="@{/web/horneadas}" class="btn btn-ghost btn-sm">Limpiar</a>
+            <span class="filter-bar-count" th:if="${horneadas != null}"><span th:text="${#lists.size(horneadas)}">0</span> horneadas</span>
+        </div>
+    </form>
 
     <div class="table-card">
         <div class="table-responsive">
@@ -17,39 +34,51 @@
                     <tr>
                         <th>Fecha</th>
                         <th>Tipo</th>
-                        <th class="text-end">T. Inicial (°C)</th>
-                        <th class="text-end">T. Final (°C)</th>
-                        <th class="text-end">Cantidad</th>
+                        <th class="cifra d-none d-lg-table-cell">T. inicial (°C)</th>
+                        <th class="cifra d-none d-lg-table-cell">T. final (°C)</th>
+                        <th class="cifra">Cantidad</th>
                         <th>Resultado</th>
-                        <th class="text-end">Coste unit.</th>
-                        <th style="width:80px;"></th>
+                        <th class="cifra d-none d-md-table-cell">Coste unit.</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(horneadas)}">
                         <td colspan="8" class="empty-state">
-                            <i class="bi bi-fire"></i>
-                            <div>No hay horneadas registradas</div>
+                            <i class="bi bi-fire" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay horneadas registradas</div>
+                            <small class="empty-state-hint" th:if="${q != null and !q.isEmpty()}">Prueba con otros términos de búsqueda</small>
+                            <small class="empty-state-hint" th:unless="${q != null and !q.isEmpty()}">Anota cada hornada para llevar el control de temperaturas y costes.</small>
+                            <a th:unless="${q != null and !q.isEmpty()}" th:href="@{/web/horneadas/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Registrar horneada
+                            </a>
                         </td>
                     </tr>
                     <tr th:each="h : ${horneadas}">
-                        <td class="text-muted small"
-                            th:text="${h.fecha != null ? #temporals.format(h.fecha, 'dd/MM/yyyy') : '—'}"></td>
-                        <td th:text="${h.tipoHorneada ?: '—'}"></td>
-                        <td class="text-end" th:text="${h.temperaturaInicial != null ? h.temperaturaInicial + ' °C' : '—'}"></td>
-                        <td class="text-end" th:text="${h.temperaturaFinal != null ? h.temperaturaFinal + ' °C' : '—'}"></td>
-                        <td class="text-end" th:text="${h.cantidadProducida != null ? h.cantidadProducida : '—'}"></td>
                         <td>
-                            <span class="badge-status" th:attr="data-status=${h.resultado?.toLowerCase()}"
-                                  th:text="${h.resultado ?: '—'}"></span>
-                        </td>
-                        <td class="text-end text-muted small"
-                            th:text="${h.costeUnitario() != null ? #numbers.formatDecimal(h.costeUnitario(),1,2) + ' €' : '—'}"></td>
-                        <td class="text-end">
                             <a th:href="@{/web/horneadas/{id}(id=${h.id})}"
-                               class="btn btn-ghost btn-sm" title="Ver">
-                                <i class="bi bi-eye"></i>
-                            </a>
+                               th:text="${h.fecha != null ? #temporals.format(h.fecha, 'dd/MM/yyyy') : '—'}">01/10/2026</a>
+                        </td>
+                        <td th:text="${h.tipoHorneada ?: '—'}"></td>
+                        <td class="cifra d-none d-lg-table-cell" th:text="${h.temperaturaInicial != null ? h.temperaturaInicial : '—'}"></td>
+                        <td class="cifra d-none d-lg-table-cell" th:text="${h.temperaturaFinal != null ? h.temperaturaFinal : '—'}"></td>
+                        <td class="cifra" th:text="${h.cantidadProducida != null ? #numbers.formatDecimal(h.cantidadProducida, 1, 'POINT', 2, 'COMMA') : '—'}"></td>
+                        <td>
+                            <span th:if="${h.resultado != null}" class="badge-status"
+                                  th:attr="data-status=${h.resultado.toLowerCase()}"
+                                  th:text="${h.resultado}">OK</span>
+                            <span th:unless="${h.resultado != null}" class="text-muted">Sin registrar</span>
+                        </td>
+                        <td class="cifra text-muted d-none d-md-table-cell"
+                            th:text="${h.costeUnitario() != null ? #numbers.formatDecimal(h.costeUnitario(), 1, 'POINT', 2, 'COMMA') + ' €' : '—'}"></td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/horneadas/{id}(id=${h.id})}"
+                                   class="btn btn-ghost btn-sm btn-icon" title="Ver"
+                                   th:attr="aria-label='Ver horneada del ' + ${h.fecha != null ? #temporals.format(h.fecha, 'dd/MM/yyyy') : h.id}">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

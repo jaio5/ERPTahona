@@ -1,11 +1,12 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Proveedores</h4>
+            <h1 th:text="${titulo}">Proveedores</h1>
+            <p>Harineras, lácteos y demás proveedores del obrador</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/proveedores/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nuevo proveedor
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo proveedor
             </a>
         </div>
     </div>
@@ -13,15 +14,18 @@
     <form class="filter-bar mb-3" method="get" th:action="@{/web/proveedores}">
         <div class="filter-bar-search">
             <label for="prov-search" class="visually-hidden">Buscar proveedores</label>
-            <i class="bi bi-search"></i>
+            <i class="bi bi-search" aria-hidden="true"></i>
             <input id="prov-search" type="search" name="q" class="form-control form-control-sm"
-                   placeholder="Nombre, CIF o código..." th:value="${q}" autocomplete="off">
+                   placeholder="Nombre, CIF o código…" th:value="${q}" autocomplete="off">
         </div>
         <div class="filter-bar-actions">
-            <button class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-funnel me-1"></i>Filtrar
+            <button class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar
             </button>
             <a th:href="@{/web/proveedores}" class="btn btn-ghost btn-sm">Limpiar</a>
+            <span class="filter-bar-count" th:if="${page != null}">
+                <span th:text="${page.totalElements}">0</span> proveedores
+            </span>
         </div>
     </form>
 
@@ -32,41 +36,48 @@
                     <tr>
                         <th>Código</th>
                         <th>Nombre</th>
-                        <th>CIF</th>
+                        <th class="d-none d-md-table-cell">CIF</th>
                         <th>Teléfono</th>
-                        <th>Email</th>
-                        <th style="width:130px;"></th>
+                        <th class="d-none d-lg-table-cell">Email</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(proveedores)}">
                         <td colspan="6" class="empty-state">
-                            <i class="bi bi-person-badge"></i>
-                            <div>No hay proveedores registrados</div>
-                            <small th:if="${q != null and !q.isEmpty()}">Prueba con otros términos de búsqueda</small>
+                            <i class="bi bi-truck" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay proveedores</div>
+                            <small class="empty-state-hint" th:if="${q != null and !q.isEmpty()}">Prueba con otro nombre, CIF o código.</small>
+                            <small class="empty-state-hint" th:unless="${q != null and !q.isEmpty()}">Da de alta el primero para registrar pedidos y facturas de compra.</small>
+                            <a th:href="@{/web/proveedores/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo proveedor
+                            </a>
                         </td>
                     </tr>
                     <tr th:each="p : ${proveedores}">
-                        <td class="fw-medium" th:text="${p.codigo}"></td>
-                        <td th:text="${p.nombre}"></td>
-                        <td class="text-muted" th:text="${p.cif ?: '—'}"></td>
-                        <td class="text-muted" th:text="${p.telefono ?: '—'}"></td>
-                        <td class="text-muted small" th:text="${p.email ?: '—'}"></td>
-                        <td class="text-end text-nowrap">
-                            <a th:href="@{/web/proveedores/{id}(id=${p.id})}"
-                               class="btn btn-ghost btn-sm" title="Ver">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a th:href="@{/web/proveedores/{id}/editar(id=${p.id})}"
-                               class="btn btn-ghost btn-sm" title="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form th:action="@{/web/proveedores/{id}/eliminar(id=${p.id})}" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-ghost btn-sm text-danger" title="Eliminar"
-                                        data-confirm="¿Eliminar este proveedor? Si tiene documentos asociados no se podrá borrar.">
-                                    <i class="bi bi-trash3"></i>
-                                </button>
-                            </form>
+                        <td class="text-muted" th:text="${p.codigo}">P001</td>
+                        <td><a th:href="@{/web/proveedores/{id}(id=${p.id})}" th:text="${p.nombre}">Harinas del Segura</a></td>
+                        <td class="text-muted d-none d-md-table-cell" th:text="${p.cif ?: '—'}">B03000000</td>
+                        <td class="text-muted" th:text="${p.telefono ?: '—'}">965 000 000</td>
+                        <td class="text-muted d-none d-lg-table-cell" th:text="${p.email ?: '—'}">pedidos@proveedor.es</td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/proveedores/{id}(id=${p.id})}" class="btn btn-ghost btn-sm btn-icon"
+                                   th:attr="aria-label='Ver proveedor ' + ${p.nombre}" title="Ver">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                                <a th:href="@{/web/proveedores/{id}/editar(id=${p.id})}" class="btn btn-ghost btn-sm btn-icon"
+                                   th:attr="aria-label='Editar proveedor ' + ${p.nombre}" title="Editar">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+                                <form th:action="@{/web/proveedores/{id}/eliminar(id=${p.id})}" method="post">
+                                    <button type="submit" class="btn btn-ghost btn-sm btn-icon text-danger" data-no-double-click
+                                            data-confirm="¿Eliminar este proveedor? Si tiene documentos asociados no se podrá borrar."
+                                            th:attr="aria-label='Eliminar proveedor ' + ${p.nombre}" title="Eliminar">
+                                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

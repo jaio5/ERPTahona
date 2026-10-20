@@ -1,28 +1,59 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Nueva devolución</h4>
+            <h1 th:text="${titulo}">Nueva devolución</h1>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/devoluciones}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
-    <form th:action="@{/web/devoluciones}" method="post" class="form-card needs-validation" novalidate>
-        <input type="hidden" name="id" th:value="${devolucion?.id}">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label" for="clienteId">Cliente *</label>
-                <select id="clienteId" name="clienteId" class="form-select" required data-searchable>
-                    <option value="">Seleccionar cliente...</option>
-                    <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre}" th:selected="${devolucion?.cliente?.id == c.id}"></option>
-                </select>
+
+    <div class="form-card form-card-narrow">
+        <form th:action="@{/web/devoluciones}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${devolucion?.id}">
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-arrow-return-left" aria-hidden="true"></i>Datos de la devolución</h2>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="numero">Número *</label>
+                        <input id="numero" name="numero" class="form-control" th:value="${devolucion?.numero}" required>
+                        <div class="invalid-feedback">El número es obligatorio.</div>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label" for="clienteId">Cliente *</label>
+                        <select id="clienteId" name="clienteId" class="form-select" required data-searchable>
+                            <option value="">Seleccionar cliente…</option>
+                            <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre}" th:selected="${devolucion?.cliente?.id == c.id}"></option>
+                        </select>
+                        <div class="invalid-feedback">Selecciona un cliente.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-chat-left-text" aria-hidden="true"></i>Motivo</h2>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="motivo">Motivo de la devolución</label>
+                        <input id="motivo" name="motivo" class="form-control" th:value="${devolucion?.motivo}"
+                               placeholder="Producto dañado, pedido equivocado…">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="observaciones">Observaciones</label>
+                        <textarea id="observaciones" name="observaciones" class="form-control" rows="3" th:text="${devolucion?.observaciones}"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" type="submit" data-no-double-click>
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar devolución
+                </button>
+                <a th:href="@{/web/devoluciones}" class="btn btn-ghost">Cancelar</a>
             </div>
-            <div class="col-md-4"><label class="form-label" for="numero">Numero</label><input id="numero" name="numero" class="form-control" th:value="${devolucion?.numero}" required></div>
-            <div class="col-md-6"><label class="form-label" for="motivo">Motivo</label><input id="motivo" name="motivo" class="form-control" th:value="${devolucion?.motivo}"></div>
-            <div class="col-12"><label class="form-label" for="observaciones">Observaciones</label><textarea id="observaciones" name="observaciones" class="form-control" rows="3" th:text="${devolucion?.observaciones}"></textarea></div>
-        </div>
-        <div class="mt-4"><button class="btn btn-primary" type="submit" data-no-double-click>Guardar</button><a th:href="@{/web/devoluciones}" class="btn btn-ghost ms-2">Cancelar</a></div>
-    </form>
+        </form>
+    </div>
 </div>

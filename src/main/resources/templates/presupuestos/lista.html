@@ -1,40 +1,67 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Presupuestos</h4>
+            <h1 th:text="${titulo}">Presupuestos</h1>
+            <p>Ofertas de precios enviadas a clientes</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/presupuestos/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nuevo presupuesto
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo presupuesto
             </a>
         </div>
     </div>
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
-    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
-        <thead><tr><th>Número</th><th>Fecha</th><th>Válido hasta</th><th>Cliente</th><th>Estado</th><th style="width:80px;"></th></tr></thead>
-        <tbody>
-            <tr th:if="${#lists.isEmpty(presupuestos)}"><td colspan="6" class="empty-state"><i class="bi bi-file-earmark-text"></i><div>No hay presupuestos</div></td></tr>
-            <tr th:each="p : ${presupuestos}">
-                <td><a th:href="@{/web/presupuestos/{id}(id=${p.id})}"
-                       class="fw-medium text-decoration-none" th:text="${p.numero ?: '—'}"></a></td>
-                <td th:text="${p.fecha != null ? #temporals.format(p.fecha, 'dd/MM/yyyy') : '-'}"></td>
-                <td th:text="${p.fechaValidez != null ? #temporals.format(p.fechaValidez, 'dd/MM/yyyy') : '-'}"></td>
-                <td th:text="${p.cliente?.nombre} ?: '-'"></td>
-                <td><span class="badge-status" th:attr="data-status=${p.estado?.toLowerCase()}" th:text="${p.estado}"></span></td>
-                <td class="text-end">
-                    <a th:href="@{/web/presupuestos/{id}(id=${p.id})}" class="btn btn-ghost btn-sm" title="Ver">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <a th:if="${p.estado == 'BORRADOR'}"
-                       th:href="@{/web/presupuestos/{id}/editar(id=${p.id})}"
-                       class="btn btn-ghost btn-sm" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                </td>
-            </tr>
-        </tbody>
-    </table></div></div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Fecha</th>
+                        <th class="d-none d-lg-table-cell">Válido hasta</th>
+                        <th>Cliente</th>
+                        <th class="cifra">Total</th>
+                        <th>Estado</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(presupuestos)}">
+                        <td colspan="7" class="empty-state">
+                            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay presupuestos</div>
+                            <small class="empty-state-hint">Prepara una oferta de precios para un cliente</small>
+                            <a th:href="@{/web/presupuestos/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo presupuesto
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:each="p : ${presupuestos}">
+                        <td><a th:href="@{/web/presupuestos/{id}(id=${p.id})}" th:text="${p.numero ?: '—'}">P-1</a></td>
+                        <td class="text-muted" th:text="${p.fecha != null ? #temporals.format(p.fecha, 'dd/MM/yyyy') : '—'}">01/10/2026</td>
+                        <td class="text-muted d-none d-lg-table-cell" th:text="${p.fechaValidez != null ? #temporals.format(p.fechaValidez, 'dd/MM/yyyy') : '—'}">15/10/2026</td>
+                        <td th:text="${p.cliente?.nombre} ?: '—'">Cliente</td>
+                        <td class="cifra fw-medium" th:text="${p.total != null ? #numbers.formatCurrency(p.total) : '—'}">0,00 €</td>
+                        <td><span class="badge-status" th:attr="data-status=${p.estado?.toLowerCase()}" th:text="${p.estado}">BORRADOR</span></td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/presupuestos/{id}(id=${p.id})}" class="btn btn-ghost btn-sm btn-icon" title="Ver"
+                                   th:attr="aria-label='Ver presupuesto ' + ${p.numero}">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                                <a th:if="${p.estado == 'BORRADOR'}"
+                                   th:href="@{/web/presupuestos/{id}/editar(id=${p.id})}"
+                                   class="btn btn-ghost btn-sm btn-icon" title="Editar"
+                                   th:attr="aria-label='Editar presupuesto ' + ${p.numero}">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/presupuestos')}"></div>
 </div>

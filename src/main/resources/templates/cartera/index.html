@@ -1,57 +1,99 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Cartera</h4>
+            <h1 th:text="${titulo}">Cartera</h1>
+            <p>Facturas con importe pendiente, por antigüedad de la deuda</p>
         </div>
     </div>
 
-    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <!-- Los mensajes exito/error salen como toast desde el layout -->
 
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="tab-cobros" data-bs-toggle="tab" data-bs-target="#panel-cobros" type="button" role="tab">
-                <i class="bi bi-arrow-down-circle me-1"></i>Cobros pendientes
+            <button class="nav-link active" id="tab-cobros" data-bs-toggle="tab" data-bs-target="#panel-cobros" type="button" role="tab"
+                    aria-controls="panel-cobros" aria-selected="true">
+                <i class="bi bi-arrow-down-circle me-1" aria-hidden="true"></i>Cobros pendientes
+                <span class="badge badge-count ms-1" th:text="${#lists.size(cobros)}">0</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-pagos" data-bs-toggle="tab" data-bs-target="#panel-pagos" type="button" role="tab">
-                <i class="bi bi-arrow-up-circle me-1"></i>Pagos pendientes
+            <button class="nav-link" id="tab-pagos" data-bs-toggle="tab" data-bs-target="#panel-pagos" type="button" role="tab"
+                    aria-controls="panel-pagos" aria-selected="false">
+                <i class="bi bi-arrow-up-circle me-1" aria-hidden="true"></i>Pagos pendientes
+                <span class="badge badge-count ms-1" th:text="${#lists.size(pagos)}">0</span>
             </button>
         </li>
     </ul>
 
     <div class="tab-content pt-3">
         <!-- ── Cobros ── -->
-        <div class="tab-pane fade show active" id="panel-cobros" role="tabpanel">
-            <div class="row g-2 mb-3">
-                <div class="col"><div class="card p-2 text-center"><small class="text-muted">No vencido</small><div class="fw-bold" th:text="${#numbers.formatCurrency(agingCobros.noVencido)}"></div></div></div>
-                <div class="col"><div class="card p-2 text-center"><small class="text-muted">1–30 días</small><div class="fw-bold text-warning" th:text="${#numbers.formatCurrency(agingCobros.hasta30)}"></div></div></div>
-                <div class="col"><div class="card p-2 text-center"><small class="text-muted">31–60 días</small><div class="fw-bold text-warning" th:text="${#numbers.formatCurrency(agingCobros.hasta60)}"></div></div></div>
-                <div class="col"><div class="card p-2 text-center"><small class="text-muted">&gt;60 días</small><div class="fw-bold text-danger" th:text="${#numbers.formatCurrency(agingCobros.mas60)}"></div></div></div>
-                <div class="col"><div class="card p-2 text-center"><small class="text-muted">Total pendiente</small><div class="fw-bold" th:text="${#numbers.formatCurrency(agingCobros.total)}"></div></div></div>
+        <div class="tab-pane fade show active" id="panel-cobros" role="tabpanel" aria-labelledby="tab-cobros" tabindex="0">
+            <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-xl-5 mb-3">
+                <div class="col"><div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-calendar-check" aria-hidden="true"></i>No vencido</div>
+                    <div class="stat-value" th:text="${#numbers.formatCurrency(agingCobros.noVencido)}">0,00 €</div>
+                </div></div>
+                <div class="col"><div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-hourglass-split" aria-hidden="true"></i>1–30 días</div>
+                    <div class="stat-value" th:text="${#numbers.formatCurrency(agingCobros.hasta30)}">0,00 €</div>
+                </div></div>
+                <div class="col"><div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-hourglass-bottom" aria-hidden="true"></i>31–60 días</div>
+                    <div class="stat-value" th:text="${#numbers.formatCurrency(agingCobros.hasta60)}">0,00 €</div>
+                </div></div>
+                <div class="col"><div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Más de 60 días</div>
+                    <div class="stat-value" th:classappend="${agingCobros.mas60 != null and agingCobros.mas60.signum() > 0} ? 'peligro'"
+                         th:text="${#numbers.formatCurrency(agingCobros.mas60)}">0,00 €</div>
+                </div></div>
+                <div class="col"><div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-wallet2" aria-hidden="true"></i>Total pendiente</div>
+                    <div class="stat-value" th:text="${#numbers.formatCurrency(agingCobros.total)}">0,00 €</div>
+                </div></div>
             </div>
             <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
-                <thead><tr><th>Factura</th><th>Cliente</th><th>Fecha</th><th>Vencimiento</th><th class="text-end">Total</th><th class="text-end">Cobrado</th><th class="text-end">Pendiente</th><th class="text-end">Días vencida</th><th></th></tr></thead>
+                <thead><tr>
+                    <th>Factura</th>
+                    <th>Cliente</th>
+                    <th class="d-none d-lg-table-cell">Fecha</th>
+                    <th>Vencimiento</th>
+                    <th class="cifra d-none d-lg-table-cell">Total</th>
+                    <th class="cifra d-none d-lg-table-cell">Cobrado</th>
+                    <th class="cifra">Pendiente</th>
+                    <th class="cifra">Días vencida</th>
+                    <th><span class="visually-hidden">Acciones</span></th>
+                </tr></thead>
                 <tbody>
-                    <tr th:if="${#lists.isEmpty(cobros)}"><td colspan="9" class="empty-state"><i class="bi bi-check2-all"></i><div>No hay cobros pendientes</div></td></tr>
+                    <tr th:if="${#lists.isEmpty(cobros)}">
+                        <td colspan="9" class="empty-state">
+                            <i class="bi bi-check2-all" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay cobros pendientes</div>
+                            <small class="empty-state-hint">Todas las facturas de venta están cobradas.</small>
+                        </td>
+                    </tr>
                     <tr th:each="c : ${cobros}">
                         <td><a th:href="@{'/web/facturas/' + ${c.id}}" th:text="${c.numero}"></a></td>
                         <td th:text="${c.tercero}"></td>
-                        <td th:text="${c.fecha != null ? #temporals.format(c.fecha, 'dd/MM/yyyy') : '—'}"></td>
+                        <td class="text-muted d-none d-lg-table-cell" th:text="${c.fecha != null ? #temporals.format(c.fecha, 'dd/MM/yyyy') : '—'}"></td>
                         <td th:text="${c.vencimiento != null ? #temporals.format(c.vencimiento, 'dd/MM/yyyy') : '—'}"></td>
-                        <td class="text-end" th:text="${#numbers.formatCurrency(c.total)}"></td>
-                        <td class="text-end" th:text="${#numbers.formatCurrency(c.pagado)}"></td>
-                        <td class="text-end fw-medium" th:text="${#numbers.formatCurrency(c.pendiente)}"></td>
-                        <td class="text-end" th:classappend="${c.diasVencido > 0 ? 'text-danger fw-bold' : ''}"
-                            th:text="${c.diasVencido > 0 ? c.diasVencido : '—'}"></td>
-                        <td class="text-end">
-                            <button th:if="${@permisos.puede('tesoreria','crear')}" type="button"
-                                    class="btn btn-sm btn-success btn-registrar-cobro"
-                                    data-bs-toggle="modal" data-bs-target="#modalCobro"
-                                    th:attr="data-factura-id=${c.id},data-numero=${c.numero},data-pendiente=${c.pendiente}">
-                                <i class="bi bi-cash-coin me-1"></i>Cobrar
-                            </button>
+                        <td class="cifra d-none d-lg-table-cell" th:text="${#numbers.formatCurrency(c.total)}"></td>
+                        <td class="cifra text-muted d-none d-lg-table-cell" th:text="${#numbers.formatCurrency(c.pagado)}"></td>
+                        <td class="cifra fw-semibold" th:text="${#numbers.formatCurrency(c.pendiente)}"></td>
+                        <td class="cifra">
+                            <!-- Vencida: badge de peligro (color + forma), no solo texto rojo -->
+                            <span th:if="${c.diasVencido > 0}" class="badge-estado badge-estado-peligro"
+                                  th:text="${c.diasVencido} + ' días'">0 días</span>
+                            <span th:unless="${c.diasVencido > 0}" class="text-muted">—</span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button th:if="${@permisos.puede('tesoreria','crear')}" type="button"
+                                        class="btn btn-sm btn-outline-primary btn-registrar-cobro"
+                                        data-bs-toggle="modal" data-bs-target="#modalCobro"
+                                        th:attr="data-factura-id=${c.id},data-numero=${c.numero},data-pendiente=${c.pendiente},aria-label='Cobrar factura ' + ${c.numero}">
+                                    <i class="bi bi-cash-coin me-1" aria-hidden="true"></i>Cobrar
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -59,35 +101,73 @@
         </div>
 
         <!-- ── Pagos ── -->
-        <div class="tab-pane fade" id="panel-pagos" role="tabpanel">
-            <div class="row g-2 mb-3">
-                <div class="col"><div class="card p-2 text-center"><small class="text-muted">No vencido</small><div class="fw-bold" th:text="${#numbers.formatCurrency(agingPagos.noVencido)}"></div></div></div>
-                <div class="col"><div class="card p-2 text-center"><small class="text-muted">1–30 días</small><div class="fw-bold text-warning" th:text="${#numbers.formatCurrency(agingPagos.hasta30)}"></div></div></div>
-                <div class="col"><div class="card p-2 text-center"><small class="text-muted">31–60 días</small><div class="fw-bold text-warning" th:text="${#numbers.formatCurrency(agingPagos.hasta60)}"></div></div></div>
-                <div class="col"><div class="card p-2 text-center"><small class="text-muted">&gt;60 días</small><div class="fw-bold text-danger" th:text="${#numbers.formatCurrency(agingPagos.mas60)}"></div></div></div>
-                <div class="col"><div class="card p-2 text-center"><small class="text-muted">Total pendiente</small><div class="fw-bold" th:text="${#numbers.formatCurrency(agingPagos.total)}"></div></div></div>
+        <div class="tab-pane fade" id="panel-pagos" role="tabpanel" aria-labelledby="tab-pagos" tabindex="0">
+            <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-xl-5 mb-3">
+                <div class="col"><div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-calendar-check" aria-hidden="true"></i>No vencido</div>
+                    <div class="stat-value" th:text="${#numbers.formatCurrency(agingPagos.noVencido)}">0,00 €</div>
+                </div></div>
+                <div class="col"><div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-hourglass-split" aria-hidden="true"></i>1–30 días</div>
+                    <div class="stat-value" th:text="${#numbers.formatCurrency(agingPagos.hasta30)}">0,00 €</div>
+                </div></div>
+                <div class="col"><div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-hourglass-bottom" aria-hidden="true"></i>31–60 días</div>
+                    <div class="stat-value" th:text="${#numbers.formatCurrency(agingPagos.hasta60)}">0,00 €</div>
+                </div></div>
+                <div class="col"><div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>Más de 60 días</div>
+                    <div class="stat-value" th:classappend="${agingPagos.mas60 != null and agingPagos.mas60.signum() > 0} ? 'peligro'"
+                         th:text="${#numbers.formatCurrency(agingPagos.mas60)}">0,00 €</div>
+                </div></div>
+                <div class="col"><div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-wallet2" aria-hidden="true"></i>Total pendiente</div>
+                    <div class="stat-value" th:text="${#numbers.formatCurrency(agingPagos.total)}">0,00 €</div>
+                </div></div>
             </div>
             <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
-                <thead><tr><th>Factura</th><th>Proveedor</th><th>Fecha</th><th>Vencimiento</th><th class="text-end">Total</th><th class="text-end">Pagado</th><th class="text-end">Pendiente</th><th class="text-end">Días vencida</th><th></th></tr></thead>
+                <thead><tr>
+                    <th>Factura</th>
+                    <th>Proveedor</th>
+                    <th class="d-none d-lg-table-cell">Fecha</th>
+                    <th>Vencimiento</th>
+                    <th class="cifra d-none d-lg-table-cell">Total</th>
+                    <th class="cifra d-none d-lg-table-cell">Pagado</th>
+                    <th class="cifra">Pendiente</th>
+                    <th class="cifra">Días vencida</th>
+                    <th><span class="visually-hidden">Acciones</span></th>
+                </tr></thead>
                 <tbody>
-                    <tr th:if="${#lists.isEmpty(pagos)}"><td colspan="9" class="empty-state"><i class="bi bi-check2-all"></i><div>No hay pagos pendientes</div></td></tr>
+                    <tr th:if="${#lists.isEmpty(pagos)}">
+                        <td colspan="9" class="empty-state">
+                            <i class="bi bi-check2-all" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay pagos pendientes</div>
+                            <small class="empty-state-hint">Todas las facturas de compra están pagadas.</small>
+                        </td>
+                    </tr>
                     <tr th:each="p : ${pagos}">
                         <td><a th:href="@{'/web/facturas-compra/' + ${p.id}}" th:text="${p.numero}"></a></td>
                         <td th:text="${p.tercero}"></td>
-                        <td th:text="${p.fecha != null ? #temporals.format(p.fecha, 'dd/MM/yyyy') : '—'}"></td>
+                        <td class="text-muted d-none d-lg-table-cell" th:text="${p.fecha != null ? #temporals.format(p.fecha, 'dd/MM/yyyy') : '—'}"></td>
                         <td th:text="${p.vencimiento != null ? #temporals.format(p.vencimiento, 'dd/MM/yyyy') : '—'}"></td>
-                        <td class="text-end" th:text="${#numbers.formatCurrency(p.total)}"></td>
-                        <td class="text-end" th:text="${#numbers.formatCurrency(p.pagado)}"></td>
-                        <td class="text-end fw-medium" th:text="${#numbers.formatCurrency(p.pendiente)}"></td>
-                        <td class="text-end" th:classappend="${p.diasVencido > 0 ? 'text-danger fw-bold' : ''}"
-                            th:text="${p.diasVencido > 0 ? p.diasVencido : '—'}"></td>
-                        <td class="text-end">
-                            <button th:if="${@permisos.puede('tesoreria','crear')}" type="button"
-                                    class="btn btn-sm btn-primary btn-registrar-pago"
-                                    data-bs-toggle="modal" data-bs-target="#modalPago"
-                                    th:attr="data-factura-id=${p.id},data-numero=${p.numero},data-pendiente=${p.pendiente}">
-                                <i class="bi bi-cash-coin me-1"></i>Pagar
-                            </button>
+                        <td class="cifra d-none d-lg-table-cell" th:text="${#numbers.formatCurrency(p.total)}"></td>
+                        <td class="cifra text-muted d-none d-lg-table-cell" th:text="${#numbers.formatCurrency(p.pagado)}"></td>
+                        <td class="cifra fw-semibold" th:text="${#numbers.formatCurrency(p.pendiente)}"></td>
+                        <td class="cifra">
+                            <!-- Vencida: badge de peligro (color + forma), no solo texto rojo -->
+                            <span th:if="${p.diasVencido > 0}" class="badge-estado badge-estado-peligro"
+                                  th:text="${p.diasVencido} + ' días'">0 días</span>
+                            <span th:unless="${p.diasVencido > 0}" class="text-muted">—</span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button th:if="${@permisos.puede('tesoreria','crear')}" type="button"
+                                        class="btn btn-sm btn-outline-primary btn-registrar-pago"
+                                        data-bs-toggle="modal" data-bs-target="#modalPago"
+                                        th:attr="data-factura-id=${p.id},data-numero=${p.numero},data-pendiente=${p.pendiente},aria-label='Pagar factura ' + ${p.numero}">
+                                    <i class="bi bi-cash-coin me-1" aria-hidden="true"></i>Pagar
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -96,19 +176,20 @@
     </div>
 
     <!-- Modal registrar cobro -->
-    <div class="modal fade" id="modalCobro" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modalCobro" tabindex="-1" aria-labelledby="modalCobroTitulo" aria-hidden="true">
         <div class="modal-dialog"><div class="modal-content">
             <form th:action="@{/web/cartera/cobros}" method="post" class="needs-validation" novalidate>
                 <div class="modal-header">
-                    <h5 class="modal-title">Registrar cobro <span id="cobroNumero" class="text-muted"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h2 class="modal-title" id="modalCobroTitulo">Registrar cobro <span id="cobroNumero" class="text-muted"></span></h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="facturaId" id="cobroFacturaId">
                     <div class="mb-3">
                         <label class="form-label" for="cobroImporte">Importe (€) *</label>
-                        <input type="number" id="cobroImporte" name="importe" class="form-control" step="0.01" min="0.01" required>
-                        <small class="text-muted">Pendiente: <span id="cobroPendiente"></span> €</small>
+                        <input type="number" id="cobroImporte" name="importe" class="form-control text-end" inputmode="decimal" step="0.01" min="0.01" required aria-describedby="cobroPendienteAyuda">
+                        <div class="invalid-feedback">Indica un importe entre 0,01 € y el pendiente.</div>
+                        <div class="form-text" id="cobroPendienteAyuda">Pendiente: <span id="cobroPendiente" class="cifra"></span></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="cobroFecha">Fecha</label>
@@ -132,26 +213,27 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success" data-no-double-click>Registrar cobro</button>
+                    <button type="submit" class="btn btn-primary" data-no-double-click><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Registrar cobro</button>
                 </div>
             </form>
         </div></div>
     </div>
 
     <!-- Modal registrar pago -->
-    <div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modalPago" tabindex="-1" aria-labelledby="modalPagoTitulo" aria-hidden="true">
         <div class="modal-dialog"><div class="modal-content">
             <form th:action="@{/web/cartera/pagos}" method="post" class="needs-validation" novalidate>
                 <div class="modal-header">
-                    <h5 class="modal-title">Registrar pago <span id="pagoNumero" class="text-muted"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h2 class="modal-title" id="modalPagoTitulo">Registrar pago <span id="pagoNumero" class="text-muted"></span></h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="facturaCompraId" id="pagoFacturaId">
                     <div class="mb-3">
                         <label class="form-label" for="pagoImporte">Importe (€) *</label>
-                        <input type="number" id="pagoImporte" name="importe" class="form-control" step="0.01" min="0.01" required>
-                        <small class="text-muted">Pendiente: <span id="pagoPendiente"></span> €</small>
+                        <input type="number" id="pagoImporte" name="importe" class="form-control text-end" inputmode="decimal" step="0.01" min="0.01" required aria-describedby="pagoPendienteAyuda">
+                        <div class="invalid-feedback">Indica un importe entre 0,01 € y el pendiente.</div>
+                        <div class="form-text" id="pagoPendienteAyuda">Pendiente: <span id="pagoPendiente" class="cifra"></span></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="pagoFecha">Fecha</label>
@@ -174,7 +256,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" data-no-double-click>Registrar pago</button>
+                    <button type="submit" class="btn btn-primary" data-no-double-click><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Registrar pago</button>
                 </div>
             </form>
         </div></div>
@@ -189,7 +271,10 @@
                     document.getElementById(idField).value = btn.getAttribute('data-factura-id');
                     document.getElementById(numeroSpan).textContent = btn.getAttribute('data-numero');
                     var pendiente = btn.getAttribute('data-pendiente');
-                    document.getElementById(pendienteSpan).textContent = pendiente;
+                    // Se muestra en formato español; el campo conserva el valor numérico
+                    var n = parseFloat(pendiente);
+                    document.getElementById(pendienteSpan).textContent = isNaN(n) ? pendiente
+                        : n.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
                     var imp = document.getElementById(importeField);
                     imp.value = pendiente;
                     imp.max = pendiente;

@@ -1,140 +1,140 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Nuevo albarán</h4>
+            <h1 th:text="${titulo}">Nuevo albarán</h1>
+            <p>Entrega de producto a un cliente</p>
         </div>
         <div class="page-header-actions">
-            <button type="button" class="btn btn-primary btn-sm"
+            <a th:href="@{/web/albaranes}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <button type="button" class="btn btn-outline-secondary btn-sm"
                     th:if="${albaran != null and albaran.id != null and albaran.estado != 'FACTURADO' and albaran.estado != 'ANULADO'}"
                     data-bs-toggle="modal" data-bs-target="#modalFacturar"
                     th:attr="data-albaran-numero=${albaran.numero}, data-albaran-id=${albaran.id}, data-cliente=${albaran.cliente?.nombre}">
-                <i class="bi bi-receipt me-1"></i>Convertir en factura
+                <i class="bi bi-receipt me-1" aria-hidden="true"></i>Convertir en factura
             </button>
-            <a th:href="@{/web/albaranes}" class="btn btn-ghost btn-sm">
-        <i class="bi bi-arrow-left me-1"></i>Volver
-            </a>
         </div>
     </div>
 
-<div class="form-card form-card-wide">
+    <div class="form-card form-card-wide">
         <form th:action="@{/web/albaranes}" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="id" th:value="${albaran?.id}">
 
-            <div class="form-section-title">
-                <i class="bi bi-file-text"></i> Datos del albarán
-            </div>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label" for="fecha">Fecha *</label>
-                <input type="date" id="fecha" name="fecha" class="form-control"
-                           th:value="${albaran?.fecha != null ? albaran.fecha : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
-                           required>
-                    <div class="invalid-feedback">La fecha es obligatoria.</div>
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-file-text" aria-hidden="true"></i>Datos del albarán</h2>
+                <div class="row g-3">
+                    <div class="col-md-4 col-lg-3">
+                        <label class="form-label" for="fecha">Fecha *</label>
+                        <input type="date" id="fecha" name="fecha" class="form-control"
+                               th:value="${albaran?.fecha != null ? albaran.fecha : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                               required>
+                        <div class="invalid-feedback">La fecha es obligatoria.</div>
+                    </div>
+                    <div class="col-md-8 col-lg-9">
+                        <label class="form-label" for="clienteId">Cliente *</label>
+                        <select id="clienteId" name="clienteId" class="form-select" required data-searchable>
+                            <option value="">Seleccionar cliente…</option>
+                            <option th:each="c : ${clientes}" th:value="${c.id}"
+                                    th:text="${c.nombre}"
+                                    th:selected="${albaran?.cliente?.id == c.id}"></option>
+                        </select>
+                        <div class="invalid-feedback">Selecciona un cliente.</div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="almacenId">Almacén</label>
+                        <select id="almacenId" name="almacenId" class="form-select">
+                            <option value="">Sin almacén</option>
+                            <option th:each="a : ${almacenes}" th:value="${a.id}"
+                                    th:text="${a.nombre}"
+                                    th:selected="${albaran?.almacen?.id != null ? albaran.almacen.id == a.id : almacenPorDefectoId == a.id}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="numeroLote">Nº de lote</label>
+                        <input type="text" id="numeroLote" name="numeroLote" class="form-control"
+                               th:value="${albaran?.numeroLote}" placeholder="Nº lote del albarán">
+                    </div>
+                    <div class="col-lg-6">
+                        <label class="form-label" for="observaciones">Observaciones</label>
+                        <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
+                                  th:text="${albaran?.observaciones}"></textarea>
+                    </div>
                 </div>
-                <div class="col-md-9">
-                    <label class="form-label" for="clienteId">Cliente *</label>
-                    <select id="clienteId" name="clienteId" class="form-select" required data-searchable>
-                        <option value="">Seleccionar cliente...</option>
-                        <option th:each="c : ${clientes}" th:value="${c.id}"
-                                th:text="${c.nombre}"
-                                th:selected="${albaran?.cliente?.id == c.id}"></option>
-                    </select>
-                    <div class="invalid-feedback">Selecciona un cliente.</div>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="almacenId">Almacén</label>
-                    <select id="almacenId" name="almacenId" class="form-select">
-                        <option value="">Sin almacén</option>
-                        <option th:each="a : ${almacenes}" th:value="${a.id}"
-                                th:text="${a.nombre}"
-                                th:selected="${albaran?.almacen?.id != null ? albaran.almacen.id == a.id : almacenPorDefectoId == a.id}"></option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="numeroLote">Nº de lote</label>
-                    <input type="text" id="numeroLote" name="numeroLote" class="form-control"
-                           th:value="${albaran?.numeroLote}" placeholder="Nº lote del albarán">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="observaciones">Observaciones</label>
-                    <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
-                              th:text="${albaran?.observaciones}"></textarea>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="descuentoGlobalValor">Descuento global</label>
-                    <input type="number" step="0.01" min="0" id="descuentoGlobalValor" name="descuentoGlobalValor"
-                           class="form-control" th:value="${albaran?.descuentoGlobalValor}"
-                           placeholder="Sobre el total">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="descuentoGlobalTipo">Tipo de descuento</label>
-                    <select id="descuentoGlobalTipo" name="descuentoGlobalTipo" class="form-select">
-                        <option value="PORCENTAJE" th:selected="${albaran?.descuentoGlobalTipo == null or albaran?.descuentoGlobalTipo == 'PORCENTAJE'}">% Porcentaje</option>
-                        <option value="IMPORTE" th:selected="${albaran?.descuentoGlobalTipo == 'IMPORTE'}">€ Importe fijo</option>
-                    </select>
-                </div>
-            </div>
+            </section>
 
-            <div class="form-section-divider">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="form-section-title mb-0">
-                        <i class="bi bi-list-ul"></i> Líneas del albarán
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-percent" aria-hidden="true"></i>Descuento global</h2>
+                <p class="form-section-hint">Se aplica sobre el total del albarán, repartido entre las líneas.</p>
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="descuentoGlobalValor">Descuento</label>
+                        <input type="number" step="0.01" min="0" id="descuentoGlobalValor" name="descuentoGlobalValor"
+                               class="form-control text-end" th:value="${albaran?.descuentoGlobalValor}">
                     </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-ghost btn-sm" id="addLineBtn">
-                            <i class="bi bi-plus me-1"></i>Añadir producto
-                        </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="copyPedidoBtn"
-                                title="Cargar líneas del pedido anterior de este cliente"
-                                style="display:none">
-                            <i class="bi bi-clipboard-check me-1"></i>Copiar pedido anterior
-                        </button>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="descuentoGlobalTipo">Tipo de descuento</label>
+                        <select id="descuentoGlobalTipo" name="descuentoGlobalTipo" class="form-select">
+                            <option value="PORCENTAJE" th:selected="${albaran?.descuentoGlobalTipo == null or albaran?.descuentoGlobalTipo == 'PORCENTAJE'}">Porcentaje (%)</option>
+                            <option value="IMPORTE" th:selected="${albaran?.descuentoGlobalTipo == 'IMPORTE'}">Importe fijo (€)</option>
+                        </select>
                     </div>
                 </div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-list-ul" aria-hidden="true"></i>Líneas del albarán</h2>
 
                 <div class="table-responsive">
                     <table class="lines-table">
                         <thead>
                             <tr>
                                 <th>Producto</th>
-                                <th class="col-qty">Cantidad</th>
-                                <th class="col-price">Precio unit.</th>
-                                <th class="col-iva">IVA %</th>
-                                <th class="col-dto">Dto %</th>
-                                <th class="col-sub text-end">Subtotal</th>
-                                <th class="col-del"></th>
+                                <th class="col-qty cifra">Cantidad</th>
+                                <th class="col-price cifra">Precio unit.</th>
+                                <th class="col-iva cifra">IVA %</th>
+                                <th class="col-dto cifra">Dto. %</th>
+                                <th class="col-sub cifra">Subtotal</th>
+                                <th class="col-del"><span class="visually-hidden">Quitar</span></th>
                             </tr>
                         </thead>
                         <tbody id="albaranLineasBody"></tbody>
                     </table>
                 </div>
-
-                <div class="total-box mt-3">
-                    <span class="total-box-label">
-                        <i class="bi bi-calculator me-2"></i>Total del albarán
-                    </span>
-                    <span class="total-box-amount" id="totalDisplay">0,00 €</span>
+                <div class="form-section-tools">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="addLineBtn">
+                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Añadir producto
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="copyPedidoBtn"
+                            title="Cargar líneas del pedido anterior de este cliente" hidden>
+                        <i class="bi bi-clipboard-check me-1" aria-hidden="true"></i>Copiar pedido anterior
+                    </button>
                 </div>
-            </div>
+
+                <div class="total-box">
+                    <span class="total-box-label">
+                        <i class="bi bi-calculator me-2" aria-hidden="true"></i>Total del albarán
+                    </span>
+                    <span class="total-box-amount cifra" id="totalDisplay" aria-live="polite">0,00 €</span>
+                </div>
+            </section>
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary" data-no-double-click>
-                    <i class="bi bi-floppy me-1"></i>Guardar albarán
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar albarán
                 </button>
                 <a th:href="@{/web/albaranes}" class="btn btn-ghost">Cancelar</a>
             </div>
         </form>
     </div>
 
-    <div id="albaran-form-data"
-         th:attr="data-lineas=${lineasJson}"
-         style="display:none">
+    <!-- Datos para el JS de líneas (no se muestran) -->
+    <div id="albaran-form-data" hidden
+         th:attr="data-lineas=${lineasJson}">
         <span th:each="a : ${articulos}"
-              th:attr="data-id=${a.id},data-texto=${(a.codigo ?: '') + ' — ' + (a.nombre ?: '')},data-pvp=${a.pvp != null ? a.pvp : 0},data-iva=${a.iva != null ? a.iva : 0}"
-              style="display:none"></span>
+              th:attr="data-id=${a.id},data-texto=${(a.codigo ?: '') + ' — ' + (a.nombre ?: '')},data-pvp=${a.pvp != null ? a.pvp : 0},data-iva=${a.iva != null ? a.iva : 0}"></span>
         <span th:each="t : ${tiposIva}" class="tipo-iva-opt"
-              th:attr="data-valor=${t.porcentaje},data-nombre=${t.nombre},data-defecto=${t.esDefecto}"
-              style="display:none"></span>
+              th:attr="data-valor=${t.porcentaje},data-nombre=${t.nombre},data-defecto=${t.esDefecto}"></span>
     </div>
     <script th:attr="nonce=${cspNonce}">
         /* global TomSelect */
@@ -201,14 +201,14 @@
                 if (_tiposIva.length === 0) {
                     const inp = document.createElement('input');
                     inp.type = 'text'; inp.inputMode = 'decimal';
-                    inp.name = 'lineaIva';
-                    inp.className = 'form-control form-control-sm line-iva line-input';
+                    inp.name = 'lineaIva'; inp.setAttribute('aria-label', 'IVA %');
+                    inp.className = 'form-control form-control-sm text-end line-iva line-input';
                     inp.placeholder = '21';
                     if (selectedVal != null) inp.value = fmtDec(selectedVal);
                     return inp;
                 }
                 const sel = document.createElement('select');
-                sel.name = 'lineaIva';
+                sel.name = 'lineaIva'; sel.setAttribute('aria-label', 'IVA %');
                 sel.className = 'form-select form-select-sm line-iva line-input';
                 _tiposIva.forEach(function(t) {
                     const opt = document.createElement('option');
@@ -269,7 +269,7 @@
 
             function buildSelect(selectedId) {
                 const sel = document.createElement('select');
-                sel.name = 'lineaArticuloId';
+                sel.name = 'lineaArticuloId'; sel.setAttribute('aria-label', 'Producto');
                 sel.className = 'form-select form-select-sm line-producto';
                 const empty = document.createElement('option');
                 empty.value = ''; empty.textContent = 'Seleccionar producto...';
@@ -294,8 +294,8 @@
                 const tdCant = document.createElement('td');
                 const cant = document.createElement('input');
                 cant.type = 'text'; cant.inputMode = 'decimal';
-                cant.name = 'lineaCantidad';
-                cant.className = 'form-control form-control-sm line-cantidad line-input';
+                cant.name = 'lineaCantidad'; cant.setAttribute('aria-label', 'Cantidad');
+                cant.className = 'form-control form-control-sm text-end line-cantidad line-input';
                 cant.placeholder = '0';
                 if (data && data.cantidad) cant.value = fmtDec(data.cantidad);
                 tdCant.appendChild(cant);
@@ -303,8 +303,8 @@
                 const tdPrecio = document.createElement('td');
                 const precio = document.createElement('input');
                 precio.type = 'text'; precio.inputMode = 'decimal';
-                precio.name = 'lineaPrecio';
-                precio.className = 'form-control form-control-sm line-precio line-input';
+                precio.name = 'lineaPrecio'; precio.setAttribute('aria-label', 'Precio unitario');
+                precio.className = 'form-control form-control-sm text-end line-precio line-input';
                 precio.placeholder = '0,00';
                 if (data && data.precio) precio.value = fmtDec(data.precio);
                 tdPrecio.appendChild(precio);
@@ -316,8 +316,8 @@
                 const tdDto = document.createElement('td');
                 const dto = document.createElement('input');
                 dto.type = 'text'; dto.inputMode = 'decimal';
-                dto.name = 'lineaDescuento';
-                dto.className = 'form-control form-control-sm line-dto line-input';
+                dto.name = 'lineaDescuento'; dto.setAttribute('aria-label', 'Descuento %');
+                dto.className = 'form-control form-control-sm text-end line-dto line-input';
                 dto.placeholder = '0';
                 if (data && data.descuento) dto.value = fmtDec(data.descuento);
                 tdDto.appendChild(dto);
@@ -329,9 +329,10 @@
                 const tdDel = document.createElement('td');
                 const btnDel = document.createElement('button');
                 btnDel.type = 'button';
-                btnDel.className = 'btn btn-ghost btn-sm text-danger line-remove btn-remove-line p-1';
-                btnDel.title = 'Eliminar línea';
-                btnDel.innerHTML = '<i class="bi bi-trash3"></i>';
+                btnDel.className = 'btn btn-ghost btn-sm btn-icon text-danger line-remove btn-remove-line';
+                btnDel.title = 'Quitar línea';
+                btnDel.setAttribute('aria-label', 'Quitar línea');
+                btnDel.innerHTML = '<i class="bi bi-trash3" aria-hidden="true"></i>';
                 tdDel.appendChild(btnDel);
 
                 tr.appendChild(tdSel);
@@ -387,7 +388,7 @@
             if (!clienteSelect || !copyBtn) return;
 
             function actualizarBoton() {
-                copyBtn.style.display = clienteSelect.value ? '' : 'none';
+                copyBtn.hidden = !clienteSelect.value;
             }
             clienteSelect.addEventListener('change', actualizarBoton);
             actualizarBoton();
@@ -397,18 +398,18 @@
                 if (!clienteId) return;
 
                 copyBtn.disabled = true;
-                copyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Cargando...';
+                copyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Cargando…';
 
                 fetch('/api/web/clientes/' + clienteId + '/albaranes-recientes')
                     .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
                     .then(function(pedidos) {
                         copyBtn.disabled = false;
-                        copyBtn.innerHTML = '<i class="bi bi-clipboard-check me-1"></i>Copiar pedido anterior';
+                        copyBtn.innerHTML = '<i class="bi bi-clipboard-check me-1" aria-hidden="true"></i>Copiar pedido anterior';
                         mostrarModalPedidos(pedidos);
                     })
                     .catch(function() {
                         copyBtn.disabled = false;
-                        copyBtn.innerHTML = '<i class="bi bi-clipboard-check me-1"></i>Copiar pedido anterior';
+                        copyBtn.innerHTML = '<i class="bi bi-clipboard-check me-1" aria-hidden="true"></i>Copiar pedido anterior';
                         alert('No se pudieron cargar los pedidos del cliente.');
                     });
             });
@@ -421,15 +422,15 @@
 
                 var filas = '';
                 if (!pedidos.length) {
-                    filas = '<tr><td colspan="4" class="empty-state"><i class="bi bi-box"></i><div>Este cliente no tiene albaranes anteriores.</div></td></tr>';
+                    filas = '<tr><td colspan="4" class="empty-state"><i class="bi bi-box" aria-hidden="true"></i><div class="empty-state-title">Este cliente no tiene albaranes anteriores</div><small class="empty-state-hint">Añade los productos a mano con «Añadir producto».</small></td></tr>';
                 } else {
                     pedidos.forEach(function(p, idx) {
                         var nLineas = p.lineas ? p.lineas.length : 0;
-                        filas += '<tr style="cursor:pointer" data-idx="' + idx + '">' +
+                        filas += '<tr role="button" tabindex="0" data-idx="' + idx + '">' +
                             '<td class="fw-semibold">' + (p.numero || '—') + '</td>' +
                             '<td>' + (p.fecha || '—') + '</td>' +
-                            '<td>' + nLineas + ' producto' + (nLineas !== 1 ? 's' : '') + '</td>' +
-                            '<td class="text-end">' + (p.total != null ? fmt.format(p.total) : '—') + '</td>' +
+                            '<td class="cifra">' + nLineas + ' producto' + (nLineas !== 1 ? 's' : '') + '</td>' +
+                            '<td class="cifra">' + (p.total != null ? fmt.format(p.total) : '—') + '</td>' +
                             '</tr>';
                     });
                 }
@@ -438,21 +439,22 @@
                 modal.className = 'modal fade';
                 modal.id = 'modalCopiarPedido';
                 modal.tabIndex = -1;
+                modal.setAttribute('aria-labelledby', 'modalCopiarPedidoLabel');
                 modal.innerHTML =
                     '<div class="modal-dialog modal-lg">' +
                       '<div class="modal-content">' +
                         '<div class="modal-header">' +
-                          '<h5 class="modal-title"><i class="bi bi-clipboard-check me-2 text-primary"></i>Copiar albarán anterior</h5>' +
-                          '<button type="button" class="btn-close" data-bs-dismiss="modal"></button>' +
+                          '<h2 class="modal-title" id="modalCopiarPedidoLabel"><i class="bi bi-clipboard-check me-2" aria-hidden="true"></i>Copiar albarán anterior</h2>' +
+                          '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>' +
                         '</div>' +
                         '<div class="modal-body p-0">' +
-                          '<p class="text-muted small px-3 pt-3 mb-2">Haz clic en un albarán para copiar sus líneas. Las líneas actuales serán reemplazadas.</p>' +
-                          '<table class="table table-hover mb-0">' +
+                          '<p class="text-muted small px-3 pt-3 mb-2">Elige un albarán para copiar sus líneas. Las líneas actuales se sustituyen.</p>' +
+                          '<div class="table-responsive"><table class="table table-hover mb-0">' +
                             '<thead class="table-light"><tr>' +
-                              '<th>Número</th><th>Fecha</th><th>Productos</th><th class="text-end">Total</th>' +
+                              '<th>Número</th><th>Fecha</th><th class="cifra">Productos</th><th class="cifra">Total</th>' +
                             '</tr></thead>' +
                             '<tbody>' + filas + '</tbody>' +
-                          '</table>' +
+                          '</table></div>' +
                         '</div>' +
                         '<div class="modal-footer">' +
                           '<button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>' +
@@ -466,6 +468,10 @@
                 bsModal.show();
 
                 modal.querySelectorAll('tbody tr[data-idx]').forEach(function(tr) {
+                    // Enter o espacio sobre la fila equivalen al clic
+                    tr.addEventListener('keydown', function(ev) {
+                        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tr.click(); }
+                    });
                     tr.addEventListener('click', function() {
                         var pedido = pedidos[parseInt(tr.getAttribute('data-idx'))];
                         if (!pedido || !pedido.lineas) return;
@@ -504,27 +510,25 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalFacturarLabel">
-                        <i class="bi bi-receipt me-2 text-primary"></i>Convertir en factura
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h2 class="modal-title" id="modalFacturarLabel">
+                        <i class="bi bi-receipt me-2" aria-hidden="true"></i>Convertir en factura
+                    </h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <form method="post" th:action="@{/web/albaranes/{id}/facturar(id=${albaran.id})}">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <div class="modal-body">
-                        <p class="text-muted small mb-4"
+                        <p class="text-muted small mb-3"
                            th:text="'Albarán ' + ${albaran.numero} + (${albaran.cliente?.nombre} != null ? '  ·  ' + ${albaran.cliente.nombre} : '')"></p>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" for="fFechaF">
-                                Fecha de factura <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label" for="fFechaF">Fecha de factura *</label>
                             <input type="date" id="fFechaF" name="fecha" class="form-control" required
                                    th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" for="fMedioCobroF">Medio de cobro</label>
+                            <label class="form-label" for="fMedioCobroF">Medio de cobro</label>
                             <select id="fMedioCobroF" name="medioCobro" class="form-select">
-                                <option value="">— Sin especificar —</option>
+                                <option value="">Sin indicar</option>
                                 <option value="EFECTIVO">Efectivo</option>
                                 <option value="TRANSFERENCIA">Transferencia bancaria</option>
                                 <option value="TARJETA">Tarjeta</option>
@@ -534,20 +538,20 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" for="fFechaVencF">Fecha de vencimiento</label>
+                            <label class="form-label" for="fFechaVencF">Fecha de vencimiento</label>
                             <input type="date" id="fFechaVencF" name="fechaVencimiento" class="form-control">
-                            <div class="form-text">Déjala vacía si el pago es inmediato</div>
+                            <div class="form-text">Déjala vacía si el pago es inmediato.</div>
                         </div>
                         <div class="mb-1">
-                            <label class="form-label fw-semibold" for="fObsF">Observaciones adicionales</label>
+                            <label class="form-label" for="fObsF">Observaciones adicionales</label>
                             <textarea id="fObsF" name="observaciones" class="form-control" rows="2"
-                                      placeholder="Opcional..."></textarea>
+                                      placeholder="Opcional"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary" data-no-double-click>
-                            <i class="bi bi-receipt me-1"></i>Crear factura
+                            <i class="bi bi-receipt me-1" aria-hidden="true"></i>Crear factura
                         </button>
                     </div>
                 </form>

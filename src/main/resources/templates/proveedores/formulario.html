@@ -1,25 +1,66 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Proveedor</h4>
+            <h1 th:text="${titulo}">Proveedor</h1>
+            <p>Datos fiscales y de contacto del proveedor</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/proveedores}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
-    <div class="form-card" style="max-width:600px;">
+
+    <div class="form-card form-card-narrow">
         <form th:action="@{/web/proveedores}" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="id" th:value="${proveedor?.id}">
-            <div class="row g-3">
-                <div class="col-md-6"><label class="form-label" for="codigo">Código *</label><input type="text" id="codigo" name="codigo" class="form-control" th:value="${proveedor?.codigo}" required></div>
-                <div class="col-md-6"><label class="form-label" for="nombre">Nombre *</label><input type="text" id="nombre" name="nombre" class="form-control" th:value="${proveedor?.nombre}" required></div>
-                <div class="col-md-6"><label class="form-label" for="cif">CIF</label><input type="text" id="cif" name="cif" class="form-control" th:value="${proveedor?.cif}"></div>
-                <div class="col-md-6"><label class="form-label" for="telefono">Teléfono</label><input type="text" id="telefono" name="telefono" class="form-control" th:value="${proveedor?.telefono}"></div>
-                <div class="col-12"><label class="form-label" for="email">Email</label><input type="email" id="email" name="email" class="form-control" th:value="${proveedor?.email}"></div>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-building" aria-hidden="true"></i>Datos generales</h2>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="codigo">Código *</label>
+                        <input type="text" id="codigo" name="codigo" class="form-control"
+                               th:value="${proveedor?.codigo}" required>
+                        <div class="invalid-feedback">El código es obligatorio.</div>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label" for="nombre">Nombre *</label>
+                        <input type="text" id="nombre" name="nombre" class="form-control"
+                               th:value="${proveedor?.nombre}" required>
+                        <div class="invalid-feedback">El nombre es obligatorio.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="cif">CIF / NIF</label>
+                        <input type="text" id="cif" name="cif" class="form-control"
+                               th:value="${proveedor?.cif}" autocomplete="off">
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-telephone" aria-hidden="true"></i>Contacto</h2>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="telefono">Teléfono</label>
+                        <input type="tel" id="telefono" name="telefono" class="form-control"
+                               th:value="${proveedor?.telefono}">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label" for="email">Email</label>
+                        <input type="email" id="email" name="email" class="form-control"
+                               th:value="${proveedor?.email}">
+                        <div class="invalid-feedback">Escribe un email válido, por ejemplo pedidos@harinas.es.</div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar proveedor
+                </button>
+                <a th:href="@{/web/proveedores}" class="btn btn-ghost">Cancelar</a>
             </div>
-            <div class="mt-4"><button type="submit" class="btn btn-primary" data-no-double-click>Guardar</button><a th:href="@{/web/proveedores}" class="btn btn-ghost ms-2">Cancelar</a></div>
         </form>
     </div>
 </div>

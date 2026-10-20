@@ -1,111 +1,103 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Artículo</h4>
+            <h1 th:text="${titulo}">Artículo</h1>
+            <p>Producto de venta o materia prima del obrador</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/articulos}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
 
-    <div class="form-card" style="max-width:700px;">
+    <div class="form-card form-card-narrow">
         <form th:action="@{/web/articulos}" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="id" th:value="${articulo?.id}">
 
-            <div class="form-section-title">
-                <i class="bi bi-tag"></i> Identificación
-            </div>
-            <div class="row g-3 mb-4">
-                <div class="col-md-4">
-                    <label class="form-label" for="codigo">Código *</label>
-                    <input type="text" id="codigo" name="codigo" class="form-control"
-                           th:value="${articulo?.codigo}" required>
-                    <div class="invalid-feedback">El código es obligatorio.</div>
-                </div>
-                <div class="col-md-8">
-                    <label class="form-label" for="nombre">Nombre *</label>
-                    <input type="text" id="nombre" name="nombre" class="form-control"
-                           th:value="${articulo?.nombre}" required>
-                    <div class="invalid-feedback">El nombre es obligatorio.</div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="categoria">Categoría</label>
-                    <input type="text" id="categoria" name="categoria" class="form-control"
-                           th:value="${articulo?.categoria}" placeholder="Pan, Bollería, Pastelería...">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="unidad">Unidad de medida</label>
-                    <input type="text" id="unidad" name="unidad" class="form-control"
-                           th:value="${articulo?.unidad}" placeholder="ud., kg, litro...">
-                </div>
-            </div>
-
-            <div class="form-section-divider">
-                <div class="form-section-title">
-                    <i class="bi bi-currency-euro"></i> Precios
-                </div>
-                <div class="row g-3 mb-4">
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-tag" aria-hidden="true"></i>Identificación</h2>
+                <div class="row g-3">
                     <div class="col-md-4">
+                        <label class="form-label" for="codigo">Código *</label>
+                        <input type="text" id="codigo" name="codigo" class="form-control"
+                               th:value="${articulo?.codigo}" required autocomplete="off">
+                        <div class="invalid-feedback">El código es obligatorio.</div>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label" for="nombre">Nombre *</label>
+                        <input type="text" id="nombre" name="nombre" class="form-control"
+                               th:value="${articulo?.nombre}" required>
+                        <div class="invalid-feedback">El nombre es obligatorio.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="categoria">Categoría</label>
+                        <input type="text" id="categoria" name="categoria" class="form-control"
+                               th:value="${articulo?.categoria}" placeholder="Pan, bollería, pastelería…">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="unidad">Unidad de medida</label>
+                        <input type="text" id="unidad" name="unidad" class="form-control"
+                               th:value="${articulo?.unidad}" placeholder="ud., kg, litro…">
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-currency-euro" aria-hidden="true"></i>Precios</h2>
+                <p class="form-section-hint">El PVP lleva el IVA incluido. Usa la coma para los decimales.</p>
+                <div class="row g-3">
+                    <div class="col-sm-6 col-md-4">
                         <label class="form-label" for="pvp">PVP</label>
                         <div class="input-group">
-                            <input type="text" inputmode="decimal" id="pvp" name="pvp" class="form-control"
-                                   th:value="${articulo?.pvp != null ? #numbers.formatDecimal(articulo.pvp, 1, 'COMMA', 2, 'POINT') : ''}" placeholder="0,00">
+                            <input type="text" inputmode="decimal" id="pvp" name="pvp" class="form-control text-end"
+                                   th:value="${articulo?.pvp != null ? #numbers.formatDecimal(articulo.pvp, 1, 'NONE', 2, 'COMMA') : ''}" placeholder="0,00">
                             <span class="input-group-text">€</span>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label" for="iva">IVA (%)</label>
-                        <select id="iva" name="iva" class="form-select">
-                            <option value="0"  th:selected="${articulo?.iva == 0}">0% — Exento</option>
-                            <option value="4"  th:selected="${articulo?.iva == 4}">4% — Superreducido</option>
-                            <option value="10" th:selected="${articulo?.iva == 10 || articulo?.iva == null}">10% — Reducido (pan, bollería)</option>
-                            <option value="21" th:selected="${articulo?.iva == 21}">21% — General</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-sm-6 col-md-4">
                         <label class="form-label" for="coste">Coste</label>
                         <div class="input-group">
-                            <input type="text" inputmode="decimal" id="coste" name="coste" class="form-control"
-                                   th:value="${articulo?.coste != null ? #numbers.formatDecimal(articulo.coste, 1, 'COMMA', 2, 'POINT') : ''}" placeholder="0,00">
+                            <input type="text" inputmode="decimal" id="coste" name="coste" class="form-control text-end"
+                                   th:value="${articulo?.coste != null ? #numbers.formatDecimal(articulo.coste, 1, 'NONE', 2, 'COMMA') : ''}" placeholder="0,00">
                             <span class="input-group-text">€</span>
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="iva">IVA</label>
+                        <select id="iva" name="iva" class="form-select">
+                            <option value="0"  th:selected="${articulo?.iva == 0}">0 % · Exento</option>
+                            <option value="4"  th:selected="${articulo?.iva == 4}">4 % · Superreducido</option>
+                            <option value="10" th:selected="${articulo?.iva == 10 || articulo?.iva == null}">10 % · Reducido (pan, bollería)</option>
+                            <option value="21" th:selected="${articulo?.iva == 21}">21 % · General</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="form-section-divider">
-                <div class="form-section-title">
-                    <i class="bi bi-archive"></i> Stock
-                </div>
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-archive" aria-hidden="true"></i>Stock</h2>
+                <div class="row g-3">
+                    <div class="col-sm-6 col-md-4">
                         <label class="form-label" for="stock">Stock actual</label>
-                            <input type="text" inputmode="decimal" id="stock" name="stock" class="form-control"
-                                   th:value="${articulo?.stock != null ? #numbers.formatDecimal(articulo.stock, 1, 'COMMA', 2, 'POINT') : ''}" placeholder="0">
+                        <input type="text" inputmode="decimal" id="stock" name="stock" class="form-control text-end"
+                               th:value="${articulo?.stock != null ? #numbers.formatDecimal(articulo.stock, 1, 'NONE', 2, 'COMMA') : ''}" placeholder="0">
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="form-section-divider">
-                <div class="form-section-title">
-                    <i class="bi bi-shield-check"></i> Alérgenos
-                </div>
-                <div class="row g-3 mb-2">
-                    <div class="col-12">
-                        <label class="form-label" for="alergenos">Alérgenos declarados</label>
-                        <input type="text" id="alergenos" name="alergenos" class="form-control"
-                               th:value="${articulo?.alergenos}"
-                               placeholder="Gluten, Leche, Huevos, Frutos secos...">
-                        <div class="form-text">Separa cada alérgeno con una coma.</div>
-                    </div>
-                </div>
-            </div>
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-shield-check" aria-hidden="true"></i>Alérgenos</h2>
+                <label class="form-label" for="alergenos">Alérgenos declarados</label>
+                <input type="text" id="alergenos" name="alergenos" class="form-control"
+                       th:value="${articulo?.alergenos}"
+                       placeholder="Gluten, leche, huevos, frutos de cáscara…" aria-describedby="alergenosAyuda">
+                <div class="form-text" id="alergenosAyuda">Separa cada alérgeno con una coma.</div>
+            </section>
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary" data-no-double-click>
-                    <i class="bi bi-floppy me-1"></i>Guardar artículo
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar artículo
                 </button>
                 <a th:href="@{/web/articulos}" class="btn btn-ghost">Cancelar</a>
             </div>

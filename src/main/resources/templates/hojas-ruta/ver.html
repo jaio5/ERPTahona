@@ -1,33 +1,58 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Hoja de ruta</h4>
+            <h1 th:text="${titulo}">Hoja de ruta</h1>
+            <p>
+                <span class="badge-status"
+                      th:attr="data-status=${hoja.estado?.toLowerCase()}"
+                      th:text="${hoja.estado ?: '—'}">PLANIFICADA</span>
+                <span th:text="${hoja.ruta?.nombre ?: ''}">Ruta</span>
+            </p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/hojas-ruta}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-6">
-            <div class="form-card">
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div class="doc-header-icon">
+        <div class="col-lg-5">
+            <div class="doc-card">
+                <div class="doc-card-header">
+                    <div class="doc-header-icon" aria-hidden="true"
+                         th:classappend="${hoja.estado == 'FINALIZADA' ? 'success' : ''}">
                         <i class="bi bi-map"></i>
                     </div>
                     <div>
-                        <div class="fw-bold fs-5" th:text="${hoja.fecha}">Fecha</div>
-                        <div class="text-muted small" th:text="${hoja.conductor ?: 'Sin conductor'}"></div>
+                        <div class="doc-card-title"
+                             th:text="${hoja.fecha != null ? #temporals.format(hoja.fecha, 'dd/MM/yyyy') : '—'}">Fecha</div>
+                        <div class="doc-card-meta" th:text="${hoja.conductor ?: 'Sin conductor'}"></div>
                     </div>
                 </div>
 
-                <div class="doc-fields">
+                <!-- Resumen de entregas: hechas sobre total -->
+                <div class="doc-summary">
+                    <div>
+                        <span class="doc-field-label">Entregas</span>
+                        <div class="doc-field-value" th:text="${#lists.size(entregas)}">0</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Entregadas</span>
+                        <div class="doc-field-value"
+                             th:text="${#lists.size(entregas.?[entregado != null and entregado])}">0</div>
+                    </div>
+                </div>
+
+                <div class="doc-fields mt-3">
                     <table class="doc-table">
                     <tr>
-                        <th scope="row">Fecha</th>
-                        <td th:text="${hoja.fecha}">—</td>
+                        <th scope="row">Ruta</th>
+                        <td>
+                            <a th:if="${hoja.ruta != null}" th:href="@{/web/rutas/{id}(id=${hoja.ruta.id})}"
+                               th:text="${hoja.ruta.nombre}">Ruta</a>
+                            <span th:unless="${hoja.ruta != null}">—</span>
+                        </td>
                     </tr>
                     <tr>
                         <th scope="row">Conductor</th>
@@ -35,49 +60,63 @@
                     </tr>
                     <tr>
                         <th scope="row">Vehículo</th>
-                        <td th:text="${hoja.vehiculo?.matricula ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Estado</th>
                         <td>
-                            <span class="badge-status"
-                                  th:attr="data-status=${hoja.estado?.toLowerCase()}"
-                                  th:text="${hoja.estado ?: '—'}">—</span>
+                            <a th:if="${hoja.vehiculo != null}" th:href="@{/web/vehiculos/{id}(id=${hoja.vehiculo.id})}"
+                               th:text="${hoja.vehiculo.matricula}">1234ABC</a>
+                            <span th:unless="${hoja.vehiculo != null}">—</span>
                         </td>
                     </tr>
+                    <tr>
+                        <th scope="row">Salida</th>
+                        <td th:text="${hoja.horaSalida != null ? #temporals.format(hoja.horaSalida, 'HH:mm') : '—'}">—</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Llegada</th>
+                        <td th:text="${hoja.horaLlegada != null ? #temporals.format(hoja.horaLlegada, 'HH:mm') : '—'}">—</td>
+                    </tr>
                     </table>
+                </div>
+
+                <div class="alert alert-warning d-flex align-items-start gap-2 mt-3 mb-0" role="status"
+                     th:if="${hoja.incidencias != null and !hoja.incidencias.isEmpty()}">
+                    <i class="bi bi-exclamation-triangle-fill mt-1" aria-hidden="true"></i>
+                    <div><strong>Incidencias:</strong> <span th:text="${hoja.incidencias}"></span></div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-6">
-            <div class="form-card">
-                <div class="form-section-title mb-3">
-                    <i class="bi bi-truck"></i> Entregas
+        <div class="col-lg-7">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h2 class="table-card-title">Entregas</h2>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover align-middle mb-0">
-                        <thead class="table-light">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
                             <tr>
-                                <th>#</th>
+                                <th class="cifra">Orden</th>
                                 <th>Cliente</th>
                                 <th>Estado</th>
+                                <th class="cifra d-none d-md-table-cell">Cobrado</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="e : ${entregas}">
-                                <td th:text="${e.orden}"></td>
+                                <td class="cifra" th:text="${e.orden}"></td>
                                 <td th:text="${e.cliente?.nombre}"></td>
                                 <td>
                                     <span class="badge-status"
                                           th:attr="data-status=${e.entregado ? 'entregado' : 'pendiente'}"
                                           th:text="${e.entregado ? 'ENTREGADO' : 'PENDIENTE'}"></span>
                                 </td>
+                                <td class="cifra d-none d-md-table-cell"
+                                    th:text="${e.importeCobrado != null ? #numbers.formatDecimal(e.importeCobrado, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}"></td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(entregas)}">
-                                <td colspan="3" class="empty-state">
-                                    <i class="bi bi-truck"></i>
-                                    <p>Sin entregas programadas</p>
+                                <td colspan="4" class="empty-state">
+                                    <i class="bi bi-truck" aria-hidden="true"></i>
+                                    <div class="empty-state-title">Sin entregas programadas</div>
+                                    <small class="empty-state-hint">La ruta no tenía paradas o albaranes para esta fecha.</small>
                                 </td>
                             </tr>
                         </tbody>

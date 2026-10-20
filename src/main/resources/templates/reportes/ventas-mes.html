@@ -1,22 +1,99 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Ventas del mes</h4>
+            <h1 th:text="${titulo}">Ventas del mes</h1>
+            <p th:text="'Facturas emitidas · ' + ${mes}">Facturas emitidas</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/reportes}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
+
     <div class="row g-3 mb-4">
-        <div class="col-md-3"><div class="stat-card"><div class="stat-label">Total facturado</div><div class="stat-value" th:text="${totalVentas != null ? #numbers.formatCurrency(totalVentas) : '0,00 €'}">0 €</div><div class="stat-sub" th:text="${mes}"></div></div></div>
-        <div class="col-md-3"><div class="stat-card"><div class="stat-label">Nº facturas</div><div class="stat-value" th:text="${numFacturas}">0</div><div class="stat-sub">emitidas este mes</div></div></div>
-        <div class="col-md-3"><div class="stat-card"><div class="stat-label">Ticket medio</div><div class="stat-value" th:text="${ticketMedio != null ? #numbers.formatCurrency(ticketMedio) : '0,00 €'}"></div><div class="stat-sub">por factura</div></div></div>
-        <div class="col-md-3"><div class="stat-card"><div class="stat-label">Media diaria</div><div class="stat-value" th:text="${mediaDiaria != null ? #numbers.formatCurrency(mediaDiaria) : '0,00 €'}"></div><div class="stat-sub">facturación por día</div></div></div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-cash-stack" aria-hidden="true"></i>Total facturado</div>
+                <div class="stat-value" th:text="${totalVentas != null ? #numbers.formatCurrency(totalVentas) : '0,00 €'}">0 €</div>
+                <div class="stat-sub" th:text="${mes}"></div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-receipt" aria-hidden="true"></i>Nº facturas</div>
+                <div class="stat-value" th:text="${numFacturas}">0</div>
+                <div class="stat-sub">emitidas este mes</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-basket" aria-hidden="true"></i>Ticket medio</div>
+                <div class="stat-value" th:text="${ticketMedio != null ? #numbers.formatCurrency(ticketMedio) : '0,00 €'}"></div>
+                <div class="stat-sub">por factura</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-calendar-day" aria-hidden="true"></i>Media diaria</div>
+                <div class="stat-value" th:text="${mediaDiaria != null ? #numbers.formatCurrency(mediaDiaria) : '0,00 €'}"></div>
+                <div class="stat-sub">facturación por día</div>
+            </div>
+        </div>
     </div>
+
     <div class="row g-3">
-        <div class="col-md-8"><div class="table-card"><h6 class="p-3 mb-0">Top 10 clientes</h6><div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Cliente</th><th class="text-end">Facturado</th></tr></thead><tbody><tr th:each="e : ${porCliente}"><td th:text="${e.key}"></td><td class="text-end" th:text="${e.value != null ? #numbers.formatCurrency(e.value) : '—'}"></td></tr></tbody></table></div></div></div>
-        <div class="col-md-4"><div class="table-card"><h6 class="p-3 mb-0">Ventas por día</h6><div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Día</th><th class="text-end">€</th></tr></thead><tbody><tr th:each="e : ${porDia}"><td th:text="${e.key}"></td><td class="text-end" th:text="${e.value != null and e.value.signum() > 0 ? #numbers.formatCurrency(e.value) : '-'}"></td></tr></tbody></table></div></div></div>
+        <div class="col-lg-8">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h2 class="table-card-title">Top 10 clientes</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr><th class="cifra">#</th><th>Cliente</th><th class="cifra">Facturado</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#maps.isEmpty(porCliente)}">
+                                <td colspan="3" class="empty-state empty-state-compact">
+                                    <i class="bi bi-people" aria-hidden="true"></i>
+                                    <div class="empty-state-title">Aún no hay facturas emitidas este mes</div>
+                                    <a th:href="@{/web/facturas}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-receipt me-1" aria-hidden="true"></i>Ir a facturas
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:each="e, st : ${porCliente}">
+                                <td class="cifra text-muted" th:text="${st.count}">1</td>
+                                <td th:text="${e.key}" th:title="${e.key}"></td>
+                                <td class="cifra fw-medium" th:text="${e.value != null ? #numbers.formatCurrency(e.value) : '—'}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h2 class="table-card-title">Ventas por día</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr><th class="cifra">Día</th><th class="cifra">Importe</th></tr>
+                        </thead>
+                        <tbody>
+                            <!-- Días sin ventas en gris para que destaquen los días con actividad -->
+                            <tr th:each="e : ${porDia}">
+                                <td class="cifra" th:text="${e.key}"></td>
+                                <td class="cifra" th:classappend="${e.value != null and e.value.signum() > 0} ? 'fw-medium' : 'text-muted'"
+                                    th:text="${e.value != null and e.value.signum() > 0 ? #numbers.formatCurrency(e.value) : '—'}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

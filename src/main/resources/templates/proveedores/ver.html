@@ -1,42 +1,37 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${proveedor.nombre}">Proveedor</h4>
+            <h1 th:text="${proveedor.nombre}">Proveedor</h1>
             <p>
-                <span class="badge-status"
-                      th:attr="data-status=${proveedor.activo ? 'activo' : 'anulada'}"
-                      th:text="${proveedor.activo ? 'Activo' : 'Inactivo'}">Activo</span>
-                <span class="text-muted small ms-2" th:text="${proveedor.codigo}"></span>
+                <span class="badge-estado"
+                      th:classappend="${proveedor.activo != false} ? 'badge-estado-ok' : 'badge-estado-neutro'"
+                      th:text="${proveedor.activo != false ? 'Activo' : 'Inactivo'}">Activo</span>
+                <span th:text="${proveedor.codigo}">P001</span>
             </p>
         </div>
         <div class="page-header-actions">
-            <a th:href="@{/web/proveedores/{id}/editar(id=${proveedor.id})}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-pencil me-1"></i>Editar
-            </a>
             <a th:href="@{/web/proveedores}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <a th:href="@{/web/proveedores/{id}/editar(id=${proveedor.id})}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar proveedor
             </a>
         </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="form-card">
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div class="doc-header-icon">
-                        <i class="bi bi-building-check"></i>
-                    </div>
-                    <div>
-                        <div class="fw-bold fs-5" th:text="${proveedor.nombre}">Proveedor</div>
-                        <div class="text-muted small" th:text="${proveedor.cif ?: ''}"></div>
-                    </div>
-                </div>
+    <div class="doc-card">
+        <div class="doc-card-header">
+            <div class="doc-header-icon" aria-hidden="true"><i class="bi bi-truck"></i></div>
+            <div>
+                <div class="doc-card-title" th:text="${proveedor.nombreComercial ?: proveedor.nombre}">Proveedor</div>
+                <div class="doc-card-meta" th:text="${proveedor.cif ?: 'Sin CIF registrado'}">B03000000</div>
+            </div>
+        </div>
 
-                <div class="form-section-title">
-                    <i class="bi bi-info-circle"></i> Datos generales
-                </div>
-                <div class="doc-fields">
-                    <table class="doc-table mb-4">
+        <section class="form-section">
+            <h2 class="form-section-title"><i class="bi bi-info-circle" aria-hidden="true"></i>Datos generales</h2>
+            <div class="doc-fields">
+                <table class="doc-table">
                     <tr>
                         <th scope="row">Código</th>
                         <td th:text="${proveedor.codigo ?: '—'}">—</td>
@@ -68,26 +63,26 @@
                     <tr>
                         <th scope="row">Estado</th>
                         <td>
-                            <span class="badge-status"
-                                  th:attr="data-status=${proveedor.activo ? 'activo' : 'anulada'}"
-                                  th:text="${proveedor.activo ? 'Activo' : 'Inactivo'}">—</span>
+                            <span class="badge-estado"
+                                  th:classappend="${proveedor.activo != false} ? 'badge-estado-ok' : 'badge-estado-neutro'"
+                                  th:text="${proveedor.activo != false ? 'Activo' : 'Inactivo'}">Activo</span>
                         </td>
                     </tr>
-                    </table>
-                </div>
+                </table>
+            </div>
+        </section>
 
-                <div class="form-section-title">
-                    <i class="bi bi-geo-alt"></i> Dirección y pagos
-                </div>
-                <div class="doc-fields">
-                    <table class="doc-table">
+        <section class="form-section">
+            <h2 class="form-section-title"><i class="bi bi-geo-alt" aria-hidden="true"></i>Dirección y pagos</h2>
+            <div class="doc-fields">
+                <table class="doc-table">
                     <tr>
                         <th scope="row">Dirección</th>
                         <td th:text="${proveedor.direccion ?: '—'}">—</td>
                     </tr>
                     <tr>
                         <th scope="row">C.P. / Población</th>
-                        <td th:text="${(proveedor.codigoPostal ?: '') + ' ' + (proveedor.poblacion ?: '')}">—</td>
+                        <td th:text="${proveedor.codigoPostal == null and proveedor.poblacion == null ? '—' : (proveedor.codigoPostal ?: '') + ' ' + (proveedor.poblacion ?: '')}">—</td>
                     </tr>
                     <tr>
                         <th scope="row">Forma de pago</th>
@@ -95,7 +90,7 @@
                     </tr>
                     <tr>
                         <th scope="row">Días de pago</th>
-                        <td th:text="${proveedor.diasPago ?: '—'}">—</td>
+                        <td th:text="${proveedor.diasPago != null ? proveedor.diasPago + ' días' : '—'}">30 días</td>
                     </tr>
                     <tr>
                         <th scope="row">IBAN</th>
@@ -105,20 +100,8 @@
                         <th scope="row">Notas</th>
                         <td class="text-muted" th:text="${proveedor.notas}"></td>
                     </tr>
-                    </table>
-                </div>
+                </table>
             </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="form-card">
-                <div class="doc-field-label mb-3">Acciones</div>
-                <div class="d-grid gap-2">
-                    <a th:href="@{/web/proveedores/{id}/editar(id=${proveedor.id})}" class="btn btn-outline-primary">
-                        <i class="bi bi-pencil me-2"></i>Editar proveedor
-                    </a>
-                </div>
-            </div>
-        </div>
+        </section>
     </div>
 </div>

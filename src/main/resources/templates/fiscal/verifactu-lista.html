@@ -1,35 +1,82 @@
 <div th:fragment="content">
     <div class="page-header">
-        <div class="page-header-title"><h4 th:text="${titulo}">Evidencias VERI*FACTU</h4></div>
-        <div class="page-header-actions">
-            <span class="badge text-bg-warning" th:text="${pendientes} + ' pendientes'"></span>
-            <span class="badge text-bg-danger" th:text="${erroresCount} + ' errores'"></span>
+        <div class="page-header-title">
+            <h1 th:text="${titulo}">Evidencias VERI*FACTU</h1>
+            <p>
+                <!-- Recuentos como accesos directos al filtro correspondiente -->
+                <a th:href="@{/web/verifactu(estado='PENDIENTE')}" class="badge-estado badge-estado-aviso text-decoration-none"
+                   th:text="${pendientes} + ' pendientes'">0 pendientes</a>
+                <a th:href="@{/web/verifactu(estado='ERROR')}" class="badge-estado badge-estado-peligro text-decoration-none"
+                   th:text="${erroresCount} + ' errores'">0 errores</a>
+            </p>
         </div>
     </div>
-    <form method="get" th:action="@{/web/verifactu}" class="filter-bar mb-3">
-        <div class="filter-bar-search"><i class="bi bi-search"></i><input type="search" name="q" class="form-control form-control-sm" placeholder="Serie, número o factura..." th:value="${q}"></div>
-        <div class="filter-bar-filters"><select name="estado" class="form-select form-select-sm">
-            <option value="">Todos los estados</option>
-            <option value="PENDIENTE" th:selected="${estado == 'PENDIENTE'}">Pendiente</option>
-            <option value="ENVIADO" th:selected="${estado == 'ENVIADO'}">Enviado</option>
-            <option value="VERIFICADO" th:selected="${estado == 'VERIFICADO'}">Verificado</option>
-            <option value="ERROR" th:selected="${estado == 'ERROR'}">Error</option>
-        </select></div>
-        <div class="filter-bar-actions"><button class="btn btn-outline-primary btn-sm">Filtrar</button><a th:href="@{/web/verifactu}" class="btn btn-ghost btn-sm">Limpiar</a></div>
-    </form>
-    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
-        <thead><tr><th>Factura</th><th>Serie / número</th><th>Generación</th><th>Estado</th><th>Código AEAT</th><th></th></tr></thead>
-        <tbody>
-        <tr th:if="${evidencias.empty}"><td colspan="6" class="empty-state"><i class="bi bi-shield-check"></i><div>No hay evidencias</div></td></tr>
-        <tr th:each="e : ${evidencias.content}">
-            <td th:text="${e.facturaId}"></td>
-            <td><span th:text="${e.serie ?: '—'}"></span> / <span th:text="${e.numero ?: '—'}"></span></td>
-            <td class="small text-muted" th:text="${e.fechaGeneracionRegistro != null ? #temporals.format(e.fechaGeneracionRegistro, 'dd/MM/yyyy HH:mm') : '—'}"></td>
-            <td><span class="badge-status" th:attr="data-status=${e.estado?.toLowerCase()}" th:text="${e.estado ?: '—'}"></span></td>
-            <td th:text="${e.codigoRespuestaAEAT ?: '—'}"></td>
-            <td class="text-end"><a th:href="@{/web/verifactu/{id}(id=${e.id})}" class="btn btn-ghost btn-sm"><i class="bi bi-eye"></i></a></td>
-        </tr>
-        </tbody>
-    </table></div></div>
+
+    <div class="table-card">
+        <form method="get" th:action="@{/web/verifactu}" class="filter-bar">
+            <div class="filter-bar-search">
+                <label for="verifactu-search" class="visually-hidden">Buscar evidencias</label>
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="verifactu-search" type="search" name="q" class="form-control form-control-sm"
+                       placeholder="Serie, número o factura…" th:value="${q}" autocomplete="off">
+            </div>
+            <div class="filter-bar-filters">
+                <select name="estado" class="form-select form-select-sm" aria-label="Estado" data-autosubmit>
+                    <option value="">Todos los estados</option>
+                    <option value="PENDIENTE" th:selected="${estado == 'PENDIENTE'}">Pendiente</option>
+                    <option value="ENVIADO" th:selected="${estado == 'ENVIADO'}">Enviado</option>
+                    <option value="VERIFICADO" th:selected="${estado == 'VERIFICADO'}">Verificado</option>
+                    <option value="ERROR" th:selected="${estado == 'ERROR'}">Error</option>
+                </select>
+            </div>
+            <div class="filter-bar-actions">
+                <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar</button>
+                <a th:href="@{/web/verifactu}" class="btn btn-ghost btn-sm">Limpiar</a>
+                <span class="filter-bar-count"><span th:text="${evidencias.totalElements}">0</span> evidencias</span>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Factura</th>
+                        <th>Serie / número</th>
+                        <th class="d-none d-lg-table-cell">Generación</th>
+                        <th>Estado</th>
+                        <th class="d-none d-md-table-cell">Código AEAT</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${evidencias.empty}">
+                    <td colspan="6" class="empty-state">
+                        <i class="bi bi-shield-check" aria-hidden="true"></i>
+                        <div class="empty-state-title">No hay evidencias</div>
+                        <small class="empty-state-hint" th:if="${(q != null and !q.isEmpty()) or (estado != null and !estado.isEmpty())}">Prueba con otros términos o quita el filtro de estado.</small>
+                        <small class="empty-state-hint" th:unless="${(q != null and !q.isEmpty()) or (estado != null and !estado.isEmpty())}">Cada factura emitida genera su registro VERI*FACTU.</small>
+                    </td>
+                </tr>
+                <tr th:each="e : ${evidencias.content}">
+                    <td>
+                        <a th:if="${e.facturaId != null}" th:href="@{/web/facturas/{id}(id=${e.facturaId})}" th:text="${e.facturaId}"></a>
+                        <span th:unless="${e.facturaId != null}">—</span>
+                    </td>
+                    <td><span th:text="${e.serie ?: '—'}"></span> / <span th:text="${e.numero ?: '—'}"></span></td>
+                    <td class="text-muted d-none d-lg-table-cell" th:text="${e.fechaGeneracionRegistro != null ? #temporals.format(e.fechaGeneracionRegistro, 'dd/MM/yyyy HH:mm') : '—'}"></td>
+                    <td><span class="badge-status" th:attr="data-status=${e.estado?.toLowerCase()}" th:text="${e.estado ?: '—'}"></span></td>
+                    <td class="d-none d-md-table-cell" th:text="${e.codigoRespuestaAEAT ?: '—'}"></td>
+                    <td>
+                        <div class="actions">
+                            <a th:href="@{/web/verifactu/{id}(id=${e.id})}" class="btn btn-ghost btn-sm btn-icon"
+                               th:attr="aria-label='Ver evidencia ' + ${e.numero ?: e.id}" title="Ver">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
     <div th:replace="~{fragments/pagination :: paginacion(${evidencias}, '/web/verifactu')}"></div>
 </div>

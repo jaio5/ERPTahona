@@ -1,66 +1,106 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Factura de compra</h4>
+            <h1 th:text="${titulo}">Factura de compra</h1>
+            <p>
+                <span class="badge-status" th:attr="data-status=${factura.estado?.toLowerCase()}"
+                      th:text="${factura.estado != null ? #strings.capitalize(#strings.toLowerCase(#strings.replace(factura.estado, '_', ' '))) : '—'}">Pendiente</span>
+                <span th:if="${factura.fecha != null}" th:text="${#temporals.format(factura.fecha, 'dd/MM/yyyy')}">01/10/2026</span>
+            </p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/facturas-compra}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
-    <div class="form-card" style="max-width:700px;">
-        <div class="doc-fields">
-            <table class="doc-table">
-            <tr>
-                <th scope="row">Número</th>
-                <td th:text="${factura.numero}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Proveedor</th>
-                <td th:text="${factura.proveedor?.nombre} ?: '—'">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Fecha</th>
-                <td th:text="${factura.fecha}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Vencimiento</th>
-                <td th:text="${factura.fechaVencimiento} ?: '—'">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Base imponible</th>
-                <td th:text="${factura.baseImponible != null ? #numbers.formatDecimal(factura.baseImponible, 1, 2) + ' €' : '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">IVA (%)</th>
-                <td th:text="${factura.tipoIva != null ? factura.tipoIva + '%' : '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Importe IVA</th>
-                <td th:text="${factura.importeIva != null ? #numbers.formatDecimal(factura.importeIva, 1, 2) + ' €' : '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Total</th>
-                <td class="fw-bold" style="font-size:1.25rem;color:var(--brand-color);"
-                     th:text="${factura.total != null ? #numbers.formatDecimal(factura.total, 1, 2) + ' €' : '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Pagada</th>
-                <td th:text="${factura.pagada ? 'Sí' : 'No'}">—</td>
-            </tr>
-            <tr th:if="${factura.observaciones != null and !factura.observaciones.isBlank()}">
-                <th scope="row">Observaciones</th>
-                <td class="text-muted" th:text="${factura.observaciones}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Estado</th>
-                <td>
-                    <span class="badge-status" th:attr="data-status=${factura.estado?.toLowerCase()}"
-                          th:text="${factura.estado}">—</span>
-                </td>
-            </tr>
-            </table>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="doc-card">
+                <div class="doc-card-header">
+                    <div class="doc-header-icon" aria-hidden="true"
+                         th:classappend="${factura.pagada == true} ? 'success'"><i class="bi bi-receipt"></i></div>
+                    <div>
+                        <div class="doc-card-title" th:text="${factura.proveedor?.nombre ?: 'Sin proveedor'}">Proveedor</div>
+                        <div class="doc-card-meta" th:text="${factura.proveedor?.cif ?: ''}">B03000000</div>
+                    </div>
+                </div>
+
+                <div class="doc-summary">
+                    <div>
+                        <span class="doc-field-label">Base imponible</span>
+                        <div class="doc-field-value"
+                             th:text="${factura.baseImponible != null ? #numbers.formatDecimal(factura.baseImponible, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">0,00 €</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Tipo de IVA</span>
+                        <div class="doc-field-value"
+                             th:text="${factura.tipoIva != null ? #numbers.formatDecimal(factura.tipoIva, 1, 'POINT', 2, 'COMMA') + ' %' : '—'}">10,00 %</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Importe IVA</span>
+                        <div class="doc-field-value"
+                             th:text="${factura.importeIva != null ? #numbers.formatDecimal(factura.importeIva, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">0,00 €</div>
+                    </div>
+                </div>
+                <div class="doc-total mt-3">
+                    <span class="doc-total-label">Total</span>
+                    <span class="doc-total-amount"
+                          th:text="${factura.total != null ? #numbers.formatDecimal(factura.total, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">0,00 €</span>
+                </div>
+
+                <section class="form-section mt-4">
+                    <h2 class="form-section-title"><i class="bi bi-info-circle" aria-hidden="true"></i>Datos de la factura</h2>
+                    <div class="doc-fields">
+                        <table class="doc-table">
+                            <tr>
+                                <th scope="row">Número</th>
+                                <td th:text="${factura.numero ?: '—'}">—</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Proveedor</th>
+                                <td>
+                                    <a th:if="${factura.proveedor != null}"
+                                       th:href="@{/web/proveedores/{id}(id=${factura.proveedor.id})}"
+                                       th:text="${factura.proveedor.nombre}">Proveedor</a>
+                                    <span th:if="${factura.proveedor == null}">—</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Fecha</th>
+                                <td th:text="${factura.fecha != null ? #temporals.format(factura.fecha, 'dd/MM/yyyy') : '—'}">—</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Vencimiento</th>
+                                <td th:text="${factura.fechaVencimiento != null ? #temporals.format(factura.fechaVencimiento, 'dd/MM/yyyy') : '—'}">—</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Forma de pago</th>
+                                <td th:text="${factura.formaPago == null ? '—' : (factura.formaPago == 'PAGARE' ? 'Pagaré' : #strings.capitalize(#strings.toLowerCase(factura.formaPago)))}">—</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Pagada</th>
+                                <td th:text="${factura.pagada == true ? 'Sí' : 'No'}">No</td>
+                            </tr>
+                            <tr th:if="${factura.observaciones != null and !factura.observaciones.isBlank()}">
+                                <th scope="row">Observaciones</th>
+                                <td class="text-muted" th:text="${factura.observaciones}">—</td>
+                            </tr>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="form-card total-card-big">
+                <div class="label">Total factura</div>
+                <div class="amount"
+                     th:text="${factura.total != null ? #numbers.formatDecimal(factura.total, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">0,00 €</div>
+                <span class="badge-status" th:attr="data-status=${factura.estado?.toLowerCase()}"
+                      th:text="${factura.estado != null ? #strings.capitalize(#strings.toLowerCase(#strings.replace(factura.estado, '_', ' '))) : '—'}">Pendiente</span>
+            </div>
         </div>
     </div>
 </div>

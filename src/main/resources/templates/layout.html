@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" th:content="${_csrf != null ? _csrf.token : ''}">
     <meta name="csrf-header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}">
+    <meta name="color-scheme" content="light dark">
+    <!-- Fija el tema claro/oscuro antes de pintar (sin defer a propósito) -->
+    <script th:attr="nonce=${cspNonce}" th:src="@{/js/tema.js}"></script>
     <link th:href="@{/webjars/fontsource__inter/5.2.8/400.css}" rel="stylesheet">
     <link th:href="@{/webjars/fontsource__inter/5.2.8/500.css}" rel="stylesheet">
     <link th:href="@{/webjars/fontsource__inter/5.2.8/600.css}" rel="stylesheet">
@@ -17,10 +20,11 @@
     <title th:text="${titulo} + ' | ERP Tahona'">ERP Tahona</title>
 </head>
 <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
     <div class="app-layout">
         <nav class="sidebar" id="mainSidebar" th:replace="~{fragments/menu :: menu}"></nav>
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
-        <main class="main-content">
+        <main class="main-content" id="contenido" tabindex="-1">
             <header class="topbar-global">
                 <button class="sidebar-toggle-btn" id="sidebarToggle" type="button" aria-label="Abrir menú"
                         aria-controls="mainSidebar" aria-expanded="false">
@@ -45,13 +49,19 @@
                         <li class="breadcrumb-item active" th:text="${titulo}"></li>
                     </ol>
                 </nav>
-                <div class="ms-auto d-flex align-items-center gap-2">
-                    <a th:href="@{/web/dashboard}" class="btn btn-ghost btn-sm"
+                <div class="topbar-tools">
+                    <!-- El rótulo lo actualiza app.js según el tema activo (dice la acción, sin aria-pressed) -->
+                    <button type="button" class="btn btn-ghost btn-sm btn-icon theme-toggle" id="temaToggle"
+                            aria-label="Cambiar a modo oscuro" title="Cambiar a modo oscuro">
+                        <i class="bi bi-moon-stars tema-icono-oscuro" aria-hidden="true"></i>
+                        <i class="bi bi-sun tema-icono-claro" aria-hidden="true"></i>
+                    </button>
+                    <a th:href="@{/web/dashboard}" class="btn btn-ghost btn-sm btn-icon"
                        aria-label="Panel de trabajo" title="Panel de trabajo">
                         <i class="bi bi-grid-1x2" aria-hidden="true"></i>
                     </a>
                     <form th:action="@{/web/logout}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-ghost btn-sm" title="Cerrar sesión"
+                        <button type="submit" class="btn btn-ghost btn-sm btn-icon" title="Cerrar sesión"
                                 aria-label="Cerrar sesión" data-no-double-click>
                             <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                         </button>

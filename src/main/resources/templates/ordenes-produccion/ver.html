@@ -1,41 +1,56 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="'Orden ' + ${orden.numero}">Orden de producción</h4>
+            <h1 th:text="'Orden ' + ${orden.numero}">Orden de producción</h1>
             <p>
                 <span class="badge-status"
                       th:attr="data-status=${orden.estado?.toLowerCase()}"
                       th:text="${orden.estado ?: 'Sin estado'}">-</span>
-                <span class="text-muted small ms-2"
-                      th:text="${orden.fecha != null ? #temporals.format(orden.fecha,'dd/MM/yyyy') : ''}"></span>
+                <span th:text="${orden.fecha != null ? #temporals.format(orden.fecha,'dd/MM/yyyy') : ''}"></span>
             </p>
         </div>
         <div class="page-header-actions">
-            <a th:href="@{/web/ordenes-produccion/{id}/editar(id=${orden.id})}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-pencil me-1"></i>Editar
-            </a>
             <a th:href="@{/web/ordenes-produccion}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <a th:href="@{/web/ordenes-produccion/{id}/editar(id=${orden.id})}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
             </a>
         </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="form-card mb-4">
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div class="doc-header-icon">
+            <div class="doc-card mb-4">
+                <div class="doc-card-header">
+                    <!-- Icono según estado: verde finalizada, rojo cancelada -->
+                    <div class="doc-header-icon" aria-hidden="true"
+                         th:classappend="${orden.estado == 'FINALIZADA' ? 'success' : (orden.estado == 'CANCELADA' ? 'danger' : '')}">
                         <i class="bi bi-gear"></i>
                     </div>
                     <div>
-                        <div class="fw-bold fs-5" th:text="${orden.numero}">Orden</div>
-                        <div class="text-muted small">
-                            <span th:text="${orden.receta?.nombre ?: 'Sin receta'}"></span>
-                        </div>
+                        <div class="doc-card-title" th:text="${orden.articulo?.nombre ?: orden.numero}">Orden</div>
+                        <div class="doc-card-meta" th:text="${orden.receta?.nombre ?: 'Sin receta'}"></div>
                     </div>
                 </div>
 
-                <div class="doc-fields">
+                <!-- Avance: planificado frente a producido -->
+                <div class="doc-summary">
+                    <div>
+                        <span class="doc-field-label">Planificada</span>
+                        <div class="doc-field-value" th:text="${orden.cantidadPlanificada != null ? #numbers.formatDecimal(orden.cantidadPlanificada, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Producida</span>
+                        <div class="doc-field-value" th:text="${orden.cantidadProducida != null ? #numbers.formatDecimal(orden.cantidadProducida, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Merma</span>
+                        <div class="doc-field-value" th:text="${orden.merma != null ? #numbers.formatDecimal(orden.merma, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+                    </div>
+                </div>
+
+                <div class="doc-fields mt-3">
                     <table class="doc-table">
                     <tr>
                         <th scope="row">Número</th>
@@ -46,6 +61,10 @@
                         <td th:text="${orden.fecha != null ? #temporals.format(orden.fecha,'dd/MM/yyyy') : '—'}">—</td>
                     </tr>
                     <tr>
+                        <th scope="row">Artículo</th>
+                        <td th:text="${orden.articulo?.nombre ?: '—'}">—</td>
+                    </tr>
+                    <tr>
                         <th scope="row">Receta</th>
                         <td>
                             <a th:if="${orden.receta != null}"
@@ -54,73 +73,56 @@
                             <span th:if="${orden.receta == null}">—</span>
                         </td>
                     </tr>
-                    <tr>
-                        <th scope="row">Planificada</th>
-                        <td th:text="${orden.cantidadPlanificada ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Producida</th>
-                        <td th:text="${orden.cantidadProducida ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Merma</th>
-                        <td th:text="${orden.merma ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Artículo</th>
-                        <td th:text="${orden.articulo?.nombre ?: '—'}">—</td>
-                    </tr>
-                    <tr th:if="${orden.observaciones}">
-                        <th scope="row">Observaciones</th>
-                        <td class="text-muted" th:text="${orden.observaciones}"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Estado</th>
-                        <td>
-                            <span class="badge-status"
-                                  th:attr="data-status=${orden.estado?.toLowerCase()}"
-                                  th:text="${orden.estado ?: '—'}">—</span>
-                        </td>
-                    </tr>
                     </table>
+                </div>
+
+                <div class="doc-notes" th:if="${orden.observaciones}">
+                    <span class="doc-field-label">Observaciones</span>
+                    <p th:text="${orden.observaciones}"></p>
                 </div>
             </div>
 
             <div class="table-card">
-                <div class="d-flex align-items-center justify-content-between px-4 py-3 border-separator">
-                    <span class="fw-semibold">Horneadas y avance</span>
+                <div class="table-card-header">
+                    <h2 class="table-card-title">Horneadas y avance</h2>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Fecha</th>
-                                <th>Inicio</th>
-                                <th>Fin</th>
-                                <th class="text-end">Producido</th>
-                                <th class="text-end">Merma</th>
+                                <th class="d-none d-md-table-cell">Inicio</th>
+                                <th class="d-none d-md-table-cell">Fin</th>
+                                <th class="cifra">Producido</th>
+                                <th class="cifra">Merma</th>
                                 <th>Resultado</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:if="${#lists.isEmpty(horneadas)}">
                                 <td colspan="6" class="empty-state">
-                                    <i class="bi bi-fire"></i>
-                                    <p>No hay horneadas registradas</p>
+                                    <i class="bi bi-fire" aria-hidden="true"></i>
+                                    <div class="empty-state-title">No hay horneadas registradas</div>
+                                    <small class="empty-state-hint">Las hornadas vinculadas a esta orden aparecerán aquí.</small>
+                                    <a th:href="@{/web/horneadas/nuevo}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Registrar horneada
+                                    </a>
                                 </td>
                             </tr>
                             <tr th:each="h : ${horneadas}">
                                 <td>
-                                    <a th:href="@{/web/horneadas/{id}(id=${h.id})}" th:text="${h.fecha}"></a>
+                                    <a th:href="@{/web/horneadas/{id}(id=${h.id})}"
+                                       th:text="${h.fecha != null ? #temporals.format(h.fecha,'dd/MM/yyyy') : h.id}"></a>
                                 </td>
-                                <td th:text="${h.horaInicio ?: '—'}">—</td>
-                                <td th:text="${h.horaFin ?: '—'}">—</td>
-                                <td class="text-end" th:text="${h.cantidadProducida ?: '—'}">—</td>
-                                <td class="text-end" th:text="${h.merma ?: '—'}">—</td>
+                                <td class="d-none d-md-table-cell" th:text="${h.horaInicio != null ? #temporals.format(h.horaInicio,'HH:mm') : '—'}">—</td>
+                                <td class="d-none d-md-table-cell" th:text="${h.horaFin != null ? #temporals.format(h.horaFin,'HH:mm') : '—'}">—</td>
+                                <td class="cifra" th:text="${h.cantidadProducida != null ? #numbers.formatDecimal(h.cantidadProducida, 1, 'POINT', 2, 'COMMA') : '—'}">—</td>
+                                <td class="cifra" th:text="${h.merma != null ? #numbers.formatDecimal(h.merma, 1, 'POINT', 2, 'COMMA') : '—'}">—</td>
                                 <td>
-                                    <span class="badge-status"
-                                          th:attr="data-status=${h.resultado?.toLowerCase()}"
-                                          th:text="${h.resultado ?: '—'}">—</span>
+                                    <span th:if="${h.resultado != null}" class="badge-status"
+                                          th:attr="data-status=${h.resultado.toLowerCase()}"
+                                          th:text="${h.resultado}">OK</span>
+                                    <span th:unless="${h.resultado != null}" class="text-muted">Sin registrar</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -131,45 +133,50 @@
 
         <div class="col-lg-4">
             <div class="form-card">
-                <div class="doc-field-label mb-3">Acciones</div>
-                <div class="d-grid gap-2">
+                <h2 class="card-heading mb-3">Acciones</h2>
+                <div class="action-stack">
                     <!-- PLANIFICADA: editar e iniciar -->
                     <a th:if="${orden.estado == 'PLANIFICADA'}"
                        th:href="@{/web/ordenes-produccion/{id}/editar(id=${orden.id})}"
-                       class="btn btn-ghost">
-                        <i class="bi bi-pencil me-2"></i>Editar orden
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-pencil me-2" aria-hidden="true"></i>Editar orden
                     </a>
                     <form th:if="${orden.estado == 'PLANIFICADA'}"
                           th:action="@{/web/ordenes-produccion/{id}/iniciar(id=${orden.id})}" method="post">
-                        <button class="btn btn-success w-100" data-no-double-click>
-                            <i class="bi bi-play-fill me-2"></i>Iniciar producción
+                        <button class="btn btn-primary" data-no-double-click>
+                            <i class="bi bi-play-fill me-2" aria-hidden="true"></i>Iniciar producción
                         </button>
                     </form>
                     <!-- EN_CURSO: finalizar -->
                     <form th:if="${orden.estado == 'EN_CURSO'}"
                           th:action="@{/web/ordenes-produccion/{id}/finalizar(id=${orden.id})}" method="post">
-                        <div class="mb-2">
-                            <label class="form-label small text-muted">Cantidad producida</label>
-                            <input type="number" name="cantidadProducida" class="form-control form-control-sm"
+                        <div>
+                            <label class="form-label" for="finCantidadProducida">Cantidad producida</label>
+                            <input type="number" id="finCantidadProducida" name="cantidadProducida" class="form-control text-end"
                                    th:value="${orden.cantidadPlanificada}" step="0.001" min="0">
                         </div>
                         <div class="mb-2">
-                            <label class="form-label small text-muted">Merma</label>
-                            <input type="number" name="merma" class="form-control form-control-sm"
+                            <label class="form-label" for="finMerma">Merma</label>
+                            <input type="number" id="finMerma" name="merma" class="form-control text-end"
                                    value="0" step="0.001" min="0">
                         </div>
-                        <button class="btn btn-primary w-100" data-no-double-click>
-                            <i class="bi bi-check2-all me-2"></i>Finalizar producción
+                        <button class="btn btn-primary" data-no-double-click>
+                            <i class="bi bi-check2-all me-2" aria-hidden="true"></i>Finalizar producción
                         </button>
                     </form>
                     <!-- Cancelar (PLANIFICADA o EN_CURSO) -->
+                    <div class="action-stack-sep" th:if="${orden.estado == 'PLANIFICADA' or orden.estado == 'EN_CURSO'}"></div>
                     <form th:if="${orden.estado == 'PLANIFICADA' or orden.estado == 'EN_CURSO'}"
                           th:action="@{/web/ordenes-produccion/{id}/cancelar(id=${orden.id})}" method="post">
-                        <button class="btn btn-outline-danger w-100"
+                        <button class="btn btn-outline-danger" data-no-double-click
                                 data-confirm="¿Cancelar esta orden de producción?">
-                            <i class="bi bi-x-circle me-2"></i>Cancelar orden
+                            <i class="bi bi-x-circle me-2" aria-hidden="true"></i>Cancelar orden
                         </button>
                     </form>
+                    <p class="text-muted small mb-0"
+                       th:if="${orden.estado != 'PLANIFICADA' and orden.estado != 'EN_CURSO'}">
+                        Esta orden ya está cerrada; no admite cambios de estado.
+                    </p>
                 </div>
             </div>
         </div>

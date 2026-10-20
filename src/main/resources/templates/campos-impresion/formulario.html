@@ -1,111 +1,127 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Campo de impresión</h4>
+            <h1 th:text="${titulo}">Campo de impresión</h1>
+            <p>Dato extra que se imprime en facturas y albaranes</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/campos-impresion}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
 
-    <div class="form-card" style="max-width:760px;">
+    <div class="form-card form-card-narrow">
         <form th:action="@{/web/campos-impresion}" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="id" th:value="${campo?.id}">
-            <div class="row g-3">
-                <!-- Qué campo: catálogo del sistema o campo propio -->
-                <div class="col-12">
-                    <label class="form-label" for="claveSistema">Campo</label>
-                    <select id="claveSistema" name="claveSistema" class="form-select">
-                        <option value="" th:selected="${campo == null or campo.claveSistema == null}">
-                            — Campo propio (texto libre) —
-                        </option>
-                        <optgroup label="Datos de la empresa">
-                            <option th:each="cs : ${camposEmpresa}" th:value="${cs.clave}"
-                                    th:text="${cs.etiqueta}"
-                                    th:selected="${campo != null and campo.claveSistema == cs.clave}"></option>
-                        </optgroup>
-                        <optgroup label="Datos del cliente">
-                            <option th:each="cs : ${camposCliente}" th:value="${cs.clave}"
-                                    th:text="${cs.etiqueta}"
-                                    th:selected="${campo != null and campo.claveSistema == cs.clave}"></option>
-                        </optgroup>
-                    </select>
-                    <div class="form-text">
-                        Elige un dato que el ERP rellena solo (registro sanitario, IBAN, código de cliente…)
-                        o «Campo propio» para escribir tú la etiqueta y el valor.
+
+            <!-- Qué campo: catálogo del sistema o campo propio -->
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-input-cursor-text" aria-hidden="true"></i>Contenido</h2>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="claveSistema">Campo</label>
+                        <select id="claveSistema" name="claveSistema" class="form-select" aria-describedby="claveSistemaHelp">
+                            <option value="" th:selected="${campo == null or campo.claveSistema == null}">
+                                — Campo propio (texto libre) —
+                            </option>
+                            <optgroup label="Datos de la empresa">
+                                <option th:each="cs : ${camposEmpresa}" th:value="${cs.clave}"
+                                        th:text="${cs.etiqueta}"
+                                        th:selected="${campo != null and campo.claveSistema == cs.clave}"></option>
+                            </optgroup>
+                            <optgroup label="Datos del cliente">
+                                <option th:each="cs : ${camposCliente}" th:value="${cs.clave}"
+                                        th:text="${cs.etiqueta}"
+                                        th:selected="${campo != null and campo.claveSistema == cs.clave}"></option>
+                            </optgroup>
+                        </select>
+                        <div class="form-text" id="claveSistemaHelp">
+                            Elige un dato que el ERP rellena solo (registro sanitario, IBAN, código de cliente…)
+                            o «Campo propio» para escribir tú la etiqueta y el valor.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="etiqueta" id="lblEtiqueta">Etiqueta *</label>
+                        <input type="text" id="etiqueta" name="etiqueta" class="form-control"
+                               th:value="${campo?.etiqueta}" placeholder="Forma de pago">
+                        <div class="invalid-feedback">La etiqueta es obligatoria.</div>
+                    </div>
+                    <div class="col-md-6" id="valorWrap">
+                        <label class="form-label" for="valor">Valor</label>
+                        <input type="text" id="valor" name="valor" class="form-control"
+                               th:value="${campo?.valor}" placeholder="Texto que se imprime">
+                        <div class="form-text" id="valorAuto" hidden>
+                            <i class="bi bi-magic me-1" aria-hidden="true"></i>El valor se rellena automáticamente con el dato del sistema.
+                        </div>
                     </div>
                 </div>
+            </section>
 
-                <div class="col-md-6">
-                    <label class="form-label" for="etiqueta" id="lblEtiqueta">Etiqueta *</label>
-                    <input type="text" id="etiqueta" name="etiqueta" class="form-control"
-                           th:value="${campo?.etiqueta}" placeholder="Forma de pago">
-                    <div class="invalid-feedback">La etiqueta es obligatoria.</div>
-                </div>
-                <div class="col-md-6" id="valorWrap">
-                    <label class="form-label" for="valor">Valor</label>
-                    <input type="text" id="valor" name="valor" class="form-control"
-                           th:value="${campo?.valor}" placeholder="Texto que se imprime">
-                    <div class="form-text" id="valorAuto" style="display:none;">
-                        El valor se rellena automáticamente con el dato del sistema.
+            <!-- Visibilidad respecto a los clientes -->
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-people" aria-hidden="true"></i>A quién se imprime</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="visibilidad">Visibilidad *</label>
+                        <select id="visibilidad" name="visibilidad" class="form-select">
+                            <option value="TODOS"   th:selected="${campo == null or campo.visibilidad == 'TODOS'}">A todos los clientes</option>
+                            <option value="EXCEPTO" th:selected="${campo != null and campo.visibilidad == 'EXCEPTO'}">A todos excepto…</option>
+                            <option value="SOLO"    th:selected="${campo != null and campo.visibilidad == 'SOLO'}">Solo a…</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="clientesWrap">
+                        <label class="form-label" for="clienteIds">Clientes</label>
+                        <select id="clienteIds" name="clienteIds" class="form-select" multiple data-searchable
+                                data-placeholder="Busca por nombre o CIF…">
+                            <option th:each="cl : ${clientes}" th:value="${cl.id}"
+                                    th:text="${cl.nombre + (cl.cif != null ? ' (' + cl.cif + ')' : '')}"
+                                    th:selected="${campo != null and campo.clientes.contains(cl.id)}"></option>
+                        </select>
+                        <div class="form-text">Escribe para buscar y selecciona uno o varios; se muestran como etiquetas.</div>
                     </div>
                 </div>
+            </section>
 
-                <!-- Visibilidad respecto a los clientes -->
-                <div class="col-md-6">
-                    <label class="form-label" for="visibilidad">Visibilidad *</label>
-                    <select id="visibilidad" name="visibilidad" class="form-select">
-                        <option value="TODOS"   th:selected="${campo == null or campo.visibilidad == 'TODOS'}">A todos los clientes</option>
-                        <option value="EXCEPTO" th:selected="${campo != null and campo.visibilidad == 'EXCEPTO'}">A todos excepto…</option>
-                        <option value="SOLO"    th:selected="${campo != null and campo.visibilidad == 'SOLO'}">Solo a…</option>
-                    </select>
-                </div>
-                <div class="col-md-6" id="clientesWrap">
-                    <label class="form-label" for="clienteIds">Clientes</label>
-                    <select id="clienteIds" name="clienteIds" class="form-select" multiple data-searchable
-                            data-placeholder="Busca por nombre o CIF…">
-                        <option th:each="cl : ${clientes}" th:value="${cl.id}"
-                                th:text="${cl.nombre + (cl.cif != null ? ' (' + cl.cif + ')' : '')}"
-                                th:selected="${campo != null and campo.clientes.contains(cl.id)}"></option>
-                    </select>
-                    <div class="form-text">Escribe para buscar y selecciona uno o varios; se muestran como etiquetas.</div>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label" for="documento">Documento *</label>
-                    <select id="documento" name="documento" class="form-select">
-                        <option value="AMBOS"   th:selected="${campo == null or campo.documento == 'AMBOS'}">Factura y albarán</option>
-                        <option value="FACTURA" th:selected="${campo != null and campo.documento == 'FACTURA'}">Solo factura</option>
-                        <option value="ALBARAN" th:selected="${campo != null and campo.documento == 'ALBARAN'}">Solo albarán</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="ubicacion">Zona *</label>
-                    <select id="ubicacion" name="ubicacion" class="form-select">
-                        <option value="CABECERA"      th:selected="${campo != null and campo.ubicacion == 'CABECERA'}">Cabecera</option>
-                        <option value="CLIENTE"       th:selected="${campo != null and campo.ubicacion == 'CLIENTE'}">Junto al cliente</option>
-                        <option value="OBSERVACIONES" th:selected="${campo != null and campo.ubicacion == 'OBSERVACIONES'}">Observaciones</option>
-                        <option value="PIE"           th:selected="${campo == null or campo.ubicacion == 'PIE'}">Pie</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="orden">Orden</label>
-                    <input type="number" id="orden" name="orden" class="form-control"
-                           th:value="${campo?.orden}" min="0" step="1">
-                </div>
-                <div class="col-12">
-                    <div class="form-check mt-1">
-                        <input class="form-check-input" type="checkbox" id="activo" name="activo" value="true"
-                               th:checked="${campo == null or campo.activo == null or campo.activo}">
-                        <label class="form-check-label" for="activo">Activo</label>
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-layout-text-window" aria-hidden="true"></i>Dónde se imprime</h2>
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label" for="documento">Documento *</label>
+                        <select id="documento" name="documento" class="form-select">
+                            <option value="AMBOS"   th:selected="${campo == null or campo.documento == 'AMBOS'}">Factura y albarán</option>
+                            <option value="FACTURA" th:selected="${campo != null and campo.documento == 'FACTURA'}">Solo factura</option>
+                            <option value="ALBARAN" th:selected="${campo != null and campo.documento == 'ALBARAN'}">Solo albarán</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="ubicacion">Zona *</label>
+                        <select id="ubicacion" name="ubicacion" class="form-select">
+                            <option value="CABECERA"      th:selected="${campo != null and campo.ubicacion == 'CABECERA'}">Cabecera</option>
+                            <option value="CLIENTE"       th:selected="${campo != null and campo.ubicacion == 'CLIENTE'}">Junto al cliente</option>
+                            <option value="OBSERVACIONES" th:selected="${campo != null and campo.ubicacion == 'OBSERVACIONES'}">Observaciones</option>
+                            <option value="PIE"           th:selected="${campo == null or campo.ubicacion == 'PIE'}">Pie</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="orden">Orden</label>
+                        <input type="number" id="orden" name="orden" class="form-control text-end"
+                               th:value="${campo?.orden}" min="0" step="1" inputmode="numeric">
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="activo" name="activo" value="true"
+                                   th:checked="${campo == null or campo.activo == null or campo.activo}">
+                            <label class="form-check-label" for="activo">Activo</label>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="form-actions mt-4">
+            </section>
+
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary" data-no-double-click>
-                    <i class="bi bi-floppy me-1"></i>Guardar
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar
                 </button>
                 <a th:href="@{/web/campos-impresion}" class="btn btn-ghost">Cancelar</a>
             </div>
@@ -122,8 +138,9 @@
 
             function syncOrigen() {
                 var sistema = clave.value !== '';
-                valorInput.style.display = sistema ? 'none' : '';
-                valorAuto.style.display = sistema ? '' : 'none';
+                // hidden en vez de style.display (guía, regla 2)
+                valorInput.hidden = sistema;
+                valorAuto.hidden = !sistema;
                 etiqueta.required = !sistema;
                 lblEtiqueta.textContent = sistema
                     ? 'Etiqueta (opcional: sobrescribe la del catálogo)'
@@ -135,7 +152,7 @@
 
             function syncVis() {
                 var necesita = vis.value === 'EXCEPTO' || vis.value === 'SOLO';
-                clientesWrap.style.display = necesita ? '' : 'none';
+                clientesWrap.hidden = !necesita;
             }
 
             clave.addEventListener('change', syncOrigen);

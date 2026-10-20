@@ -1,11 +1,12 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo != null ? titulo : 'Nueva factura'}">Nueva factura</h4>
+            <h1 th:text="${titulo != null ? titulo : 'Nueva factura'}">Nueva factura</h1>
+            <p>Se guarda como borrador; se emite después desde la ficha</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/facturas}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
@@ -14,146 +15,146 @@
         <form th:action="@{/web/facturas}" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="id" th:value="${factura?.id}">
 
-            <div class="form-section-title">
-                <i class="bi bi-file-text"></i> Datos de la factura
-            </div>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label" for="numero">Número</label>
-                    <input type="text" id="numero" name="numero" class="form-control"
-                           th:value="${factura?.numero}" placeholder="Auto-generado" readonly
-                           style="background:var(--color-surface-2);color:var(--color-text-muted);">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="fecha">Fecha *</label>
-                    <input type="date" id="fecha" name="fecha" class="form-control"
-                           th:value="${factura?.fecha != null ? factura.fecha : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
-                           required>
-                    <div class="invalid-feedback">La fecha es obligatoria.</div>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="fechaVencimiento">Fecha vencimiento</label>
-                    <input type="date" id="fechaVencimiento" name="fechaVencimiento" class="form-control"
-                           th:value="${factura?.fechaVencimiento}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="medioCobro">Medio de cobro</label>
-                    <select id="medioCobro" name="medioCobro" class="form-select">
-                        <option value="">—</option>
-                        <option value="EFECTIVO"      th:selected="${factura?.medioCobro == 'EFECTIVO'}">Efectivo</option>
-                        <option value="TARJETA"       th:selected="${factura?.medioCobro == 'TARJETA'}">Tarjeta</option>
-                        <option value="TRANSFERENCIA" th:selected="${factura?.medioCobro == 'TRANSFERENCIA'}">Transferencia</option>
-                        <option value="BIZUM"         th:selected="${factura?.medioCobro == 'BIZUM'}">Bizum</option>
-                        <option value="CHEQUE"        th:selected="${factura?.medioCobro == 'CHEQUE'}">Cheque</option>
-                        <option value="PAGARE"        th:selected="${factura?.medioCobro == 'PAGARE'}">Pagaré</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="rappelPorcentaje">% RAPPEL</label>
-                    <input type="number" step="0.01" min="0" id="rappelPorcentaje" name="rappelPorcentaje"
-                           class="form-control" th:value="${factura?.rappelPorcentaje}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="rappelImporte">Importe RAPPEL</label>
-                    <input type="number" step="0.01" min="0" id="rappelImporte" name="rappelImporte"
-                           class="form-control" th:value="${factura?.rappelImporte}">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="descuentoGlobalValor">Descuento global</label>
-                    <input type="number" step="0.01" min="0" id="descuentoGlobalValor" name="descuentoGlobalValor"
-                           class="form-control" th:value="${factura?.descuentoGlobalValor}"
-                           placeholder="Sobre el total del documento">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="descuentoGlobalTipo">Tipo de descuento</label>
-                    <select id="descuentoGlobalTipo" name="descuentoGlobalTipo" class="form-select">
-                        <option value="PORCENTAJE" th:selected="${factura?.descuentoGlobalTipo == null or factura?.descuentoGlobalTipo == 'PORCENTAJE'}">% Porcentaje</option>
-                        <option value="IMPORTE" th:selected="${factura?.descuentoGlobalTipo == 'IMPORTE'}">€ Importe fijo</option>
-                    </select>
-                </div>
-                <div class="col-12">
-                    <label class="form-label" for="clienteId">Cliente *</label>
-                    <select id="clienteId" name="clienteId" class="form-select" required data-searchable>
-                        <option value="">Seleccionar cliente...</option>
-                        <option th:each="c : ${clientes}" th:value="${c.id}"
-                                th:text="${c.nombre + (c.cif != null ? ' (' + c.cif + ')' : '')}"
-                                th:selected="${factura?.cliente?.id == c.id}"></option>
-                    </select>
-                    <div class="invalid-feedback">Selecciona un cliente.</div>
-                </div>
-                <div class="col-12">
-                    <label class="form-label" for="observaciones">Observaciones</label>
-                    <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
-                              th:text="${factura?.observaciones}"></textarea>
-                </div>
-            </div>
-
-            <div class="form-section-divider">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div class="form-section-title mb-0">
-                        <i class="bi bi-list-ul"></i> Líneas de factura
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-file-text" aria-hidden="true"></i>Datos de la factura</h2>
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="numero">Número</label>
+                        <input type="text" id="numero" name="numero" class="form-control"
+                               th:value="${factura?.numero}" placeholder="Se asigna al guardar" readonly>
                     </div>
-                    <button type="button" class="btn btn-ghost btn-sm" id="addLineBtn">
-                        <i class="bi bi-plus me-1"></i>Añadir producto
-                    </button>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="fecha">Fecha *</label>
+                        <input type="date" id="fecha" name="fecha" class="form-control"
+                               th:value="${factura?.fecha != null ? factura.fecha : #temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                               required>
+                        <div class="invalid-feedback">La fecha es obligatoria.</div>
+                    </div>
+                    <div class="col-lg-6">
+                        <label class="form-label" for="clienteId">Cliente *</label>
+                        <select id="clienteId" name="clienteId" class="form-select" required data-searchable>
+                            <option value="">Seleccionar cliente…</option>
+                            <option th:each="c : ${clientes}" th:value="${c.id}"
+                                    th:text="${c.nombre + (c.cif != null ? ' (' + c.cif + ')' : '')}"
+                                    th:selected="${factura?.cliente?.id == c.id}"></option>
+                        </select>
+                        <div class="invalid-feedback">Selecciona un cliente.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="observaciones">Observaciones</label>
+                        <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
+                                  th:text="${factura?.observaciones}"></textarea>
+                    </div>
                 </div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-credit-card" aria-hidden="true"></i>Cobro y descuentos</h2>
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="fechaVencimiento">Fecha de vencimiento</label>
+                        <input type="date" id="fechaVencimiento" name="fechaVencimiento" class="form-control"
+                               th:value="${factura?.fechaVencimiento}">
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="medioCobro">Medio de cobro</label>
+                        <select id="medioCobro" name="medioCobro" class="form-select">
+                            <option value="">Sin indicar</option>
+                            <option value="EFECTIVO"      th:selected="${factura?.medioCobro == 'EFECTIVO'}">Efectivo</option>
+                            <option value="TARJETA"       th:selected="${factura?.medioCobro == 'TARJETA'}">Tarjeta</option>
+                            <option value="TRANSFERENCIA" th:selected="${factura?.medioCobro == 'TRANSFERENCIA'}">Transferencia</option>
+                            <option value="BIZUM"         th:selected="${factura?.medioCobro == 'BIZUM'}">Bizum</option>
+                            <option value="CHEQUE"        th:selected="${factura?.medioCobro == 'CHEQUE'}">Cheque</option>
+                            <option value="PAGARE"        th:selected="${factura?.medioCobro == 'PAGARE'}">Pagaré</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="descuentoGlobalValor">Descuento global</label>
+                        <input type="number" step="0.01" min="0" id="descuentoGlobalValor" name="descuentoGlobalValor"
+                               class="form-control text-end" th:value="${factura?.descuentoGlobalValor}"
+                               aria-describedby="descuentoGlobalAyuda">
+                        <div class="form-text" id="descuentoGlobalAyuda">Sobre el total del documento.</div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="descuentoGlobalTipo">Tipo de descuento</label>
+                        <select id="descuentoGlobalTipo" name="descuentoGlobalTipo" class="form-select">
+                            <option value="PORCENTAJE" th:selected="${factura?.descuentoGlobalTipo == null or factura?.descuentoGlobalTipo == 'PORCENTAJE'}">Porcentaje (%)</option>
+                            <option value="IMPORTE" th:selected="${factura?.descuentoGlobalTipo == 'IMPORTE'}">Importe fijo (€)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="rappelPorcentaje">Rappel %</label>
+                        <input type="number" step="0.01" min="0" id="rappelPorcentaje" name="rappelPorcentaje"
+                               class="form-control text-end" th:value="${factura?.rappelPorcentaje}">
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <label class="form-label" for="rappelImporte">Importe de rappel (€)</label>
+                        <input type="number" step="0.01" min="0" id="rappelImporte" name="rappelImporte"
+                               class="form-control text-end" th:value="${factura?.rappelImporte}">
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-list-ul" aria-hidden="true"></i>Líneas de factura</h2>
 
                 <div class="table-responsive">
                     <table class="lines-table">
                         <thead>
                             <tr>
                                 <th>Producto</th>
-                                <th class="col-qty">Cantidad</th>
-                                <th class="col-price">Precio unit.</th>
-                                <th class="col-iva">IVA %</th>
-                                <th class="col-dto">Dto %</th>
-                                <th class="col-sub text-end">Subtotal</th>
-                                <th class="col-del"></th>
+                                <th class="col-qty cifra">Cantidad</th>
+                                <th class="col-price cifra">Precio unit.</th>
+                                <th class="col-iva cifra">IVA %</th>
+                                <th class="col-dto cifra">Dto. %</th>
+                                <th class="col-sub cifra">Subtotal</th>
+                                <th class="col-del"><span class="visually-hidden">Quitar</span></th>
                             </tr>
                         </thead>
                         <tbody id="facturaLineasBody"></tbody>
                     </table>
                 </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="addLineBtn">
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Añadir producto
+                </button>
 
-                <div class="total-box mt-3">
+                <div class="total-box">
                     <span class="total-box-label">
-                        <i class="bi bi-calculator me-2"></i>Resumen
+                        <i class="bi bi-calculator me-2" aria-hidden="true"></i>Resumen
                     </span>
-                    <div class="total-breakdown">
+                    <div class="total-breakdown" aria-live="polite">
                         <div class="total-breakdown-item">
                             <span class="tbl">Base</span>
-                            <span class="tbv" id="baseDisplay">0,00 €</span>
+                            <span class="tbv cifra" id="baseDisplay">0,00 €</span>
                         </div>
                         <div class="total-breakdown-item">
                             <span class="tbl">IVA</span>
-                            <span class="tbv" id="ivaDisplay">0,00 €</span>
+                            <span class="tbv cifra" id="ivaDisplay">0,00 €</span>
                         </div>
                         <div class="total-breakdown-item highlight">
                             <span class="tbl">Total</span>
-                            <span class="tbv" id="totalDisplay">0,00 €</span>
+                            <span class="tbv cifra" id="totalDisplay">0,00 €</span>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary" data-no-double-click>
-                    <i class="bi bi-floppy me-1"></i>Guardar borrador
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar borrador
                 </button>
                 <a th:href="@{/web/facturas}" class="btn btn-ghost">Cancelar</a>
             </div>
         </form>
     </div>
 
-    <div id="factura-form-data"
-         th:attr="data-lineas=${lineasJson}"
-         style="display:none">
+    <!-- Datos para el JS de líneas (no se muestran) -->
+    <div id="factura-form-data" hidden
+         th:attr="data-lineas=${lineasJson}">
         <span th:each="a : ${articulos}"
-              th:attr="data-id=${a.id},data-texto=${(a.codigo ?: '') + ' — ' + (a.nombre ?: '')},data-pvp=${a.pvp != null ? a.pvp : 0},data-iva=${a.iva != null ? a.iva : 0}"
-              style="display:none"></span>
+              th:attr="data-id=${a.id},data-texto=${(a.codigo ?: '') + ' — ' + (a.nombre ?: '')},data-pvp=${a.pvp != null ? a.pvp : 0},data-iva=${a.iva != null ? a.iva : 0}"></span>
         <span th:each="t : ${tiposIva}" class="tipo-iva-opt"
-              th:attr="data-valor=${t.porcentaje},data-nombre=${t.nombre},data-defecto=${t.esDefecto}"
-              style="display:none"></span>
+              th:attr="data-valor=${t.porcentaje},data-nombre=${t.nombre},data-defecto=${t.esDefecto}"></span>
     </div>
     <script th:attr="nonce=${cspNonce}">
         /* global TomSelect */
@@ -247,7 +248,7 @@
 
             function buildSelect(selectedId) {
                 const sel = document.createElement('select');
-                sel.name = 'lineaArticuloId';
+                sel.name = 'lineaArticuloId'; sel.setAttribute('aria-label', 'Producto');
                 sel.className = 'form-select form-select-sm line-producto';
                 const empty = document.createElement('option');
                 empty.value = ''; empty.textContent = 'Seleccionar producto...';
@@ -262,11 +263,16 @@
                 return sel;
             }
 
+            // Nombre accesible de cada campo de línea (la tabla no tiene <label>)
+
+            const ARIA_LINEA = { lineaCantidad: 'Cantidad', lineaPrecio: 'Precio unitario', lineaIva: 'IVA %', lineaDescuento: 'Descuento %' };
+
+
             function makeInput(name, cssClass, placeholder, value) {
                 const inp = document.createElement('input');
                 inp.type = 'text'; inp.inputMode = 'decimal';
-                inp.name = name;
-                inp.className = 'form-control form-control-sm ' + cssClass + ' line-input';
+                inp.name = name; inp.setAttribute('aria-label', ARIA_LINEA[name] || name);
+                inp.className = 'form-control form-control-sm text-end ' + cssClass + ' line-input';
                 inp.placeholder = placeholder;
                 if (value !== undefined && value !== null) inp.value = value;
                 return inp;
@@ -296,7 +302,7 @@
                     return makeInput('lineaIva', 'line-iva', '21', selectedVal != null ? fmtDec(selectedVal) : '');
                 }
                 const sel = document.createElement('select');
-                sel.name = 'lineaIva';
+                sel.name = 'lineaIva'; sel.setAttribute('aria-label', 'IVA %');
                 sel.className = 'form-select form-select-sm line-iva line-input';
                 _tiposIva.forEach(function(t) {
                     const opt = document.createElement('option');
@@ -336,9 +342,10 @@
                 const tdDel  = document.createElement('td');
                 const btnDel = document.createElement('button');
                 btnDel.type = 'button';
-                btnDel.className = 'btn btn-ghost btn-sm text-danger line-remove btn-remove-line p-1';
-                btnDel.title = 'Eliminar línea';
-                btnDel.innerHTML = '<i class="bi bi-trash3"></i>';
+                btnDel.className = 'btn btn-ghost btn-sm btn-icon text-danger line-remove btn-remove-line';
+                btnDel.title = 'Quitar línea';
+                btnDel.setAttribute('aria-label', 'Quitar línea');
+                btnDel.innerHTML = '<i class="bi bi-trash3" aria-hidden="true"></i>';
                 tdDel.appendChild(btnDel);
 
                 tr.appendChild(tdSel);

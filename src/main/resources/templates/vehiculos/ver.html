@@ -1,44 +1,75 @@
 <div th:fragment="content">
     <div class="page-header">
-        <div class="page-header-title"><h4 th:text="${titulo}">Vehículo</h4></div>
+        <div class="page-header-title">
+            <h1 th:text="${titulo}">Vehículo</h1>
+            <p>
+                <span th:if="${vehiculo.activo == null or vehiculo.activo}" class="badge-estado badge-estado-ok">Activo</span>
+                <span th:unless="${vehiculo.activo == null or vehiculo.activo}" class="badge-estado badge-estado-neutro">Inactivo</span>
+                <span th:text="${vehiculo.tipo ?: ''}">Furgoneta</span>
+            </p>
+        </div>
         <div class="page-header-actions">
-            <a th:href="@{/web/vehiculos/{id}/editar(id=${vehiculo.id})}" class="btn btn-outline-primary btn-sm">Editar</a>
-            <a th:href="@{/web/vehiculos}" class="btn btn-ghost btn-sm">Volver</a>
+            <a th:href="@{/web/vehiculos}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <a th:href="@{/web/vehiculos/{id}/editar(id=${vehiculo.id})}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
+            </a>
         </div>
     </div>
-    <div class="form-card">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <span class="doc-field-label">Matrícula</span>
-                <div class="doc-field-value" th:text="${vehiculo.matricula}">—</div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="doc-card">
+                <div class="doc-card-header">
+                    <div class="doc-header-icon" aria-hidden="true"><i class="bi bi-truck"></i></div>
+                    <div>
+                        <div class="doc-card-title" th:text="${vehiculo.matricula}">1234ABC</div>
+                        <div class="doc-card-meta"
+                             th:text="${(vehiculo.marca ?: '') + ' ' + (vehiculo.modelo ?: '')}">Marca modelo</div>
+                    </div>
+                </div>
+
+                <!-- Capacidades y consumo -->
+                <div class="doc-summary">
+                    <div>
+                        <span class="doc-field-label">Capacidad</span>
+                        <div class="doc-field-value" th:text="${vehiculo.capacidadKg != null ? #numbers.formatDecimal(vehiculo.capacidadKg, 1, 'POINT', 0, 'COMMA') + ' kg' : '—'}">—</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Volumen</span>
+                        <div class="doc-field-value" th:text="${vehiculo.capacidadVolumen != null ? #numbers.formatDecimal(vehiculo.capacidadVolumen, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Consumo medio</span>
+                        <div class="doc-field-value" th:text="${vehiculo.consumoMedio != null ? #numbers.formatDecimal(vehiculo.consumoMedio, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+                    </div>
+                </div>
+
+                <div class="doc-fields mt-3">
+                    <table class="doc-table">
+                        <tr><th>Matrícula</th><td th:text="${vehiculo.matricula}">—</td><th>Tipo</th><td th:text="${vehiculo.tipo ?: '—'}">—</td></tr>
+                        <tr><th>Marca</th><td th:text="${vehiculo.marca ?: '—'}">—</td><th>Modelo</th><td th:text="${vehiculo.modelo ?: '—'}">—</td></tr>
+                    </table>
+                </div>
+
+                <div class="doc-notes" th:if="${vehiculo.observaciones}">
+                    <span class="doc-field-label">Observaciones</span>
+                    <p th:text="${vehiculo.observaciones}">—</p>
+                </div>
             </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Marca</span>
-                <div class="doc-field-value" th:text="${vehiculo.marca ?: '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Modelo</span>
-                <div class="doc-field-value" th:text="${vehiculo.modelo ?: '—'}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Tipo</span>
-                <div class="doc-field-value" th:text="${vehiculo.tipo ?: '—'}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Capacidad kg</span>
-                <div class="doc-field-value" th:text="${vehiculo.capacidadKg ?: '—'}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Volumen</span>
-                <div class="doc-field-value" th:text="${vehiculo.capacidadVolumen ?: '—'}">—</div>
-            </div>
-            <div class="col-md-3">
-                <span class="doc-field-label">Consumo medio</span>
-                <div class="doc-field-value" th:text="${vehiculo.consumoMedio ?: '—'}">—</div>
-            </div>
-            <div class="col-12" th:if="${vehiculo.observaciones}">
-                <span class="doc-field-label">Observaciones</span>
-                <div class="doc-field-value text-muted" th:text="${vehiculo.observaciones}">—</div>
+        </div>
+        <div class="col-lg-4">
+            <div class="form-card">
+                <h2 class="card-heading mb-3">Acciones</h2>
+                <div class="action-stack">
+                    <a th:href="@{/web/vehiculos/{id}/editar(id=${vehiculo.id})}" class="btn btn-outline-secondary">
+                        <i class="bi bi-pencil me-2" aria-hidden="true"></i>Editar vehículo
+                    </a>
+                    <a th:href="@{/web/hojas-ruta}" class="btn btn-outline-secondary">
+                        <i class="bi bi-map me-2" aria-hidden="true"></i>Ver hojas de ruta
+                    </a>
+                </div>
             </div>
         </div>
     </div>

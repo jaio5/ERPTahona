@@ -1,18 +1,22 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Órdenes de producción</h4>
+            <h1 th:text="${titulo}">Órdenes de producción</h1>
+            <p>Lo que el obrador tiene que producir, por fecha</p>
         </div>
         <div class="page-header-actions">
+            <a th:href="@{/web/planificador}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-calendar-week me-1" aria-hidden="true"></i>Planificador
+            </a>
             <a th:href="@{/web/ordenes-produccion/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nueva orden
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva orden
             </a>
         </div>
     </div>
 
     <form class="filter-bar mb-3" method="get" th:action="@{/web/ordenes-produccion}">
         <div class="filter-bar-filters">
-            <select name="estado" class="form-select form-select-sm" style="width:170px;">
+            <select name="estado" class="form-select form-select-sm" aria-label="Estado" data-autosubmit>
                 <option value="">Todos los estados</option>
                 <option value="PLANIFICADA"  th:selected="${estado == 'PLANIFICADA'}">Planificada</option>
                 <option value="EN_CURSO"     th:selected="${estado == 'EN_CURSO'}">En curso</option>
@@ -21,10 +25,11 @@
             </select>
         </div>
         <div class="filter-bar-actions">
-            <button class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-funnel me-1"></i>Filtrar
+            <button class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar
             </button>
             <a th:href="@{/web/ordenes-produccion}" class="btn btn-ghost btn-sm">Limpiar</a>
+            <span class="filter-bar-count" th:if="${page != null}"><span th:text="${page.totalElements}">0</span> órdenes</span>
         </div>
     </form>
 
@@ -35,41 +40,51 @@
                     <tr>
                         <th>Número</th>
                         <th>Fecha</th>
-                        <th>Receta</th>
+                        <th class="d-none d-lg-table-cell">Receta</th>
                         <th>Artículo</th>
-                        <th class="text-end">Cantidad</th>
+                        <th class="cifra">Cantidad</th>
                         <th>Estado</th>
-                        <th style="width:80px;"></th>
+                        <th><span class="visually-hidden">Acciones</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(ordenes)}">
                         <td colspan="7" class="empty-state">
-                            <i class="bi bi-gear"></i>
-                            <div>No hay órdenes de producción</div>
-                            <small th:if="${estado != null and !estado.isEmpty()}">No hay órdenes con ese estado</small>
+                            <i class="bi bi-gear" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay órdenes de producción</div>
+                            <small class="empty-state-hint" th:if="${estado != null and !estado.isEmpty()}">No hay órdenes con ese estado</small>
+                            <small class="empty-state-hint" th:unless="${estado != null and !estado.isEmpty()}">Crea una orden o genera las del día desde el planificador.</small>
+                            <a th:unless="${estado != null and !estado.isEmpty()}" th:href="@{/web/ordenes-produccion/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva orden
+                            </a>
                         </td>
                     </tr>
                     <tr th:each="o : ${ordenes}">
-                        <td class="fw-medium" th:text="${o.numero}"></td>
-                        <td class="text-muted small"
+                        <td>
+                            <a th:href="@{/web/ordenes-produccion/{id}(id=${o.id})}" th:text="${o.numero}">OP-1</a>
+                        </td>
+                        <td class="text-muted"
                             th:text="${o.fecha != null ? #temporals.format(o.fecha, 'dd/MM/yyyy') : '—'}"></td>
-                        <td th:text="${o.receta?.nombre ?: '—'}"></td>
+                        <td class="d-none d-lg-table-cell" th:text="${o.receta?.nombre ?: '—'}"></td>
                         <td th:text="${o.articulo?.nombre ?: '—'}"></td>
-                        <td class="text-end" th:text="${o.cantidadPlanificada != null ? o.cantidadPlanificada : '—'}"></td>
+                        <td class="cifra fw-medium" th:text="${o.cantidadPlanificada != null ? #numbers.formatDecimal(o.cantidadPlanificada, 1, 'POINT', 2, 'COMMA') : '—'}"></td>
                         <td>
                             <span class="badge-status" th:attr="data-status=${o.estado?.toLowerCase()}"
                                   th:text="${o.estado ?: '—'}"></span>
                         </td>
-                        <td class="text-end">
-                            <a th:href="@{/web/ordenes-produccion/{id}(id=${o.id})}"
-                               class="btn btn-ghost btn-sm" title="Ver detalle">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a th:href="@{/web/ordenes-produccion/{id}/editar(id=${o.id})}"
-                               class="btn btn-ghost btn-sm" title="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </a>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/ordenes-produccion/{id}(id=${o.id})}"
+                                   class="btn btn-ghost btn-sm btn-icon" title="Ver"
+                                   th:attr="aria-label='Ver orden ' + ${o.numero}">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                                <a th:href="@{/web/ordenes-produccion/{id}/editar(id=${o.id})}"
+                                   class="btn btn-ghost btn-sm btn-icon" title="Editar"
+                                   th:attr="aria-label='Editar orden ' + ${o.numero}">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

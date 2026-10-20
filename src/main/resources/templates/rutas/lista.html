@@ -1,14 +1,33 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Rutas</h4>
+            <h1 th:text="${titulo}">Rutas</h1>
+            <p>Recorridos fijos de reparto con sus paradas</p>
         </div>
         <div class="page-header-actions">
+            <a th:href="@{/web/hojas-ruta}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-map me-1" aria-hidden="true"></i>Hojas de ruta
+            </a>
             <a th:href="@{/web/rutas/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nueva ruta
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva ruta
             </a>
         </div>
     </div>
+
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/rutas}">
+        <div class="filter-bar-search">
+            <label for="rutas-search" class="visually-hidden">Buscar rutas</label>
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input id="rutas-search" type="search" name="q" class="form-control form-control-sm"
+                   placeholder="Nombre o código…" th:value="${q}" autocomplete="off">
+        </div>
+        <div class="filter-bar-actions">
+            <button class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar
+            </button>
+            <a th:href="@{/web/rutas}" class="btn btn-ghost btn-sm">Limpiar</a>
+        </div>
+    </form>
 
     <div class="table-card">
         <div class="table-responsive">
@@ -17,29 +36,46 @@
                     <tr>
                         <th>Código</th>
                         <th>Nombre</th>
-                        <th>Conductor</th>
-                        <th>Descripción</th>
-                        <th style="width:80px;"></th>
+                        <th class="d-none d-md-table-cell">Conductor</th>
+                        <th class="d-none d-lg-table-cell">Descripción</th>
+                        <th>Estado</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(rutas)}">
-                        <td colspan="5" class="empty-state">
-                            <i class="bi bi-map"></i>
-                            <div>No hay rutas registradas</div>
+                        <td colspan="6" class="empty-state">
+                            <i class="bi bi-signpost-split" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay rutas registradas</div>
+                            <small class="empty-state-hint" th:if="${q != null and !q.isEmpty()}">Prueba con otros términos de búsqueda</small>
+                            <small class="empty-state-hint" th:unless="${q != null and !q.isEmpty()}">Crea una ruta para generar después las hojas de reparto del día.</small>
+                            <a th:unless="${q != null and !q.isEmpty()}" th:href="@{/web/rutas/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva ruta
+                            </a>
                         </td>
                     </tr>
                     <tr th:each="r : ${rutas}">
                         <td class="fw-medium" th:text="${r.codigo}"></td>
-                        <td th:text="${r.nombre}"></td>
-                        <td class="text-muted" th:text="${r.conductor ?: '—'}"></td>
-                        <td class="text-muted small" th:text="${r.descripcion ?: '—'}"></td>
-                        <td class="text-end">
-                            <a th:href="@{/web/rutas/{id}(id=${r.id})}" class="btn btn-ghost btn-sm" title="Ver"><i class="bi bi-eye"></i></a>
-                            <a th:href="@{/web/rutas/{id}/editar(id=${r.id})}"
-                               class="btn btn-ghost btn-sm" title="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </a>
+                        <td>
+                            <a th:href="@{/web/rutas/{id}(id=${r.id})}" th:text="${r.nombre}">Ruta</a>
+                        </td>
+                        <td class="text-muted d-none d-md-table-cell" th:text="${r.conductor ?: '—'}"></td>
+                        <td class="text-muted small d-none d-lg-table-cell" th:text="${r.descripcion ?: '—'}"></td>
+                        <td>
+                            <span th:if="${r.activo == null or r.activo}" class="badge-estado badge-estado-ok">Activa</span>
+                            <span th:unless="${r.activo == null or r.activo}" class="badge-estado badge-estado-neutro">Inactiva</span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/rutas/{id}(id=${r.id})}" class="btn btn-ghost btn-sm btn-icon" title="Ver"
+                                   th:attr="aria-label='Ver ruta ' + ${r.nombre}">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                                <a th:href="@{/web/rutas/{id}/editar(id=${r.id})}" class="btn btn-ghost btn-sm btn-icon" title="Editar"
+                                   th:attr="aria-label='Editar ruta ' + ${r.nombre}">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

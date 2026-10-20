@@ -1,30 +1,78 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Importar datos</h4>
+            <h1 th:text="${titulo}">Importar datos</h1>
+            <p>Carga clientes o artículos desde un archivo CSV separado por punto y coma</p>
         </div>
     </div>
+
     <div class="row g-4">
-        <div class="col-md-6"><div class="form-card">
-            <h5 class="mb-3">Importar clientes</h5>
-            <p class="text-muted small">Formato CSV con columnas: código;nombre;CIF;teléfono;email;dirección;población</p>
-            <form th:action="@{/web/importar/clientes}" method="post" enctype="multipart/form-data">
-                <input type="file" name="archivo" class="form-control mb-2" accept=".csv">
-                <button class="btn btn-primary btn-sm" data-no-double-click>Importar clientes</button>
-            </form></div>
+        <div class="col-lg-6">
+            <div class="form-card h-100">
+                <form th:action="@{/web/importar/clientes}" method="post" enctype="multipart/form-data"
+                      class="needs-validation" novalidate>
+                    <section class="form-section">
+                        <h2 class="form-section-title"><i class="bi bi-people" aria-hidden="true"></i>Importar clientes</h2>
+                        <p class="form-section-hint">Columnas, en este orden:</p>
+                        <p><code>código;nombre;CIF;teléfono;email;dirección;población</code></p>
+                        <label class="form-label" for="archivoClientes">Archivo CSV de clientes *</label>
+                        <input type="file" id="archivoClientes" name="archivo" class="form-control" accept=".csv" required>
+                        <div class="invalid-feedback">Elige un archivo .csv.</div>
+                    </section>
+                    <div class="form-actions">
+                        <button class="btn btn-outline-primary" data-no-double-click data-loading-text="Importando…">
+                            <i class="bi bi-upload me-1" aria-hidden="true"></i>Importar clientes
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="col-md-6"><div class="form-card">
-            <h5 class="mb-3">Importar artículos</h5>
-            <p class="text-muted small">Formato CSV: código;nombre;PVP;IVA;categoría;alérgenos</p>
-            <form th:action="@{/web/importar/articulos}" method="post" enctype="multipart/form-data">
-                <input type="file" name="archivo" class="form-control mb-2" accept=".csv">
-                <button class="btn btn-primary btn-sm" data-no-double-click>Importar artículos</button>
-            </form></div>
+        <div class="col-lg-6">
+            <div class="form-card h-100">
+                <form th:action="@{/web/importar/articulos}" method="post" enctype="multipart/form-data"
+                      class="needs-validation" novalidate>
+                    <section class="form-section">
+                        <h2 class="form-section-title"><i class="bi bi-box-seam" aria-hidden="true"></i>Importar artículos</h2>
+                        <p class="form-section-hint">Columnas, en este orden:</p>
+                        <p><code>código;nombre;PVP;IVA;categoría;alérgenos</code></p>
+                        <label class="form-label" for="archivoArticulos">Archivo CSV de artículos *</label>
+                        <input type="file" id="archivoArticulos" name="archivo" class="form-control" accept=".csv" required>
+                        <div class="invalid-feedback">Elige un archivo .csv.</div>
+                    </section>
+                    <div class="form-actions">
+                        <button class="btn btn-outline-primary" data-no-double-click data-loading-text="Importando…">
+                            <i class="bi bi-upload me-1" aria-hidden="true"></i>Importar artículos
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-    <div th:if="${resultado}" class="mt-4"><div class="form-card">
-        <h5>Resultado de importación</h5>
-        <p th:text="'Total: ' + ${resultado.total()} + ' | OK: ' + ${resultado.ok()} + ' | Errores: ' + ${resultado.errores()}"></p>
-        <ul th:if="${!resultado.mensajes().isEmpty()}"><li th:each="msg : ${resultado.mensajes()}" th:text="${msg}" class="text-danger small"></li></ul>
-    </div></div>
+
+    <div th:if="${resultado}" class="form-card mt-4" role="status">
+        <h2 class="card-heading mb-3">
+            <i class="bi bi-clipboard-check" aria-hidden="true"></i>Resultado de la importación
+        </h2>
+        <div class="doc-summary">
+            <div>
+                <span class="doc-field-label">Filas leídas</span>
+                <div class="doc-field-value" th:text="${resultado.total()}">0</div>
+            </div>
+            <div>
+                <span class="doc-field-label">Importadas</span>
+                <div class="doc-field-value text-success" th:text="${resultado.ok()}">0</div>
+            </div>
+            <div>
+                <span class="doc-field-label">Con errores</span>
+                <div class="doc-field-value" th:classappend="${resultado.errores() > 0} ? 'text-danger'"
+                     th:text="${resultado.errores()}">0</div>
+            </div>
+        </div>
+        <div th:if="${!resultado.mensajes().isEmpty()}" class="alert alert-danger d-flex align-items-start gap-2 mt-3 mb-0" role="alert">
+            <i class="bi bi-exclamation-circle-fill mt-1" aria-hidden="true"></i>
+            <ul class="mb-0 ps-3">
+                <li th:each="msg : ${resultado.mensajes()}" th:text="${msg}">Fila 3: CIF no válido</li>
+            </ul>
+        </div>
+    </div>
 </div>

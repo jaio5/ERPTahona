@@ -1,55 +1,80 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Usuarios</h4>
+            <h1 th:text="${titulo}">Usuarios</h1>
+            <p>Cuentas con acceso al ERP y su rol</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/usuarios/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nuevo usuario
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo usuario
             </a>
         </div>
     </div>
 
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+    <!-- Los avisos de exito/error salen como toast desde el layout -->
 
     <div class="table-card">
+        <form class="filter-bar" method="get" th:action="@{/web/usuarios}">
+            <div class="filter-bar-search">
+                <label for="usuarios-search" class="visually-hidden">Buscar usuarios</label>
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="usuarios-search" type="search" name="q" class="form-control form-control-sm"
+                       placeholder="Usuario, nombre o email…" th:value="${param.q}" autocomplete="off">
+            </div>
+            <div class="filter-bar-actions">
+                <span class="filter-bar-count" th:if="${page != null}"><span th:text="${page.totalElements}">0</span> usuarios</span>
+            </div>
+        </form>
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
                         <th>Usuario</th>
                         <th>Nombre</th>
-                        <th>Email</th>
+                        <th class="d-none d-lg-table-cell">Email</th>
                         <th>Rol</th>
                         <th>Estado</th>
-                        <th style="width:100px;"></th>
+                        <th><span class="visually-hidden">Acciones</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(usuarios)}">
                         <td colspan="6" class="empty-state">
-                            <i class="bi bi-people"></i>
-                            <div>No hay usuarios registrados</div>
+                            <i class="bi bi-people" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay usuarios registrados</div>
+                            <small class="empty-state-hint" th:if="${param.q != null}">Prueba con otros términos de búsqueda.</small>
+                            <a th:href="@{/web/usuarios/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo usuario
+                            </a>
                         </td>
                     </tr>
                     <tr th:each="u : ${usuarios}">
-                        <td class="fw-medium" th:text="${u.username}"></td>
+                        <td><a th:href="@{/web/usuarios/{id}(id=${u.id})}" th:text="${u.username}"></a></td>
                         <td th:text="${u.nombre ?: '—'}"></td>
-                        <td class="text-muted" th:text="${u.email ?: '—'}"></td>
-                        <td class="text-muted small" th:text="${u.role ?: u.rol?.nombre ?: '—'}"></td>
-                        <td>
-                            <span th:if="${u.bloqueado}" class="badge-status" data-status="anulada">Bloqueado</span>
-                            <span th:if="${!u.bloqueado and u.enabled}" class="badge-status" data-status="activo">Activo</span>
-                            <span th:if="${!u.bloqueado and !u.enabled}" class="badge-status" data-status="borrador">Inactivo</span>
+                        <td class="text-muted d-none d-lg-table-cell" th:text="${u.email ?: '—'}"></td>
+                        <td class="text-muted" th:switch="${u.role}">
+                            <span th:case="'ADMIN'">Administrador</span>
+                            <span th:case="'MANAGER'">Gestor</span>
+                            <span th:case="'USER'">Usuario</span>
+                            <span th:case="'READONLY'">Solo lectura</span>
+                            <span th:case="*" th:text="${u.role ?: u.rol?.nombre ?: '—'}"></span>
                         </td>
-                        <td class="text-end">
-                            <a th:href="@{/web/usuarios/{id}(id=${u.id})}" class="btn btn-ghost btn-sm" title="Ver">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a th:href="@{/web/usuarios/{id}/editar(id=${u.id})}" class="btn btn-ghost btn-sm" title="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </a>
+                        <td>
+                            <span th:if="${u.bloqueado}" class="badge-estado badge-estado-aviso">Bloqueado</span>
+                            <span th:if="${!u.bloqueado and u.enabled}" class="badge-estado badge-estado-ok">Activo</span>
+                            <span th:if="${!u.bloqueado and !u.enabled}" class="badge-estado badge-estado-neutro">Inactivo</span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/usuarios/{id}(id=${u.id})}" class="btn btn-ghost btn-sm btn-icon"
+                                   th:attr="aria-label='Ver usuario ' + ${u.username}" title="Ver">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                                <a th:href="@{/web/usuarios/{id}/editar(id=${u.id})}" class="btn btn-ghost btn-sm btn-icon"
+                                   th:attr="aria-label='Editar usuario ' + ${u.username}" title="Editar">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

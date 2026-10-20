@@ -1,17 +1,38 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Trazabilidad</h4>
+            <h1 th:text="${titulo}">Trazabilidad</h1>
+            <p>Estado de caducidad de los lotes</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/reportes}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <a th:href="@{/web/lotes}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-upc-scan me-1" aria-hidden="true"></i>Ver lotes
             </a>
         </div>
     </div>
     <div class="row g-3 mb-4">
-        <div class="col-md-4"><div class="stat-card"><div class="stat-label">Total lotes</div><div class="stat-value" th:text="${totalLotes}">0</div></div></div>
-        <div class="col-md-4"><div class="stat-card"><div class="stat-label">Caducados</div><div class="stat-value" style="color:#dc2626;" th:text="${caducados}">0</div></div></div>
-        <div class="col-md-4"><div class="stat-card"><div class="stat-label">Por caducar (7d)</div><div class="stat-value" style="color:#d97706;" th:text="${porCaducar}">0</div></div></div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-boxes" aria-hidden="true"></i>Total lotes</div>
+                <div class="stat-value" th:text="${totalLotes}">0</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-calendar-x" aria-hidden="true"></i>Caducados</div>
+                <div class="stat-value" th:text="${caducados}">0</div>
+                <div class="stat-sub text-danger" th:if="${caducados > 0}"><i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>Revisar y retirar</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-calendar-event" aria-hidden="true"></i>Por caducar (7 días)</div>
+                <div class="stat-value" th:text="${porCaducar}">0</div>
+                <div class="stat-sub text-warning" th:if="${porCaducar > 0}"><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>Dar salida primero</div>
+            </div>
+        </div>
     </div>
 </div>

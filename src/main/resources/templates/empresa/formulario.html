@@ -1,48 +1,145 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Configuración de empresa</h4>
+            <h1 th:text="${titulo}">Configuración de empresa</h1>
+            <p>Datos fiscales y de contacto que salen en facturas, albaranes y remesas</p>
         </div>
     </div>
-    <div th:if="${vatValidation}" th:class="${vatValidation.valido ? 'alert alert-success mb-3' : 'alert alert-warning mb-3'}">
-        <div><strong th:text="${vatValidation.mensaje}">Resultado VIES</strong></div>
-        <div th:if="${vatValidation.countryCode}">
-            <span th:text="${vatValidation.countryCode + vatValidation.vatNumber}">ESB00000000</span>
-            <span th:if="${vatValidation.requestDate}" th:text="' - Consulta: ' + ${vatValidation.requestDate}"></span>
-        </div>
-        <div th:if="${vatValidation.nombre}"><strong>Nombre VIES:</strong> <span th:text="${vatValidation.nombre}"></span></div>
-        <div th:if="${vatValidation.direccion}"><strong>Dirección VIES:</strong> <span style="white-space: pre-line" th:text="${vatValidation.direccion}"></span></div>
-    </div>
-    <form th:action="@{/web/empresa}" method="post" class="form-card needs-validation" novalidate>
-        <input type="hidden" name="id" th:value="${empresa?.id}">
-        <div class="row g-3">
-            <div class="col-md-6"><label class="form-label" for="nombreEmpresa">Nombre empresa</label><input id="nombreEmpresa" name="nombreEmpresa" th:value="${empresa?.nombreEmpresa}" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label" for="cif">CIF / NIF</label><input id="cif" name="cif" th:value="${empresa?.cif}" class="form-control" placeholder="B12345678" required></div>
-            <div class="col-md-6"><label class="form-label" for="nombreComercial">Nombre comercial (cabecera de factura/albarán)</label><input id="nombreComercial" name="nombreComercial" th:value="${empresa?.nombreComercial}" class="form-control" placeholder="Tahona de Fernando"></div>
-            <div class="col-md-6"><label class="form-label" for="direccion">Dirección</label><input id="direccion" name="direccion" th:value="${empresa?.direccion}" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label" for="codigoPostal">Código postal</label><input id="codigoPostal" name="codigoPostal" th:value="${empresa?.codigoPostal}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label" for="ciudad">Ciudad</label><input id="ciudad" name="ciudad" th:value="${empresa?.ciudad}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label" for="provincia">Provincia</label><input id="provincia" name="provincia" th:value="${empresa?.provincia}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label" for="telefono">Teléfono</label><input id="telefono" name="telefono" th:value="${empresa?.telefono}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label" for="whatsapp">Whatsapp (cabecera de albarán)</label><input id="whatsapp" name="whatsapp" th:value="${empresa?.whatsapp}" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label" for="email">Email</label><input id="email" name="email" th:value="${empresa?.email}" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label" for="web">Web</label><input id="web" name="web" th:value="${empresa?.web}" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label" for="registroSanitario">Registro sanitario</label><input id="registroSanitario" name="registroSanitario" th:value="${empresa?.registroSanitario}" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label" for="registroMercantil">Registro mercantil</label><input id="registroMercantil" name="registroMercantil" th:value="${empresa?.registroMercantil}" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label" for="iban">IBAN (remesas SEPA)</label><input id="iban" name="iban" th:value="${empresa?.iban}" class="form-control" maxlength="34" placeholder="ES00 0000 0000 0000 0000 0000"></div>
-            <div class="col-md-6"><label class="form-label" for="sepaCreditorId">Identificador acreedor SEPA</label><input id="sepaCreditorId" name="sepaCreditorId" th:value="${empresa?.sepaCreditorId}" class="form-control" maxlength="35" placeholder="ES12000B12345678"></div>
-            <div class="col-12">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" role="switch" id="albaranMedioFolio" name="albaranMedioFolio" value="true"
-                           th:checked="${empresa != null and empresa.albaranMedioFolio}">
-                    <label class="form-check-label" for="albaranMedioFolio">Imprimir albaranes en <strong>media hoja (A5)</strong> para aprovechar el papel</label>
-                </div>
-                <div class="form-text">Si se desactiva, los albaranes salen en folio completo (A4). No afecta a las facturas.</div>
+
+    <!-- Resultado de la consulta VIES -->
+    <div th:if="${vatValidation}" class="alert d-flex align-items-start gap-2 form-card-narrow"
+         th:classappend="${vatValidation.valido ? 'alert-success' : 'alert-warning'}" role="status">
+        <i class="bi mt-1" th:classappend="${vatValidation.valido ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}" aria-hidden="true"></i>
+        <div>
+            <div><strong th:text="${vatValidation.mensaje}">Resultado VIES</strong></div>
+            <div th:if="${vatValidation.countryCode}">
+                <span th:text="${vatValidation.countryCode + vatValidation.vatNumber}">ESB00000000</span>
+                <span th:if="${vatValidation.requestDate}" th:text="' - Consulta: ' + ${vatValidation.requestDate}"></span>
             </div>
+            <div th:if="${vatValidation.nombre}"><strong>Nombre VIES:</strong> <span th:text="${vatValidation.nombre}"></span></div>
+            <!-- Sin white-space en línea: los saltos de la dirección VIES se muestran como espacios -->
+            <div th:if="${vatValidation.direccion}"><strong>Dirección VIES:</strong> <span th:text="${vatValidation.direccion}"></span></div>
         </div>
-        <div class="mt-4 d-flex gap-2">
-            <button class="btn btn-primary" type="submit" data-no-double-click>Guardar</button>
-            <button class="btn btn-outline-primary" type="submit" data-no-double-click th:formaction="@{/web/empresa/validar-vat}">Validar VAT/NIF UE</button>
+    </div>
+
+    <form th:action="@{/web/empresa}" method="post" class="form-card form-card-narrow needs-validation" novalidate>
+        <input type="hidden" name="id" th:value="${empresa?.id}">
+
+        <section class="form-section">
+            <h2 class="form-section-title"><i class="bi bi-building" aria-hidden="true"></i>Identificación</h2>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label" for="nombreEmpresa">Nombre empresa *</label>
+                    <input id="nombreEmpresa" name="nombreEmpresa" th:value="${empresa?.nombreEmpresa}" class="form-control" required>
+                    <div class="invalid-feedback">El nombre de la empresa es obligatorio.</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="cif">CIF / NIF *</label>
+                    <input id="cif" name="cif" th:value="${empresa?.cif}" class="form-control" placeholder="B12345678" required autocomplete="off">
+                    <div class="invalid-feedback">El CIF o NIF es obligatorio.</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="nombreComercial">Nombre comercial</label>
+                    <input id="nombreComercial" name="nombreComercial" th:value="${empresa?.nombreComercial}" class="form-control"
+                           placeholder="Tahona de Fernando" aria-describedby="nombreComercialHelp">
+                    <div id="nombreComercialHelp" class="form-text">Se imprime en la cabecera de facturas y albaranes.</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <h2 class="form-section-title"><i class="bi bi-geo-alt" aria-hidden="true"></i>Dirección</h2>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="direccion">Dirección</label>
+                    <input id="direccion" name="direccion" th:value="${empresa?.direccion}" class="form-control">
+                </div>
+                <div class="col-sm-4">
+                    <label class="form-label" for="codigoPostal">Código postal</label>
+                    <input id="codigoPostal" name="codigoPostal" th:value="${empresa?.codigoPostal}" class="form-control" inputmode="numeric">
+                </div>
+                <div class="col-sm-8 col-md-4">
+                    <label class="form-label" for="ciudad">Ciudad</label>
+                    <input id="ciudad" name="ciudad" th:value="${empresa?.ciudad}" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="provincia">Provincia</label>
+                    <input id="provincia" name="provincia" th:value="${empresa?.provincia}" class="form-control">
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <h2 class="form-section-title"><i class="bi bi-telephone" aria-hidden="true"></i>Contacto</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="telefono">Teléfono</label>
+                    <input id="telefono" name="telefono" type="tel" th:value="${empresa?.telefono}" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="whatsapp">WhatsApp</label>
+                    <input id="whatsapp" name="whatsapp" type="tel" th:value="${empresa?.whatsapp}" class="form-control" aria-describedby="whatsappHelp">
+                    <div id="whatsappHelp" class="form-text">Se imprime en la cabecera del albarán.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="email">Email</label>
+                    <input id="email" name="email" th:value="${empresa?.email}" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="web">Web</label>
+                    <input id="web" name="web" th:value="${empresa?.web}" class="form-control">
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <h2 class="form-section-title"><i class="bi bi-journal-bookmark" aria-hidden="true"></i>Registros</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="registroSanitario">Registro sanitario</label>
+                    <input id="registroSanitario" name="registroSanitario" th:value="${empresa?.registroSanitario}" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="registroMercantil">Registro mercantil</label>
+                    <input id="registroMercantil" name="registroMercantil" th:value="${empresa?.registroMercantil}" class="form-control">
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <h2 class="form-section-title"><i class="bi bi-bank" aria-hidden="true"></i>Cobros SEPA</h2>
+            <p class="form-section-hint">Necesarios para generar remesas de recibos domiciliados.</p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="iban">IBAN</label>
+                    <input id="iban" name="iban" th:value="${empresa?.iban}" class="form-control" maxlength="34"
+                           placeholder="ES00 0000 0000 0000 0000 0000" autocomplete="off">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="sepaCreditorId">Identificador acreedor SEPA</label>
+                    <input id="sepaCreditorId" name="sepaCreditorId" th:value="${empresa?.sepaCreditorId}" class="form-control"
+                           maxlength="35" placeholder="ES12000B12345678" autocomplete="off">
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <h2 class="form-section-title"><i class="bi bi-printer" aria-hidden="true"></i>Impresión</h2>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="albaranMedioFolio" name="albaranMedioFolio" value="true"
+                       th:checked="${empresa != null and empresa.albaranMedioFolio}" aria-describedby="albaranMedioFolioHelp">
+                <label class="form-check-label" for="albaranMedioFolio">Imprimir albaranes en <strong>media hoja (A5)</strong> para aprovechar el papel</label>
+            </div>
+            <div id="albaranMedioFolioHelp" class="form-text">Si se desactiva, los albaranes salen en folio completo (A4). No afecta a las facturas.</div>
+        </section>
+
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit" data-no-double-click>
+                <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar
+            </button>
+            <button class="btn btn-outline-secondary" type="submit" data-no-double-click th:formaction="@{/web/empresa/validar-vat}">
+                <i class="bi bi-patch-check me-1" aria-hidden="true"></i>Validar VAT/NIF UE
+            </button>
         </div>
     </form>
 </div>

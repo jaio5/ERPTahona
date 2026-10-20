@@ -1,22 +1,78 @@
 <div th:fragment="content">
     <div class="page-header">
-        <div class="page-header-title"><h4 th:text="${titulo}">Evidencia VERI*FACTU</h4></div>
-        <div class="page-header-actions"><a th:href="@{/web/verifactu}" class="btn btn-ghost btn-sm">Volver</a></div>
+        <div class="page-header-title">
+            <h1 th:text="${titulo}">Evidencia VERI*FACTU</h1>
+            <p>
+                <span class="badge-status" th:attr="data-status=${evidencia.estado?.toLowerCase()}" th:text="${evidencia.estado ?: '—'}"></span>
+                <span th:if="${evidencia.fechaEnvio != null}" th:text="'Enviada el ' + ${#temporals.format(evidencia.fechaEnvio, 'dd/MM/yyyy HH:mm')}"></span>
+            </p>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/verifactu}" class="btn btn-ghost btn-sm"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver</a>
+        </div>
     </div>
-    <div class="form-card mb-3"><div class="row g-3">
-        <div class="col-md-3"><small class="text-muted">Factura</small><h6 th:text="${evidencia.facturaId}"></h6></div>
-        <div class="col-md-3"><small class="text-muted">Serie / número</small><h6 th:text="${(evidencia.serie ?: '—') + ' / ' + (evidencia.numero ?: '—')}"></h6></div>
-        <div class="col-md-3"><small class="text-muted">Estado</small><h6><span class="badge-status" th:attr="data-status=${evidencia.estado?.toLowerCase()}" th:text="${evidencia.estado ?: '—'}"></span></h6></div>
-        <div class="col-md-3"><small class="text-muted">Cadena</small><h6 th:class="${cadenaValida ? 'text-success' : 'text-danger'}" th:text="${cadenaValida ? 'Íntegra' : 'No validada'}"></h6></div>
-        <div class="col-md-4"><small class="text-muted">Tipo registro</small><h6 th:text="${evidencia.tipoRegistro ?: '—'}"></h6></div>
-        <div class="col-md-4"><small class="text-muted">Código AEAT</small><h6 th:text="${evidencia.codigoRespuestaAEAT ?: '—'}"></h6></div>
-        <div class="col-md-4"><small class="text-muted">Envío</small><h6 th:text="${evidencia.fechaEnvio != null ? #temporals.format(evidencia.fechaEnvio, 'dd/MM/yyyy HH:mm') : '—'}"></h6></div>
-        <div class="col-12"><small class="text-muted">Hash</small><code class="d-block text-break" th:text="${evidencia.hash}"></code></div>
-        <div class="col-12"><small class="text-muted">Hash anterior</small><code class="d-block text-break" th:text="${evidencia.hashAnterior ?: '—'}"></code></div>
-        <div class="col-12" th:if="${evidencia.errorMessage}"><div class="alert alert-danger mb-0" th:text="${evidencia.errorMessage}"></div></div>
-    </div></div>
-    <div class="d-flex gap-2">
-        <form th:action="@{/web/verifactu/{id}/reenviar(id=${evidencia.id})}" method="post"><button class="btn btn-outline-primary btn-sm">Reenviar</button></form>
-        <form th:action="@{/web/verifactu/{id}/verificar(id=${evidencia.id})}" method="post"><button class="btn btn-primary btn-sm">Verificar estado</button></form>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="doc-card">
+                <div class="doc-card-header">
+                    <div class="doc-header-icon" th:classappend="${cadenaValida ? 'success' : 'danger'}" aria-hidden="true">
+                        <i class="bi" th:classappend="${cadenaValida ? 'bi-shield-check' : 'bi-shield-exclamation'}"></i>
+                    </div>
+                    <div>
+                        <div class="doc-card-title" th:text="${(evidencia.serie ?: '—') + ' / ' + (evidencia.numero ?: '—')}">Serie / número</div>
+                        <div class="doc-card-meta">
+                            Cadena:
+                            <span class="badge-estado" th:classappend="${cadenaValida ? 'badge-estado-ok' : 'badge-estado-peligro'}"
+                                  th:text="${cadenaValida ? 'Íntegra' : 'No validada'}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="doc-fields">
+                    <table class="doc-table">
+                        <tr>
+                            <th>Factura</th>
+                            <td>
+                                <a th:if="${evidencia.facturaId != null}" th:href="@{/web/facturas/{id}(id=${evidencia.facturaId})}" th:text="${evidencia.facturaId}"></a>
+                                <span th:unless="${evidencia.facturaId != null}">—</span>
+                            </td>
+                            <th>Tipo registro</th>
+                            <td th:text="${evidencia.tipoRegistro ?: '—'}"></td>
+                        </tr>
+                        <tr>
+                            <th>Código AEAT</th>
+                            <td th:text="${evidencia.codigoRespuestaAEAT ?: '—'}"></td>
+                            <th>Envío</th>
+                            <td th:text="${evidencia.fechaEnvio != null ? #temporals.format(evidencia.fechaEnvio, 'dd/MM/yyyy HH:mm') : '—'}"></td>
+                        </tr>
+                        <tr>
+                            <th>Hash</th>
+                            <td><code class="text-break" th:text="${evidencia.hash}"></code></td>
+                        </tr>
+                        <tr>
+                            <th>Hash anterior</th>
+                            <td><code class="text-break" th:text="${evidencia.hashAnterior ?: '—'}"></code></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="alert alert-danger d-flex align-items-start gap-2 mt-3 mb-0" role="alert" th:if="${evidencia.errorMessage}">
+                    <i class="bi bi-exclamation-circle-fill mt-1" aria-hidden="true"></i>
+                    <div th:text="${evidencia.errorMessage}"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="form-card">
+                <h2 class="card-heading mb-3">Acciones</h2>
+                <div class="action-stack">
+                    <form th:action="@{/web/verifactu/{id}/verificar(id=${evidencia.id})}" method="post">
+                        <button class="btn btn-primary" data-no-double-click><i class="bi bi-arrow-repeat me-2" aria-hidden="true"></i>Verificar estado</button>
+                    </form>
+                    <form th:action="@{/web/verifactu/{id}/reenviar(id=${evidencia.id})}" method="post">
+                        <button class="btn btn-outline-secondary" data-no-double-click><i class="bi bi-send me-2" aria-hidden="true"></i>Reenviar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

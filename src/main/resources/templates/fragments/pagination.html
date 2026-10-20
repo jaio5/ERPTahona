@@ -6,7 +6,7 @@
        Pasa también los parámetros de filtro como atributo data-extra-params o mediante th:with */-->
 
 <nav th:fragment="paginacion(page, baseUrl)" aria-label="Paginación" th:if="${page != null and page.totalPages > 1}">
-  <ul class="pagination pagination-sm justify-content-center mb-0 mt-3">
+  <ul class="pagination pagination-sm justify-content-center flex-wrap mb-0 mt-3">
 
     <!-- Anterior -->
     <li class="page-item" th:classappend="${page.first} ? 'disabled'">
@@ -39,7 +39,7 @@
     </li>
 
   </ul>
-  <p class="text-center text-muted small mt-1 mb-0">
+  <p class="pagination-info mb-0">
     Mostrando <span th:text="${page.numberOfElements}">20</span>
     de <span th:text="${page.totalElements}">100</span> registros
     (página <span th:text="${page.number + 1}">1</span>

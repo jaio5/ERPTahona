@@ -1,77 +1,92 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Recepción</h4>
+            <h1 th:text="${titulo}">Recepción</h1>
+            <p>
+                <span th:if="${recepcion.estado == 'CONFIRMADA'}" class="badge-estado badge-estado-ok">Confirmada</span>
+                <span th:if="${recepcion.estado != 'CONFIRMADA'}" class="badge-estado badge-estado-aviso">Pendiente</span>
+                <span th:if="${recepcion.fecha != null}" th:text="${#temporals.format(recepcion.fecha,'dd/MM/yyyy')}">01/10/2026</span>
+            </p>
         </div>
         <div class="page-header-actions">
-            <a th:if="${recepcion.estado != 'CONFIRMADA'}"
-               th:href="@{/web/recepciones/{id}/editar(id=${recepcion.id})}"
-               class="btn btn-ghost btn-sm">
-                <i class="bi bi-pencil me-1"></i>Editar
-            </a>
-            <form th:if="${recepcion.estado != 'CONFIRMADA'}"
-                  th:action="@{/web/recepciones/{id}/confirmar(id=${recepcion.id})}"
-                  method="post" style="display:inline;">
-                <button type="submit" class="btn btn-success btn-sm" data-no-double-click
-                        data-confirm="¿Confirmar recepción? Se actualizará el stock.">
-                    <i class="bi bi-check2-all me-1"></i>Confirmar recepción
-                </button>
-            </form>
             <a th:href="@{/web/recepciones}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
 
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
-
-    <!-- Cabecera -->
+    <!-- Los mensajes exito/error salen como toast desde el layout -->
     <div class="row g-4 mb-4">
         <div class="col-lg-8">
-            <div class="form-card h-100">
-                <div class="form-section-title">
-                    <i class="bi bi-info-circle"></i> Datos de la recepción
+            <div class="doc-card h-100">
+                <div class="doc-card-header">
+                    <div class="doc-header-icon" aria-hidden="true"
+                         th:classappend="${recepcion.estado == 'CONFIRMADA'} ? 'success' : 'warning'"><i class="bi bi-box-arrow-in-down"></i></div>
+                    <div>
+                        <div class="doc-card-title" th:text="${recepcion.proveedor?.nombre ?: 'Sin proveedor'}">Proveedor</div>
+                        <div class="doc-card-meta" th:text="${recepcion.almacen != null ? 'Destino: ' + recepcion.almacen.nombre : 'Sin almacén específico'}">Destino</div>
+                    </div>
                 </div>
                 <div class="doc-fields">
                     <table class="doc-table">
-                    <tr>
-                        <th scope="row">Número</th>
-                        <td class="fw-bold" th:text="${recepcion.numero ?: '#' + recepcion.id}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Fecha</th>
-                        <td th:text="${recepcion.fecha != null ? #temporals.format(recepcion.fecha,'dd/MM/yyyy') : '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Proveedor</th>
-                        <td th:text="${recepcion.proveedor?.nombre ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Almacén</th>
-                        <td th:text="${recepcion.almacen?.nombre ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Pedido compra</th>
-                        <td>
-                            <a th:if="${recepcion.pedidoCompra != null}"
-                               th:href="@{/web/pedidos-compra/{id}(id=${recepcion.pedidoCompra.id})}"
-                               th:text="${recepcion.pedidoCompra.numero ?: '#' + recepcion.pedidoCompra.id}"></a>
-                            <span th:if="${recepcion.pedidoCompra == null}">—</span>
-                        </td>
-                    </tr>
-                    <tr th:if="${recepcion.observaciones}">
-                        <th scope="row">Observaciones</th>
-                        <td class="text-muted small" th:text="${recepcion.observaciones}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Estado</th>
-                        <td>
-                            <span th:if="${recepcion.estado == 'CONFIRMADA'}" class="badge-status" data-status="completado">Confirmada</span>
-                            <span th:if="${recepcion.estado != 'CONFIRMADA'}" class="badge-status" data-status="pendiente">Pendiente</span>
-                        </td>
-                    </tr>
+                        <tr>
+                            <th scope="row">Número</th>
+                            <td th:text="${recepcion.numero ?: '#' + recepcion.id}">—</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Fecha</th>
+                            <td th:text="${recepcion.fecha != null ? #temporals.format(recepcion.fecha,'dd/MM/yyyy') : '—'}">—</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Proveedor</th>
+                            <td>
+                                <a th:if="${recepcion.proveedor != null}"
+                                   th:href="@{/web/proveedores/{id}(id=${recepcion.proveedor.id})}"
+                                   th:text="${recepcion.proveedor.nombre}">Proveedor</a>
+                                <span th:if="${recepcion.proveedor == null}">—</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Almacén</th>
+                            <td th:text="${recepcion.almacen?.nombre ?: '—'}">—</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Pedido de compra</th>
+                            <td>
+                                <a th:if="${recepcion.pedidoCompra != null}"
+                                   th:href="@{/web/pedidos-compra/{id}(id=${recepcion.pedidoCompra.id})}"
+                                   th:text="${recepcion.pedidoCompra.numero ?: '#' + recepcion.pedidoCompra.id}"></a>
+                                <span th:if="${recepcion.pedidoCompra == null}">—</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${recepcion.observaciones}">
+                            <th scope="row">Observaciones</th>
+                            <td class="text-muted" th:text="${recepcion.observaciones}">—</td>
+                        </tr>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="form-card h-100">
+                <h2 class="card-heading mb-3">Estado</h2>
+                <p class="text-muted mb-3" th:if="${recepcion.estado == 'CONFIRMADA'}">
+                    <i class="bi bi-check-circle-fill text-success me-1" aria-hidden="true"></i>Recepción confirmada: el stock ya está actualizado.
+                </p>
+                <p class="text-muted mb-3" th:if="${recepcion.estado != 'CONFIRMADA'}">
+                    Añade los productos recibidos y confirma la recepción para que entren en el stock.
+                </p>
+                <div class="action-stack" th:if="${recepcion.estado != 'CONFIRMADA'}">
+                    <form th:action="@{/web/recepciones/{id}/confirmar(id=${recepcion.id})}" method="post">
+                        <button type="submit" class="btn btn-primary" data-no-double-click
+                                data-confirm="¿Confirmar recepción? Se actualizará el stock.">
+                            <i class="bi bi-check2-all me-2" aria-hidden="true"></i>Confirmar recepción
+                        </button>
+                    </form>
+                    <a th:href="@{/web/recepciones/{id}/editar(id=${recepcion.id})}" class="btn btn-outline-secondary">
+                        <i class="bi bi-pencil me-2" aria-hidden="true"></i>Editar recepción
+                    </a>
                 </div>
             </div>
         </div>
@@ -79,48 +94,53 @@
 
     <!-- Líneas recibidas -->
     <div class="table-card mb-4">
-        <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
-            <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Productos recibidos</h6>
+        <div class="table-card-header">
+            <h2 class="table-card-title">Productos recibidos</h2>
         </div>
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
                         <th>Artículo</th>
-                        <th class="text-end">Cant. pedida</th>
-                        <th class="text-end">Cant. recibida</th>
-                        <th class="text-end">Precio unit.</th>
-                        <th>Lote</th>
+                        <th class="cifra d-none d-md-table-cell">Cant. pedida</th>
+                        <th class="cifra">Cant. recibida</th>
+                        <th class="cifra">Precio unit.</th>
+                        <th class="d-none d-lg-table-cell">Lote</th>
                         <th>Caducidad</th>
-                        <th style="width:60px;"></th>
+                        <th><span class="visually-hidden">Acciones</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(lineas)}">
-                        <td colspan="7" class="empty-state">
-                            <i class="bi bi-box"></i>
-                            <div>No hay productos en esta recepción</div>
+                        <td colspan="7" class="empty-state empty-state-compact">
+                            <i class="bi bi-box" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay productos en esta recepción</div>
+                            <small class="empty-state-hint" th:if="${recepcion.estado != 'CONFIRMADA'}">Añádelos con el formulario de abajo.</small>
                         </td>
                     </tr>
                     <tr th:each="l : ${lineas}">
-                        <td th:text="${l.articulo?.nombre ?: '—'}"></td>
-                        <td class="text-end text-muted" th:text="${l.cantidadPedida ?: '—'}"></td>
-                        <td class="text-end fw-medium" th:text="${l.cantidadRecibida ?: '—'}"></td>
-                        <td class="text-end"
-                            th:text="${l.precioUnitario != null ? #numbers.formatDecimal(l.precioUnitario,1,'COMMA',2,'POINT') + ' €' : '—'}"></td>
-                        <td class="text-muted small" th:text="${l.codigoLote ?: '—'}"></td>
-                        <td class="text-muted small"
-                            th:text="${l.fechaCaducidad != null ? #temporals.format(l.fechaCaducidad,'dd/MM/yyyy') : '—'}"></td>
-                        <td th:if="${recepcion.estado != 'CONFIRMADA'}">
-                            <form th:action="@{/web/recepciones/{id}/lineas/{lineaId}/eliminar(id=${recepcion.id},lineaId=${l.id})}"
-                                  method="post">
-                                <button type="submit" class="btn btn-ghost btn-sm text-danger"
-                                        title="Eliminar" data-confirm="¿Eliminar esta línea?">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                        <td th:text="${l.articulo?.nombre ?: '—'}">Harina de fuerza</td>
+                        <td class="cifra text-muted d-none d-md-table-cell"
+                            th:text="${l.cantidadPedida != null ? #numbers.formatDecimal(l.cantidadPedida, 1, 'POINT', 2, 'COMMA') : '—'}">25,00</td>
+                        <td class="cifra fw-medium"
+                            th:text="${l.cantidadRecibida != null ? #numbers.formatDecimal(l.cantidadRecibida, 1, 'POINT', 2, 'COMMA') : '—'}">25,00</td>
+                        <td class="cifra"
+                            th:text="${l.precioUnitario != null ? #numbers.formatDecimal(l.precioUnitario, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">0,00 €</td>
+                        <td class="text-muted d-none d-lg-table-cell" th:text="${l.codigoLote ?: '—'}">L-001</td>
+                        <td class="text-muted"
+                            th:text="${l.fechaCaducidad != null ? #temporals.format(l.fechaCaducidad,'dd/MM/yyyy') : '—'}">31/12/2026</td>
+                        <td>
+                            <div class="actions" th:if="${recepcion.estado != 'CONFIRMADA'}">
+                                <form th:action="@{/web/recepciones/{id}/lineas/{lineaId}/eliminar(id=${recepcion.id},lineaId=${l.id})}"
+                                      method="post">
+                                    <button type="submit" class="btn btn-ghost btn-sm btn-icon text-danger" data-no-double-click
+                                            data-confirm="¿Eliminar esta línea?"
+                                            th:attr="aria-label='Eliminar línea de ' + ${l.articulo?.nombre ?: 'artículo'}" title="Eliminar">
+                                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
-                        <td th:if="${recepcion.estado == 'CONFIRMADA'}"></td>
                     </tr>
                 </tbody>
             </table>
@@ -129,55 +149,58 @@
 
     <!-- Formulario añadir línea (solo si no confirmada) -->
     <div th:if="${recepcion.estado != 'CONFIRMADA'}" class="form-card">
-        <div class="form-section-title">
-            <i class="bi bi-plus-circle"></i> Añadir producto recibido
-        </div>
         <form th:action="@{/web/recepciones/{id}/lineas(id=${recepcion.id})}"
               method="post" class="needs-validation" novalidate>
-            <div class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label" for="articuloId">Artículo *</label>
-                    <select id="articuloId" name="articuloId" class="form-select" required>
-                        <option value="">— Selecciona artículo —</option>
-                        <option th:each="a : ${articulos}"
-                                th:value="${a.id}"
-                                th:text="${a.codigo != null ? '[' + a.codigo + '] ' + a.nombre : a.nombre}"></option>
-                    </select>
-                    <div class="invalid-feedback">El artículo es obligatorio.</div>
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-plus-circle" aria-hidden="true"></i>Añadir producto recibido</h2>
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <label class="form-label" for="articuloId">Artículo *</label>
+                        <select id="articuloId" name="articuloId" class="form-select" required>
+                            <option value="">Selecciona un artículo…</option>
+                            <option th:each="a : ${articulos}"
+                                    th:value="${a.id}"
+                                    th:text="${a.codigo != null ? '[' + a.codigo + '] ' + a.nombre : a.nombre}"></option>
+                        </select>
+                        <div class="invalid-feedback">El artículo es obligatorio.</div>
+                    </div>
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label class="form-label" for="cantidadRecibida">Cant. recibida *</label>
+                        <input id="cantidadRecibida" name="cantidadRecibida" type="number" step="0.01" min="0.01"
+                               class="form-control text-end" required placeholder="0,00">
+                        <div class="invalid-feedback">Introduce la cantidad.</div>
+                    </div>
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label class="form-label" for="cantidadPedida">Cant. pedida</label>
+                        <input id="cantidadPedida" name="cantidadPedida" type="number" step="0.01" min="0"
+                               class="form-control text-end" placeholder="0,00">
+                    </div>
+                    <div class="col-md-4 col-lg-2">
+                        <label class="form-label" for="precioUnitario">Precio unitario</label>
+                        <div class="input-group">
+                            <input id="precioUnitario" name="precioUnitario" type="number" step="0.0001" min="0"
+                                   class="form-control text-end" placeholder="0,00">
+                            <span class="input-group-text">€</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-2">
+                        <label class="form-label" for="codigoLote">Código de lote</label>
+                        <input id="codigoLote" name="codigoLote" class="form-control" placeholder="Opcional" autocomplete="off">
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <label class="form-label" for="fechaCaducidad">Fecha de caducidad</label>
+                        <input id="fechaCaducidad" name="fechaCaducidad" type="date" class="form-control">
+                    </div>
+                    <div class="col-lg-9">
+                        <label class="form-label" for="observaciones">Observaciones</label>
+                        <input id="observaciones" name="observaciones" class="form-control" placeholder="Opcional">
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label" for="cantidadRecibida">Cantidad recibida *</label>
-                    <input id="cantidadRecibida" name="cantidadRecibida" type="number" step="0.01" min="0.01"
-                           class="form-control" required placeholder="0,00">
-                    <div class="invalid-feedback">Introduce la cantidad.</div>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label" for="cantidadPedida">Cantidad pedida</label>
-                    <input id="cantidadPedida" name="cantidadPedida" type="number" step="0.01" min="0"
-                           class="form-control" placeholder="0,00">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label" for="precioUnitario">Precio unitario</label>
-                    <input id="precioUnitario" name="precioUnitario" type="number" step="0.0001" min="0"
-                           class="form-control" placeholder="0,00">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="codigoLote">Código lote</label>
-                    <input id="codigoLote" name="codigoLote" class="form-control" placeholder="Opcional">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label" for="fechaCaducidad">Fecha caducidad</label>
-                    <input id="fechaCaducidad" name="fechaCaducidad" type="date" class="form-control">
-                </div>
-                <div class="col-md-7">
-                    <label class="form-label" for="observaciones">Observaciones</label>
-                    <input id="observaciones" name="observaciones" class="form-control" placeholder="Opcional">
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100" data-no-double-click>
-                        <i class="bi bi-plus-lg me-1"></i>Añadir línea
-                    </button>
-                </div>
+            </section>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-outline-primary" data-no-double-click>
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Añadir línea
+                </button>
             </div>
         </form>
     </div>

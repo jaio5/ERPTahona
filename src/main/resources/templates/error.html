@@ -1,28 +1,37 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+    <link th:href="@{/webjars/fontsource__inter/5.2.8/400.css}" rel="stylesheet">
+    <link th:href="@{/webjars/fontsource__inter/5.2.8/600.css}" rel="stylesheet">
+    <link th:href="@{/webjars/fontsource__inter/5.2.8/700.css}" rel="stylesheet">
     <link th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}" rel="stylesheet">
-    <link href="/css/app.css" rel="stylesheet">
+    <link th:href="@{/webjars/bootstrap-icons/1.13.1/font/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/css/app.css}" rel="stylesheet">
+    <script th:attr="nonce=${cspNonce}" th:src="@{/js/tema.js}"></script>
     <title th:text="${titulo != null ? titulo + ' | ERP Tahona' : (status != null ? status + ' | ERP Tahona' : 'Error | ERP Tahona')}">Error</title>
 </head>
-<body class="bg-light d-flex align-items-center justify-content-center" style="min-height:100vh;font-family:system-ui,sans-serif;">
-<div class="text-center" style="max-width:600px;padding:2rem;">
-    <div th:with="cod=${codigo} ?: ${status}"
-         style="font-size:5rem;font-weight:700;color:#dc2626;line-height:1;"
-         th:text="${cod} ?: '500'">500</div>
-    <h4 th:with="msg=${mensaje} ?: ${error}"
-        style="margin:1rem 0 0.5rem;color:#1e293b;"
-        th:text="${msg} ?: 'Ha ocurrido un error inesperado'">Error interno</h4>
-    <p th:with="ruta=${url} ?: ${path}"
-       style="color:#64748b;font-size:0.875rem;"
-       th:text="${ruta}"></p>
-    <pre th:if="${message != null and message != ''}"
-         style="text-align:left;background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:1rem;font-size:0.75rem;color:#7f1d1d;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow:auto;margin-top:1rem;"
-         th:text="${message}"></pre>
-    <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;">
-        <a th:href="@{/web/dashboard}" style="display:inline-block;padding:0.5rem 1.25rem;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-size:0.875rem;">← Volver al panel</a>
-        <a href="javascript:history.back()" style="display:inline-block;padding:0.5rem 1.25rem;background:#f1f5f9;color:#374151;border-radius:6px;text-decoration:none;font-size:0.875rem;border:1px solid #e2e8f0;">Volver atrás</a>
+<body>
+<main class="status-page">
+    <div class="status-card">
+        <div class="status-code" th:with="cod=${codigo} ?: ${status}"
+             th:text="${cod} ?: '500'">500</div>
+        <h1 class="status-title" th:with="msg=${mensaje} ?: ${error}"
+            th:text="${msg} ?: 'Ha ocurrido un error inesperado'">Error interno</h1>
+        <p class="status-path" th:with="ruta=${url} ?: ${path}" th:text="${ruta}"></p>
+        <pre class="status-detail" th:if="${message != null and message != ''}" th:text="${message}"></pre>
+        <div class="status-actions">
+            <a th:href="@{/web/dashboard}" class="btn btn-primary">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver al panel
+            </a>
+            <!-- Sin href="javascript:…" (lo bloquea la CSP): app.js gestiona data-history-back -->
+            <a th:href="@{/web/dashboard}" class="btn btn-outline-secondary" data-history-back>Volver atrás</a>
+        </div>
     </div>
-</div>
-</body></html>
+</main>
+<script th:attr="nonce=${cspNonce}" th:src="@{/js/app.js}"></script>
+</body>
+</html>

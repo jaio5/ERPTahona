@@ -1,15 +1,29 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Devolución</h4>
+            <h1 th:text="${titulo}">Devolución</h1>
+            <p>
+                <span class="badge-status" th:attr="data-status=${devolucion.estado?.toLowerCase()}"
+                      th:text="${devolucion.estado}">PENDIENTE</span>
+                <span th:text="${devolucion.fecha != null ? #temporals.format(devolucion.fecha, 'dd/MM/yyyy') : ''}">01/10/2026</span>
+            </p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/devoluciones}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
-    <div class="form-card" style="max-width:640px;">
+
+    <div class="doc-card form-card-narrow">
+        <div class="doc-card-header">
+            <div class="doc-header-icon warning" aria-hidden="true"><i class="bi bi-arrow-return-left"></i></div>
+            <div>
+                <div class="doc-card-title" th:text="${devolucion.cliente?.nombre} ?: '—'">Cliente</div>
+                <div class="doc-card-meta" th:text="${devolucion.numero} ?: ''">D-1</div>
+            </div>
+        </div>
+
         <div class="doc-fields">
             <table class="doc-table">
             <tr>
@@ -18,15 +32,7 @@
             </tr>
             <tr>
                 <th scope="row">Fecha</th>
-                <td th:text="${devolucion.fecha}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Cliente</th>
-                <td th:text="${devolucion.cliente?.nombre} ?: '—'">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Importe total</th>
-                <td th:text="${devolucion.importeTotal != null ? #numbers.formatDecimal(devolucion.importeTotal,1,2) + ' €' : '—'}">—</td>
+                <td th:text="${devolucion.fecha != null ? #temporals.format(devolucion.fecha, 'dd/MM/yyyy') : '—'}">—</td>
             </tr>
             <tr>
                 <th scope="row">Albarán</th>
@@ -38,20 +44,19 @@
             </tr>
             <tr th:if="${devolucion.motivo}">
                 <th scope="row">Motivo</th>
-                <td class="text-muted" th:text="${devolucion.motivo}">—</td>
+                <td th:text="${devolucion.motivo}">—</td>
             </tr>
             <tr th:if="${devolucion.observaciones}">
                 <th scope="row">Observaciones</th>
-                <td class="text-muted" th:text="${devolucion.observaciones}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Estado</th>
-                <td>
-                    <span class="badge-status" th:attr="data-status=${devolucion.estado?.toLowerCase()}"
-                          th:text="${devolucion.estado}">—</span>
-                </td>
+                <td class="fw-normal" th:text="${devolucion.observaciones}">—</td>
             </tr>
             </table>
+        </div>
+
+        <div class="doc-total doc-total-ruled">
+            <span class="doc-total-label">Importe total</span>
+            <span class="doc-total-amount"
+                  th:text="${devolucion.importeTotal != null ? #numbers.formatCurrency(devolucion.importeTotal) : '—'}">0,00 €</span>
         </div>
     </div>
 </div>

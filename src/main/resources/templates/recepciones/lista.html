@@ -1,28 +1,29 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Recepciones</h4>
+            <h1 th:text="${titulo}">Recepciones</h1>
+            <p>Entradas de mercancía de proveedores al almacén</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/recepciones/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nueva recepción
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva recepción
             </a>
         </div>
     </div>
 
-    <div class="filter-bar">
-        <form method="get" class="d-flex gap-2 flex-wrap align-items-center">
-            <select name="estado" class="form-select form-select-sm" style="width:auto;" data-autosubmit aria-label="Filtrar por estado">
+    <!-- Sin buscador de servidor: app.js añade aquí el buscador en vivo de la tabla -->
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/recepciones}">
+        <div class="filter-bar-filters">
+            <select name="estado" class="form-select form-select-sm" data-autosubmit aria-label="Filtrar por estado">
                 <option value="" th:selected="${estado == null or estado == ''}">Todos los estados</option>
                 <option value="PENDIENTE" th:selected="${estado == 'PENDIENTE'}">Pendiente</option>
                 <option value="CONFIRMADA" th:selected="${estado == 'CONFIRMADA'}">Confirmada</option>
             </select>
-            <button th:if="${estado != null and estado != ''}" type="button"
-                    class="btn btn-ghost btn-sm" data-navigate="/web/recepciones">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </form>
-    </div>
+        </div>
+        <div class="filter-bar-actions" th:if="${estado != null and estado != ''}">
+            <a th:href="@{/web/recepciones}" class="btn btn-ghost btn-sm">Limpiar</a>
+        </div>
+    </form>
 
     <div class="table-card">
         <div class="table-responsive">
@@ -32,32 +33,40 @@
                         <th>Número</th>
                         <th>Fecha</th>
                         <th>Proveedor</th>
-                        <th>Almacén</th>
+                        <th class="d-none d-md-table-cell">Almacén</th>
                         <th>Estado</th>
-                        <th style="width:80px;"></th>
+                        <th><span class="visually-hidden">Acciones</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(recepciones)}">
                         <td colspan="6" class="empty-state">
-                            <i class="bi bi-box-arrow-in-down"></i>
-                            <div>No hay recepciones registradas</div>
-                            <a th:href="@{/web/recepciones/nuevo}" class="btn btn-primary btn-sm mt-2">Nueva recepción</a>
+                            <i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay recepciones</div>
+                            <small class="empty-state-hint" th:if="${estado != null and estado != ''}">Prueba con otro estado.</small>
+                            <small class="empty-state-hint" th:unless="${estado != null and estado != ''}">Registra la próxima entrega de un proveedor para que sume al stock.</small>
+                            <a th:href="@{/web/recepciones/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva recepción
+                            </a>
                         </td>
                     </tr>
                     <tr th:each="r : ${recepciones}">
-                        <td class="fw-medium" th:text="${r.numero ?: '#' + r.id}"></td>
-                        <td th:text="${r.fecha != null ? #temporals.format(r.fecha,'dd/MM/yyyy') : '—'}"></td>
-                        <td th:text="${r.proveedor?.nombre ?: '—'}"></td>
-                        <td class="text-muted" th:text="${r.almacen?.nombre ?: '—'}"></td>
+                        <td><a th:href="@{/web/recepciones/{id}(id=${r.id})}" th:text="${r.numero ?: '#' + r.id}">REC-0001</a></td>
+                        <td class="text-muted" th:text="${r.fecha != null ? #temporals.format(r.fecha,'dd/MM/yyyy') : '—'}">01/10/2026</td>
+                        <td th:text="${r.proveedor?.nombre ?: '—'}">Proveedor</td>
+                        <td class="text-muted d-none d-md-table-cell" th:text="${r.almacen?.nombre ?: '—'}">Almacén</td>
                         <td>
-                            <span th:if="${r.estado == 'CONFIRMADA'}" class="badge-status" data-status="activo">Confirmada</span>
-                            <span th:if="${r.estado != 'CONFIRMADA'}" class="badge-status" data-status="pendiente">Pendiente</span>
+                            <!-- Confirmada = stock ya actualizado: estado final, en verde -->
+                            <span th:if="${r.estado == 'CONFIRMADA'}" class="badge-estado badge-estado-ok">Confirmada</span>
+                            <span th:if="${r.estado != 'CONFIRMADA'}" class="badge-estado badge-estado-aviso">Pendiente</span>
                         </td>
-                        <td class="text-end">
-                            <a th:href="@{/web/recepciones/{id}(id=${r.id})}" class="btn btn-ghost btn-sm" title="Ver">
-                                <i class="bi bi-eye"></i>
-                            </a>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/recepciones/{id}(id=${r.id})}" class="btn btn-ghost btn-sm btn-icon"
+                                   th:attr="aria-label='Ver recepción ' + ${r.numero ?: r.id}" title="Ver">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

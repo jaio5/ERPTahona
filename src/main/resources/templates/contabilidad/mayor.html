@@ -1,42 +1,63 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Libro mayor</h4>
+            <h1 th:text="${titulo}">Libro mayor</h1>
+            <p>Movimientos y saldo acumulado de una cuenta del PGC</p>
+        </div>
+        <div class="page-header-actions">
+            <a th:href="@{/web/contabilidad}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Contabilidad
+            </a>
         </div>
     </div>
 
-    <form method="get" th:action="@{/web/contabilidad/mayor}" class="table-card p-3 mb-3">
-        <div class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label" for="cuenta">Cuenta (código PGC)</label>
-                <input type="text" id="cuenta" name="cuenta" class="form-control" th:value="${cuenta}" placeholder="430" required>
+    <div class="table-card">
+        <!-- Consulta: cuenta y periodo -->
+        <form method="get" th:action="@{/web/contabilidad/mayor}" class="filter-bar">
+            <div class="filter-bar-filters">
+                <label class="visually-hidden" for="cuenta">Cuenta (código PGC)</label>
+                <input type="text" id="cuenta" name="cuenta" class="form-control form-control-sm" th:value="${cuenta}"
+                       placeholder="Cuenta, p. ej. 430" inputmode="numeric" required>
+                <label class="visually-hidden" for="desde">Desde</label>
+                <input type="date" id="desde" name="desde" class="form-control form-control-sm" th:value="${desde}">
+                <label class="visually-hidden" for="hasta">Hasta</label>
+                <input type="date" id="hasta" name="hasta" class="form-control form-control-sm" th:value="${hasta}">
             </div>
-            <div class="col-md-3">
-                <label class="form-label" for="desde">Desde</label>
-                <input type="date" id="desde" name="desde" class="form-control" th:value="${desde}">
+            <div class="filter-bar-actions">
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar</button>
             </div>
-            <div class="col-md-3">
-                <label class="form-label" for="hasta">Hasta</label>
-                <input type="date" id="hasta" name="hasta" class="form-control" th:value="${hasta}">
-            </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Consultar</button>
-            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Asiento</th>
+                        <th>Concepto</th>
+                        <th class="cifra">Debe</th>
+                        <th class="cifra">Haber</th>
+                        <th class="cifra">Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(movimientos)}">
+                        <td colspan="6" class="empty-state">
+                            <i class="bi bi-journal-text" aria-hidden="true"></i>
+                            <div class="empty-state-title" th:text="${cuenta != null and !#strings.isEmpty(cuenta)} ? 'Sin movimientos de la cuenta en el periodo' : 'Indica una cuenta para consultar su mayor'"></div>
+                            <small class="empty-state-hint" th:if="${cuenta != null and !#strings.isEmpty(cuenta)}">Amplía el rango de fechas o revisa el código de la cuenta.</small>
+                            <small class="empty-state-hint" th:unless="${cuenta != null and !#strings.isEmpty(cuenta)}">Por ejemplo 430 (clientes), 400 (proveedores) o 572 (bancos).</small>
+                        </td>
+                    </tr>
+                    <tr th:each="mov : ${movimientos}">
+                        <td class="text-muted" th:text="${#temporals.format(mov.fecha,'dd/MM/yyyy')}"></td>
+                        <td th:text="${mov.numeroAsiento}"></td>
+                        <td class="td-wrap" th:text="${mov.concepto}"></td>
+                        <td class="cifra" th:text="${#numbers.formatCurrency(mov.debe)}"></td>
+                        <td class="cifra" th:text="${#numbers.formatCurrency(mov.haber)}"></td>
+                        <td class="cifra fw-semibold" th:text="${#numbers.formatCurrency(mov.saldo)}"></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </form>
-
-    <div class="table-card"><div class="table-responsive"><table class="table table-hover table-sm mb-0">
-        <thead><tr><th>Fecha</th><th>Asiento</th><th>Concepto</th><th class="text-end">Debe</th><th class="text-end">Haber</th><th class="text-end">Saldo</th></tr></thead>
-        <tbody>
-            <tr th:if="${#lists.isEmpty(movimientos)}"><td colspan="6" class="empty-state"><i class="bi bi-journal"></i><div th:text="${cuenta != null and !#strings.isEmpty(cuenta)} ? 'Sin movimientos de la cuenta en el periodo' : 'Indica una cuenta para consultar su mayor'"></div></td></tr>
-            <tr th:each="mov : ${movimientos}">
-                <td th:text="${#temporals.format(mov.fecha,'dd/MM/yyyy')}"></td>
-                <td th:text="${mov.numeroAsiento}"></td>
-                <td th:text="${mov.concepto}"></td>
-                <td class="text-end" th:text="${#numbers.formatCurrency(mov.debe)}"></td>
-                <td class="text-end" th:text="${#numbers.formatCurrency(mov.haber)}"></td>
-                <td class="text-end fw-medium" th:text="${#numbers.formatCurrency(mov.saldo)}"></td>
-            </tr>
-        </tbody>
-    </table></div></div>
+    </div>
 </div>

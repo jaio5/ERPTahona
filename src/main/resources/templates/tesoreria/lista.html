@@ -1,47 +1,84 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Tesorería</h4>
+            <h1 th:text="${titulo}">Tesorería</h1>
+            <p>Movimientos de la caja de tienda y de las cuentas bancarias</p>
         </div>
         <div class="page-header-actions">
-            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalMovCaja" data-tipo="INGRESO">
-                <i class="bi bi-plus-lg me-1"></i>Ingreso caja
+            <a th:href="@{/web/tesoreria/conciliacion}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-check2-square me-1" aria-hidden="true"></i>Conciliar banco
+            </a>
+            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalMovCaja" data-tipo="GASTO">
+                <i class="bi bi-dash-lg me-1" aria-hidden="true"></i>Gasto caja
             </button>
-            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalMovCaja" data-tipo="GASTO">
-                <i class="bi bi-dash-lg me-1"></i>Gasto caja
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalMovCaja" data-tipo="INGRESO">
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Ingreso caja
             </button>
         </div>
     </div>
 
-    <h6 class="mb-2 mt-3">Caja</h6>
-    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
-        <thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th class="text-end">Importe</th></tr></thead>
-        <tbody>
-            <tr th:if="${#lists.isEmpty(caja)}"><td colspan="4" class="empty-state"><i class="bi bi-wallet2"></i><div>No hay movimientos de caja</div></td></tr>
-            <tr th:each="m : ${caja}">
-                <td th:text="${m.fecha != null ? #temporals.format(m.fecha, 'dd/MM/yyyy') : '—'}"></td>
-                <td th:text="${m.concepto}"></td>
-                <td><span class="badge-status" th:attr="data-status=${m.tipo?.toLowerCase()}" th:text="${m.tipo}"></span></td>
-                <td class="text-end fw-medium"
-                    th:classappend="${m.tipo == 'GASTO'} ? 'text-danger' : 'text-success'"
-                    th:text="${m.importe != null ? #numbers.formatCurrency(m.importe) : '-'}"></td>
-            </tr>
-        </tbody>
-    </table></div></div>
+    <!-- Caja -->
+    <div class="table-card mb-4">
+        <div class="table-card-header">
+            <h2 class="table-card-title"><i class="bi bi-wallet2 me-1 text-muted" aria-hidden="true"></i>Caja</h2>
+        </div>
+        <div class="table-responsive"><table class="table table-hover mb-0">
+            <thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th class="cifra">Importe</th></tr></thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(caja)}">
+                    <td colspan="4" class="empty-state">
+                        <i class="bi bi-wallet2" aria-hidden="true"></i>
+                        <div class="empty-state-title">No hay movimientos de caja</div>
+                        <small class="empty-state-hint">Registra un ingreso o un gasto con los botones de arriba.</small>
+                    </td>
+                </tr>
+                <tr th:each="m : ${caja}">
+                    <td class="text-muted" th:text="${m.fecha != null ? #temporals.format(m.fecha, 'dd/MM/yyyy') : '—'}"></td>
+                    <td class="td-wrap" th:text="${m.concepto}"></td>
+                    <td><span class="badge-status" th:attr="data-status=${m.tipo?.toLowerCase()}" th:text="${m.tipo}"></span></td>
+                    <td class="cifra fw-medium"
+                        th:classappend="${m.tipo == 'GASTO'} ? 'text-danger' : 'text-success'"
+                        th:text="${m.importe != null ? #numbers.formatCurrency(m.importe) : '—'}"></td>
+                </tr>
+            </tbody>
+        </table></div>
+    </div>
 
-    <h6 class="mb-2 mt-4">Banco</h6>
-    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
-        <thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th class="text-end">Importe</th></tr></thead>
-        <tbody>
-            <tr th:if="${#lists.isEmpty(banco)}"><td colspan="4" class="empty-state"><i class="bi bi-bank"></i><div>No hay movimientos de banco</div></td></tr>
-            <tr th:each="m : ${banco}">
-                <td th:text="${m.fecha != null ? #temporals.format(m.fecha, 'dd/MM/yyyy') : '—'}"></td>
-                <td th:text="${m.concepto}"></td>
-                <td th:text="${m.tipo}"></td>
-                <td class="text-end fw-medium" th:text="${m.importe != null ? #numbers.formatCurrency(m.importe) : '-'}"></td>
-            </tr>
-        </tbody>
-    </table></div></div>
+    <!-- Banco -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2 class="table-card-title"><i class="bi bi-bank me-1 text-muted" aria-hidden="true"></i>Banco</h2>
+            <a th:href="@{/web/tesoreria/extractos}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-upload me-1" aria-hidden="true"></i>Importar extracto
+            </a>
+        </div>
+        <div class="table-responsive"><table class="table table-hover mb-0">
+            <thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th class="cifra">Importe</th><th class="d-none d-md-table-cell">Conciliación</th></tr></thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(banco)}">
+                    <td colspan="5" class="empty-state">
+                        <i class="bi bi-bank" aria-hidden="true"></i>
+                        <div class="empty-state-title">No hay movimientos de banco</div>
+                        <small class="empty-state-hint">Importa el extracto Norma 43 de tu banco para verlos aquí.</small>
+                        <a th:href="@{/web/tesoreria/extractos}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-upload me-1" aria-hidden="true"></i>Importar extracto
+                        </a>
+                    </td>
+                </tr>
+                <tr th:each="m : ${banco}">
+                    <td class="text-muted" th:text="${m.fecha != null ? #temporals.format(m.fecha, 'dd/MM/yyyy') : '—'}"></td>
+                    <td class="td-wrap" th:text="${m.concepto}"></td>
+                    <td><span class="badge-status" th:attr="data-status=${m.tipo?.toLowerCase()}" th:text="${m.tipo}"></span></td>
+                    <td class="cifra fw-medium" th:text="${m.importe != null ? #numbers.formatCurrency(m.importe) : '—'}"></td>
+                    <td class="d-none d-md-table-cell">
+                        <span class="badge-estado"
+                              th:classappend="${m.conciliado != null and m.conciliado} ? 'badge-estado-ok' : 'badge-estado-aviso'"
+                              th:text="${m.conciliado != null and m.conciliado} ? 'Conciliado' : 'Pendiente'">Pendiente</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table></div>
+    </div>
 
     <!-- Modal nuevo movimiento caja -->
     <div class="modal fade" id="modalMovCaja" tabindex="-1" aria-labelledby="modalMovCajaLabel" aria-hidden="true">
@@ -49,8 +86,8 @@
             <div class="modal-content">
                 <form th:action="@{/web/tesoreria/caja}" method="post" class="needs-validation" novalidate>
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modalMovCajaLabel">Nuevo movimiento de caja</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h2 class="modal-title" id="modalMovCajaLabel">Nuevo movimiento de caja</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         <input type="hidden" name="tipo" id="movTipo" value="INGRESO">
@@ -59,14 +96,16 @@
                             <input type="text" id="movConcepto" name="concepto" class="form-control" required maxlength="200">
                             <div class="invalid-feedback">El concepto es obligatorio.</div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="movImporte">Importe (€) *</label>
-                            <input type="number" id="movImporte" name="importe" class="form-control" step="0.01" min="0.01" required>
-                            <div class="invalid-feedback">Introduce un importe válido.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="movCategoria">Categoría</label>
-                            <input type="text" id="movCategoria" name="categoria" class="form-control" maxlength="100" placeholder="Ej: Ventas, Suministros...">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label class="form-label" for="movImporte">Importe (€) *</label>
+                                <input type="number" id="movImporte" name="importe" class="form-control text-end" inputmode="decimal" step="0.01" min="0.01" required>
+                                <div class="invalid-feedback">Introduce un importe válido.</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" for="movCategoria">Categoría</label>
+                                <input type="text" id="movCategoria" name="categoria" class="form-control" maxlength="100" placeholder="Ej.: ventas, suministros…">
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -84,8 +123,8 @@
             document.getElementById('movTipo').value = tipo;
             var esGasto = tipo === 'GASTO';
             document.getElementById('modalMovCajaLabel').textContent = esGasto ? 'Nuevo gasto de caja' : 'Nuevo ingreso de caja';
+            // El botón siempre es el primario del modal; solo cambia el texto
             document.getElementById('movSubmitBtn').textContent = esGasto ? 'Registrar gasto' : 'Registrar ingreso';
-            document.getElementById('movSubmitBtn').className = 'btn ' + (esGasto ? 'btn-danger' : 'btn-success');
         });
     </script>
 </div>

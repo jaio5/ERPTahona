@@ -1,61 +1,104 @@
 <div th:fragment="content">
     <div class="page-header">
-        <div class="page-header-title"><h4 th:text="${titulo}">Ruta</h4></div>
+        <div class="page-header-title">
+            <h1 th:text="${titulo}">Ruta</h1>
+            <p>
+                <span th:if="${ruta.activo == null or ruta.activo}" class="badge-estado badge-estado-ok">Activa</span>
+                <span th:unless="${ruta.activo == null or ruta.activo}" class="badge-estado badge-estado-neutro">Inactiva</span>
+                <span th:text="${ruta.codigo}">R-01</span>
+            </p>
+        </div>
         <div class="page-header-actions">
-            <a th:href="@{/web/rutas/{id}/editar(id=${ruta.id})}" class="btn btn-outline-primary btn-sm">Editar</a>
-            <a th:href="@{/web/rutas}" class="btn btn-ghost btn-sm">Volver</a>
+            <a th:href="@{/web/rutas}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <a th:href="@{/web/rutas/{id}/editar(id=${ruta.id})}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
+            </a>
+            <a th:href="@{/web/hojas-ruta/nuevo}" class="btn btn-primary btn-sm">
+                <i class="bi bi-map me-1" aria-hidden="true"></i>Generar hoja de ruta
+            </a>
         </div>
     </div>
-    <div class="form-card mb-3">
-        <div class="doc-fields">
+
+    <div class="doc-card mb-4">
+        <div class="doc-card-header">
+            <div class="doc-header-icon" aria-hidden="true"><i class="bi bi-signpost-split"></i></div>
+            <div>
+                <div class="doc-card-title" th:text="${ruta.nombre}">Ruta</div>
+                <div class="doc-card-meta" th:text="${ruta.conductor ?: 'Sin conductor asignado'}"></div>
+            </div>
+        </div>
+
+        <div class="doc-summary">
+            <div>
+                <span class="doc-field-label">Paradas</span>
+                <div class="doc-field-value" th:text="${#sets.size(ruta.paradas)}">0</div>
+            </div>
+            <div>
+                <span class="doc-field-label">Distancia</span>
+                <div class="doc-field-value" th:text="${ruta.distanciaTotalKm != null ? #numbers.formatDecimal(ruta.distanciaTotalKm, 1, 'POINT', 1, 'COMMA') + ' km' : '—'}">—</div>
+            </div>
+            <div>
+                <span class="doc-field-label">Tiempo estimado</span>
+                <div class="doc-field-value" th:text="${ruta.tiempoEstimadoMinutos != null ? ruta.tiempoEstimadoMinutos + ' min' : '—'}">—</div>
+            </div>
+        </div>
+
+        <div class="doc-fields mt-3">
             <table class="doc-table">
             <tr>
                 <th scope="row">Código</th>
                 <td th:text="${ruta.codigo}">—</td>
+                <th scope="row">Vehículo</th>
+                <td>
+                    <a th:if="${ruta.vehiculo != null}" th:href="@{/web/vehiculos/{id}(id=${ruta.vehiculo.id})}"
+                       th:text="${ruta.vehiculo.matricula}">1234ABC</a>
+                    <span th:unless="${ruta.vehiculo != null}">—</span>
+                </td>
             </tr>
             <tr>
                 <th scope="row">Conductor</th>
                 <td th:text="${ruta.conductor ?: '—'}">—</td>
             </tr>
-            <tr>
-                <th scope="row">Vehículo</th>
-                <td th:text="${ruta.vehiculo?.matricula ?: '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Distancia</th>
-                <td th:text="${ruta.distanciaTotalKm != null ? ruta.distanciaTotalKm + ' km' : '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Tiempo estimado</th>
-                <td th:text="${ruta.tiempoEstimadoMinutos != null ? ruta.tiempoEstimadoMinutos + ' min' : '—'}">—</td>
-            </tr>
-            <tr th:if="${ruta.descripcion}">
-                <th scope="row">Descripción</th>
-                <td class="text-muted" th:text="${ruta.descripcion}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Estado</th>
-                <td>
-                    <span class="badge-status" th:attr="data-status=${ruta.activo ? 'activo' : 'anulada'}"
-                          th:text="${ruta.activo ? 'Activa' : 'Inactiva'}">—</span>
-                </td>
-            </tr>
             </table>
         </div>
+
+        <div class="mt-3" th:if="${ruta.descripcion}">
+            <span class="doc-field-label">Descripción</span>
+            <div class="text-body mt-1 text-break" th:text="${ruta.descripcion}">—</div>
+        </div>
     </div>
+
     <div class="table-card">
-        <div class="p-3 border-bottom"><h6 class="mb-0">Paradas</h6></div>
+        <div class="table-card-header">
+            <h2 class="table-card-title">Paradas</h2>
+        </div>
         <div class="table-responsive">
-            <table class="table mb-0">
-                <thead><tr><th>Orden</th><th>Cliente</th><th>Hora estimada</th><th>Duración</th><th>Notas</th></tr></thead>
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="cifra">Orden</th>
+                        <th>Cliente</th>
+                        <th>Hora estimada</th>
+                        <th class="cifra d-none d-md-table-cell">Duración</th>
+                        <th class="d-none d-lg-table-cell">Notas</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    <tr th:if="${#sets.isEmpty(ruta.paradas)}"><td colspan="5" class="empty-state"><i class="bi bi-geo-alt"></i><div>No hay paradas configuradas</div></td></tr>
+                    <tr th:if="${#sets.isEmpty(ruta.paradas)}">
+                        <td colspan="5" class="empty-state">
+                            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay paradas configuradas</div>
+                            <small class="empty-state-hint">Sin paradas, la hoja de ruta se genera vacía.</small>
+                        </td>
+                    </tr>
                     <tr th:each="p : ${ruta.paradas}">
-                        <td th:text="${p.orden}"></td>
+                        <td class="cifra" th:text="${p.orden}"></td>
                         <td th:text="${p.cliente?.nombre ?: '—'}"></td>
-                        <td th:text="${p.horaEstimada ?: '—'}"></td>
-                        <td th:text="${p.tiempoParadaMinutos != null ? p.tiempoParadaMinutos + ' min' : '—'}"></td>
-                        <td th:text="${p.notas ?: '—'}"></td>
+                        <td th:text="${p.horaEstimada != null ? #temporals.format(p.horaEstimada, 'HH:mm') : '—'}"></td>
+                        <td class="cifra d-none d-md-table-cell" th:text="${p.tiempoParadaMinutos != null ? p.tiempoParadaMinutos + ' min' : '—'}"></td>
+                        <td class="td-wrap text-muted d-none d-lg-table-cell" th:text="${p.notas ?: '—'}"></td>
                     </tr>
                 </tbody>
             </table>

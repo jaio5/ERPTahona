@@ -1,19 +1,27 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Backups</h4>
+            <h1 th:text="${titulo}">Backups</h1>
+            <p>Copias de seguridad de la base de datos</p>
         </div>
         <div class="page-header-actions">
-            <form th:action="@{/web/backups/crear}" method="post" class="d-inline">
-                <button class="btn btn-success btn-sm" type="submit">
-                    <i class="bi bi-plus-lg me-1"></i>Crear backup
+            <form th:action="@{/web/backups/crear}" method="post">
+                <button class="btn btn-primary btn-sm" type="submit" data-no-double-click data-loading-text="Creando backup…">
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Crear backup
                 </button>
             </form>
         </div>
     </div>
 
-    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
+    <!-- Los avisos de exito/error salen como toast desde el layout -->
+
+    <div class="alert alert-warning d-flex align-items-start gap-2" role="status">
+        <i class="bi bi-exclamation-triangle-fill mt-1" aria-hidden="true"></i>
+        <div>
+            <strong>Restaurar sustituye todos los datos actuales</strong> por los de la copia elegida.
+            Para confirmarlo, escribe el nombre exacto del fichero junto a su botón.
+        </div>
+    </div>
 
     <div class="table-card">
         <div class="table-responsive">
@@ -21,30 +29,36 @@
                 <thead>
                     <tr>
                         <th>Nombre</th>
-                        <th>Tamaño (MB)</th>
-                        <th>Fecha</th>
+                        <th class="cifra">Tamaño (MB)</th>
+                        <th class="d-none d-md-table-cell">Fecha</th>
                         <th>Restaurar</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(backups)}">
                         <td colspan="4" class="empty-state">
-                            <i class="bi bi-cloud-arrow-down"></i>
-                            <div>No hay backups</div>
+                            <i class="bi bi-cloud-arrow-down" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay backups</div>
+                            <small class="empty-state-hint">Crea la primera copia con el botón «Crear backup».</small>
                         </td>
                     </tr>
-                    <tr th:each="b : ${backups}">
-                        <td class="fw-medium" th:text="${b.nombre}"></td>
-                        <td class="text-muted" th:text="${b.tamanoMB}"></td>
-                        <td class="text-muted" th:text="${b.fechaFormateada}"></td>
-                        <td>
+                    <tr th:each="b, st : ${backups}">
+                        <td class="fw-medium" th:text="${b.nombre}" th:title="${b.nombre}"></td>
+                        <td class="cifra text-muted" th:text="${b.tamanoMB}"></td>
+                        <td class="text-muted d-none d-md-table-cell" th:text="${b.fechaFormateada}"></td>
+                        <td class="td-wrap">
                             <!-- Operación destructiva: exige teclear el nombre exacto del fichero como confirmación.
                                  Sin confirm() inline: el CSP (script-src con nonce) bloquea manejadores onclick. -->
-                            <form th:action="@{/web/backups/restaurar}" method="post" class="d-flex gap-1">
+                            <form th:action="@{/web/backups/restaurar}" method="post" class="d-flex flex-wrap gap-2">
                                 <input type="hidden" name="archivo" th:value="${b.nombre}">
-                                <input type="text" name="confirmacion" class="form-control form-control-sm" style="max-width: 22rem"
-                                       th:placeholder="'Escribe ' + ${b.nombre} + ' para confirmar'" autocomplete="off">
-                                <button class="btn btn-outline-danger btn-sm" type="submit">Restaurar</button>
+                                <label class="visually-hidden" th:for="'confirmacion-' + ${st.index}"
+                                       th:text="'Confirmación: escribe ' + ${b.nombre}">Confirmación</label>
+                                <input type="text" name="confirmacion" class="form-control form-control-sm w-auto flex-grow-1"
+                                       th:id="'confirmacion-' + ${st.index}"
+                                       th:placeholder="'Escribe ' + ${b.nombre} + ' para confirmar'" autocomplete="off" spellcheck="false">
+                                <button class="btn btn-outline-danger btn-sm" type="submit" data-no-double-click>
+                                    <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Restaurar
+                                </button>
                             </form>
                         </td>
                     </tr>

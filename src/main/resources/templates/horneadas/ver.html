@@ -1,66 +1,101 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Horneada</h4>
+            <h1 th:text="${titulo}">Horneada</h1>
+            <p>
+                <span th:if="${horneada.resultado != null}" class="badge-status"
+                      th:attr="data-status=${horneada.resultado.toLowerCase()}"
+                      th:text="${horneada.resultado}">OK</span>
+                <span th:text="${horneada.tipoHorneada ?: 'Sin tipo'}">Pan</span>
+            </p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/horneadas}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
-    <div class="form-card" style="max-width:640px;">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <span class="doc-field-label">Fecha</span>
-                <div class="doc-field-value" th:text="${horneada.fecha}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Hora inicio</span>
-                <div class="doc-field-value" th:text="${horneada.horaInicio} ?: '—'">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Hora fin</span>
-                <div class="doc-field-value" th:text="${horneada.horaFin} ?: '—'">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Tipo</span>
-                <div class="doc-field-value" th:text="${horneada.tipoHorneada} ?: '—'">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Temp. inicial</span>
-                <div class="doc-field-value" th:text="${horneada.temperaturaInicial != null ? horneada.temperaturaInicial + ' °C' : '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Temp. final</span>
-                <div class="doc-field-value" th:text="${horneada.temperaturaFinal != null ? horneada.temperaturaFinal + ' °C' : '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Cantidad producida</span>
-                <div class="doc-field-value" th:text="${horneada.cantidadProducida} ?: '—'">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Merma</span>
-                <div class="doc-field-value" th:text="${horneada.merma} ?: '—'">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Resultado</span>
-                <div class="doc-field-value">
-                    <span class="badge-status" th:attr="data-status=${horneada.resultado?.toLowerCase()}"
-                          th:text="${horneada.resultado} ?: '—'">—</span>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="doc-card">
+                <div class="doc-card-header">
+                    <!-- El icono refleja el resultado: verde OK, rojo NOK -->
+                    <div class="doc-header-icon" aria-hidden="true"
+                         th:classappend="${horneada.resultado == 'OK' ? 'success' : (horneada.resultado == 'NOK' ? 'danger' : '')}">
+                        <i class="bi bi-fire"></i>
+                    </div>
+                    <div>
+                        <div class="doc-card-title" th:text="${horneada.tipoHorneada ?: 'Horneada'}">Horneada</div>
+                        <div class="doc-card-meta"
+                             th:text="${horneada.fecha != null ? #temporals.format(horneada.fecha, 'dd/MM/yyyy') : '—'}">01/10/2026</div>
+                    </div>
+                </div>
+
+                <!-- Cifras de la hornada -->
+                <div class="doc-summary">
+                    <div>
+                        <span class="doc-field-label">Temp. inicial</span>
+                        <div class="doc-field-value" th:text="${horneada.temperaturaInicial != null ? horneada.temperaturaInicial + ' °C' : '—'}">—</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Temp. final</span>
+                        <div class="doc-field-value" th:text="${horneada.temperaturaFinal != null ? horneada.temperaturaFinal + ' °C' : '—'}">—</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Cantidad producida</span>
+                        <div class="doc-field-value"
+                             th:text="${horneada.cantidadProducida != null ? #numbers.formatDecimal(horneada.cantidadProducida, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+                    </div>
+                    <div>
+                        <span class="doc-field-label">Merma</span>
+                        <div class="doc-field-value"
+                             th:text="${horneada.merma != null ? #numbers.formatDecimal(horneada.merma, 1, 'POINT', 2, 'COMMA') : '—'}">—</div>
+                    </div>
+                </div>
+
+                <div class="doc-fields mt-3">
+                    <table class="doc-table">
+                        <tr>
+                            <th>Hora inicio</th>
+                            <td th:text="${horneada.horaInicio != null ? #temporals.format(horneada.horaInicio, 'HH:mm') : '—'}">—</td>
+                            <th>Hora fin</th>
+                            <td th:text="${horneada.horaFin != null ? #temporals.format(horneada.horaFin, 'HH:mm') : '—'}">—</td>
+                        </tr>
+                        <tr>
+                            <th>Orden de producción</th>
+                            <td>
+                                <a th:if="${horneada.ordenProduccion != null}"
+                                   th:href="@{/web/ordenes-produccion/{id}(id=${horneada.ordenProduccion.id})}"
+                                   th:text="${horneada.ordenProduccion.numero ?: horneada.ordenProduccion.id}">OP-1</a>
+                                <span th:unless="${horneada.ordenProduccion != null}">—</span>
+                            </td>
+                            <th>Responsable</th>
+                            <td th:text="${horneada.usuario?.nombre ?: '—'}">—</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="doc-notes" th:if="${horneada.observaciones}">
+                    <span class="doc-field-label">Observaciones</span>
+                    <p th:text="${horneada.observaciones}">—</p>
                 </div>
             </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Orden de producción</span>
-                <div class="doc-field-value" th:text="${horneada.ordenProduccion?.id} ?: '—'">—</div>
-            </div>
-            <div class="col-md-6">
-                <span class="doc-field-label">Responsable</span>
-                <div class="doc-field-value" th:text="${horneada.usuario?.nombre} ?: '—'">—</div>
-            </div>
-            <div class="col-12" th:if="${horneada.observaciones}">
-                <span class="doc-field-label">Observaciones</span>
-                <div class="doc-field-value text-muted" th:text="${horneada.observaciones}">—</div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Coste unitario real, calculado a partir de los costes y la cantidad -->
+            <div class="form-card total-card-big">
+                <div class="label">Coste unitario</div>
+                <div class="amount"
+                     th:text="${horneada.costeUnitario() != null ? #numbers.formatDecimal(horneada.costeUnitario(), 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</div>
+                <div class="doc-fields mt-3">
+                    <table class="doc-table">
+                        <tr><th>Mano de obra</th><td class="cifra" th:text="${horneada.costeManoObra != null ? #numbers.formatDecimal(horneada.costeManoObra, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</td></tr>
+                        <tr><th>Energía</th><td class="cifra" th:text="${horneada.costeEnergia != null ? #numbers.formatDecimal(horneada.costeEnergia, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</td></tr>
+                        <tr><th>Materiales</th><td class="cifra" th:text="${horneada.costeMateriales != null ? #numbers.formatDecimal(horneada.costeMateriales, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</td></tr>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

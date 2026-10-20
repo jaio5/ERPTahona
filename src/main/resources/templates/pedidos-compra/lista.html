@@ -1,11 +1,12 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Pedidos de compra</h4>
+            <h1 th:text="${titulo}">Pedidos de compra</h1>
+            <p>Pedidos de materia prima y envases a proveedores</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/pedidos-compra/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nuevo pedido
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo pedido
             </a>
         </div>
     </div>
@@ -13,26 +14,28 @@
     <form class="filter-bar mb-3" method="get" th:action="@{/web/pedidos-compra}">
         <div class="filter-bar-search">
             <label for="pedidos-search" class="visually-hidden">Buscar pedidos</label>
-            <i class="bi bi-search"></i>
+            <i class="bi bi-search" aria-hidden="true"></i>
             <input id="pedidos-search" type="search" name="q" class="form-control form-control-sm"
-                   placeholder="Número o proveedor..." th:value="${q}" autocomplete="off">
+                   placeholder="Número o proveedor…" th:value="${q}" autocomplete="off">
         </div>
         <div class="filter-bar-filters">
-            <select name="estado" class="form-select form-select-sm" style="width:150px;">
+            <!-- Valores alineados con los estados reales del pedido (BORRADOR → ENVIADO → RECIBIDO) -->
+            <select name="estado" class="form-select form-select-sm" aria-label="Estado" data-autosubmit>
                 <option value="">Todos los estados</option>
-                <option value="BORRADOR"    th:selected="${estado == 'BORRADOR'}">Borrador</option>
-                <option value="PENDIENTE"   th:selected="${estado == 'PENDIENTE'}">Pendiente</option>
-                <option value="CONFIRMADO"  th:selected="${estado == 'CONFIRMADO'}">Confirmado</option>
-                <option value="RECIBIDO"    th:selected="${estado == 'RECIBIDO'}">Recibido</option>
-                <option value="CANCELADO"   th:selected="${estado == 'CANCELADO'}">Cancelado</option>
+                <option value="BORRADOR"         th:selected="${estado == 'BORRADOR'}">Borrador</option>
+                <option value="ENVIADO"          th:selected="${estado == 'ENVIADO'}">Enviado</option>
+                <option value="RECIBIDO_PARCIAL" th:selected="${estado == 'RECIBIDO_PARCIAL'}">Recibido parcial</option>
+                <option value="RECIBIDO"         th:selected="${estado == 'RECIBIDO'}">Recibido</option>
+                <option value="FACTURADO"        th:selected="${estado == 'FACTURADO'}">Facturado</option>
+                <option value="CANCELADO"        th:selected="${estado == 'CANCELADO'}">Cancelado</option>
             </select>
         </div>
         <div class="filter-bar-actions">
-            <button class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-funnel me-1"></i>Filtrar
+            <button class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar
             </button>
             <a th:href="@{/web/pedidos-compra}" class="btn btn-ghost btn-sm">Limpiar</a>
-            <span class="text-muted small" th:if="${page != null}">
+            <span class="filter-bar-count" th:if="${page != null}">
                 <span th:text="${page.totalElements}">0</span> pedidos
             </span>
         </div>
@@ -46,32 +49,43 @@
                         <th>Número</th>
                         <th>Fecha</th>
                         <th>Proveedor</th>
+                        <th class="cifra d-none d-md-table-cell">Total</th>
                         <th>Estado</th>
-                        <th style="width:80px;"></th>
+                        <th><span class="visually-hidden">Acciones</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(pedidos)}">
-                        <td colspan="5" class="empty-state">
-                            <i class="bi bi-bag-check"></i>
-                            <div>No hay pedidos de compra</div>
+                        <td colspan="6" class="empty-state">
+                            <i class="bi bi-bag-check" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay pedidos de compra</div>
+                            <small class="empty-state-hint"
+                                   th:if="${(q != null and !q.isEmpty()) or (estado != null and !estado.isEmpty())}">Prueba con otro estado o término de búsqueda.</small>
+                            <small class="empty-state-hint"
+                                   th:unless="${(q != null and !q.isEmpty()) or (estado != null and !estado.isEmpty())}">Crea un pedido para encargar harina, levadura o envases a un proveedor.</small>
+                            <a th:href="@{/web/pedidos-compra/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo pedido
+                            </a>
                         </td>
                     </tr>
                     <tr th:each="p : ${pedidos}">
-                        <td><a th:href="@{/web/pedidos-compra/{id}(id=${p.id})}"
-                               class="fw-medium text-decoration-none" th:text="${p.numero ?: '—'}"></a></td>
-                        <td class="text-muted small"
-                            th:text="${p.fecha != null ? #temporals.format(p.fecha, 'dd/MM/yyyy') : '—'}"></td>
-                        <td th:text="${p.proveedor?.nombre ?: '—'}"></td>
+                        <td><a th:href="@{/web/pedidos-compra/{id}(id=${p.id})}" th:text="${p.numero ?: '—'}">PC-2026-0001</a></td>
+                        <td class="text-muted"
+                            th:text="${p.fecha != null ? #temporals.format(p.fecha, 'dd/MM/yyyy') : '—'}">01/10/2026</td>
+                        <td th:text="${p.proveedor?.nombre ?: '—'}">Proveedor</td>
+                        <td class="cifra fw-medium d-none d-md-table-cell"
+                            th:text="${p.total != null ? #numbers.formatDecimal(p.total, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">0,00 €</td>
                         <td>
                             <span class="badge-status" th:attr="data-status=${p.estado?.toLowerCase()}"
-                                  th:text="${p.estado ?: '—'}"></span>
+                                  th:text="${p.estado != null ? #strings.capitalize(#strings.toLowerCase(#strings.replace(p.estado, '_', ' '))) : '—'}">Borrador</span>
                         </td>
-                        <td class="text-end">
-                            <a th:href="@{/web/pedidos-compra/{id}(id=${p.id})}"
-                               class="btn btn-ghost btn-sm" title="Ver">
-                                <i class="bi bi-eye"></i>
-                            </a>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/pedidos-compra/{id}(id=${p.id})}" class="btn btn-ghost btn-sm btn-icon"
+                                   th:attr="aria-label='Ver pedido ' + ${p.numero ?: p.id}" title="Ver">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

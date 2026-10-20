@@ -1,23 +1,22 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Cliente</h4>
+            <h1 th:text="${titulo}">Cliente</h1>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/clientes}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
 
-    <div class="form-card" style="max-width:760px;">
+    <div class="form-card form-card-narrow">
         <form th:action="@{/web/clientes}" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="id" th:value="${cliente?.id}">
 
-            <div class="form-section-title">
-                <i class="bi bi-info-circle"></i> Datos generales
-            </div>
-            <div class="row g-3 mb-4">
+            <section class="form-section">
+            <h2 class="form-section-title"><i class="bi bi-info-circle" aria-hidden="true"></i>Datos generales</h2>
+            <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label" for="codigo">Código *</label>
                     <input type="text" id="codigo" name="codigo" class="form-control"
@@ -37,7 +36,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="telefono">Teléfono</label>
-                    <input type="text" id="telefono" name="telefono" class="form-control"
+                    <input type="tel" id="telefono" autocomplete="tel" name="telefono" class="form-control"
                            th:value="${cliente?.telefono}">
                 </div>
                 <div class="col-md-4">
@@ -51,16 +50,16 @@
                            th:value="${cliente?.representante}" placeholder="Casilla «Repres.» de la factura">
                 </div>
             </div>
+            </section>
 
-            <div class="form-section-divider">
-                <div class="form-section-title">
-                    <i class="bi bi-geo-alt"></i> Dirección
-                </div>
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-geo-alt" aria-hidden="true"></i>Dirección</h2>
+                <p class="form-section-hint">Se imprime en facturas y albaranes.</p>
                 <div class="row g-3">
                     <div class="col-12">
                         <label class="form-label" for="direccion">Dirección</label>
                         <input type="text" id="direccion" name="direccion" class="form-control"
-                               th:value="${cliente?.direccion}" placeholder="Calle, número, piso...">
+                               th:value="${cliente?.direccion}" placeholder="Calle, número, piso…">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" for="poblacion">Población</label>
@@ -69,20 +68,19 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" for="codigoPostal">Código postal</label>
-                        <input type="text" id="codigoPostal" name="codigoPostal" class="form-control"
+                        <input type="text" inputmode="numeric" id="codigoPostal" name="codigoPostal" class="form-control"
                                th:value="${cliente?.codigoPostal}" placeholder="03001">
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="form-section-divider">
-                <div class="form-section-title">
-                    <i class="bi bi-bank"></i> Domiciliación SEPA
-                </div>
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-bank" aria-hidden="true"></i>Domiciliación SEPA</h2>
+                <p class="form-section-hint">Con IBAN y mandato configurados, las facturas del cliente pueden incluirse en remesas SEPA.</p>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label" for="iban">IBAN</label>
-                        <input type="text" id="iban" name="iban" class="form-control"
+                        <input type="text" autocapitalize="characters" spellcheck="false" id="iban" name="iban" class="form-control"
                                th:value="${cliente?.iban}" placeholder="ES00 0000 0000 0000 0000 0000" maxlength="34">
                     </div>
                     <div class="col-md-3">
@@ -95,15 +93,12 @@
                         <input type="date" id="mandatoSepaFecha" name="mandatoSepaFecha" class="form-control"
                                th:value="${cliente?.mandatoSepaFecha}">
                     </div>
-                    <div class="col-12">
-                        <small class="text-muted">Con IBAN y mandato configurados, las facturas del cliente pueden incluirse en remesas SEPA.</small>
-                    </div>
                 </div>
-            </div>
+            </section>
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary" data-no-double-click>
-                    <i class="bi bi-floppy me-1"></i>Guardar cliente
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar cliente
                 </button>
                 <a th:href="@{/web/clientes}" class="btn btn-ghost">Cancelar</a>
             </div>

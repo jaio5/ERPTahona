@@ -1,16 +1,12 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4>Cumplimiento fiscal</h4>
-            <small class="text-muted">Diagnóstico del sistema informático de facturación (RD 1007/2023 · RRSIF)</small>
-        </div>
-        <div class="page-header-actions">
-            <span th:if="${report.listoProduccion()}" class="badge bg-success fs-6">
-                <i class="bi bi-shield-check me-1"></i>Listo para emisión
-            </span>
-            <span th:unless="${report.listoProduccion()}" class="badge bg-warning text-dark fs-6">
-                <i class="bi bi-exclamation-triangle me-1"></i>Cumplimiento incompleto
-            </span>
+            <h1>Cumplimiento fiscal</h1>
+            <p>
+                Diagnóstico del sistema informático de facturación (RD 1007/2023 · RRSIF)
+                <span th:if="${report.listoProduccion()}" class="badge-estado badge-estado-ok">Listo para emisión</span>
+                <span th:unless="${report.listoProduccion()}" class="badge-estado badge-estado-aviso">Cumplimiento incompleto</span>
+            </p>
         </div>
     </div>
 
@@ -18,19 +14,25 @@
         <!-- Diagnóstico -->
         <div class="col-lg-6">
             <div class="table-card h-100">
-                <div class="form-section-title">
-                    <i class="bi bi-list-check me-1"></i>Requisitos
-                    <span class="text-muted small ms-2" th:text="'Modalidad: ' + ${report.modalidad() != null ? report.modalidad() : '—'}"></span>
+                <div class="table-card-header">
+                    <h2 class="table-card-title"><i class="bi bi-list-check me-1" aria-hidden="true"></i>Requisitos</h2>
+                    <span class="text-muted small" th:text="'Modalidad: ' + ${report.modalidad() != null ? report.modalidad() : '—'}"></span>
                 </div>
-                <div class="table-responsive">
+                <div class="overflow-x-auto">
                     <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-center"><span class="visually-hidden">Resultado</span></th>
+                                <th>Requisito</th>
+                            </tr>
+                        </thead>
                         <tbody>
                         <tr th:each="check : ${report.checks()}">
-                            <td style="width:36px" class="text-center">
-                                <i th:if="${check.ok()}" class="bi bi-check-circle-fill text-success"></i>
-                                <i th:unless="${check.ok()}" class="bi bi-x-circle-fill text-danger"></i>
+                            <td class="text-center">
+                                <i th:if="${check.ok()}" class="bi bi-check-circle-fill text-success" role="img" aria-label="Cumple"></i>
+                                <i th:unless="${check.ok()}" class="bi bi-x-circle-fill text-danger" role="img" aria-label="No cumple"></i>
                             </td>
-                            <td>
+                            <td class="td-wrap">
                                 <div class="fw-medium small" th:text="${check.codigo()}"></div>
                                 <div class="text-muted small" th:text="${check.descripcion()}"></div>
                             </td>
@@ -41,112 +43,118 @@
             </div>
         </div>
 
-        <!-- Datos del SIF -->
-        <div class="col-lg-6">
+        <div class="col-lg-6 d-flex flex-column gap-3">
+            <!-- Datos del SIF -->
             <div class="form-card">
-                <div class="form-section-title"><i class="bi bi-cpu me-1"></i>Datos del sistema de facturación</div>
+                <h2 class="form-section-title"><i class="bi bi-cpu" aria-hidden="true"></i>Datos del sistema de facturación</h2>
                 <form th:action="@{/web/fiscal/cumplimiento/sif}" method="post" th:if="${config != null}">
-                    <div class="row g-2">
+                    <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">NIF emisor VERI*FACTU</label>
-                            <input name="verifactuNifEmisor" class="form-control form-control-sm"
-                                   th:value="${config.verifactuNifEmisor}" placeholder="B12345678">
+                            <label class="form-label" for="sif-nif">NIF emisor VERI*FACTU</label>
+                            <input id="sif-nif" name="verifactuNifEmisor" class="form-control"
+                                   th:value="${config.verifactuNifEmisor}" placeholder="B12345678" autocomplete="off">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Modalidad SIF</label>
-                            <select name="sifModalidad" class="form-select form-select-sm">
+                            <label class="form-label" for="sif-modalidad">Modalidad SIF</label>
+                            <select id="sif-modalidad" name="sifModalidad" class="form-select">
                                 <option th:each="m : ${modalidades}" th:value="${m}" th:text="${m}"
                                         th:selected="${config.sifModalidad == m}"></option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Nombre del sistema</label>
-                            <input name="verifactuNombreSistema" class="form-control form-control-sm"
+                            <label class="form-label" for="sif-nombre">Nombre del sistema</label>
+                            <input id="sif-nombre" name="verifactuNombreSistema" class="form-control"
                                    th:value="${config.verifactuNombreSistema}" placeholder="ERP Tahona">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Versión</label>
-                            <input name="verifactuVersionSistema" class="form-control form-control-sm"
+                        <div class="col-6 col-md-3">
+                            <label class="form-label" for="sif-version">Versión</label>
+                            <input id="sif-version" name="verifactuVersionSistema" class="form-control"
                                    th:value="${config.verifactuVersionSistema}" placeholder="1.0">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Nº instalación</label>
-                            <input name="verifactuIdDispositivo" class="form-control form-control-sm"
+                        <div class="col-6 col-md-3">
+                            <label class="form-label" for="sif-instalacion">Nº instalación</label>
+                            <input id="sif-instalacion" name="verifactuIdDispositivo" class="form-control"
                                    th:value="${config.verifactuIdDispositivo}" placeholder="1">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Productor del software</label>
-                            <input name="productorSoftware" class="form-control form-control-sm"
+                            <label class="form-label" for="sif-productor">Productor del software</label>
+                            <input id="sif-productor" name="productorSoftware" class="form-control"
                                    th:value="${config.productorSoftware}" placeholder="Razón social del productor">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">NIF del productor</label>
-                            <input name="nifProductorSoftware" class="form-control form-control-sm"
+                            <label class="form-label" for="sif-productor-nif">NIF del productor</label>
+                            <input id="sif-productor-nif" name="nifProductorSoftware" class="form-control"
                                    th:value="${config.nifProductorSoftware}">
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <button class="btn btn-primary btn-sm"><i class="bi bi-save me-1"></i>Guardar datos SIF</button>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" data-no-double-click><i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar datos SIF</button>
                     </div>
                 </form>
-                <div th:if="${config == null}" class="alert alert-warning mb-0">
-                    Configura primero los datos de empresa en <a th:href="@{/web/empresa}">Empresa</a>.
+                <div th:if="${config == null}" class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="status">
+                    <i class="bi bi-exclamation-triangle-fill mt-1" aria-hidden="true"></i>
+                    <div>Configura primero los datos de empresa en <a th:href="@{/web/empresa}">Empresa</a>.</div>
                 </div>
             </div>
 
             <!-- Declaración responsable -->
-            <div class="form-card mt-3" th:if="${config != null}">
-                <div class="form-section-title"><i class="bi bi-file-earmark-check me-1"></i>Declaración responsable (art. 13 RRSIF)</div>
-                <div th:if="${config.declaracionResponsableEmitida}" class="small mb-2">
-                    <div><span class="text-muted">Emitida:</span>
-                        <span th:text="${config.declaracionResponsableFecha != null ? #temporals.format(config.declaracionResponsableFecha, 'dd/MM/yyyy HH:mm') : '—'}"></span>
-                        <span class="text-muted ms-2">Versión:</span> <span th:text="${config.declaracionResponsableVersion}"></span>
-                    </div>
-                    <div class="text-truncate"><span class="text-muted">Huella SHA-256:</span>
-                        <code class="small" th:text="${config.declaracionResponsableHash}"></code>
-                    </div>
+            <div class="form-card" th:if="${config != null}">
+                <h2 class="form-section-title"><i class="bi bi-file-earmark-check" aria-hidden="true"></i>Declaración responsable (art. 13 RRSIF)</h2>
+                <div th:if="${config.declaracionResponsableEmitida}" class="doc-fields mb-3">
+                    <table class="doc-table">
+                        <tr>
+                            <th>Emitida</th>
+                            <td th:text="${config.declaracionResponsableFecha != null ? #temporals.format(config.declaracionResponsableFecha, 'dd/MM/yyyy HH:mm') : '—'}"></td>
+                            <th>Versión</th>
+                            <td th:text="${config.declaracionResponsableVersion}"></td>
+                        </tr>
+                        <tr>
+                            <th>Huella SHA-256</th>
+                            <td><code class="small text-break" th:text="${config.declaracionResponsableHash}"></code></td>
+                        </tr>
+                    </table>
                 </div>
-                <div th:unless="${config.declaracionResponsableEmitida}" class="text-muted small mb-2">
+                <p th:unless="${config.declaracionResponsableEmitida}" class="text-muted small mb-3">
                     Aún no se ha emitido la declaración responsable del sistema.
-                </div>
-                <div class="d-flex gap-2">
+                </p>
+                <div class="d-flex flex-wrap gap-2">
                     <form th:action="@{/web/fiscal/cumplimiento/declaracion}" method="post">
-                        <button class="btn btn-outline-primary btn-sm"
+                        <button class="btn btn-outline-primary btn-sm" data-no-double-click
                                 data-confirm="Se generará y registrará la declaración responsable con los datos actuales del sistema. ¿Continuar?">
-                            <i class="bi bi-file-earmark-plus me-1"></i>
+                            <i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>
                             <span th:text="${config.declaracionResponsableEmitida ? 'Reemitir declaración' : 'Emitir declaración'}"></span>
                         </button>
                     </form>
                     <a th:if="${config.declaracionResponsableEmitida}"
                        th:href="@{/web/fiscal/cumplimiento/declaracion/descargar}"
-                       class="btn btn-outline-secondary btn-sm"><i class="bi bi-download me-1"></i>Descargar PDF</a>
+                       class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Descargar PDF</a>
                 </div>
             </div>
 
             <!-- Funcionamiento VERI*FACTU -->
-            <div class="form-card mt-3" th:if="${config != null}">
-                <div class="form-section-title"><i class="bi bi-shield-check me-1"></i>Funcionamiento VERI*FACTU</div>
-                <div class="small mb-2">
+            <div class="form-card" th:if="${config != null}">
+                <h2 class="form-section-title"><i class="bi bi-shield-check" aria-hidden="true"></i>Funcionamiento VERI*FACTU</h2>
+                <div class="d-flex flex-wrap align-items-center gap-2 small mb-3">
                     <span class="text-muted">Estado:</span>
-                    <span th:if="${vigente}" class="badge bg-success">Vigente</span>
-                    <span th:unless="${vigente}" class="badge bg-secondary">No iniciado</span>
-                    <span class="text-muted ms-2" th:if="${config.verifactuFechaInicio != null}"
+                    <span th:if="${vigente}" class="badge-estado badge-estado-ok">Vigente</span>
+                    <span th:unless="${vigente}" class="badge-estado badge-estado-neutro">No iniciado</span>
+                    <span class="text-muted" th:if="${config.verifactuFechaInicio != null}"
                           th:text="'Inicio: ' + ${#temporals.format(config.verifactuFechaInicio, 'dd/MM/yyyy')}"></span>
-                    <span class="text-muted ms-2" th:if="${config.verifactuFechaRenuncia != null}"
+                    <span class="badge-estado badge-estado-aviso" th:if="${config.verifactuFechaRenuncia != null}"
                           th:text="'Renuncia programada: ' + ${#temporals.format(config.verifactuFechaRenuncia, 'dd/MM/yyyy')}"></span>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     <form th:action="@{/web/fiscal/cumplimiento/iniciar}" method="post" th:unless="${vigente}">
-                        <button class="btn btn-success btn-sm"
+                        <button class="btn btn-success btn-sm" data-no-double-click
                                 data-confirm="Una vez iniciado, VERI*FACTU no se desactiva: solo se puede programar la renuncia a 31 de diciembre. ¿Iniciar?">
-                            <i class="bi bi-play-circle me-1"></i>Iniciar VERI*FACTU
+                            <i class="bi bi-play-circle me-1" aria-hidden="true"></i>Iniciar VERI*FACTU
                         </button>
                     </form>
                     <form th:action="@{/web/fiscal/cumplimiento/renuncia}" method="post"
                           th:if="${vigente and config.verifactuFechaRenuncia == null}">
-                        <button class="btn btn-outline-danger btn-sm"
+                        <button class="btn btn-outline-danger btn-sm" data-no-double-click
                                 data-confirm="Se programará la renuncia a VERI*FACTU para el 31 de diciembre. ¿Continuar?">
-                            <i class="bi bi-calendar-x me-1"></i>Programar renuncia a fin de año
+                            <i class="bi bi-calendar-x me-1" aria-hidden="true"></i>Programar renuncia a fin de año
                         </button>
                     </form>
                 </div>

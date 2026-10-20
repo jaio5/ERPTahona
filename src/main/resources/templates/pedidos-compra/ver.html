@@ -1,79 +1,129 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Pedido de compra</h4>
+            <h1 th:text="${titulo}">Pedido de compra</h1>
+            <p>
+                <span class="badge-status" th:attr="data-status=${pedido.estado?.toLowerCase()}"
+                      th:text="${pedido.estado != null ? #strings.capitalize(#strings.toLowerCase(#strings.replace(pedido.estado, '_', ' '))) : '—'}">Borrador</span>
+                <span th:if="${pedido.fecha != null}" th:text="${#temporals.format(pedido.fecha, 'dd/MM/yyyy')}">01/10/2026</span>
+            </p>
         </div>
         <div class="page-header-actions">
-            <form th:if="${pedido.estado == 'BORRADOR'}"
-                  th:action="@{/web/pedidos-compra/{id}/estado(id=${pedido.id})}" method="post" class="d-inline">
-                <input type="hidden" name="estado" value="ENVIADO">
-                <button class="btn btn-primary btn-sm" data-no-double-click>
-                    <i class="bi bi-send me-1"></i>Enviar pedido
-                </button>
-            </form>
-            <form th:if="${pedido.estado == 'ENVIADO'}"
-                  th:action="@{/web/pedidos-compra/{id}/estado(id=${pedido.id})}" method="post" class="d-inline">
-                <input type="hidden" name="estado" value="RECIBIDO">
-                <button class="btn btn-success btn-sm" data-no-double-click>
-                    <i class="bi bi-box-seam me-1"></i>Marcar recibido
-                </button>
-            </form>
             <a th:href="@{/web/pedidos-compra}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
-    <div class="form-card" style="max-width:640px;">
-        <div class="doc-fields">
-            <table class="doc-table">
-            <tr>
-                <th scope="row">Número</th>
-                <td th:text="${pedido.numero} ?: '—'">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Fecha</th>
-                <td th:text="${pedido.fecha}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Proveedor</th>
-                <td th:text="${pedido.proveedor?.nombre} ?: '—'">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Total</th>
-                <td th:text="${pedido.total != null ? #numbers.formatDecimal(pedido.total,1,2) + ' €' : '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Entrega esperada</th>
-                <td th:text="${pedido.fechaEsperadaEntrega} ?: '—'">—</td>
-            </tr>
-            <tr th:if="${pedido.observaciones}">
-                <th scope="row">Observaciones</th>
-                <td class="text-muted" th:text="${pedido.observaciones}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Estado</th>
-                <td>
-                    <span class="badge-status" th:attr="data-status=${pedido.estado?.toLowerCase()}"
-                          th:text="${pedido.estado}">—</span>
-                </td>
-            </tr>
-            </table>
-        </div>
-        <div th:if="${!#lists.isEmpty(pedido.lineas)}" class="mt-3">
-            <div class="form-section-title mb-2">
-                <i class="bi bi-list-ul"></i> Líneas del pedido
-            </div>
-            <div class="table-responsive">
-                <table class="table table-sm mb-0">
-                    <thead><tr><th>Artículo</th><th>Cantidad</th><th>Precio</th></tr></thead>
-                    <tbody>
-                        <tr th:each="l : ${pedido.lineas}">
-                            <td th:text="${l.articulo?.nombre} ?: '—'"></td>
-                            <td th:text="${l.cantidad}"></td>
-                            <td th:text="${l.precio != null ? #numbers.formatDecimal(l.precio,1,2) + ' €' : '—'}"></td>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="doc-card mb-4">
+                <div class="doc-card-header">
+                    <div class="doc-header-icon" aria-hidden="true"><i class="bi bi-bag-check"></i></div>
+                    <div>
+                        <div class="doc-card-title" th:text="${pedido.proveedor?.nombre ?: 'Sin proveedor'}">Proveedor</div>
+                        <div class="doc-card-meta" th:text="${pedido.proveedor?.cif ?: ''}">B03000000</div>
+                    </div>
+                </div>
+                <div class="doc-fields">
+                    <table class="doc-table">
+                        <tr>
+                            <th scope="row">Número</th>
+                            <td th:text="${pedido.numero ?: '—'}">—</td>
                         </tr>
-                    </tbody>
-                </table>
+                        <tr>
+                            <th scope="row">Fecha</th>
+                            <td th:text="${pedido.fecha != null ? #temporals.format(pedido.fecha, 'dd/MM/yyyy') : '—'}">—</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Proveedor</th>
+                            <td>
+                                <a th:if="${pedido.proveedor != null}"
+                                   th:href="@{/web/proveedores/{id}(id=${pedido.proveedor.id})}"
+                                   th:text="${pedido.proveedor.nombre}">Proveedor</a>
+                                <span th:if="${pedido.proveedor == null}">—</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Entrega esperada</th>
+                            <td th:text="${pedido.fechaEsperadaEntrega != null ? #temporals.format(pedido.fechaEsperadaEntrega, 'dd/MM/yyyy') : '—'}">—</td>
+                        </tr>
+                        <tr th:if="${pedido.observaciones}">
+                            <th scope="row">Observaciones</th>
+                            <td class="text-muted" th:text="${pedido.observaciones}">—</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-card-header">
+                    <h2 class="table-card-title">Líneas del pedido</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Artículo</th>
+                                <th class="cifra">Cantidad</th>
+                                <th class="cifra d-none d-md-table-cell">Recibida</th>
+                                <th class="cifra">Precio</th>
+                                <th class="cifra">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(pedido.lineas)}">
+                                <td colspan="5" class="empty-state empty-state-compact">
+                                    <i class="bi bi-list-ul" aria-hidden="true"></i>
+                                    <div class="empty-state-title">El pedido no tiene líneas</div>
+                                    <small class="empty-state-hint">Las líneas indican qué artículos y cantidades se piden al proveedor.</small>
+                                </td>
+                            </tr>
+                            <tr th:each="l : ${pedido.lineas}">
+                                <td class="td-wrap" th:text="${l.articulo?.nombre ?: (l.descripcion ?: '—')}">Harina de fuerza</td>
+                                <td class="cifra"
+                                    th:text="${l.cantidad != null ? #numbers.formatDecimal(l.cantidad, 1, 'POINT', 2, 'COMMA') : '—'}">25,00</td>
+                                <td class="cifra text-muted d-none d-md-table-cell"
+                                    th:text="${l.cantidadRecibida != null ? #numbers.formatDecimal(l.cantidadRecibida, 1, 'POINT', 2, 'COMMA') : '—'}">0,00</td>
+                                <td class="cifra"
+                                    th:text="${l.precioUnitario != null ? #numbers.formatDecimal(l.precioUnitario, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">0,00 €</td>
+                                <td class="cifra fw-medium"
+                                    th:text="${l.importe != null ? #numbers.formatDecimal(l.importe, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">0,00 €</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="form-card total-card-big mb-3">
+                <div class="label">Total del pedido</div>
+                <div class="amount"
+                     th:text="${pedido.total != null ? #numbers.formatDecimal(pedido.total, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">0,00 €</div>
+                <span class="badge-status" th:attr="data-status=${pedido.estado?.toLowerCase()}"
+                      th:text="${pedido.estado != null ? #strings.capitalize(#strings.toLowerCase(#strings.replace(pedido.estado, '_', ' '))) : '—'}">Borrador</span>
+            </div>
+
+            <div class="form-card" th:if="${pedido.estado == 'BORRADOR' or pedido.estado == 'ENVIADO'}">
+                <h2 class="card-heading mb-3">Acciones</h2>
+                <div class="action-stack">
+                    <!-- Siguiente paso del flujo: solo se muestra uno a la vez -->
+                    <form th:if="${pedido.estado == 'BORRADOR'}"
+                          th:action="@{/web/pedidos-compra/{id}/estado(id=${pedido.id})}" method="post">
+                        <input type="hidden" name="estado" value="ENVIADO">
+                        <button class="btn btn-primary" data-no-double-click>
+                            <i class="bi bi-send me-2" aria-hidden="true"></i>Enviar pedido
+                        </button>
+                    </form>
+                    <form th:if="${pedido.estado == 'ENVIADO'}"
+                          th:action="@{/web/pedidos-compra/{id}/estado(id=${pedido.id})}" method="post">
+                        <input type="hidden" name="estado" value="RECIBIDO">
+                        <button class="btn btn-primary" data-no-double-click>
+                            <i class="bi bi-box-seam me-2" aria-hidden="true"></i>Marcar recibido
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

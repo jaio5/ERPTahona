@@ -1,100 +1,103 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Usuario</h4>
+            <h1 th:text="${titulo}">Usuario</h1>
+            <p>
+                <span th:if="${usuario.bloqueado}" class="badge-estado badge-estado-aviso">Bloqueado</span>
+                <span th:if="${!usuario.bloqueado and usuario.enabled}" class="badge-estado badge-estado-ok">Activo</span>
+                <span th:if="${!usuario.bloqueado and !usuario.enabled}" class="badge-estado badge-estado-neutro">Inactivo</span>
+                <span th:text="${usuario.ultimoLogin != null ? 'Último acceso ' + #temporals.format(usuario.ultimoLogin,'dd/MM/yyyy HH:mm') : 'Sin accesos'}"></span>
+            </p>
         </div>
         <div class="page-header-actions">
-            <a th:href="@{/web/usuarios/{id}/editar(id=${usuario.id})}" class="btn btn-primary btn-sm">
-                <i class="bi bi-pencil me-1"></i>Editar
-            </a>
             <a th:href="@{/web/usuarios}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <a th:href="@{/web/usuarios/{id}/editar(id=${usuario.id})}" class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
             </a>
         </div>
     </div>
 
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+    <!-- Los avisos de exito/error salen como toast desde el layout -->
 
     <div class="row g-4">
-        <div class="col-lg-6">
-            <div class="form-card">
-                <div class="form-section-title">
-                    <i class="bi bi-person"></i> Información del usuario
+        <div class="col-lg-8">
+            <div class="doc-card">
+                <div class="doc-card-header">
+                    <div class="doc-header-icon" aria-hidden="true"
+                         th:classappend="${usuario.bloqueado ? 'warning' : (usuario.enabled ? 'success' : '')}">
+                        <i class="bi bi-person"></i>
+                    </div>
+                    <div>
+                        <div class="doc-card-title" th:text="${usuario.nombre ?: usuario.username}">Nombre</div>
+                        <div class="doc-card-meta" th:text="${usuario.username}">usuario</div>
+                    </div>
                 </div>
                 <div class="doc-fields">
                     <table class="doc-table">
-                    <tr>
-                        <th scope="row">Usuario</th>
-                        <td class="fw-medium" th:text="${usuario.username}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Nombre</th>
-                        <td th:text="${usuario.nombre ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Email</th>
-                        <td th:text="${usuario.email ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Rol</th>
-                        <td th:text="${usuario.role ?: usuario.rol?.nombre ?: '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Intentos fallidos</th>
-                        <td th:text="${usuario.intentosFallidos ?: 0}">0</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Creado</th>
-                        <td class="text-muted" th:text="${usuario.fechaCreacion != null ? #temporals.format(usuario.fechaCreacion,'dd/MM/yyyy HH:mm') : '—'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Último acceso</th>
-                        <td class="text-muted" th:text="${usuario.ultimoLogin != null ? #temporals.format(usuario.ultimoLogin,'dd/MM/yyyy HH:mm') : 'Nunca'}">—</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Estado</th>
-                        <td>
-                            <span th:if="${usuario.bloqueado}" class="badge-status" data-status="anulada">Bloqueado</span>
-                            <span th:if="${!usuario.bloqueado and usuario.enabled}" class="badge-status" data-status="activo">Activo</span>
-                            <span th:if="${!usuario.bloqueado and !usuario.enabled}" class="badge-status" data-status="borrador">Inactivo</span>
-                        </td>
-                    </tr>
+                        <tr>
+                            <th scope="row">Usuario</th>
+                            <td class="fw-medium" th:text="${usuario.username}">—</td>
+                            <th scope="row">Nombre</th>
+                            <td th:text="${usuario.nombre ?: '—'}">—</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Email</th>
+                            <td th:text="${usuario.email ?: '—'}">—</td>
+                            <th scope="row">Rol</th>
+                            <td th:switch="${usuario.role}">
+                                <span th:case="'ADMIN'">Administrador</span>
+                                <span th:case="'MANAGER'">Gestor</span>
+                                <span th:case="'USER'">Usuario</span>
+                                <span th:case="'READONLY'">Solo lectura</span>
+                                <span th:case="*" th:text="${usuario.role ?: usuario.rol?.nombre ?: '—'}">—</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Intentos fallidos</th>
+                            <td th:text="${usuario.intentosFallidos ?: 0}">0</td>
+                            <th scope="row">Creado</th>
+                            <td class="text-muted" th:text="${usuario.fechaCreacion != null ? #temporals.format(usuario.fechaCreacion,'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Último acceso</th>
+                            <td class="text-muted" th:text="${usuario.ultimoLogin != null ? #temporals.format(usuario.ultimoLogin,'dd/MM/yyyy HH:mm') : 'Nunca'}">—</td>
+                        </tr>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="form-card">
-                <div class="form-section-title">
-                    <i class="bi bi-gear"></i> Acciones
-                </div>
-                <div class="d-flex flex-column gap-2">
+                <h2 class="card-heading mb-3">Acciones</h2>
+                <div class="action-stack">
                     <form th:if="${!usuario.bloqueado}"
                           th:action="@{/web/usuarios/{id}/bloquear(id=${usuario.id})}" method="post">
-                        <button type="submit" class="btn btn-outline-warning btn-sm w-100" data-no-double-click
+                        <button type="submit" class="btn btn-outline-warning" data-no-double-click
                                 data-confirm="¿Bloquear este usuario?">
-                            <i class="bi bi-lock me-1"></i>Bloquear usuario
+                            <i class="bi bi-lock me-2" aria-hidden="true"></i>Bloquear usuario
                         </button>
                     </form>
                     <form th:if="${usuario.bloqueado}"
                           th:action="@{/web/usuarios/{id}/desbloquear(id=${usuario.id})}" method="post">
-                        <button type="submit" class="btn btn-outline-success btn-sm w-100" data-no-double-click>
-                            <i class="bi bi-unlock me-1"></i>Desbloquear usuario
-                        </button>
-                    </form>
-                    <form th:if="${usuario.enabled}"
-                          th:action="@{/web/usuarios/{id}/desactivar(id=${usuario.id})}" method="post">
-                        <button type="submit" class="btn btn-outline-danger btn-sm w-100" data-no-double-click
-                                data-confirm="¿Desactivar este usuario?">
-                            <i class="bi bi-person-x me-1"></i>Desactivar cuenta
+                        <button type="submit" class="btn btn-outline-success" data-no-double-click>
+                            <i class="bi bi-unlock me-2" aria-hidden="true"></i>Desbloquear usuario
                         </button>
                     </form>
                     <form th:if="${!usuario.enabled}"
                           th:action="@{/web/usuarios/{id}/activar(id=${usuario.id})}" method="post">
-                        <button type="submit" class="btn btn-outline-success btn-sm w-100" data-no-double-click>
-                            <i class="bi bi-person-check me-1"></i>Activar cuenta
+                        <button type="submit" class="btn btn-outline-success" data-no-double-click>
+                            <i class="bi bi-person-check me-2" aria-hidden="true"></i>Activar cuenta
+                        </button>
+                    </form>
+                    <div class="action-stack-sep" th:if="${usuario.enabled}"></div>
+                    <form th:if="${usuario.enabled}"
+                          th:action="@{/web/usuarios/{id}/desactivar(id=${usuario.id})}" method="post">
+                        <button type="submit" class="btn btn-outline-danger" data-no-double-click
+                                data-confirm="¿Desactivar este usuario?">
+                            <i class="bi bi-person-x me-2" aria-hidden="true"></i>Desactivar cuenta
                         </button>
                     </form>
                 </div>

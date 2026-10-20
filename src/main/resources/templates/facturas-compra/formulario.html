@@ -1,81 +1,107 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Factura de compra</h4>
+            <h1 th:text="${titulo}">Factura de compra</h1>
+            <p>Copia los datos tal como aparecen en la factura del proveedor</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/facturas-compra}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
-    <div class="form-card" style="max-width:700px;">
+
+    <div class="form-card form-card-narrow">
         <form th:action="@{/web/facturas-compra}" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="id" th:value="${factura?.id}">
-            <div class="row g-3">
-                <div class="col-md-8">
-                    <label class="form-label" for="proveedorId">Proveedor *</label>
-                    <select id="proveedorId" name="proveedorId" class="form-select" data-searchable required>
-                        <option value="">-- Selecciona proveedor --</option>
-                        <option th:each="p : ${proveedores}" th:value="${p.id}"
-                                th:text="${p.nombre}"
-                                th:selected="${factura?.proveedor?.id == p.id}"></option>
-                    </select>
-                    <div class="invalid-feedback">El proveedor es obligatorio</div>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-receipt" aria-hidden="true"></i>Datos de la factura</h2>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label" for="proveedorId">Proveedor *</label>
+                        <select id="proveedorId" name="proveedorId" class="form-select" data-searchable required>
+                            <option value="">Selecciona un proveedor…</option>
+                            <option th:each="p : ${proveedores}" th:value="${p.id}"
+                                    th:text="${p.nombre}"
+                                    th:selected="${factura?.proveedor?.id == p.id}"></option>
+                        </select>
+                        <div class="invalid-feedback">El proveedor es obligatorio.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="numero">Número de factura *</label>
+                        <input type="text" id="numero" name="numero" class="form-control" maxlength="100"
+                               th:value="${factura?.numero}" required autocomplete="off">
+                        <div class="invalid-feedback">Introduce el número de factura del proveedor.</div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <label class="form-label" for="fecha">Fecha *</label>
+                        <input type="date" id="fecha" name="fecha" class="form-control"
+                               th:value="${factura?.fecha}" required>
+                        <div class="invalid-feedback">La fecha es obligatoria.</div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <label class="form-label" for="fechaVencimiento">Vencimiento</label>
+                        <input type="date" id="fechaVencimiento" name="fechaVencimiento" class="form-control"
+                               th:value="${factura?.fechaVencimiento}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="formaPago">Forma de pago</label>
+                        <select id="formaPago" name="formaPago" class="form-select">
+                            <option value="">Sin indicar</option>
+                            <option value="CONTADO" th:selected="${factura?.formaPago == 'CONTADO'}">Contado</option>
+                            <option value="TRANSFERENCIA" th:selected="${factura?.formaPago == 'TRANSFERENCIA'}">Transferencia</option>
+                            <option value="CHEQUE" th:selected="${factura?.formaPago == 'CHEQUE'}">Cheque</option>
+                            <option value="PAGARE" th:selected="${factura?.formaPago == 'PAGARE'}">Pagaré</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="numero">Número factura *</label>
-                    <input type="text" id="numero" name="numero" class="form-control" maxlength="100"
-                           th:value="${factura?.numero}" required>
-                    <div class="invalid-feedback">Introduce el número de factura del proveedor</div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-calculator" aria-hidden="true"></i>Importes</h2>
+                <p class="form-section-hint">Usa la coma para los decimales (por ejemplo, 125,40).</p>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="baseImponible">Base imponible *</label>
+                        <div class="input-group">
+                            <input type="text" inputmode="decimal" id="baseImponible" name="baseImponible" class="form-control text-end"
+                                   th:value="${factura?.baseImponible != null ? #numbers.formatDecimal(factura.baseImponible, 1, 'NONE', 2, 'COMMA') : ''}" required>
+                            <span class="input-group-text">€</span>
+                            <div class="invalid-feedback">Introduce la base imponible.</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <label class="form-label" for="tipoIva">Tipo de IVA</label>
+                        <div class="input-group">
+                            <input type="text" inputmode="decimal" id="tipoIva" name="tipoIva" class="form-control text-end"
+                                   th:value="${factura?.tipoIva != null ? #numbers.formatDecimal(factura.tipoIva, 1, 'NONE', 2, 'COMMA') : ''}">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <label class="form-label" for="importeIva">Importe IVA</label>
+                        <div class="input-group">
+                            <input type="text" inputmode="decimal" id="importeIva" name="importeIva" class="form-control text-end"
+                                   th:value="${factura?.importeIva != null ? #numbers.formatDecimal(factura.importeIva, 1, 'NONE', 2, 'COMMA') : ''}">
+                            <span class="input-group-text">€</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="fecha">Fecha *</label>
-                    <input type="date" id="fecha" name="fecha" class="form-control"
-                           th:value="${factura?.fecha}" required>
-                    <div class="invalid-feedback">La fecha es obligatoria</div>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="fechaVencimiento">Vencimiento</label>
-                    <input type="date" id="fechaVencimiento" name="fechaVencimiento" class="form-control"
-                           th:value="${factura?.fechaVencimiento}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="formaPago">Forma de pago</label>
-                    <select id="formaPago" name="formaPago" class="form-select">
-                        <option value="">--</option>
-                        <option value="CONTADO" th:selected="${factura?.formaPago == 'CONTADO'}">Contado</option>
-                        <option value="TRANSFERENCIA" th:selected="${factura?.formaPago == 'TRANSFERENCIA'}">Transferencia</option>
-                        <option value="CHEQUE" th:selected="${factura?.formaPago == 'CHEQUE'}">Cheque</option>
-                        <option value="PAGARE" th:selected="${factura?.formaPago == 'PAGARE'}">Pagaré</option>
-                    </select>
-                </div>
-                <hr class="my-1">
-                <div class="col-md-4">
-                    <label class="form-label" for="baseImponible">Base imponible (€) *</label>
-                    <input type="text" inputmode="decimal" id="baseImponible" name="baseImponible" class="form-control"
-                           th:value="${factura?.baseImponible != null ? #numbers.formatDecimal(factura.baseImponible, 1, 'COMMA', 2, 'POINT') : ''}" required>
-                    <div class="invalid-feedback">Introduce la base imponible</div>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="tipoIva">% IVA</label>
-                    <input type="text" inputmode="decimal" id="tipoIva" name="tipoIva" class="form-control"
-                           th:value="${factura?.tipoIva != null ? #numbers.formatDecimal(factura.tipoIva, 1, 'COMMA', 2, 'POINT') : ''}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="importeIva">Importe IVA (€)</label>
-                    <input type="text" inputmode="decimal" id="importeIva" name="importeIva" class="form-control"
-                           th:value="${factura?.importeIva != null ? #numbers.formatDecimal(factura.importeIva, 1, 'COMMA', 2, 'POINT') : ''}">
-                </div>
-                <div class="col-12">
-                    <label class="form-label" for="observaciones">Observaciones</label>
-                    <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
-                              th:text="${factura?.observaciones}"></textarea>
-                </div>
-            </div>
-            <div class="mt-4">
-                <button type="submit" class="btn btn-primary" data-no-double-click>Guardar factura</button>
-                <a th:href="@{/web/facturas-compra}" class="btn btn-ghost ms-2">Cancelar</a>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-chat-left-text" aria-hidden="true"></i>Notas</h2>
+                <label class="form-label" for="observaciones">Observaciones</label>
+                <textarea id="observaciones" name="observaciones" class="form-control" rows="2"
+                          th:text="${factura?.observaciones}"></textarea>
+            </section>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar factura
+                </button>
+                <a th:href="@{/web/facturas-compra}" class="btn btn-ghost">Cancelar</a>
             </div>
         </form>
     </div>

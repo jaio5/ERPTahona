@@ -1,31 +1,74 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Control APPCC</h4>
+            <h1 th:text="${titulo}">Control APPCC</h1>
+            <p>Se registra con la fecha y hora actuales</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/appcc}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
-    <div class="form-card" style="max-width:700px;">
-    <form th:action="@{/web/appcc}" method="post" class="needs-validation" novalidate>
-        <input type="hidden" name="id" th:value="${control?.id}">
-        <div class="row g-3">
-            <div class="col-md-5"><label class="form-label" for="puntoCritico">Punto critico</label><input id="puntoCritico" name="puntoCritico" class="form-control" required></div>
-            <div class="col-md-3"><label class="form-label" for="temperatura">Temperatura</label><input id="temperatura" name="temperatura" type="text" inputmode="decimal" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label" for="limiteCritico">Limite critico</label><input id="limiteCritico" name="limiteCritico" type="text" inputmode="decimal" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label" for="resultado">Resultado</label><input id="resultado" name="resultado" class="form-control" placeholder="OK / NOK"></div>
-            <div class="col-md-4"><label class="form-label" for="responsable">Responsable</label><input id="responsable" name="responsable" class="form-control"></div>
-            <div class="col-12"><label class="form-label" for="accionCorrectiva">Accion correctiva</label><textarea id="accionCorrectiva" name="accionCorrectiva" class="form-control" rows="3"></textarea></div>
-        </div>
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary" data-no-double-click>
-                <i class="bi bi-floppy me-1"></i>Guardar control
-            </button>
-            <a th:href="@{/web/appcc}" class="btn btn-ghost">Cancelar</a>
-        </div>
-    </form>
+
+    <div class="form-card form-card-narrow">
+        <form th:action="@{/web/appcc}" method="post" class="needs-validation" novalidate>
+            <input type="hidden" name="id" th:value="${control?.id}">
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-thermometer-half" aria-hidden="true"></i>Medición</h2>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="puntoCritico">Punto crítico *</label>
+                        <input id="puntoCritico" name="puntoCritico" class="form-control" required
+                               placeholder="Cámara de fermentación, horno 2…">
+                        <div class="invalid-feedback">Indica el punto crítico controlado.</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label" for="temperatura">Temperatura (°C)</label>
+                        <input id="temperatura" name="temperatura" type="text" inputmode="decimal" class="form-control text-end"
+                               placeholder="4.5" aria-describedby="appcc-decimales">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label" for="limiteCritico">Límite crítico (°C)</label>
+                        <input id="limiteCritico" name="limiteCritico" type="text" inputmode="decimal" class="form-control text-end"
+                               placeholder="5.0" aria-describedby="appcc-decimales">
+                    </div>
+                    <div class="col-12">
+                        <div class="form-text mt-0" id="appcc-decimales">Usa punto para los decimales (p. ej. 4.5).</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-clipboard-check" aria-hidden="true"></i>Resultado</h2>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="form-label" for="resultado">Resultado</label>
+                        <select id="resultado" name="resultado" class="form-select">
+                            <option value="">Sin registrar</option>
+                            <option value="OK">OK, dentro del límite</option>
+                            <option value="NOK">NOK, fuera del límite</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label" for="responsable">Responsable</label>
+                        <input id="responsable" name="responsable" class="form-control">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="accionCorrectiva">Acción correctiva</label>
+                        <textarea id="accionCorrectiva" name="accionCorrectiva" class="form-control" rows="3"
+                                  placeholder="Obligatoria si el resultado es NOK: qué se hizo y con qué producto."></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" data-no-double-click>
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar control
+                </button>
+                <a th:href="@{/web/appcc}" class="btn btn-ghost">Cancelar</a>
+            </div>
+        </form>
     </div>
 </div>

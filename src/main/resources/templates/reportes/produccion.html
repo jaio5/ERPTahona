@@ -1,23 +1,66 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Producción</h4>
+            <h1 th:text="${titulo}">Producción</h1>
+            <p>Órdenes de producción con fecha en el mes en curso</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/reportes}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <a th:href="@{/web/ordenes-produccion}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-list-ul me-1" aria-hidden="true"></i>Ver órdenes
             </a>
         </div>
     </div>
-    <div class="row g-3 mb-4">
-        <div class="col-md-3"><div class="stat-card"><div class="stat-label">Órdenes totales</div><div class="stat-value" th:text="${totalOrdenes}">0</div></div></div>
-        <div class="col-md-3"><div class="stat-card"><div class="stat-label">Finalizadas</div><div class="stat-value" style="color:#059669;" th:text="${finalizadas}">0</div></div></div>
-        <div class="col-md-3"><div class="stat-card"><div class="stat-label">En curso</div><div class="stat-value" style="color:#2563eb;" th:text="${enCurso}">0</div></div></div>
-        <div class="col-md-3"><div class="stat-card"><div class="stat-label">Canceladas</div><div class="stat-value" style="color:#dc2626;" th:text="${canceladas}">0</div></div></div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-clipboard" aria-hidden="true"></i>Órdenes totales</div>
+                <div class="stat-value" th:text="${totalOrdenes}">0</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-check2-circle" aria-hidden="true"></i>Finalizadas</div>
+                <div class="stat-value" th:text="${finalizadas}">0</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-play-circle" aria-hidden="true"></i>En curso</div>
+                <div class="stat-value" th:text="${enCurso}">0</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card h-100">
+                <div class="stat-label"><i class="bi bi-x-circle" aria-hidden="true"></i>Canceladas</div>
+                <div class="stat-value" th:text="${canceladas}">0</div>
+            </div>
+        </div>
     </div>
-    <div class="row g-3">
-        <div class="col-md-6"><div class="stat-card text-center py-4"><div class="stat-label">Cantidad planificada</div><div class="stat-value" th:text="${totalPlanificado}"></div></div></div>
-        <div class="col-md-6"><div class="stat-card text-center py-4"><div class="stat-label">Cantidad producida</div><div class="stat-value" th:text="${totalProducido}"></div></div></div>
+
+    <div class="form-card">
+        <h2 class="card-heading mb-3"><i class="bi bi-speedometer2" aria-hidden="true"></i>Cumplimiento del plan</h2>
+        <div class="row g-3 align-items-end">
+            <div class="col-sm-4">
+                <div class="doc-field-label">Cantidad planificada</div>
+                <div class="stat-value" th:text="${#numbers.formatDecimal(totalPlanificado, 1, 'POINT', 2, 'COMMA')}">0</div>
+            </div>
+            <div class="col-sm-4">
+                <div class="doc-field-label">Cantidad producida</div>
+                <div class="stat-value" th:text="${#numbers.formatDecimal(totalProducido, 1, 'POINT', 2, 'COMMA')}">0</div>
+            </div>
+            <div class="col-sm-4">
+                <div class="doc-field-label">Eficiencia</div>
+                <div class="stat-value" th:text="${#numbers.formatDecimal(eficiencia, 1, 'POINT', 1, 'COMMA')} + ' %'">0 %</div>
+            </div>
+        </div>
+        <!-- Barra de progreso: ancho calculado en servidor a partir de la eficiencia (máx. 100 %) -->
+        <div class="progress mt-3" role="progressbar" aria-label="Eficiencia de producción"
+             th:attr="aria-valuenow=${eficiencia}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar" th:style="'width:' + ${eficiencia.doubleValue() > 100 ? 100 : eficiencia} + '%'"></div>
+        </div>
     </div>
-    <div class="text-center mt-3"><h5 th:text="'Eficiencia: ' + ${eficiencia} + '%'" class="fw-bold"></h5></div>
 </div>

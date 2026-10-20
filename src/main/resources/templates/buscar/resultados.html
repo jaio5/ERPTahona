@@ -1,20 +1,40 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Búsqueda</h4>
+            <h1 th:text="${titulo}">Búsqueda</h1>
+            <p th:unless="${resultados.isEmpty()}">
+                <span th:text="${#lists.size(resultados)}">0</span> resultados
+            </p>
         </div>
     </div>
-    <div class="form-card">
-        <form th:action="@{/web/buscar}" class="mb-3"><input type="search" name="q" class="form-control" th:value="${query}" placeholder="Buscar clientes, artículos, facturas, recetas..."></form>
-        <div th:if="${!resultados.isEmpty()}">
-            <div th:each="r : ${resultados}" class="border-bottom py-2">
-                <span class="badge-status me-2" th:attr="data-status=${r.tipo?.toLowerCase()}" th:text="${r.tipo}"></span>
-                <a th:href="${r.url}" th:text="${r.texto}" class="fw-bold"></a>
-            </div>
+
+    <div class="form-card form-card-narrow">
+        <form th:action="@{/web/buscar}" class="filter-bar-search mb-3" role="search">
+            <label for="buscarGlobal" class="visually-hidden">Buscar en el ERP</label>
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" id="buscarGlobal" name="q" class="form-control" th:value="${query}"
+                   placeholder="Buscar clientes, artículos, facturas, recetas…" autocomplete="off">
+        </form>
+
+        <!-- El tipo es una categoría, no un estado: icono + etiqueta en lugar de badge de estado -->
+        <nav th:if="${!resultados.isEmpty()}" class="link-list" aria-label="Resultados de la búsqueda">
+            <a th:each="r : ${resultados}" th:href="${r.url}">
+                <i class="bi" aria-hidden="true"
+                   th:classappend="${r.tipo == 'Cliente'} ? 'bi-person' : (${r.tipo == 'Artículo'} ? 'bi-box' : (${r.tipo == 'Factura'} ? 'bi-receipt' : (${r.tipo == 'Receta'} ? 'bi-journal-text' : (${r.tipo == 'Lote'} ? 'bi-upc-scan' : 'bi-dot'))))"></i>
+                <span class="flex-grow-1 fw-medium" th:text="${r.texto}"></span>
+                <span class="small text-muted" th:text="${r.tipo}"></span>
+            </a>
+        </nav>
+
+        <div th:if="${resultados.isEmpty() and query != null and !query.isEmpty()}" class="empty-state empty-state-compact">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <div class="empty-state-title">Sin resultados para «<span th:text="${query}"></span>»</div>
+            <small class="empty-state-hint">Prueba con parte del nombre, el número de factura o el código de lote.</small>
         </div>
-        <div th:if="${resultados.isEmpty()}" class="empty-state">
-            <i class="bi bi-search"></i>
-            <p>Sin resultados para "<span th:text="${query}"></span>"</p>
+        <div th:if="${resultados.isEmpty() and (query == null or query.isEmpty())}" class="empty-state empty-state-compact">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <div class="empty-state-title">Escribe qué quieres buscar</div>
+            <small class="empty-state-hint">Busca a la vez en clientes, artículos, facturas, recetas y lotes.</small>
         </div>
     </div>
 </div>

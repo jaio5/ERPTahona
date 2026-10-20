@@ -1,42 +1,69 @@
 <div th:fragment="content">
     <div class="page-header">
-        <div class="page-header-title"><h4 th:text="${titulo}">Detalle de merma</h4></div>
+        <div class="page-header-title">
+            <h1 th:text="${titulo}">Detalle de merma</h1>
+            <p th:if="${merma.fecha != null}">
+                <span th:text="${#temporals.format(merma.fecha, 'dd/MM/yyyy')}">01/10/2026</span>
+            </p>
+        </div>
         <div class="page-header-actions">
-            <a th:href="@{/web/mermas}" class="btn btn-ghost btn-sm">Volver</a>
+            <a th:href="@{/web/mermas}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
         </div>
     </div>
-    <div class="form-card">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <span class="doc-field-label">Fecha</span>
-                <div class="doc-field-value" th:text="${#temporals.format(merma.fecha, 'dd/MM/yyyy')}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Artículo</span>
-                <div class="doc-field-value" th:text="${merma.articulo?.nombre ?: '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Cantidad</span>
-                <div class="doc-field-value" th:text="${merma.cantidad ?: '—'}">—</div>
-            </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Tipo</span>
-                <div class="doc-field-value">
-                    <span class="badge-status" th:attr="data-status=${merma.tipo?.toLowerCase()}" th:text="${merma.tipo} ?: '—'"></span>
+
+    <div class="doc-card form-card-narrow">
+        <div class="doc-card-header">
+            <div class="doc-header-icon warning" aria-hidden="true"><i class="bi bi-trash3"></i></div>
+            <div>
+                <div class="doc-card-title" th:text="${merma.articulo?.nombre ?: 'Sin artículo'}">Barra de pan</div>
+                <div class="doc-card-meta" th:switch="${merma.tipo}">
+                    <span th:case="'PRODUCCION'">Merma de producción</span>
+                    <span th:case="'REPARTO'">Merma de reparto</span>
+                    <span th:case="'STOCK'">Merma de stock</span>
+                    <span th:case="'CADUCIDAD'">Merma por caducidad</span>
+                    <span th:case="*" th:text="${merma.tipo ?: 'Tipo sin indicar'}">Tipo sin indicar</span>
                 </div>
             </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Motivo</span>
-                <div class="doc-field-value" th:text="${merma.motivo ?: '—'}">—</div>
+        </div>
+
+        <div class="doc-summary mb-4">
+            <div>
+                <span class="doc-field-label">Cantidad</span>
+                <div class="doc-field-value"
+                     th:text="${merma.cantidad != null ? #numbers.formatDecimal(merma.cantidad, 1, 'POINT', 2, 'COMMA') + (merma.articulo?.unidad != null ? ' ' + merma.articulo.unidad : '') : '—'}">0,00</div>
             </div>
-            <div class="col-md-4">
-                <span class="doc-field-label">Responsable</span>
-                <div class="doc-field-value" th:text="${merma.responsable ?: '—'}">—</div>
+            <div>
+                <span class="doc-field-label">Fecha</span>
+                <div class="doc-field-value"
+                     th:text="${merma.fecha != null ? #temporals.format(merma.fecha, 'dd/MM/yyyy') : '—'}">01/10/2026</div>
             </div>
-            <div class="col-12" th:if="${merma.observaciones}">
-                <span class="doc-field-label">Observaciones</span>
-                <div class="doc-field-value text-muted" th:text="${merma.observaciones}">—</div>
-            </div>
+        </div>
+
+        <div class="doc-fields">
+            <table class="doc-table">
+                <tr>
+                    <th scope="row">Artículo</th>
+                    <td>
+                        <a th:if="${merma.articulo != null}" th:href="@{/web/articulos/{id}(id=${merma.articulo.id})}"
+                           th:text="${merma.articulo.nombre}">Artículo</a>
+                        <span th:if="${merma.articulo == null}">—</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Motivo</th>
+                    <td th:text="${merma.motivo ?: '—'}">—</td>
+                </tr>
+                <tr>
+                    <th scope="row">Responsable</th>
+                    <td th:text="${merma.responsable ?: '—'}">—</td>
+                </tr>
+                <tr th:if="${merma.observaciones}">
+                    <th scope="row">Observaciones</th>
+                    <td class="text-muted" th:text="${merma.observaciones}">—</td>
+                </tr>
+            </table>
         </div>
     </div>
 </div>

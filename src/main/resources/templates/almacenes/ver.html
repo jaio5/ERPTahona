@@ -1,51 +1,68 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Almacén</h4>
+            <h1 th:text="${titulo}">Almacén</h1>
+            <p>
+                <span class="badge-estado"
+                      th:classappend="${almacen.activo != false} ? 'badge-estado-ok' : 'badge-estado-neutro'"
+                      th:text="${almacen.activo != false ? 'Activo' : 'Inactivo'}">Activo</span>
+                <span th:text="${almacen.codigo}">ALM-01</span>
+            </p>
         </div>
         <div class="page-header-actions">
-            <a th:href="@{/web/almacenes/{id}/editar(id=${almacen.id})}" class="btn btn-outline-primary btn-sm">Editar</a>
-            <a th:href="@{/web/almacenes}" class="btn btn-ghost btn-sm">Volver</a>
+            <a th:href="@{/web/almacenes}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
+            <a th:href="@{/web/almacenes/{id}/editar(id=${almacen.id})}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar almacén
+            </a>
         </div>
     </div>
-    <div class="form-card">
+
+    <div class="doc-card form-card-narrow">
+        <div class="doc-card-header">
+            <div class="doc-header-icon" aria-hidden="true"><i class="bi bi-building"></i></div>
+            <div>
+                <div class="doc-card-title" th:text="${almacen.nombre ?: almacen.codigo}">Obrador</div>
+                <div class="doc-card-meta" th:text="${almacen.localidad ?: 'Sin localidad'}">Alicante</div>
+            </div>
+        </div>
+
+        <div class="doc-summary mb-4">
+            <div>
+                <span class="doc-field-label">Capacidad</span>
+                <div class="doc-field-value"
+                     th:text="${almacen.capacidad != null ? #numbers.formatDecimal(almacen.capacidad, 1, 'POINT', 2, 'COMMA') : '—'}">0,00</div>
+            </div>
+            <div>
+                <span class="doc-field-label">Disponible</span>
+                <div class="doc-field-value"
+                     th:text="${almacen.disponible != null ? #numbers.formatDecimal(almacen.disponible, 1, 'POINT', 2, 'COMMA') : '—'}">0,00</div>
+            </div>
+        </div>
+
         <div class="doc-fields">
             <table class="doc-table">
-            <tr>
-                <th scope="row">Código</th>
-                <td th:text="${almacen.codigo}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Nombre</th>
-                <td th:text="${almacen.nombre ?: '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Capacidad</th>
-                <td th:text="${almacen.capacidad ?: '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Disponible</th>
-                <td th:text="${almacen.disponible ?: '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Localidad</th>
-                <td th:text="${almacen.localidad ?: '—'}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Responsable</th>
-                <td th:text="${almacen.responsable ?: '—'}">—</td>
-            </tr>
-            <tr th:if="${almacen.descripcion}">
-                <th scope="row">Descripción</th>
-                <td class="text-muted" th:text="${almacen.descripcion}">—</td>
-            </tr>
-            <tr>
-                <th scope="row">Estado</th>
-                <td>
-                    <span class="badge-status" th:attr="data-status=${almacen.activo ? 'activo' : 'anulada'}"
-                          th:text="${almacen.activo ? 'Activo' : 'Inactivo'}">—</span>
-                </td>
-            </tr>
+                <tr>
+                    <th scope="row">Código</th>
+                    <td th:text="${almacen.codigo}">—</td>
+                </tr>
+                <tr>
+                    <th scope="row">Nombre</th>
+                    <td th:text="${almacen.nombre ?: '—'}">—</td>
+                </tr>
+                <tr>
+                    <th scope="row">Localidad</th>
+                    <td th:text="${almacen.localidad ?: '—'}">—</td>
+                </tr>
+                <tr>
+                    <th scope="row">Responsable</th>
+                    <td th:text="${almacen.responsable ?: '—'}">—</td>
+                </tr>
+                <tr th:if="${almacen.descripcion}">
+                    <th scope="row">Descripción</th>
+                    <td class="text-muted" th:text="${almacen.descripcion}">—</td>
+                </tr>
             </table>
         </div>
     </div>

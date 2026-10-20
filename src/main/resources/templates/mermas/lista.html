@@ -1,53 +1,83 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Mermas</h4>
+            <h1 th:text="${titulo}">Mermas</h1>
+            <p>Producto perdido en producción, reparto, stock o por caducidad</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/mermas/nueva}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nueva merma
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva merma
             </a>
         </div>
     </div>
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
-    <form class="filter-bar mb-3" method="get">
-        <select name="tipo" class="form-select form-select-sm" style="max-width:180px;" data-autosubmit aria-label="Filtrar por tipo">
-            <option value="">Todos los tipos</option>
-            <option value="PRODUCCION" th:selected="${tipo == 'PRODUCCION'}">Producción</option>
-            <option value="REPARTO" th:selected="${tipo == 'REPARTO'}">Reparto</option>
-            <option value="STOCK" th:selected="${tipo == 'STOCK'}">Stock</option>
-            <option value="CADUCIDAD" th:selected="${tipo == 'CADUCIDAD'}">Caducidad</option>
-        </select>
+
+    <!-- Los mensajes exito/error salen como toast desde el layout.
+         Sin buscador de servidor: app.js añade aquí el buscador en vivo de la tabla. -->
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/mermas}">
+        <div class="filter-bar-filters">
+            <select name="tipo" class="form-select form-select-sm" data-autosubmit aria-label="Filtrar por tipo">
+                <option value="">Todos los tipos</option>
+                <option value="PRODUCCION" th:selected="${tipo == 'PRODUCCION'}">Producción</option>
+                <option value="REPARTO" th:selected="${tipo == 'REPARTO'}">Reparto</option>
+                <option value="STOCK" th:selected="${tipo == 'STOCK'}">Stock</option>
+                <option value="CADUCIDAD" th:selected="${tipo == 'CADUCIDAD'}">Caducidad</option>
+            </select>
+        </div>
+        <div class="filter-bar-actions" th:if="${tipo != null and !tipo.isEmpty()}">
+            <a th:href="@{/web/mermas}" class="btn btn-ghost btn-sm">Limpiar</a>
+        </div>
     </form>
+
     <div class="table-card">
         <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Artículo</th>
-                    <th>Cantidad</th>
-                    <th>Tipo</th>
-                    <th>Motivo</th>
-                    <th>Responsable</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:if="${#lists.isEmpty(mermas)}">
-                    <td colspan="7" class="empty-state"><i class="bi bi-trash3"></i><div>No hay mermas registradas</div></td>
-                </tr>
-                <tr th:each="m : ${mermas}">
-                    <td th:text="${m.fecha}"></td>
-                    <td th:text="${m.articulo?.nombre}"></td>
-                    <td th:text="${m.cantidad}"></td>
-                    <td><span class="badge-status" th:attr="data-status=${m.tipo?.toLowerCase()}" th:text="${m.tipo} ?: '-'"></span></td>
-                    <td th:text="${m.motivo} ?: '-'"></td>
-                    <td th:text="${m.responsable} ?: '-'"></td>
-                    <td class="text-end"><a th:href="@{/web/mermas/{id}(id=${m.id})}" class="btn btn-ghost btn-sm" title="Ver detalle"><i class="bi bi-eye"></i></a></td>
-                </tr>
-            </tbody>
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Artículo</th>
+                        <th class="cifra">Cantidad</th>
+                        <th>Tipo</th>
+                        <th class="d-none d-md-table-cell">Motivo</th>
+                        <th class="d-none d-lg-table-cell">Responsable</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(mermas)}">
+                        <td colspan="7" class="empty-state">
+                            <i class="bi bi-trash3" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay mermas registradas</div>
+                            <small class="empty-state-hint" th:if="${tipo != null and !tipo.isEmpty()}">Prueba con otro tipo.</small>
+                            <small class="empty-state-hint" th:unless="${tipo != null and !tipo.isEmpty()}">Anota aquí el pan quemado, roto o caducado para controlar las pérdidas.</small>
+                            <a th:href="@{/web/mermas/nueva}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva merma
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:each="m : ${mermas}">
+                        <td class="text-muted" th:text="${m.fecha != null ? #temporals.format(m.fecha, 'dd/MM/yyyy') : '—'}">01/10/2026</td>
+                        <td th:text="${m.articulo?.nombre ?: '—'}">Barra de pan</td>
+                        <td class="cifra fw-medium"
+                            th:text="${m.cantidad != null ? #numbers.formatDecimal(m.cantidad, 1, 'POINT', 2, 'COMMA') : '—'}">0,00</td>
+                        <td th:switch="${m.tipo}">
+                            <span th:case="'PRODUCCION'">Producción</span>
+                            <span th:case="'REPARTO'">Reparto</span>
+                            <span th:case="'STOCK'">Stock</span>
+                            <span th:case="'CADUCIDAD'">Caducidad</span>
+                            <span th:case="*" class="text-muted" th:text="${m.tipo ?: '—'}">—</span>
+                        </td>
+                        <td class="text-muted d-none d-md-table-cell" th:text="${m.motivo ?: '—'}">Quemado</td>
+                        <td class="text-muted d-none d-lg-table-cell" th:text="${m.responsable ?: '—'}">—</td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/mermas/{id}(id=${m.id})}" class="btn btn-ghost btn-sm btn-icon"
+                                   th:attr="aria-label='Ver merma de ' + ${m.articulo?.nombre ?: 'artículo'}" title="Ver">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         </div>
     </div>

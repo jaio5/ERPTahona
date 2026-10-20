@@ -1,93 +1,158 @@
 <div th:fragment="content" x-data="inventarioApp" x-cloak>
     <div class="page-header">
         <div class="page-header-title">
-            <h4>Reportes de inventario</h4>
+            <h1>Reportes de inventario</h1>
+            <p>Valoración a coste, movimientos de almacén y ajustes manuales</p>
         </div>
         <div class="page-header-actions">
-            <button class="btn btn-ghost btn-sm" @click="setTab('valoracion')" :class="tabClass('valoracion')">Valoración</button>
-            <button class="btn btn-ghost btn-sm" @click="setTab('movimientos')" :class="tabClass('movimientos')">Movimientos</button>
-            <button class="btn btn-ghost btn-sm" @click="setTab('ajustar')" :class="tabClass('ajustar')">Ajustar stock</button>
+            <a th:href="@{/web/reportes}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
+            </a>
         </div>
     </div>
 
+    <!-- Pestañas: el estado activo lo pinta tabClass() ('active' sobre nav-link) -->
+    <nav class="nav nav-pills gap-1 mb-3" aria-label="Secciones del inventario">
+        <button type="button" class="nav-link" @click="setTab('valoracion')" :class="tabClass('valoracion')" :aria-pressed="isTab('valoracion')">
+            <i class="bi bi-cash-coin me-1" aria-hidden="true"></i>Valoración
+        </button>
+        <button type="button" class="nav-link" @click="setTab('movimientos')" :class="tabClass('movimientos')" :aria-pressed="isTab('movimientos')">
+            <i class="bi bi-arrow-left-right me-1" aria-hidden="true"></i>Movimientos
+        </button>
+        <button type="button" class="nav-link" @click="setTab('ajustar')" :class="tabClass('ajustar')" :aria-pressed="isTab('ajustar')">
+            <i class="bi bi-sliders me-1" aria-hidden="true"></i>Ajustar stock
+        </button>
+    </nav>
+
     <!-- Valoración -->
-    <div x-show="isTab('valoracion')" class="stat-card">
-        <h6 class="mb-3">Valoración de inventario</h6>
-        <div class="mb-3">
-            <strong>Valor total: </strong><span x-text="money(totalValor)"></span>
+    <div x-show="isTab('valoracion')">
+        <div class="row g-3 mb-3">
+            <div class="col-sm-6 col-lg-4">
+                <div class="stat-card h-100">
+                    <div class="stat-label"><i class="bi bi-cash-stack" aria-hidden="true"></i>Valor total del inventario</div>
+                    <div class="stat-value" x-text="money(totalValor)"></div>
+                    <div class="stat-sub" x-text="items.length + ' artículos'"></div>
+                </div>
+            </div>
         </div>
-        <table class="table table-sm">
-            <thead><tr><th>Código</th><th>Artículo</th><th class="text-end">Stock</th><th class="text-end">Coste</th><th class="text-end">Valor</th></tr></thead>
-            <tbody>
-                <template x-for="i in items" :key="i.id">
-                    <tr>
-                        <td x-text="i.codigo"></td>
-                        <td x-text="i.nombre"></td>
-                        <td class="text-end" x-text="i.stock"></td>
-                        <td class="text-end" x-text="i.coste"></td>
-                        <td class="text-end" x-text="money(i.valor)"></td>
-                    </tr>
-                </template>
-                <tr x-show="items.length === 0">
-                    <td colspan="5" class="empty-state"><i class="bi bi-box-seam"></i><div>Sin datos de inventario</div></td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="table-card">
+            <div class="table-card-header">
+                <h2 class="table-card-title">Valoración de inventario</h2>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th class="d-none d-md-table-cell">Código</th>
+                            <th>Artículo</th>
+                            <th class="cifra">Stock</th>
+                            <th class="cifra">Coste</th>
+                            <th class="cifra">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="i in items" :key="i.id">
+                            <tr>
+                                <td class="text-muted d-none d-md-table-cell" x-text="i.codigo"></td>
+                                <td x-text="i.nombre"></td>
+                                <td class="cifra" x-text="i.stock"></td>
+                                <td class="cifra" x-text="i.coste"></td>
+                                <td class="cifra fw-medium" x-text="money(i.valor)"></td>
+                            </tr>
+                        </template>
+                        <tr x-show="items.length === 0">
+                            <td colspan="5" class="empty-state">
+                                <i class="bi bi-box-seam" aria-hidden="true"></i>
+                                <div class="empty-state-title">Sin datos de inventario</div>
+                                <small class="empty-state-hint">Aparecen los artículos con stock y coste registrados.</small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Movimientos -->
     <div x-show="isTab('movimientos')">
-        <div class="stat-card mb-3">
-            <div class="d-flex gap-2 align-items-center">
-                <label>Desde: <input type="date" x-model="desde" class="form-control form-control-sm d-inline" style="width:auto"></label>
-                <label>Hasta: <input type="date" x-model="hasta" class="form-control form-control-sm d-inline" style="width:auto"></label>
-                <button class="btn btn-sm btn-primary" @click="cargarMovimientos()">Filtrar</button>
+        <div class="table-card">
+            <div class="filter-bar">
+                <div class="filter-bar-filters">
+                    <label class="form-label mb-0" for="inv-desde">Desde</label>
+                    <input type="date" id="inv-desde" x-model="desde" class="form-control form-control-sm">
+                    <label class="form-label mb-0" for="inv-hasta">Hasta</label>
+                    <input type="date" id="inv-hasta" x-model="hasta" class="form-control form-control-sm">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="cargarMovimientos()">
+                        <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar
+                    </button>
+                </div>
             </div>
-        </div>
-        <div class="stat-card">
-            <table class="table table-sm">
-                <thead><tr><th>Fecha</th><th>Tipo</th><th>Artículo</th><th class="text-end">Cantidad</th><th>Concepto</th></tr></thead>
-                <tbody>
-                    <template x-for="m in movimientos" :key="m.id">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0">
+                    <thead>
                         <tr>
-                            <td x-text="fechaCorta(m.fecha)"></td>
-                            <td><span class="badge" :class="badgeMovimiento(m.tipo)" x-text="m.tipo"></span></td>
-                            <td x-text="nombreArticulo(m)"></td>
-                            <td class="text-end" x-text="m.cantidad"></td>
-                            <td x-text="m.concepto"></td>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Artículo</th>
+                            <th class="cifra">Cantidad</th>
+                            <th class="d-none d-md-table-cell">Concepto</th>
                         </tr>
-                    </template>
-                    <tr x-show="movimientos.length === 0">
-                        <td colspan="5" class="empty-state"><i class="bi bi-arrow-left-right"></i><div>Sin movimientos en el período</div></td>
-                    </tr>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <template x-for="m in movimientos" :key="m.id">
+                            <tr>
+                                <td class="text-muted" x-text="fechaCorta(m.fecha)"></td>
+                                <td><span class="badge-estado" :class="badgeMovimiento(m.tipo)" x-text="m.tipo"></span></td>
+                                <td x-text="nombreArticulo(m)"></td>
+                                <td class="cifra" x-text="m.cantidad"></td>
+                                <td class="td-wrap d-none d-md-table-cell" x-text="m.concepto"></td>
+                            </tr>
+                        </template>
+                        <tr x-show="movimientos.length === 0">
+                            <td colspan="5" class="empty-state">
+                                <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+                                <div class="empty-state-title">Sin movimientos en el período</div>
+                                <small class="empty-state-hint">Amplía el rango de fechas y pulsa «Filtrar».</small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Ajustar stock -->
-    <div x-show="isTab('ajustar')" class="stat-card" style="max-width:500px">
-        <h6 class="mb-3">Ajuste manual de stock</h6>
-        <div class="form-grid">
-            <div class="form-field">
-                <label>Artículo</label>
-                <select class="form-select" x-model="ajuste.articuloId">
-                    <option value="">Seleccionar...</option>
-                    <template x-for="a in lookups.articuloId" :key="a.id">
-                        <option :value="a.id" x-text="a.label"></option>
-                    </template>
-                </select>
-            </div>
-            <div class="form-field">
-                <label>Nueva cantidad</label>
-                <input type="number" class="form-control" x-model="ajuste.cantidadNueva">
-            </div>
-            <div class="form-field">
-                <label>Motivo</label>
-                <input type="text" class="form-control" x-model="ajuste.motivo">
+    <div x-show="isTab('ajustar')">
+        <div class="form-card form-card-narrow">
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-sliders" aria-hidden="true"></i>Ajuste manual de stock</h2>
+                <p class="form-section-hint">Fija la cantidad real tras un recuento. Queda registrado como movimiento de ajuste.</p>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="ajuste-articulo">Artículo *</label>
+                        <select id="ajuste-articulo" class="form-select" x-model="ajuste.articuloId">
+                            <option value="">Seleccionar...</option>
+                            <template x-for="a in lookups.articuloId" :key="a.id">
+                                <option :value="a.id" x-text="a.label"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="col-sm-5">
+                        <label class="form-label" for="ajuste-cantidad">Nueva cantidad *</label>
+                        <input type="number" id="ajuste-cantidad" class="form-control text-end" x-model="ajuste.cantidadNueva" inputmode="decimal">
+                    </div>
+                    <div class="col-sm-7">
+                        <label class="form-label" for="ajuste-motivo">Motivo</label>
+                        <input type="text" id="ajuste-motivo" class="form-control" x-model="ajuste.motivo" placeholder="Recuento, merma, rotura…">
+                    </div>
+                </div>
+            </section>
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" @click="ajustarStock()">
+                    <i class="bi bi-check2 me-1" aria-hidden="true"></i>Aplicar ajuste
+                </button>
             </div>
         </div>
-        <button class="btn btn-primary mt-3" @click="ajustarStock()">Aplicar ajuste</button>
     </div>
 
     <script th:attr="nonce=${cspNonce}">
@@ -117,10 +182,11 @@
                 },
                 isTab(name) { return this.tab === name; },
                 setTab(name) { this.tab = name; },
-                tabClass(name) { return this.tab === name ? 'btn-primary' : ''; },
+                tabClass(name) { return this.tab === name ? 'active' : ''; },
                 money(value) { return formatMoneyEs(value); },
                 fechaCorta(fecha) { return fecha ? String(fecha).substring(0, 10) : ''; },
-                badgeMovimiento(tipo) { return tipo === 'ENTRADA' ? 'bg-success' : 'bg-danger'; },
+                // Familias de la guía: entrada ok, ajuste aviso, salida neutro (no es un error)
+                badgeMovimiento(tipo) { return tipo === 'ENTRADA' ? 'badge-estado-ok' : (tipo === 'AJUSTE' ? 'badge-estado-aviso' : 'badge-estado-neutro'); },
                 nombreArticulo(m) { return m.articulo ? m.articulo.nombre : String(m.articuloId || ''); },
                 cargarMovimientos() {
                     fetch('/api/web/reportes/inventario/movimientos?desde=' + this.desde + '&hasta=' + this.hasta)

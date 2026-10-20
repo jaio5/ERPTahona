@@ -1,70 +1,112 @@
 <div th:fragment="content" x-data="planificadorApp" x-cloak>
     <div class="page-header">
         <div class="page-header-title">
-            <h4>Planificador diario</h4>
+            <h1>Planificador diario</h1>
+            <p>Qué hay que elaborar y servir el <span x-text="fechaLegible()"></span></p>
         </div>
         <div class="page-header-actions d-print-none">
-            <input type="date" class="form-control form-control-sm" x-model="fecha" @change="cargar()" style="width:auto;">
-            <button class="btn btn-primary btn-sm" @click="irHoy()">Hoy</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnImprimirObrador">
-                <i class="bi bi-printer me-1"></i>Imprimir
+            <label for="planificador-fecha" class="visually-hidden">Fecha</label>
+            <input type="date" id="planificador-fecha" class="form-control form-control-sm w-auto" x-model="fecha" @change="cargar()">
+            <button type="button" class="btn btn-outline-secondary btn-sm" @click="irHoy()">Hoy</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btnImprimirObrador">
+                <i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir hoja de obrador
             </button>
         </div>
     </div>
 
+    <!-- Resumen del día: pedidos, albaranes y órdenes enlazados a su ficha -->
     <div class="row g-3 mb-4 d-print-none">
         <div class="col-md-4">
-            <div class="stat-card">
-                <h6 class="mb-2">Pedidos (<span x-text="pedidos.length"></span>)</h6>
-                <template x-for="p in pedidos" :key="p.id">
-                    <div class="mb-1 p-1 border rounded small">
-                        <div class="fw-bold" x-text="p.numero"></div>
-                        <div x-text="(p.cliente || 'Sin cliente') + ' - ' + (p.estado || '')"></div>
-                    </div>
-                </template>
-                <div x-show="pedidos.length === 0" class="text-muted small">Sin pedidos</div>
-            </div>
+            <section class="form-card h-100">
+                <div class="card-title-row">
+                    <h2 class="card-heading"><i class="bi bi-bag" aria-hidden="true"></i>Pedidos</h2>
+                    <span class="badge badge-count" x-text="pedidos.length"></span>
+                </div>
+                <nav class="link-list" aria-label="Pedidos del día" x-show="pedidos.length > 0">
+                    <template x-for="p in pedidos" :key="p.id">
+                        <a :href="'/web/pedidos-venta/' + p.id">
+                            <span class="flex-grow-1 text-truncate">
+                                <span class="fw-semibold" x-text="p.numero"></span>
+                                <small class="text-muted ms-1" x-text="p.cliente || 'Sin cliente'"></small>
+                            </span>
+                            <span class="badge-status" :data-status="p.estado" x-text="p.estado" x-show="p.estado"></span>
+                        </a>
+                    </template>
+                </nav>
+                <div x-show="pedidos.length === 0" class="empty-state empty-state-compact">
+                    <i class="bi bi-bag" aria-hidden="true"></i>
+                    <div class="empty-state-title">Sin pedidos</div>
+                    <small class="empty-state-hint">No hay pedidos de venta para esta fecha.</small>
+                </div>
+            </section>
         </div>
         <div class="col-md-4">
-            <div class="stat-card">
-                <h6 class="mb-2">Albaranes (<span x-text="albaranes.length"></span>)</h6>
-                <template x-for="a in albaranes" :key="a.id">
-                    <div class="mb-1 p-1 border rounded small">
-                        <div class="fw-bold" x-text="a.numero"></div>
-                        <div x-text="a.cliente || 'Sin cliente'"></div>
-                    </div>
-                </template>
-                <div x-show="albaranes.length === 0" class="text-muted small">Sin albaranes</div>
-            </div>
+            <section class="form-card h-100">
+                <div class="card-title-row">
+                    <h2 class="card-heading"><i class="bi bi-truck" aria-hidden="true"></i>Albaranes</h2>
+                    <span class="badge badge-count" x-text="albaranes.length"></span>
+                </div>
+                <nav class="link-list" aria-label="Albaranes del día" x-show="albaranes.length > 0">
+                    <template x-for="a in albaranes" :key="a.id">
+                        <a :href="'/web/albaranes/' + a.id">
+                            <span class="flex-grow-1 text-truncate">
+                                <span class="fw-semibold" x-text="a.numero"></span>
+                                <small class="text-muted ms-1" x-text="a.cliente || 'Sin cliente'"></small>
+                            </span>
+                        </a>
+                    </template>
+                </nav>
+                <div x-show="albaranes.length === 0" class="empty-state empty-state-compact">
+                    <i class="bi bi-truck" aria-hidden="true"></i>
+                    <div class="empty-state-title">Sin albaranes</div>
+                    <small class="empty-state-hint">No hay entregas con albarán para esta fecha.</small>
+                </div>
+            </section>
         </div>
         <div class="col-md-4">
-            <div class="stat-card">
-                <h6 class="mb-2">Órdenes prod. (<span x-text="ordenes.length"></span>)</h6>
-                <template x-for="o in ordenes" :key="o.id">
-                    <div class="mb-1 p-1 border rounded small">
-                        <div class="fw-bold" x-text="o.numero"></div>
-                        <div x-text="(o.receta || 'Sin receta') + ' - ' + (o.estado || '')"></div>
-                    </div>
-                </template>
-                <div x-show="ordenes.length === 0" class="text-muted small">Sin órdenes</div>
-            </div>
+            <section class="form-card h-100">
+                <div class="card-title-row">
+                    <h2 class="card-heading"><i class="bi bi-gear" aria-hidden="true"></i>Órdenes de producción</h2>
+                    <span class="badge badge-count" x-text="ordenes.length"></span>
+                </div>
+                <nav class="link-list" aria-label="Órdenes de producción del día" x-show="ordenes.length > 0">
+                    <template x-for="o in ordenes" :key="o.id">
+                        <a :href="'/web/ordenes-produccion/' + o.id">
+                            <span class="flex-grow-1 text-truncate">
+                                <span class="fw-semibold" x-text="o.numero"></span>
+                                <small class="text-muted ms-1" x-text="o.receta || 'Sin receta'"></small>
+                            </span>
+                            <span class="badge-status" :data-status="o.estado" x-text="o.estado" x-show="o.estado"></span>
+                        </a>
+                    </template>
+                </nav>
+                <div x-show="ordenes.length === 0" class="empty-state empty-state-compact">
+                    <i class="bi bi-gear" aria-hidden="true"></i>
+                    <div class="empty-state-title">Sin órdenes</div>
+                    <a th:href="@{/web/ordenes-produccion/nuevo}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva orden
+                    </a>
+                </div>
+            </section>
         </div>
     </div>
 
     <!-- Hoja de obrador: cantidades a elaborar por artículo -->
-    <div class="table-card mt-4 hoja-obrador">
-        <div class="form-section-title mb-3">
-            <i class="bi bi-clipboard-check"></i> Hoja de obrador
-            <span class="text-muted small ms-1" x-text="fechaLegible()"></span>
+    <div class="table-card mb-4 hoja-obrador">
+        <div class="table-card-header">
+            <h2 class="table-card-title">
+                <i class="bi bi-clipboard-check me-1" aria-hidden="true"></i>Hoja de obrador
+                <span class="text-muted fw-normal ms-1" x-text="fechaLegible()"></span>
+            </h2>
         </div>
         <div class="table-responsive" x-show="aProducir.length > 0">
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
                         <th scope="col">Artículo</th>
-                        <th scope="col" class="text-end">Pedido total</th>
-                        <th scope="col" class="text-end">Stock</th>
-                        <th scope="col" class="text-end">A elaborar</th>
+                        <th scope="col" class="cifra d-none d-md-table-cell">Pedido total</th>
+                        <th scope="col" class="cifra d-none d-md-table-cell">Stock</th>
+                        <th scope="col" class="cifra">A elaborar</th>
                         <th scope="col">Desglose por cliente</th>
                     </tr>
                 </thead>
@@ -72,36 +114,59 @@
                     <template x-for="a in aProducir" :key="a.articuloId">
                         <tr>
                             <td class="fw-semibold" x-text="a.nombre"></td>
-                            <td class="text-end" x-text="cant(a.total)"></td>
-                            <td class="text-end text-muted" x-text="cant(a.stock)"></td>
-                            <td class="text-end fw-bold" x-text="cant(a.aElaborar)"></td>
-                            <td class="small" x-text="desglose(a.desglose)"></td>
+                            <td class="cifra d-none d-md-table-cell" x-text="cant(a.total)"></td>
+                            <td class="cifra text-muted d-none d-md-table-cell" x-text="cant(a.stock)"></td>
+                            <td class="cifra fw-bold" x-text="cant(a.aElaborar)"></td>
+                            <td class="small td-wrap" x-text="desglose(a.desglose)"></td>
                         </tr>
                     </template>
                 </tbody>
             </table>
         </div>
-        <div x-show="aProducir.length === 0" class="text-muted small">No hay pedidos para esta fecha</div>
+        <div x-show="aProducir.length === 0" class="empty-state empty-state-compact">
+            <i class="bi bi-clipboard-check" aria-hidden="true"></i>
+            <div class="empty-state-title">No hay pedidos para esta fecha</div>
+            <small class="empty-state-hint">Elige otro día en el selector de fecha de la cabecera.</small>
+        </div>
     </div>
 
-    <div class="table-card mt-4">
-        <div class="form-section-title mb-3"><i class="bi bi-box-seam"></i> Necesidades de materia prima</div>
-        <div class="table-responsive">
+    <div class="table-card">
+        <div class="table-card-header">
+            <h2 class="table-card-title"><i class="bi bi-box-seam me-1" aria-hidden="true"></i>Necesidades de materia prima</h2>
+        </div>
+        <div class="table-responsive" x-show="necesidades.length > 0">
             <table class="table table-hover mb-0">
-                <thead><tr><th>Artículo</th><th class="text-end">Necesario</th><th class="text-end">Stock</th><th class="text-end">Diferencia</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th scope="col">Artículo</th>
+                        <th scope="col" class="cifra">Necesario</th>
+                        <th scope="col" class="cifra d-none d-md-table-cell">Stock</th>
+                        <th scope="col" class="cifra">Diferencia</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <template x-for="n in necesidades" :key="n.articuloId">
                         <tr>
                             <td x-text="n.nombre"></td>
-                            <td class="text-end" x-text="n.necesario"></td>
-                            <td class="text-end" x-text="n.stock"></td>
-                            <td class="text-end" :class="n.diferencia < 0 ? 'text-danger fw-bold' : 'text-success'" x-text="n.diferencia"></td>
+                            <td class="cifra" x-text="cant(n.necesario)"></td>
+                            <td class="cifra d-none d-md-table-cell" x-text="cant(n.stock)"></td>
+                            <td class="cifra" :class="n.diferencia < 0 ? 'text-danger fw-bold' : 'text-success'" x-text="cant(n.diferencia)"></td>
+                            <td>
+                                <!-- El estado también va en texto, no solo en color -->
+                                <span class="badge-estado badge-estado-peligro" x-show="n.diferencia < 0">Falta</span>
+                                <span class="badge-estado badge-estado-ok" x-show="!(n.diferencia < 0)">Cubierto</span>
+                            </td>
                         </tr>
                     </template>
                 </tbody>
             </table>
         </div>
-        <div x-show="necesidades.length === 0" class="text-muted small">Sin necesidades calculadas</div>
+        <div x-show="necesidades.length === 0" class="empty-state empty-state-compact">
+            <i class="bi bi-box-seam" aria-hidden="true"></i>
+            <div class="empty-state-title">Sin necesidades calculadas</div>
+            <small class="empty-state-hint">Se calculan a partir de las recetas de las órdenes del día.</small>
+        </div>
     </div>
 
     <!-- Impresión en A4: solo el contenido del planificador, sin menú, topbar ni controles -->
@@ -114,6 +179,8 @@
             .table-responsive { overflow: visible !important; }
             .hoja-obrador table { font-size: 11pt; }
             .hoja-obrador tr { break-inside: avoid; }
+            /* En papel se imprimen todas las columnas aunque en pantalla estrecha se oculten */
+            .hoja-obrador .d-none { display: table-cell !important; }
         }
     </style>
 

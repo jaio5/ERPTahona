@@ -1,49 +1,62 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Vehículo</h4>
+            <h1 th:text="${titulo}">Vehículo</h1>
+            <p>Flota de reparto</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/vehiculos}" class="btn btn-ghost btn-sm">
-                <i class="bi bi-arrow-left me-1"></i>Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Volver
             </a>
         </div>
     </div>
 
-    <div class="form-card" style="max-width:700px;">
+    <div class="form-card form-card-narrow">
         <form th:action="@{/web/vehiculos}" method="post" class="needs-validation" novalidate>
             <input type="hidden" name="id" th:value="${vehiculo?.id}">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label" for="matricula">Matrícula <span class="text-danger">*</span></label>
-                    <input type="text" id="matricula" name="matricula" class="form-control"
-                           th:value="${vehiculo?.matricula}" required style="text-transform:uppercase;">
-                    <div class="invalid-feedback">La matrícula es obligatoria.</div>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-truck" aria-hidden="true"></i>Identificación</h2>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="matricula">Matrícula *</label>
+                        <input type="text" id="matricula" name="matricula" class="form-control text-uppercase"
+                               th:value="${vehiculo?.matricula}" required autocomplete="off" placeholder="1234 ABC">
+                        <div class="invalid-feedback">La matrícula es obligatoria.</div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <label class="form-label" for="marca">Marca</label>
+                        <input type="text" id="marca" name="marca" class="form-control"
+                               th:value="${vehiculo?.marca}">
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <label class="form-label" for="modelo">Modelo</label>
+                        <input type="text" id="modelo" name="modelo" class="form-control"
+                               th:value="${vehiculo?.modelo}">
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="marca">Marca</label>
-                    <input type="text" id="marca" name="marca" class="form-control"
-                           th:value="${vehiculo?.marca}">
+            </section>
+
+            <section class="form-section">
+                <h2 class="form-section-title"><i class="bi bi-box-seam" aria-hidden="true"></i>Carga</h2>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="form-label" for="tipo">Tipo</label>
+                        <input type="text" id="tipo" name="tipo" class="form-control"
+                               th:value="${vehiculo?.tipo}" placeholder="Furgoneta, camión…">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label" for="capacidad">Capacidad (kg)</label>
+                        <input type="text" inputmode="decimal" id="capacidad" name="capacidad" class="form-control text-end"
+                               th:value="${vehiculo?.capacidadKg}" placeholder="800">
+                        <div class="form-text">Usa punto para los decimales.</div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="modelo">Modelo</label>
-                    <input type="text" id="modelo" name="modelo" class="form-control"
-                           th:value="${vehiculo?.modelo}">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="tipo">Tipo</label>
-                    <input type="text" id="tipo" name="tipo" class="form-control"
-                           th:value="${vehiculo?.tipo}" placeholder="Furgoneta, camión...">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="capacidad">Capacidad (kg)</label>
-                    <input type="text" inputmode="decimal" id="capacidad" name="capacidad" class="form-control"
-                           th:value="${vehiculo?.capacidadKg}">
-                </div>
-            </div>
+            </section>
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary" data-no-double-click>
-                    <i class="bi bi-floppy me-1"></i>Guardar vehículo
+                    <i class="bi bi-floppy me-1" aria-hidden="true"></i>Guardar vehículo
                 </button>
                 <a th:href="@{/web/vehiculos}" class="btn btn-ghost">Cancelar</a>
             </div>

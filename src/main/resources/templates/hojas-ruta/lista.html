@@ -1,34 +1,86 @@
 ﻿<div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Hojas de ruta</h4>
+            <h1 th:text="${titulo}">Hojas de ruta</h1>
+            <p>Repartos diarios y su estado</p>
         </div>
         <div class="page-header-actions">
+            <a th:href="@{/web/rutas}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-signpost-split me-1" aria-hidden="true"></i>Rutas
+            </a>
             <a th:href="@{/web/hojas-ruta/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nueva hoja de ruta
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva hoja de ruta
             </a>
         </div>
     </div>
-    <div th:if="${exito}" class="alert alert-success py-2" th:text="${exito}"></div>
-    <div class="table-card"><div class="table-responsive"><table class="table table-hover mb-0">
-        <thead><tr><th>Fecha</th><th>Conductor</th><th>Estado</th><th style="width:100px;"></th></tr></thead>
-        <tbody>
-            <tr th:if="${#lists.isEmpty(hojas)}">
-                <td colspan="4" class="empty-state">
-                    <i class="bi bi-map"></i>
-                    <div>No hay hojas de ruta</div>
-                </td>
-            </tr>
-            <tr th:each="h : ${hojas}">
-            <td th:text="${h.fecha}"></td><td th:text="${h.conductor}"></td>
-            <td><span class="badge-status" th:attr="data-status=${h.estado?.toLowerCase()}" th:text="${h.estado}"></span></td>
-            <td class="text-end">
-                <a th:href="@{/web/hojas-ruta/{id}(id=${h.id})}" class="btn btn-ghost btn-sm" title="Ver">
-                    <i class="bi bi-eye"></i>
-                </a>
-            </td>
-        </tr></tbody>
-    </table></div></div>
+
+    <form class="filter-bar mb-3" method="get" th:action="@{/web/hojas-ruta}">
+        <div class="filter-bar-filters">
+            <select name="estado" class="form-select form-select-sm" aria-label="Estado" data-autosubmit>
+                <option value="">Todos los estados</option>
+                <option value="PLANIFICADA" th:selected="${param.estado != null and param.estado[0] == 'PLANIFICADA'}">Planificada</option>
+                <option value="EN_CURSO"    th:selected="${param.estado != null and param.estado[0] == 'EN_CURSO'}">En curso</option>
+                <option value="FINALIZADA"  th:selected="${param.estado != null and param.estado[0] == 'FINALIZADA'}">Finalizada</option>
+                <option value="INCIDENCIA"  th:selected="${param.estado != null and param.estado[0] == 'INCIDENCIA'}">Con incidencia</option>
+                <option value="CANCELADA"   th:selected="${param.estado != null and param.estado[0] == 'CANCELADA'}">Cancelada</option>
+            </select>
+        </div>
+        <div class="filter-bar-actions">
+            <button class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar
+            </button>
+            <a th:href="@{/web/hojas-ruta}" class="btn btn-ghost btn-sm">Limpiar</a>
+            <span class="filter-bar-count" th:if="${hojas != null}"><span th:text="${#lists.size(hojas)}">0</span> hojas</span>
+        </div>
+    </form>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Conductor</th>
+                        <th class="d-none d-md-table-cell">Salida</th>
+                        <th>Estado</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(hojas)}">
+                        <td colspan="5" class="empty-state">
+                            <i class="bi bi-map" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay hojas de ruta</div>
+                            <small class="empty-state-hint">Genera la hoja del día desde una ruta maestra.</small>
+                            <a th:href="@{/web/hojas-ruta/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva hoja de ruta
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:each="h : ${hojas}">
+                        <td>
+                            <a th:href="@{/web/hojas-ruta/{id}(id=${h.id})}"
+                               th:text="${h.fecha != null ? #temporals.format(h.fecha, 'dd/MM/yyyy') : h.id}">01/10/2026</a>
+                        </td>
+                        <td th:text="${h.conductor ?: '—'}"></td>
+                        <td class="text-muted d-none d-md-table-cell"
+                            th:text="${h.horaSalida != null ? #temporals.format(h.horaSalida, 'HH:mm') : '—'}"></td>
+                        <td>
+                            <span class="badge-status" th:attr="data-status=${h.estado?.toLowerCase()}" th:text="${h.estado ?: '—'}"></span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/hojas-ruta/{id}(id=${h.id})}" class="btn btn-ghost btn-sm btn-icon" title="Ver"
+                                   th:attr="aria-label='Ver hoja de ruta del ' + ${h.fecha != null ? #temporals.format(h.fecha, 'dd/MM/yyyy') : h.id}">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div th:replace="~{fragments/pagination :: paginacion(${page}, '/web/hojas-ruta')}"></div>
 </div>

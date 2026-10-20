@@ -1,11 +1,12 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Almacenes</h4>
+            <h1 th:text="${titulo}">Almacenes</h1>
+            <p>Lugares donde se guarda el stock</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/almacenes/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nuevo almacén
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo almacén
             </a>
         </div>
     </div>
@@ -13,13 +14,13 @@
     <form class="filter-bar mb-3" method="get" th:action="@{/web/almacenes}">
         <div class="filter-bar-search">
             <label for="almacenes-search" class="visually-hidden">Buscar almacenes</label>
-            <i class="bi bi-search"></i>
+            <i class="bi bi-search" aria-hidden="true"></i>
             <input id="almacenes-search" type="search" name="q" class="form-control form-control-sm"
-                   placeholder="Nombre o código..." th:value="${q}" autocomplete="off">
+                   placeholder="Nombre o código…" th:value="${q}" autocomplete="off">
         </div>
         <div class="filter-bar-actions">
-            <button class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-funnel me-1"></i>Filtrar
+            <button class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar
             </button>
             <a th:href="@{/web/almacenes}" class="btn btn-ghost btn-sm">Limpiar</a>
         </div>
@@ -32,32 +33,42 @@
                     <tr>
                         <th>Código</th>
                         <th>Nombre</th>
-                        <th>Localidad</th>
-                        <th>Capacidad</th>
-                        <th>Responsable</th>
-                        <th style="width:80px;"></th>
+                        <th class="d-none d-md-table-cell">Localidad</th>
+                        <th class="cifra">Capacidad</th>
+                        <th class="d-none d-lg-table-cell">Responsable</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(almacenes)}">
                         <td colspan="6" class="empty-state">
-                            <i class="bi bi-building"></i>
-                            <div>No hay almacenes registrados</div>
-                            <small th:if="${q != null and !q.isEmpty()}">Prueba con otros términos de búsqueda</small>
+                            <i class="bi bi-building" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay almacenes</div>
+                            <small class="empty-state-hint" th:if="${q != null and !q.isEmpty()}">Prueba con otro nombre o código.</small>
+                            <small class="empty-state-hint" th:unless="${q != null and !q.isEmpty()}">Crea uno por cada lugar donde guardas stock: obrador, tienda o cámara.</small>
+                            <a th:href="@{/web/almacenes/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo almacén
+                            </a>
                         </td>
                     </tr>
                     <tr th:each="a : ${almacenes}">
-                        <td class="fw-medium" th:text="${a.codigo}"></td>
-                        <td th:text="${a.nombre}"></td>
-                        <td class="text-muted" th:text="${a.localidad ?: '—'}"></td>
-                        <td class="text-muted" th:text="${a.capacidad != null ? a.capacidad : '—'}"></td>
-                        <td class="text-muted" th:text="${a.responsable ?: '—'}"></td>
-                        <td class="text-end">
-                            <a th:href="@{/web/almacenes/{id}(id=${a.id})}" class="btn btn-ghost btn-sm" title="Ver"><i class="bi bi-eye"></i></a>
-                            <a th:href="@{/web/almacenes/{id}/editar(id=${a.id})}"
-                               class="btn btn-ghost btn-sm" title="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </a>
+                        <td class="text-muted" th:text="${a.codigo}">ALM-01</td>
+                        <td><a th:href="@{/web/almacenes/{id}(id=${a.id})}" th:text="${a.nombre}">Obrador</a></td>
+                        <td class="text-muted d-none d-md-table-cell" th:text="${a.localidad ?: '—'}">Alicante</td>
+                        <td class="cifra"
+                            th:text="${a.capacidad != null ? #numbers.formatDecimal(a.capacidad, 1, 'POINT', 2, 'COMMA') : '—'}">0,00</td>
+                        <td class="text-muted d-none d-lg-table-cell" th:text="${a.responsable ?: '—'}">Responsable</td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/almacenes/{id}(id=${a.id})}" class="btn btn-ghost btn-sm btn-icon"
+                                   th:attr="aria-label='Ver almacén ' + ${a.nombre}" title="Ver">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </a>
+                                <a th:href="@{/web/almacenes/{id}/editar(id=${a.id})}" class="btn btn-ghost btn-sm btn-icon"
+                                   th:attr="aria-label='Editar almacén ' + ${a.nombre}" title="Editar">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

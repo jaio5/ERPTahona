@@ -1,81 +1,93 @@
 <div th:fragment="content">
     <div class="page-header">
         <div class="page-header-title">
-            <h4 th:text="${titulo}">Campos de impresión</h4>
+            <h1 th:text="${titulo}">Campos de impresión</h1>
+            <p>Información extra en facturas y albaranes, sin tocar la plantilla</p>
         </div>
         <div class="page-header-actions">
             <a th:href="@{/web/campos-impresion/nuevo}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Nuevo campo
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo campo
             </a>
         </div>
     </div>
 
-    <p class="text-muted small mb-3">
-        Añade información extra a tus facturas y albaranes sin tocar la plantilla: elige un dato que el
-        ERP rellena solo (registro sanitario, IBAN, código de cliente…) o un campo propio, y decide a qué
-        clientes se imprime.
-    </p>
+    <div class="alert alert-info d-flex align-items-start gap-2" role="status">
+        <i class="bi bi-info-circle-fill mt-1" aria-hidden="true"></i>
+        <div>
+            Elige un dato que el ERP rellena solo (registro sanitario, IBAN, código de cliente…) o un campo
+            propio, y decide a qué clientes se imprime.
+        </div>
+    </div>
 
     <div class="table-card">
         <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead>
-                <tr>
-                    <th>Campo</th>
-                    <th>Valor</th>
-                    <th>Visibilidad</th>
-                    <th>Documento</th>
-                    <th>Zona</th>
-                    <th class="text-center">Activo</th>
-                    <th style="width:110px;"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:if="${#lists.isEmpty(campos)}">
-                    <td colspan="7" class="empty-state">
-                        <i class="bi bi-input-cursor-text"></i>
-                        <div>No hay campos de impresión</div>
-                    </td>
-                </tr>
-                <tr th:each="c : ${campos}">
-                    <td class="fw-medium"
-                        th:text="${c.esSistema()
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Campo</th>
+                        <th>Valor</th>
+                        <th>Visibilidad</th>
+                        <th class="d-none d-lg-table-cell">Documento</th>
+                        <th class="d-none d-lg-table-cell">Zona</th>
+                        <th>Estado</th>
+                        <th><span class="visually-hidden">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(campos)}">
+                        <td colspan="7" class="empty-state">
+                            <i class="bi bi-input-cursor-text" aria-hidden="true"></i>
+                            <div class="empty-state-title">No hay campos de impresión</div>
+                            <small class="empty-state-hint">Por ejemplo, el registro sanitario en el pie de todos los albaranes.</small>
+                            <a th:href="@{/web/campos-impresion/nuevo}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nuevo campo
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:each="c : ${campos}"
+                        th:with="nombreCampo=${c.esSistema()
                             ? (c.etiqueta != null ? c.etiqueta : catalogo.getOrDefault(c.claveSistema, c.claveSistema))
-                            : c.etiqueta}">Campo</td>
-                    <td class="text-muted small">
-                        <span th:if="${c.esSistema()}" class="badge bg-info-subtle text-info">Automático</span>
-                        <span th:unless="${c.esSistema()}" th:text="${c.valor}">Valor</span>
-                    </td>
-                    <td class="text-muted small">
-                        <span th:if="${c.visibilidad == 'TODOS'}">Todos</span>
-                        <span th:if="${c.visibilidad == 'EXCEPTO'}"
-                              th:text="'Todos excepto (' + ${c.clientes.size()} + ')'">Todos excepto</span>
-                        <span th:if="${c.visibilidad == 'SOLO'}"
-                              th:text="'Solo (' + ${c.clientes.size()} + ')'">Solo</span>
-                    </td>
-                    <td class="text-muted small" th:text="${c.documento}">AMBOS</td>
-                    <td class="text-muted small" th:text="${c.ubicacion}">PIE</td>
-                    <td class="text-center">
-                        <span th:if="${c.activo}" class="badge bg-success-subtle text-success">Sí</span>
-                        <span th:unless="${c.activo}" class="badge bg-secondary-subtle text-secondary">No</span>
-                    </td>
-                    <td class="text-end">
-                        <a th:href="@{/web/campos-impresion/{id}/editar(id=${c.id})}" class="btn btn-ghost btn-sm"
-                           th:attr="aria-label='Editar campo'" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <form th:action="@{/web/campos-impresion/{id}/eliminar(id=${c.id})}" method="post"
-                              class="d-inline">
-                            <button type="submit" class="btn btn-ghost btn-sm text-danger"
-                                    data-confirm="¿Eliminar este campo?"
-                                    th:attr="aria-label='Eliminar campo'" title="Eliminar">
-                                <i class="bi bi-trash3"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                            : c.etiqueta}">
+                        <td>
+                            <a th:href="@{/web/campos-impresion/{id}/editar(id=${c.id})}" th:text="${nombreCampo}">Campo</a>
+                        </td>
+                        <td class="text-muted">
+                            <span th:if="${c.esSistema()}" class="badge-estado badge-estado-info">Automático</span>
+                            <span th:unless="${c.esSistema()}" th:text="${c.valor}" th:title="${c.valor}">Valor</span>
+                        </td>
+                        <td class="text-muted">
+                            <span th:if="${c.visibilidad == 'TODOS'}">Todos</span>
+                            <span th:if="${c.visibilidad == 'EXCEPTO'}"
+                                  th:text="'Todos excepto (' + ${c.clientes.size()} + ')'">Todos excepto</span>
+                            <span th:if="${c.visibilidad == 'SOLO'}"
+                                  th:text="'Solo (' + ${c.clientes.size()} + ')'">Solo</span>
+                        </td>
+                        <td class="text-muted d-none d-lg-table-cell"
+                            th:text="${c.documento == 'AMBOS' ? 'Factura y albarán' : (c.documento == 'FACTURA' ? 'Factura' : (c.documento == 'ALBARAN' ? 'Albarán' : c.documento))}">Factura y albarán</td>
+                        <td class="text-muted d-none d-lg-table-cell"
+                            th:text="${c.ubicacion == 'CABECERA' ? 'Cabecera' : (c.ubicacion == 'CLIENTE' ? 'Junto al cliente' : (c.ubicacion == 'OBSERVACIONES' ? 'Observaciones' : (c.ubicacion == 'PIE' ? 'Pie' : c.ubicacion)))}">Pie</td>
+                        <td>
+                            <span th:if="${c.activo}" class="badge-estado badge-estado-ok">Activo</span>
+                            <span th:unless="${c.activo}" class="badge-estado badge-estado-neutro">Inactivo</span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a th:href="@{/web/campos-impresion/{id}/editar(id=${c.id})}" class="btn btn-ghost btn-sm btn-icon"
+                                   th:attr="aria-label='Editar campo ' + ${nombreCampo}" title="Editar">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+                                <form th:action="@{/web/campos-impresion/{id}/eliminar(id=${c.id})}" method="post">
+                                    <button type="submit" class="btn btn-ghost btn-sm btn-icon text-danger" data-no-double-click
+                                            data-confirm="¿Eliminar este campo?"
+                                            th:attr="aria-label='Eliminar campo ' + ${nombreCampo}" title="Eliminar">
+                                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
